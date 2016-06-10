@@ -142,12 +142,12 @@ DWORD CCrc32Dynamic::FileCrc32Streams(LPCTSTR szFilename, DWORD &dwCrc32) const
 		{
 			char buffer[MAX_BUFFER_SIZE];
 			int nLoop, nCount;
-			nCount = file.read(buffer, sizeof(buffer)).gcount();
+			nCount = (int)file.read(buffer, sizeof(buffer)).gcount();
 			while(nCount)
 			{
 				for(nLoop = 0; nLoop < nCount; nLoop++)
 					CalcCrc32(buffer[nLoop], dwCrc32);
-				nCount = file.read(buffer, sizeof(buffer)).gcount();
+				nCount = ( int ) file.read( buffer, sizeof( buffer ) ).gcount( );
 			}
 
 			file.close();

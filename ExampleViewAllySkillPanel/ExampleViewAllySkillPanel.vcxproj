@@ -26,8 +26,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);c:\Projects\HackProjects\minhook-master\include\</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);c:\Projects\HackProjects\minhook-master\build\VC12\lib\Release\</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);.\..\MinHook;</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);.\..\MinHook</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
