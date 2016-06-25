@@ -2,6 +2,7 @@
 #pragma region Includes
 // Все WINAPI и прочие функции
 #include <Windows.h>
+#include <WinInet.h>
 #include <intrin.h>
 #include <vector>
 #include <tchar.h>
@@ -13,6 +14,7 @@
 #include <string>
 using namespace std;
 #pragma comment(lib,"libMinHook.x86.lib")
+#pragma comment(lib,"Wininet.lib")
 #pragma endregion
 
 

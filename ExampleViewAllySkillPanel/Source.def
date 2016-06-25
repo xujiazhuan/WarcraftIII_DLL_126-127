@@ -1,4 +1,6 @@
 LIBRARY
 EXPORTS
-InitDotaHelper
-AddNewOffset
+InitDotaHelper @100
+AddNewOffset @101
+MutePlayer @102
+UnMutePlayer @103

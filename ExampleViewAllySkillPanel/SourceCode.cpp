@@ -54,6 +54,26 @@ void * GetGlobalPlayerData( )
 }
 
 
+int pW3XGlobalClass = 0;
+int pPrintText2 = 0;
+
+
+void DisplayText( char *szText, float fDuration )
+{
+	DWORD dwDuration = *( ( DWORD * ) &fDuration );
+	__asm
+	{
+		PUSH 0xFFFFFFFF;
+		PUSH fDuration;
+		PUSH szText;
+		MOV		ECX, [ pW3XGlobalClass ];
+		MOV		ECX, [ ECX ];
+		MOV		EAX, pPrintText2;
+		CALL	EAX;
+	}
+}
+
+
 // Получить слот игрока
 int GetLocalPlayerId( )
 {
@@ -70,6 +90,12 @@ UINT GetUnitOwnerSlot( int unitaddr )
 {
 	return *( UINT* ) ( unitaddr + 88 );
 }
+
+
+// Получить имя игрока по его слоту
+typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
+p_GetPlayerName GetPlayerName = NULL;
+
 
 // Является ли юнит героем
 BOOL IsHero( int unitaddr )
@@ -241,7 +267,7 @@ int IsNeedDrawUnit2offsetRetAddress = 0x2F9BB4;
 
 int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thiscall to fastcall*/ )
 {
-	int retaddr = ( int ) _ReturnAddress( ) - GameDll; // _ReturnAddress можно использовать в антихаках что бы обнаружить вызовы функций хаками.
+	int retaddr = ( int ) _ReturnAddress( ) - GameDll;
 
 
 	if ( retaddr + 2000 < IsNeedDrawUnit2offsetRetAddress && retaddr > IsNeedDrawUnit2offsetRetAddress )
@@ -356,20 +382,20 @@ void ReplaceIconPathIfNeed( )
 	/*char * tmpstr = 0;
 	if ( strstr( MPQFilePath, "Disabled\\DIS" ) )
 	{
-	
-		tmpstr = repl_string( MPQFilePath, "Disabled\\DIS", "\\" );
-		//MessageBox( 0, MPQFilePath, tmpstr, 0 );
-		sprintf_s( MPQFilePath, 2048, "%s\0", tmpstr );
-		free( tmpstr );
+
+	tmpstr = repl_string( MPQFilePath, "Disabled\\DIS", "\\" );
+	//MessageBox( 0, MPQFilePath, tmpstr, 0 );
+	sprintf_s( MPQFilePath, 2048, "%s\0", tmpstr );
+	free( tmpstr );
 	}*/
 
 	/*if ( strstr( MPQFilePath, ".blp" ) )
 	{
-		sprintf_s( MPQFilePath, 2048, "%s\0", "Textures\\BloodElfBallz.blp" );
+	sprintf_s( MPQFilePath, 2048, "%s\0", "Textures\\BloodElfBallz.blp" );
 	}*/
 	/*else if ( strstr( MPQFilePath, ".mdx" ) )
 	{
-		sprintf_s( MPQFilePath, 2048, "%s\0", "Units\\Undead\\Skeleton\\Skeleton.mdx" );
+	sprintf_s( MPQFilePath, 2048, "%s\0", "Units\\Undead\\Skeleton\\Skeleton.mdx" );
 	}*/
 }
 
@@ -380,6 +406,94 @@ int __stdcall Storm_279my( const char* a1, int a2, int a3, size_t Size, int a5 )
 	//ReplaceIconPathIfNeed( );
 	return Storm_279_ptr( MPQFilePath, a2, a3, Size, a5 );
 }
+
+std::string DownloadBytes( char* szUrl )
+{
+	HINTERNET hOpen = NULL;
+	HINTERNET hFile = NULL;
+	std::string output;
+	DWORD dataSize = 0;
+	DWORD dwBytesRead = 0;
+
+	hOpen = InternetOpen( "Microsoft Internet Explorer", NULL, NULL, NULL, NULL );
+	if ( !hOpen ) return string( "" );
+
+	hFile = InternetOpenUrl( hOpen, szUrl, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE, NULL );
+	if ( !hFile )
+	{
+		InternetCloseHandle( hOpen );
+		return string( "" );
+	}
+
+	do
+	{
+		char buffer[ 2000 ];
+		InternetReadFile( hFile, ( LPVOID ) buffer, _countof( buffer ), &dwBytesRead );
+		if ( dwBytesRead )
+			output.append( buffer, dwBytesRead );
+	}
+	while ( dwBytesRead );
+
+	InternetCloseHandle( hFile );
+	InternetCloseHandle( hOpen );
+	return output;
+}
+
+
+int pOnChatMessage_offset;
+vector<char *> mutedplayers;
+//sub_6F2FB480
+typedef void (__fastcall * pOnChatMessage)( int a1,int unused, int PlayerID, char * message, int a4, float a5 );
+pOnChatMessage pOnChatMessage_org;
+pOnChatMessage pOnChatMessage_ptr;
+void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
+{
+	char * playername = GetPlayerName( PlayerID, 1 );
+
+	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
+	{
+		if ( _stricmp( playername, mutedplayers[ i ] ) == 0 )
+		{
+			return;
+		}
+	}
+
+	pOnChatMessage_ptr( a1, unused, PlayerID, message, a4, a5 );
+}
+
+
+__declspec( dllexport ) int __stdcall MutePlayer( const char * str )
+{
+	if ( !str || *str == 0 )
+		return 1;
+	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
+	{
+		if ( _stricmp( str, mutedplayers[ i ] ) == 0 )
+		{
+			return 1;
+		}
+	}
+	mutedplayers.push_back( _strdup( str ) );
+	return 1;
+}
+
+__declspec( dllexport ) int __stdcall UnMutePlayer( const char * str )
+{
+	if ( !str || *str == 0 )
+		return 1;
+	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
+	{
+		if ( _stricmp( str, mutedplayers[ i ] ) == 0 )
+		{
+			free( mutedplayers[ i ] );
+			mutedplayers[ i ] = NULL;
+			mutedplayers.erase( mutedplayers.begin( ) + i );
+			return 1;
+		}
+	}
+	return 1;
+}
+
 
 
 void InitHook( )
@@ -407,13 +521,18 @@ void InitHook( )
 	// Активировать хук для IsNeedDrawUnit2org
 	MH_EnableHook( IsNeedDrawUnit2org );
 
-/*	StormDll = GetModuleHandle( "Storm.dll" );
+	/*	StormDll = GetModuleHandle( "Storm.dll" );
 
-	Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDll, ( LPCSTR ) 279 ) );
-	MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
-	MH_EnableHook( Storm_279_org );
+		Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDll, ( LPCSTR ) 279 ) );
+		MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
+		MH_EnableHook( Storm_279_org );
 
-	*/
+		*/
+
+
+	pOnChatMessage_org = ( pOnChatMessage ) ( GameDll + pOnChatMessage_offset );
+	MH_CreateHook( pOnChatMessage_org, &pOnChatMessage_my, reinterpret_cast< void** >( &pOnChatMessage_ptr ) );
+	MH_EnableHook( pOnChatMessage_org );
 
 }
 
@@ -438,11 +557,17 @@ void UninitializeHook( )
 		IsNeedDrawUnit2org = 0;
 	}
 
-/*	if ( Storm_279_org )
-	{
+	/*	if ( Storm_279_org )
+		{
 		MH_DisableHook( Storm_279_org );
 		Storm_279_org = 0;
-	}*/
+		}*/
+
+	if ( pOnChatMessage_org )
+	{
+		MH_DisableHook( pOnChatMessage_org );
+		pOnChatMessage_org = 0;
+	}
 }
 
 
@@ -766,8 +891,6 @@ pGetPlayerColor GetPlayerColor;
 typedef int( __cdecl * pPlayer )( int number );
 pPlayer Player;
 
-typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
-p_GetPlayerName GetPlayerName = NULL;
 
 
 int         PLAYER_COLOR_RED = 0;
@@ -817,24 +940,6 @@ const char * GetPlayerColorString( int player )
 }
 
 
-int pW3XGlobalClass = 0;
-int pPrintText2 = 0;
-
-
-void DisplayText( char *szText, float fDuration )
-{
-	DWORD dwDuration = *( ( DWORD * ) &fDuration );
-	__asm
-	{
-		PUSH 0xFFFFFFFF;
-		PUSH fDuration;
-		PUSH szText;
-		MOV		ECX, [ pW3XGlobalClass ];
-		MOV		ECX, [ ECX ];
-		MOV		EAX, pPrintText2;
-		CALL	EAX;
-	}
-}
 
 int __stdcall SaveStringsForPrintItem( int itemaddr )
 {
@@ -1158,6 +1263,11 @@ void __declspec( naked ) HookPrint4_127a( )
 }
 #pragma endregion
 
+
+
+
+
+
 #pragma region BackupOffsets
 struct offsetdata
 {
@@ -1205,6 +1315,8 @@ unsigned long __stdcall RefreshTimer( void * )
 
 		// Выгрузить перехватчики функций
 		UninitializeHook( );
+		// Отключить мут
+		UnMutePlayer( 0 );
 
 		// Убрать все патчи и вернуть стандартные данные
 		// Т.к функция вызывается после завершения игры проблем быть не должно.
@@ -1253,9 +1365,19 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 	}
 	//RemoveMapSizeLimit( );
 	GameVersion = gameversion;
+
+	while ( mutedplayers.size( ) )
+	{
+		free( mutedplayers.back( ) );
+		mutedplayers.pop_back( );
+	}
+
 	if ( gameversion == 0x26a )
 	{
 		UninitializeHook( );
+
+		pOnChatMessage_offset = 0x2FB480;
+
 		IsNeedDrawUnit2offset = 0x28E1D0;
 		IsNeedDrawUnit2offsetRetAddress = 0x2F9B60;
 		IsPlayerEnemyOffset = 0x3C9580;
@@ -1376,6 +1498,9 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 	else if ( gameversion == 0x27a )
 	{
 		UninitializeHook( );
+
+		pOnChatMessage_offset = 0x355CF0;
+
 		IsNeedDrawUnit2offset = 0x66E710;
 		IsNeedDrawUnit2offsetRetAddress = 0x359D60;
 		IsPlayerEnemyOffset = 0x1E8090;
@@ -1504,7 +1629,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		// Инициализация "перехватчика" функций
 		MH_Initialize( );
 
-		InitDotaHelper( 0x26a );
+		///InitDotaHelper( 0x26a );
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
