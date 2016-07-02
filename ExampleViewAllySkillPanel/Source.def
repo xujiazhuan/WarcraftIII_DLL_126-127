@@ -4,3 +4,4 @@ InitDotaHelper @100
 AddNewOffset @101
 MutePlayer @102
 UnMutePlayer @103
+SendGetRequest @104

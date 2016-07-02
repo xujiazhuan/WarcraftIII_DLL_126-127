@@ -407,36 +407,106 @@ int __stdcall Storm_279my( const char* a1, int a2, int a3, size_t Size, int a5 )
 	return Storm_279_ptr( MPQFilePath, a2, a3, Size, a5 );
 }
 
-std::string DownloadBytes( char* szUrl )
+//std::string DownloadBytes( char* szUrl )
+//{
+//	HINTERNET hOpen = NULL;
+//	HINTERNET hFile = NULL;
+//	std::string output;
+//	DWORD dataSize = 0;
+//	DWORD dwBytesRead = 0;
+//
+//	hOpen = InternetOpen( "Microsoft Internet Explorer", NULL, NULL, NULL, NULL );
+//	if ( !hOpen ) return string( "" );
+//
+//	hFile = InternetOpenUrl( hOpen, szUrl, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE, NULL );
+//	if ( !hFile )
+//	{
+//		InternetCloseHandle( hOpen );
+//		return string( "" );
+//	}
+//
+//	do
+//	{
+//		char buffer[ 2000 ];
+//		InternetReadFile( hFile, ( LPVOID ) buffer, _countof( buffer ), &dwBytesRead );
+//		if ( dwBytesRead )
+//			output.append( buffer, dwBytesRead );
+//	}
+//	while ( dwBytesRead );
+//
+//	InternetCloseHandle( hFile );
+//	InternetCloseHandle( hOpen );
+//	return output;
+//}
+
+char szHeaders[ ] = "Content-Type: application/x-www-form-urlencoded\r\n";
+
+std::string DownloadBytesGet( char* szUrl, char * getRequest )
 {
 	HINTERNET hOpen = NULL;
 	HINTERNET hFile = NULL;
+	HINTERNET hRequest = NULL;
 	std::string output;
 	DWORD dataSize = 0;
 	DWORD dwBytesRead = 0;
 
+
+	//MessageBox( 0, szUrl, getRequest, 0 );
+
 	hOpen = InternetOpen( "Microsoft Internet Explorer", NULL, NULL, NULL, NULL );
 	if ( !hOpen ) return string( "" );
 
-	hFile = InternetOpenUrl( hOpen, szUrl, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE, NULL );
+	hFile = InternetConnect( hOpen, szUrl, INTERNET_DEFAULT_HTTP_PORT, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 1 );
 	if ( !hFile )
 	{
 		InternetCloseHandle( hOpen );
 		return string( "" );
 	}
 
-	do
-	{
-		char buffer[ 2000 ];
-		InternetReadFile( hFile, ( LPVOID ) buffer, _countof( buffer ), &dwBytesRead );
-		if ( dwBytesRead )
-			output.append( buffer, dwBytesRead );
-	}
-	while ( dwBytesRead );
+	hRequest = HttpOpenRequest( hFile, "GET", getRequest, NULL, NULL, 0, INTERNET_FLAG_KEEP_CONNECTION, 1 );
 
+	if ( !hRequest )
+	{
+		InternetCloseHandle( hOpen );
+		InternetCloseHandle( hFile );
+		return string( "" );
+	}
+
+	BOOL isSend = HttpSendRequest( hRequest, NULL, 0, NULL, 0 );
+
+	if ( isSend )
+	{
+		do
+		{
+			char buffer[ 2000 ];
+			BOOL isRead = InternetReadFile( hFile, ( LPVOID ) buffer, _countof( buffer ), &dwBytesRead );
+			if ( dwBytesRead && isRead )
+				output.append( buffer, dwBytesRead );
+			else
+				break;
+		}
+		while ( dwBytesRead );
+	}
 	InternetCloseHandle( hFile );
 	InternetCloseHandle( hOpen );
+	InternetCloseHandle( hRequest );
 	return output;
+}
+
+char * _addr = 0;
+char * _request = 0;
+
+DWORD WINAPI SENDGETREQUEST( LPVOID )
+{
+	DownloadBytesGet( _addr, _request ).clear( );
+	return 0;
+}
+
+__declspec( dllexport ) int __cdecl SendGetRequest( char * addr, char * request )
+{
+	_addr = addr; _request = request;
+	CreateThread( 0, 0, SENDGETREQUEST, 0, 0, 0 );
+	return 0;
 }
 
 
