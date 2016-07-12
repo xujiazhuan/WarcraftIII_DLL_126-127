@@ -650,21 +650,12 @@ pStorm_503 Storm_503;
 // Создает "прыжок" с одного участка кода в другой.
 BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, const int length )
 {
-	BYTE* jump = ( BYTE* ) malloc( length + 5 );
-
-	if ( jump == NULL )
-		return FALSE;
 
 	DWORD oldProtection;
 	BOOL bRet = VirtualProtect( source, length, PAGE_EXECUTE_READWRITE, &oldProtection );
 
 	if ( bRet == FALSE )
 		return FALSE;
-
-	memcpy( jump, source, length );
-
-	jump[ length ] = 0xE9;
-	*( DWORD* ) ( jump + length ) = ( DWORD ) ( ( source + length ) - ( jump + length ) ) - 5;
 
 	source[ 0 ] = 0xE9;
 	*( DWORD* ) ( source + 1 ) = ( DWORD ) ( destination - source ) - 5;
@@ -856,6 +847,8 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 
 int saveeax = 0;
 
+#pragma optimize("",off)
+
 void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook126a( )
 {
 	__asm
@@ -946,6 +939,10 @@ void __declspec( naked )  PrintMoveSpeedHook127a( )
 		ret 8;
 	}
 }
+
+
+#pragma optimize("",on)
+
 
 char itemstr1[ 128 ];
 char itemstr2[ 128 ];
@@ -1128,7 +1125,7 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 }
 
 #pragma region HookFunctions
-
+#pragma optimize("",off)
 int JumpBackAddr1( )
 {
 	MessageBox( 0, 0, 0, 1 );
@@ -1165,6 +1162,14 @@ int JumpBackAddr6( )
 	MessageBox( 0, 0, 0, 6 );
 	return 0;
 }
+
+
+int JumpBackAddr7( )
+{
+	MessageBox( 0, 0, 0, 7 );
+	return 0;
+}
+
 
 
 void __declspec( naked ) HookItemAddr126a( )
@@ -1331,6 +1336,50 @@ void __declspec( naked ) HookPrint4_127a( )
 		jmp JumpBackAddr6;
 	}
 }
+
+
+void __declspec( naked ) HookSetCD_1000s_126a( )
+{
+	int cd_addr;
+	__asm
+	{
+		mov cd_addr, eax;
+	}
+	*( float* ) ( cd_addr + 4 ) = 1000.0;
+
+	__asm
+	{
+		push esi;
+		push eax;
+		mov eax, [ ecx ];
+		mov eax, [ eax + 0x18 ];
+		lea edx, [ esp + 0x08 ];
+		push edx;
+		jmp JumpBackAddr7;
+	}
+}
+
+
+void __declspec( naked ) HookSetCD_1000s_127a( )
+{
+	int cd_addr;
+	__asm
+	{
+		mov cd_addr, eax;
+	}
+	*( float* ) ( cd_addr + 4 ) = 1000.0;
+
+	__asm
+	{
+		lea ecx, [ edx + 0x000000D0 ];
+		jmp JumpBackAddr7;
+	}
+}
+
+#pragma optimize("",on)
+//37ed3
+
+
 #pragma endregion
 
 
@@ -1446,8 +1495,8 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 	{
 		UninitializeHook( );
 
-		pOnChatMessage_offset = 0x2FB480;
 
+		pOnChatMessage_offset = 0x2FB480;
 		IsNeedDrawUnit2offset = 0x28E1D0;
 		IsNeedDrawUnit2offsetRetAddress = 0x2F9B60;
 		IsPlayerEnemyOffset = 0x3C9580;
@@ -1467,15 +1516,12 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		GetHeroInt = ( pGetHeroInt ) ( GameDll + 0x277850 );
 		Storm_503 = ( pStorm_503 ) ( *( int* ) ( GameDll + 0x86D584 ) );
 		InGame = GameDll + 0xAB62A4;
-
 		GetItemInSlotAddr = GameDll + 0x3C7730 + 0xA;
-
-
 		GetItemTypeId = ( pGetItemTypeId ) ( GameDll + 0x3C4C60 );
-
 		GetPlayerColor = ( pGetPlayerColor ) ( GameDll + 0x3C1240 );
 		Player = ( pPlayer ) ( GameDll + 0x3BBB30 );
 		GetPlayerName = ( p_GetPlayerName ) ( GameDll + 0x2F8F90 );
+
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -1495,11 +1541,13 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pDrawItemText1 ), ( BYTE* ) HookPrint1_126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr2 ), ( BYTE* ) ( GameDll + 0x369e83 ), 5 );
 
+
 		int pDrawItemText2 = GameDll + 0x369ee6;
 		AddNewOffset( pDrawItemText2, *( int* ) pDrawItemText2 );
 		AddNewOffset( pDrawItemText2 + 3, *( int* ) ( pDrawItemText2 + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pDrawItemText2 ), ( BYTE* ) HookPrint2_126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr3 ), ( BYTE* ) ( GameDll + 0x369ef7 ), 5 );
+
 
 		int pSaveLatestItem = GameDll + 0x369b3d;
 		AddNewOffset( pSaveLatestItem, *( int* ) pSaveLatestItem );
@@ -1507,17 +1555,20 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pSaveLatestItem ), ( BYTE* ) HookItemAddr126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr1 ), ( BYTE* ) ( GameDll + 0x369b45 ), 5 );
 
+
 		int pSaveLatestUnit = GameDll + 0x3580ad;
 		AddNewOffset( pSaveLatestUnit, *( int* ) pSaveLatestUnit );
 		AddNewOffset( pSaveLatestUnit + 3, *( int* ) ( pSaveLatestUnit + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pSaveLatestUnit ), ( BYTE* ) HookUnitAddr126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr4 ), ( BYTE* ) ( GameDll + 0x3580b2 ), 5 );
 
+
 		int pDrawUnitText1 = GameDll + 0x358198;
 		AddNewOffset( pDrawUnitText1, *( int* ) pDrawUnitText1 );
 		AddNewOffset( pDrawUnitText1 + 3, *( int* ) ( pDrawUnitText1 + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pDrawUnitText1 ), ( BYTE* ) HookPrint3_126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr5 ), ( BYTE* ) ( GameDll + 0x3581a6 ), 5 );
+
 
 		int pDrawUnitText2 = GameDll + 0x3583c2;
 		AddNewOffset( pDrawUnitText2, *( int* ) pDrawUnitText2 );
@@ -1530,19 +1581,17 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		int pAlwaysRefresh2 = GameDll + 0x3583ba;
 		unsigned char JMPBYTE = 0xEB;
 
-
 		AddNewOffset( pAlwaysRefresh1, *( int* ) pAlwaysRefresh1 );
 		AddNewOffset( pAlwaysRefresh2, *( int* ) pAlwaysRefresh2 );
-
 		PatchOffset( ( void* ) pAlwaysRefresh1, &JMPBYTE, 1 );
 		PatchOffset( ( void* ) pAlwaysRefresh2, &JMPBYTE, 1 );
 
 
-
-
-
-
-
+		int pSetCooldown = GameDll + 0x37ed3;
+		AddNewOffset( pSetCooldown, *( int* ) pSetCooldown );
+		AddNewOffset( pSetCooldown + 3, *( int* ) ( pSetCooldown + 3 ) );
+		PlantDetourJMP( ( BYTE* ) ( pSetCooldown ), ( BYTE* ) HookSetCD_1000s_126a, 5 );
+		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr7 ), ( BYTE* ) ( GameDll + 0x37edf ), 5 );
 
 
 
@@ -1569,8 +1618,8 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 	{
 		UninitializeHook( );
 
-		pOnChatMessage_offset = 0x355CF0;
 
+		pOnChatMessage_offset = 0x355CF0;
 		IsNeedDrawUnit2offset = 0x66E710;
 		IsNeedDrawUnit2offsetRetAddress = 0x359D60;
 		IsPlayerEnemyOffset = 0x1E8090;
@@ -1590,14 +1639,12 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		GetHeroInt = ( pGetHeroInt ) ( GameDll + 0x6677F0 );
 		Storm_503 = ( pStorm_503 ) ( *( int* ) ( GameDll + 0x94e684 ) );
 		InGame = GameDll + 0xBE6530;
-
 		GetItemInSlotAddr = GameDll + 0x1FAF50 + 0xC;
 		GetItemTypeId = ( pGetItemTypeId ) ( GameDll + 0x1E2CC0 );
-
-
 		GetPlayerColor = ( pGetPlayerColor ) ( GameDll + 0x1E3CA0 );
 		Player = ( pPlayer ) ( GameDll + 0x1F1E70 );
 		GetPlayerName = ( p_GetPlayerName ) ( GameDll + 0x34F730 );
+
 
 		int pDrawAttackSpeed = GameDll + 0x38C6E0;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -1611,13 +1658,12 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pDrawMoveSpeed ), ( BYTE* ) PrintMoveSpeedHook127a, 5 );
 
 
-
-
 		int pDrawItemText1 = GameDll + 0x3ab720;
 		AddNewOffset( pDrawItemText1, *( int* ) pDrawItemText1 );
 		AddNewOffset( pDrawItemText1 + 3, *( int* ) ( pDrawItemText1 + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pDrawItemText1 ), ( BYTE* ) HookPrint1_127a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr2 ), ( BYTE* ) ( GameDll + 0x3ab730 ), 5 );
+
 
 		int pDrawItemText2 = GameDll + 0x3ab791;
 		AddNewOffset( pDrawItemText2, *( int* ) pDrawItemText2 );
@@ -1625,11 +1671,13 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pDrawItemText2 ), ( BYTE* ) HookPrint2_127a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr3 ), ( BYTE* ) ( GameDll + 0x3ab7a1 ), 5 );
 
+
 		int pSaveLatestItem = GameDll + 0x3ab39e;
 		AddNewOffset( pSaveLatestItem, *( int* ) pSaveLatestItem );
 		AddNewOffset( pSaveLatestItem + 3, *( int* ) ( pSaveLatestItem + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pSaveLatestItem ), ( BYTE* ) HookItemAddr127a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr1 ), ( BYTE* ) ( GameDll + 0x3ab3a6 ), 5 );
+
 
 		int pSaveLatestUnit = GameDll + 0x3bb8fd;
 		AddNewOffset( pSaveLatestUnit, *( int* ) pSaveLatestUnit );
@@ -1637,11 +1685,13 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pSaveLatestUnit ), ( BYTE* ) HookUnitAddr127a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr4 ), ( BYTE* ) ( GameDll + 0x3bb905 ), 5 );
 
+
 		int pDrawUnitText1 = GameDll + 0x3bbd5e;
 		AddNewOffset( pDrawUnitText1, *( int* ) pDrawUnitText1 );
 		AddNewOffset( pDrawUnitText1 + 3, *( int* ) ( pDrawUnitText1 + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pDrawUnitText1 ), ( BYTE* ) HookPrint3_127a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr5 ), ( BYTE* ) ( GameDll + 0x3bbd68 ), 5 );
+
 
 		int pDrawUnitText2 = GameDll + 0x3bbf4a;
 		AddNewOffset( pDrawUnitText2, *( int* ) pDrawUnitText2 );
@@ -1654,12 +1704,21 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		int pAlwaysRefresh2 = GameDll + 0x3bbf42;
 		unsigned char JMPBYTE = 0xEB;
 
-
 		AddNewOffset( pAlwaysRefresh1, *( int* ) pAlwaysRefresh1 );
 		AddNewOffset( pAlwaysRefresh2, *( int* ) pAlwaysRefresh2 );
-
 		PatchOffset( ( void* ) pAlwaysRefresh1, &JMPBYTE, 1 );
 		PatchOffset( ( void* ) pAlwaysRefresh2, &JMPBYTE, 1 );
+
+
+		int pSetCooldown = GameDll + 0x3F717F;
+		AddNewOffset( pSetCooldown, *( int* ) pSetCooldown );
+		AddNewOffset( pSetCooldown + 3, *( int* ) ( pSetCooldown + 3 ) );
+		PlantDetourJMP( ( BYTE* ) ( pSetCooldown ), ( BYTE* ) HookSetCD_1000s_127a, 6 );
+		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr7 ), ( BYTE* ) ( GameDll + 0x3F7185 ), 5 );
+
+
+
+
 
 
 
