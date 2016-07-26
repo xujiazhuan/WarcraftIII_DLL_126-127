@@ -417,10 +417,11 @@ int __stdcall Storm_279my(const char* a1, int a2, int a3, size_t Size, int a5)
 	return Storm_279_ptr(MPQFilePath, a2, a3, Size, a5);
 }
 
-char szHeaders[] = "Content-Type: application/x-www-form-urlencoded\r\n";
+char szHeaders[] = "Content-Type: application/x-www-form-urlencoded\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n";
 
 
 int DownStatus = 0;
+int DownProgress = 0;
 std::string LatestDownloadedString;
 
 std::string DownloadBytesGet(char* szUrl, char * getRequest)
@@ -438,7 +439,7 @@ std::string DownloadBytesGet(char* szUrl, char * getRequest)
 	{
 		WSACleanup();
 		DownStatus = -1;
-	
+
 		return returnvalue;
 	}
 
@@ -470,6 +471,8 @@ std::string DownloadBytesGet(char* szUrl, char * getRequest)
 	char sendbuffer[512];
 	sprintf_s(sendbuffer, 512, "%s%s%s%s\r\nConnection: close\r\n\r\n", "GET ", getRequest, " HTTP/1.1\r\nHost: ", szUrl);
 
+	DownProgress = 20;
+
 	if (send(Socket, sendbuffer, strlen(sendbuffer), 0) == SOCKET_ERROR)
 	{
 		closesocket(Socket);
@@ -478,13 +481,18 @@ std::string DownloadBytesGet(char* szUrl, char * getRequest)
 
 		return returnvalue;
 	}
+
+	DownProgress = 40;
+
 	char buffer[10000];
 	int nDataLength;
 	while ((nDataLength = recv(Socket, buffer, 10000, 0)) > 0){
 		int i = 0;
+		DownProgress = 60;
 		returnvalue.append(buffer, nDataLength);
-
 	}
+
+	DownProgress = 80;
 
 	while (returnvalue.size())
 	{
@@ -520,6 +528,7 @@ std::string DownloadBytesGet(char* szUrl, char * getRequest)
 		}
 	}
 
+	DownProgress = 100;
 
 	LatestDownloadedString = returnvalue;
 	if (returnvalue.size() > 0)
@@ -570,7 +579,11 @@ void BuildFilePath(char * fname)
 		{
 
 			memset(NewMapPath, 0, MAX_PATH);
-			sprintf_s(NewMapPath, MAX_PATH, "%s%s", CurrentMapPath, fname);
+			if (fname != NULL && *fname != 0)
+				sprintf_s(NewMapPath, MAX_PATH, "%s%s", CurrentMapPath, fname);
+			else
+				sprintf_s(NewMapPath, MAX_PATH, "%s", CurrentMapPath);
+
 		}
 	}
 }
@@ -587,22 +600,20 @@ void DownloadNewMapToFile(char* szUrl, char * filepath)
 	FILE * outfile = NULL;
 	BOOL AllOkay = FALSE;
 
-	BuildFilePath(filepath);
-
-	if (NewMapPath == NULL || NewMapPath[0] == '\0' || FileExist(NewMapPath))
+	if (filepath == NULL || filepath[0] == '\0' || FileExist(filepath))
 	{
 		DownStatus = 2;
 		return;
 	}
 
-	hOpen = InternetOpen("Microsoft Internet Explorer", NULL, NULL, NULL, NULL);
+	hOpen = InternetOpen("Microsoft Internet Explorer", NULL, NULL, NULL, 0);
 	if (!hOpen)
 	{
 		DownStatus = -1;
 		return;
 	}
-
-	hFile = InternetOpenUrl(hOpen, szUrl, NULL, 0, 0, 0);
+	DownProgress = 10;
+	hFile = InternetOpenUrl(hOpen, szUrl, NULL, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE, 0);
 
 	if (!hFile)
 	{
@@ -610,7 +621,7 @@ void DownloadNewMapToFile(char* szUrl, char * filepath)
 		DownStatus = -1;
 		return;
 	}
-
+	DownProgress = 20;
 	int code = 0;
 	DWORD codeLen = 4;
 	HttpQueryInfo(hFile, HTTP_QUERY_STATUS_CODE |
@@ -624,33 +635,56 @@ void DownloadNewMapToFile(char* szUrl, char * filepath)
 		return;
 	}
 
-	if (outfile != NULL)
+	DWORD sizeBuffer;
+	DWORD length = sizeof(sizeBuffer);
+	HttpQueryInfo(hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &sizeBuffer, &length, NULL);
+
+
+
+	DownProgress = 30;
+
+	do
 	{
-		do
-		{
-			dwBytesRead = 0;
-			unsigned char buffer[2000];
-			BOOL isRead = InternetReadFile(hFile, (LPVOID)buffer, _countof(buffer), &dwBytesRead);
-			if (dwBytesRead && isRead)
-			{
-				AllOkay = TRUE;
-				for (unsigned int i = 0; i < dwBytesRead; i++)
-					OutData.push_back(buffer[i]);
-			}
-			else
-				break;
-		} while (dwBytesRead);
+		dataSize += dwBytesRead;
+		if (sizeBuffer != 0)
+			DownProgress = (dataSize * 100) / sizeBuffer;
 
-
-		if (OutData.size()> 0 && AllOkay)
+		dwBytesRead = 0;
+		unsigned char buffer[2000];
+		BOOL isRead = InternetReadFile(hFile, (LPVOID)buffer, _countof(buffer), &dwBytesRead);
+		if (dwBytesRead && isRead)
 		{
-			fopen_s(&outfile, NewMapPath, "wb");
+			AllOkay = TRUE;
+			for (unsigned int i = 0; i < dwBytesRead; i++)
+				OutData.push_back(buffer[i]);
+		}
+		else
+			break;
+	} while (dwBytesRead);
+
+	if (DownProgress == 30)
+	{
+		DownProgress = 70;
+	}
+
+	if (OutData.size() > 0 && AllOkay)
+	{
+		fopen_s(&outfile, filepath, "wb");
+		if (outfile != NULL)
+		{
 			fwrite(&OutData[0], OutData.size(), 1, outfile);
 			OutData.clear();
 			fclose(outfile);
 			DownStatus = 1;
 		}
 		else DownStatus = -1;
+	}
+	else DownStatus = -1;
+
+
+	if (DownProgress == 70)
+	{
+		DownProgress = 100;
 	}
 
 	InternetCloseHandle(hFile);
@@ -678,17 +712,17 @@ DWORD WINAPI SENDSAVEFILEREQUEST(LPVOID)
 
 __declspec(dllexport) int __cdecl SendGetRequest(char * addr, char * request)
 {
-
+	DownProgress = 0;
 	_addr = addr; _request = request;
 	DownStatus = 0;
 	CreateThread(0, 0, SENDGETREQUEST, 0, 0, 0);
 	return 0;
 }
 
-__declspec(dllexport) int __cdecl SaveNewDotaVersionFromUrl(char * addr, char * filename)
+__declspec(dllexport) int __cdecl SaveNewDotaVersionFromUrl(char * addr, char * filepath)
 {
-
-	_addr = addr; _filepath = filename;
+	DownProgress = 0;
+	_addr = addr; _filepath = filepath;
 	DownStatus = 0;
 	CreateThread(0, 0, SENDSAVEFILEREQUEST, 0, 0, 0);
 	return 0;
@@ -699,11 +733,22 @@ __declspec(dllexport) int __cdecl GetDownloadStatus(int)
 	return DownStatus;
 }
 
+__declspec(dllexport) int __cdecl GetDownloadProgress(int)
+{
+	return DownProgress;
+}
+
 __declspec(dllexport) const char * __cdecl GetLatestDownloadedString(int)
 {
 	return LatestDownloadedString.c_str();
 }
 
+
+__declspec(dllexport) const char * __cdecl GetCurrentMapPath(int)
+{
+	BuildFilePath(NULL);
+	return CurrentMapPath;
+}
 
 
 int pOnChatMessage_offset;

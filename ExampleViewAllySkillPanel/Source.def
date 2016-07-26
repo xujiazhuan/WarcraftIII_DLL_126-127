@@ -8,3 +8,5 @@ SendGetRequest @104
 SaveNewDotaVersionFromUrl @105
 GetDownloadStatus @106
 GetLatestDownloadedString @107
+GetDownloadProgress @108
+GetCurrentMapPath @109
