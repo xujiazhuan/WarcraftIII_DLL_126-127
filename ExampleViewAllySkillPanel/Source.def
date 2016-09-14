@@ -10,3 +10,8 @@ GetDownloadStatus @106
 GetLatestDownloadedString @107
 GetDownloadProgress @108
 GetCurrentMapPath @109
+SetHPBarColorForPlayer @110
+SetHPBarXScaleForPlayer @111
+SetHPBarYScaleForPlayer @112
+SetWidescreenFixState @113
+SetCustomFovFix @114

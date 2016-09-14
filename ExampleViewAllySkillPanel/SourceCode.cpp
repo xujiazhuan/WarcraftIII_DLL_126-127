@@ -118,6 +118,14 @@ BOOL IsHero( int unitaddr )
 }
 
 
+// Является ли юнит зданием
+BOOL IsTower( int unitaddr )
+{
+	UINT istower = *( UINT* ) ( unitaddr + 0x5C );
+	return ( istower & 0x10000 );
+}
+
+
 int UnitVtable = 0;
 
 
@@ -177,17 +185,15 @@ BOOL IsNotBadItem( int itemaddr )
 // Проверяет враг юнит локальному игроку или нет
 BOOL __stdcall IsEnemy( int UnitAddr )
 {
-
+	if ( !UnitAddr )
+		return TRUE;
 
 	int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
-	if ( unitownerslot < 14 )
+	if ( unitownerslot <= 15 )
 	{
-		if ( IsHero( UnitAddr ) )
-		{
-			UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
-			UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-			return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
-		}
+		UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
+		UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+		return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
 	}
 	return 1;
 }
@@ -816,8 +822,124 @@ __declspec( dllexport ) int __stdcall UnMutePlayer( const char * str )
 
 
 
+struct FloatStruct1
+{
+	float flt1;//0
+	float flt2;//4
+	float flt3;//8
+	float flt4;//12
+	float flt5;//16
+	float flt6;//20
+	float flt7;//24
+	float flt8;//28
+	float flt9;//32
+	float flt10;//36
+	float flt11;//40
+	float flt12;//44
+	float flt13;//48
+	float flt14;//52
+	float flt15;//56
+	float flt16;//60
+};
+
+
+typedef void( __fastcall * SetGameAreaFOV )( FloatStruct1 * a1, int a2, float a3, float a4, float a5, float a6 );
+SetGameAreaFOV SetGameAreaFOV_org;
+SetGameAreaFOV SetGameAreaFOV_ptr;
+
+
+float CustomFovFix = 1.0f;
+
+int GetWindowXoffset = 0;
+int GetWindowYoffset = 0;
+
+int __fastcall SetGameAreaFOV_new( FloatStruct1 * a1, int _unused, float a3, float a4, float a5, float a6 )
+{
+
+	float ScreenX = *( float* ) ( GameDll + GetWindowXoffset );
+	float ScreenY = *( float* ) ( GameDll + GetWindowYoffset );
+
+	float v1 = 1.0f / sqrt( a4 * a4 + 1.0f );
+	float v2 = tan( v1 * a3 * 0.5f );
+
+	float v3 = v2 * a5;
+	float v4 = v3 * a4;
+
+	a1->flt1 = ( ( a5 * ( 4.0f / 3.0f ) ) / ( ScreenX / ScreenY ) * CustomFovFix ) / v4; // Fix 4:3 to WindowX/WindowY
+	a1->flt2 = 0.0f;
+	a1->flt3 = 0.0f;
+	a1->flt4 = 0.0f;
+	a1->flt5 = 0.0f;
+
+
+	a1->flt6 = a5 / v3;
+	a1->flt7 = 0.0f;
+	a1->flt8 = 0.0f;
+	a1->flt9 = 0.0f;
+	a1->flt10 = 0.0f;
+
+
+	a1->flt11 = ( a5 + a6 ) / ( a6 - a5 );
+	a1->flt12 = 1.0f;
+	a1->flt13 = 0.0f;
+	a1->flt14 = 0.0f;
+
+
+	a1->flt15 = a5 * ( a6 * -2.0f ) / ( a6 - a5 );
+	a1->flt16 = 0.0f;
+
+
+	return 0;
+}
+
+
+BOOL EnableFixFOV = FALSE;
+
+
+__declspec( dllexport ) int __stdcall SetWidescreenFixState( BOOL widefixenable )
+{
+	EnableFixFOV = widefixenable;
+	return 0;
+}
+
+
+__declspec( dllexport ) int __stdcall SetCustomFovFix( float _CustomFovFix )
+{
+	CustomFovFix = _CustomFovFix;
+	return 0;
+}
+
+
+void __fastcall SetGameAreaFOV_my( FloatStruct1 * a1, int a2, float a3, float a4, float a5, float a6 )
+{
+	if ( EnableFixFOV )
+	{
+		SetGameAreaFOV_new( a1, a2, a3, a4, a5, a6 );
+	}
+	else
+	{
+		SetGameAreaFOV_ptr( a1, a2, a3, a4, a5, a6 );
+	}
+}
+
+
+
+
+int SetGameAreaFOVoffset = 0;
+
+
+
+
 void InitHook( )
 {
+
+		SetGameAreaFOV_org = ( SetGameAreaFOV ) ( SetGameAreaFOVoffset + GameDll );
+
+		MH_CreateHook( SetGameAreaFOV_org, &SetGameAreaFOV_my, reinterpret_cast< void** >( &SetGameAreaFOV_ptr ) );
+
+		MH_EnableHook( SetGameAreaFOV_org );
+
+	
 	// Установить адрес для IsDrawSkillPanel_org
 	IsDrawSkillPanel_org = ( IsDrawSkillPanel ) ( IsDrawSkillPanelOffset + GameDll );
 	// Создать хук (перехват) для IsDrawSkillPanel_org и сохранить его в памяти
@@ -887,6 +1009,12 @@ void UninitializeHook( )
 	{
 		MH_DisableHook( pOnChatMessage_org );
 		pOnChatMessage_org = 0;
+	}
+
+	if ( SetGameAreaFOV_org )
+	{
+		MH_DisableHook( SetGameAreaFOV_org );
+		SetGameAreaFOV_org = 0;
 	}
 }
 
@@ -1096,6 +1224,13 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 }
 
 int saveeax = 0;
+int saveebx = 0;
+int saveecx = 0;
+int saveedx = 0;
+int saveesi = 0;
+int saveedi = 0;
+int saveebp = 0;
+int saveesp = 0;
 
 #pragma optimize("",off)
 
@@ -1375,6 +1510,225 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 }
 
 
+unsigned int hpbarcolorsHero[ 20 ];
+unsigned int hpbarcolorsUnit[ 20 ];
+unsigned int hpbarcolorsTower[ 20 ];
+
+float hpbarscaleHeroX[ 20 ];
+float hpbarscaleUnitX[ 20 ];
+float hpbarscaleTowerX[ 20 ];
+
+float hpbarscaleHeroY[ 20 ];
+float hpbarscaleUnitY[ 20 ];
+float hpbarscaleTowerY[ 20 ];
+
+void __cdecl SetHPBarColorForPlayer( int playerid, unsigned int herocolor,
+									 unsigned int unitcolor, unsigned int towercolor )
+{
+	if ( playerid >= 0 && playerid < 20 )
+	{
+		hpbarcolorsHero[ playerid ] = herocolor;
+		hpbarcolorsUnit[ playerid ] = unitcolor;
+		hpbarcolorsTower[ playerid ] = towercolor;
+	}
+}
+
+
+void __cdecl SetHPBarXScaleForPlayer( int playerid, float heroscale,
+									  float unitscale, float towerscale )
+{
+	if ( playerid >= 0 && playerid < 20 )
+	{
+		hpbarscaleHeroX[ playerid ] = heroscale;
+		hpbarscaleUnitX[ playerid ] = unitscale;
+		hpbarscaleTowerX[ playerid ] = towerscale;
+	}
+}
+
+void __cdecl SetHPBarYScaleForPlayer( int playerid, float heroscale,
+									  float unitscale, float towerscale )
+{
+	if ( playerid >= 0 && playerid < 20 )
+	{
+		hpbarscaleHeroY[ playerid ] = heroscale;
+		hpbarscaleUnitY[ playerid ] = unitscale;
+		hpbarscaleTowerY[ playerid ] = towerscale;
+	}
+}
+
+
+
+struct BarStruct
+{
+	int _BarClass;
+	int _unk1_flag;
+	int _unk2_flag;
+	int _unk3_pointer;
+	int _unk4;
+	int _unk5;
+	int _unk6;
+	int _unk7;
+	int _unk8;
+	int _unk9;
+	int _unk10;
+	int _unk11;
+	int _unk12;
+	int _unk13;
+	int _unk14;
+	int _unk15_pointer;
+	int _unk16_pointer;
+	float offset1;
+	float offset2;
+	float offset3;
+	float offset4;
+	int _unk17_flag;
+	float ScaleX;
+	float ScaleY;
+	float Scale;
+	int _unk18;
+	int _unk19_pointer;
+	int _unk20;
+	int _unk21;
+	int _unk22;
+	int _unk23;
+	int _unk24;
+	int _unk25;
+	int bartype;
+	int _unk26;
+	int _unk27;
+	int _unk28;
+	float offset5;
+	float offset6;
+	float offset7;
+	float offset8;
+	float offset9;
+	int _unk29;
+	int _unk30;
+	int _unk31;
+	int _unk32;
+	int _unk33;
+	int _unk34;
+	int _unk35;
+	int _unk36;
+	int _unk37;
+	int _unk38;
+	int _unk39;
+	int _unk40_pointer;
+	int _unk41_pointer;
+	int _unk42;
+	int _unk43_pointer;
+	int _unk44_pointer;
+	int _unk45;
+	int _unk46_pointer;
+	int _unk47_pointer;
+	int _unk48;
+	int _unk49_pointer;
+	int _unk50_pointer;
+	int _unk51;
+	int _unk52_pointer;
+	int _unk53_pointer;
+	int _unk54;
+	int _unk55_pointer;
+	int _unk56_pointer;
+	int _unk57;
+	int _unk58_pointer;
+	int _unk59_pointer;
+	int _unk60;
+	float offset10;
+	float offset11;
+	float offset12;
+	int _unk61_pointer;
+	int _unk62;
+	int _unk63;
+	int _unk64_pointer;
+	int _unk65_pointer;
+	int _unk66;
+	int _unk67;
+	float offset13;
+	int unitaddr;
+	int _unk68;
+	int _unk69;
+};
+
+int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct )
+{
+
+
+	if ( !BarStruct )
+		return 0;
+	if ( !coloraddr )
+		return 0;
+
+	int unitaddr = BarStruct->unitaddr;
+	if ( !unitaddr )
+		return 0;
+
+	int unitslot = GetUnitOwnerSlot( unitaddr );
+
+	if ( IsHero( unitaddr ) )
+	{
+		if ( BarStruct->bartype == 1 )
+		{
+			if ( hpbarscaleHeroX[ unitslot ] != 0.0 )
+			{
+				BarStruct->ScaleX = hpbarscaleHeroX[ unitslot ];
+			}
+
+			if ( hpbarscaleHeroY[ unitslot ] != 0.0 )
+			{
+				BarStruct->ScaleY = hpbarscaleHeroY[ unitslot ];
+			}
+		}
+
+		if ( hpbarcolorsHero[ unitslot ] != 0 )
+		{
+			*coloraddr = hpbarcolorsHero[ unitslot ];
+		}
+
+	}
+	else if ( IsTower( unitaddr ) )
+	{
+		if ( BarStruct->bartype == 1 )
+		{
+			if ( hpbarscaleTowerX[ unitslot ] != 0.0 )
+			{
+				BarStruct->ScaleX = hpbarscaleTowerX[ unitslot ];
+			}
+
+			if ( hpbarscaleTowerY[ unitslot ] != 0.0 )
+			{
+				BarStruct->ScaleY = hpbarscaleTowerY[ unitslot ];
+			}
+		}
+		if ( hpbarcolorsTower[ unitslot ] != 0 )
+		{
+			*coloraddr = hpbarcolorsTower[ unitslot ];
+		}
+	}
+	else
+	{
+		if ( BarStruct->bartype == 1 )
+		{
+			if ( hpbarscaleUnitX[ unitslot ] != 0.0 )
+			{
+				BarStruct->ScaleX = hpbarscaleUnitX[ unitslot ];
+			}
+
+			if ( hpbarscaleUnitY[ unitslot ] != 0.0 )
+			{
+				BarStruct->ScaleY = hpbarscaleUnitY[ unitslot ];
+			}
+		}
+
+		if ( hpbarcolorsUnit[ unitslot ] != 0 )
+		{
+			*coloraddr = hpbarcolorsUnit[ unitslot ];
+		}
+	}
+
+
+	return unitaddr;
+}
 
 
 
@@ -1444,6 +1798,13 @@ int JumpBackAddr8( )
 }
 
 
+int JumpBackAddr9( )
+{
+	MessageBox( 0, 0, 0, 9 );
+	return 0;
+}
+
+
 void __declspec( naked ) HookIconHelper126a( )
 {
 	__asm
@@ -1461,6 +1822,7 @@ void __declspec( naked ) HookIconHelper126a( )
 }
 
 
+
 void __declspec( naked ) HookIconHelper127a( )
 {
 	__asm
@@ -1476,6 +1838,45 @@ void __declspec( naked ) HookIconHelper127a( )
 		jmp JumpBackAddr8;
 	}
 }
+
+
+
+void __declspec( naked ) HookHPBarColorHelper126a( )
+{
+	__asm
+	{
+		lea edx, [ esp + 0x10 ];
+		fstp st( 0 );
+		pushad;
+		push edi;
+		push edx;
+		call SetColorForUnit;
+		popad;
+		jmp JumpBackAddr9;
+	}
+}
+
+
+int calladdr1 = 0;
+
+
+
+void __declspec( naked ) HookHPBarColorHelper127a( )
+{
+	__asm
+	{
+		lea eax, [ ebp + 0x08 ];
+		pushad;
+		push esi;
+		push eax;
+		call SetColorForUnit;
+		popad;
+		push eax;
+		call calladdr1;
+		jmp JumpBackAddr9;
+	}
+}
+
 
 
 void __declspec( naked ) HookItemAddr126a( )
@@ -1504,7 +1905,7 @@ void __declspec( naked ) HookItemAddr127a( )
 	}
 }
 
-int saveedx = 0;
+
 
 void __declspec( naked ) HookUnitAddr126a( )
 {
@@ -1651,6 +2052,7 @@ void __declspec( naked ) HookSetCD_1000s_126a( )
 	{
 		mov cd_addr, eax;
 	}
+
 	*( float* ) ( cd_addr + 4 ) = 1000.0;
 
 	__asm
@@ -1665,7 +2067,7 @@ void __declspec( naked ) HookSetCD_1000s_126a( )
 	}
 }
 
-
+//37ed3
 void __declspec( naked ) HookSetCD_1000s_127a( )
 {
 	int cd_addr;
@@ -1677,7 +2079,7 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 
 	__asm
 	{
-		lea ecx, [ edx + 0x000000D0 ];
+		lea ecx, [ edx + 0xD0 ];
 		jmp JumpBackAddr7;
 	}
 }
@@ -1689,7 +2091,7 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 
 
 #pragma optimize("",on)
-//37ed3
+
 
 
 #pragma endregion
@@ -1787,6 +2189,8 @@ void PatchOffset( void * addr, void * buffer, unsigned int size )
 
 
 
+
+
 __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 {
 	if ( threadid )
@@ -1802,6 +2206,20 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		free( mutedplayers.back( ) );
 		mutedplayers.pop_back( );
 	}
+
+	memset( hpbarcolorsHero, 0, sizeof( hpbarcolorsHero ) );
+	memset( hpbarcolorsUnit, 0, sizeof( hpbarcolorsUnit ) );
+	memset( hpbarcolorsTower, 0, sizeof( hpbarcolorsTower ) );
+	memset( hpbarscaleHeroX, 0, sizeof( hpbarscaleHeroX ) );
+	memset( hpbarscaleUnitX, 0, sizeof( hpbarscaleUnitX ) );
+	memset( hpbarscaleTowerX, 0, sizeof( hpbarscaleTowerX ) );
+	memset( hpbarscaleHeroY, 0, sizeof( hpbarscaleHeroY ) );
+	memset( hpbarscaleUnitY, 0, sizeof( hpbarscaleUnitY ) );
+	memset( hpbarscaleTowerY, 0, sizeof( hpbarscaleTowerY ) );
+
+
+	SetWidescreenFixState( FALSE );
+	SetCustomFovFix( 1.0f );
 
 	if ( gameversion == 0x26a )
 	{
@@ -1912,13 +2330,25 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pICONHELPER ), ( BYTE* ) HookIconHelper126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr8 ), ( BYTE* ) ( GameDll + 0x320940 ), 5 );
 
+		int pHPBARHELPER = GameDll + 0x364beb;
+		AddNewOffset( pHPBARHELPER, *( int* ) pHPBARHELPER );
+		AddNewOffset( pHPBARHELPER + 3, *( int* ) ( pHPBARHELPER + 3 ) );
+		PlantDetourJMP( ( BYTE* ) ( pHPBARHELPER ), ( BYTE* ) HookHPBarColorHelper126a, 6 );
+		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr9 ), ( BYTE* ) ( GameDll + 0x364bf1 ), 5 );
+
 
 
 
 
 		MapNameOffset1 = GameDll + 0xAAE788;
 		MapNameOffset2 = 8;
-	
+
+
+		SetGameAreaFOVoffset = 0x7B66F0;
+
+		GetWindowXoffset = 0xADE91C;
+		GetWindowYoffset = 0xADE918;
+
 
 		InitHook( );
 		threadid = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
@@ -2046,12 +2476,27 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr8 ), ( BYTE* ) ( GameDll + 0x336f6d ), 5 );
 
 
+		calladdr1 = GameDll + 0xBFA30;
+		int pHPBARHELPER = GameDll + 0x3bd5b0;
+		AddNewOffset( pHPBARHELPER, *( int* ) pHPBARHELPER );
+		AddNewOffset( pHPBARHELPER + 3, *( int* ) ( pHPBARHELPER + 3 ) );
+		AddNewOffset( pHPBARHELPER + 6, *( int* ) ( pHPBARHELPER + 6 ) );
+		PlantDetourJMP( ( BYTE* ) ( pHPBARHELPER ), ( BYTE* ) HookHPBarColorHelper127a, 9 );
+		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr9 ), ( BYTE* ) ( GameDll + 0x3bd5b9 ), 5 );
+
 
 
 
 
 		MapNameOffset1 = GameDll + 0xBEE150;
 		MapNameOffset2 = 8;
+
+
+
+		GetWindowXoffset = 0xBBA22C;
+		GetWindowYoffset = 0xBBA228;
+
+		SetGameAreaFOVoffset = 0xD31D0;
 
 		InitHook( );
 		threadid = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
