@@ -725,7 +725,7 @@ DWORD WINAPI SENDSAVEFILEREQUEST( LPVOID )
 	return 0;
 }
 
-__declspec( dllexport ) int __cdecl SendGetRequest( char * addr, char * request )
+__declspec( dllexport ) int __stdcall SendGetRequest( char * addr, char * request )
 {
 	DownProgress = 0;
 	_addr = addr; _request = request;
@@ -734,7 +734,7 @@ __declspec( dllexport ) int __cdecl SendGetRequest( char * addr, char * request 
 	return 0;
 }
 
-__declspec( dllexport ) int __cdecl SaveNewDotaVersionFromUrl( char * addr, char * filepath )
+__declspec( dllexport ) int __stdcall SaveNewDotaVersionFromUrl( char * addr, char * filepath )
 {
 	DownProgress = 0;
 	_addr = addr; _filepath = filepath;
@@ -743,23 +743,23 @@ __declspec( dllexport ) int __cdecl SaveNewDotaVersionFromUrl( char * addr, char
 	return 0;
 }
 
-__declspec( dllexport ) int __cdecl GetDownloadStatus( int )
+__declspec( dllexport ) int __stdcall GetDownloadStatus( int )
 {
 	return DownStatus;
 }
 
-__declspec( dllexport ) int __cdecl GetDownloadProgress( int )
+__declspec( dllexport ) int __stdcall GetDownloadProgress( int )
 {
 	return DownProgress;
 }
 
-__declspec( dllexport ) const char * __cdecl GetLatestDownloadedString( int )
+__declspec( dllexport ) const char * __stdcall GetLatestDownloadedString( int )
 {
 	return LatestDownloadedString.c_str( );
 }
 
 
-__declspec( dllexport ) const char * __cdecl GetCurrentMapPath( int )
+__declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
 {
 	BuildFilePath( NULL );
 	return CurrentMapPath;
@@ -2368,8 +2368,6 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 	else if ( gameversion == 0x27a )
 	{
 		UninitializeHook( );
-
-
 		pOnChatMessage_offset = 0x355CF0;
 		IsNeedDrawUnit2offset = 0x66E710;
 		IsNeedDrawUnit2offsetRetAddress = 0x359D60;
