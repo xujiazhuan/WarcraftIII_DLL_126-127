@@ -865,6 +865,10 @@ int __fastcall SetGameAreaFOV_new( FloatStruct1 * a1, int _unused, float a3, flo
 	float v3 = v2 * a5;
 	float v4 = v3 * a4;
 
+	//0,0
+	//1,0
+	//2,0
+
 	a1->flt1 = ( ( a5 * ( 4.0f / 3.0f ) ) / ( ScreenX / ScreenY ) * CustomFovFix ) / v4; // Fix 4:3 to WindowX/WindowY
 	a1->flt2 = 0.0f;
 	a1->flt3 = 0.0f;
