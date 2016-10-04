@@ -145,11 +145,16 @@ BOOL IsNotBadUnit( int unitaddr )
 		else if ( *( BYTE* ) ( xaddraddr + 3 ) != *( BYTE* ) ( unitaddr + 3 ) )
 			return FALSE;
 
-		unsigned int unitflag = *( unsigned int* ) ( unitaddr + 0x5C );
+		unsigned int unitflag = *( unsigned int* ) ( unitaddr + 0x20 );
+		unsigned int unitflag2 = *( unsigned int* ) ( unitaddr + 0x5C );
 
-		BOOL returnvalue = unitflag > 1 && unitflag != 0x1001u /*&& ( unitflag & 0x40000000u ) == 0*/;
+		if ( unitflag & 1u )
+			return FALSE;
 
-		return returnvalue;
+		if ( !( unitflag & 2u ) )
+			return FALSE;
+
+		return TRUE;
 	}
 
 	return FALSE;
@@ -212,16 +217,13 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 		else
 			OID = *( int * ) ( GETOID + 8 );
 
-		UINT Player1_UnitOwner = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetUnitOwnerSlot( ( int ) UnitAddr ) );
-		UINT Player2_LocalPlayer = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-
 		// Сначала вызвать оригинальную функцию
 		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
 			( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 		}
 		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( !( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1_UnitOwner, Player2_LocalPlayer ) ) )
+		else if ( !IsEnemy( ( int ) UnitAddr ) )
 		{
 			if ( IsHero( ( int ) UnitAddr ) )
 				( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
@@ -250,16 +252,13 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 		else
 			OID = *( int * ) ( GETOID + 8 );
 
-		UINT Player1_UnitOwner = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetUnitOwnerSlot( ( int ) UnitAddr ) );
-		UINT Player2_LocalPlayer = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-
 		// Сначала вызвать оригинальную функцию
 		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
 			( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 		}
 		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( !( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1_UnitOwner, Player2_LocalPlayer ) ) )
+		else if ( !IsEnemy( ( int ) UnitAddr ) )
 		{
 			if ( IsHero( ( int ) UnitAddr ) )
 				( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
@@ -284,20 +283,18 @@ int IsNeedDrawUnit2offsetRetAddress = 0x2F9BB4;
 
 int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thiscall to fastcall*/ )
 {
-	int retaddr = ( int ) _ReturnAddress( ) - GameDll;
+	/*int retaddr = ( int ) _ReturnAddress( ) - GameDll;
 
 
 	if ( retaddr + 2000 < IsNeedDrawUnit2offsetRetAddress && retaddr > IsNeedDrawUnit2offsetRetAddress )
-	{
+	{*/
 
-		UINT Player1_UnitOwner = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetUnitOwnerSlot( ( int ) UnitAddr ) );
-		UINT Player2_LocalPlayer = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-		if ( !( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1_UnitOwner, Player2_LocalPlayer ) ) )
+		if ( !IsEnemy( UnitAddr ) )
 		{
 			if ( IsHero( ( int ) UnitAddr ) )
 				return 1;
 		}
-	}
+	//}
 
 	return IsNeedDrawUnit2ptr( UnitAddr );
 }
@@ -311,7 +308,7 @@ pStorm_279 Storm_279_org;
 pStorm_279 Storm_279_ptr;
 
 
-char MPQFilePath[ 2048 ];
+char MPQFilePath[ 4000 ];
 
 const char * DisabledIconSignature = "Disabled\\DIS";
 
@@ -392,36 +389,28 @@ char *repl_string( const char *str, const char *from, const char *to )
 	return ret;
 }
 
-
-// просто для тестов не обращать внимания.
 void ReplaceIconPathIfNeed( )
 {
-	/*char * tmpstr = 0;
+	char * tmpstr = 0;
 	if ( strstr( MPQFilePath, "Disabled\\DIS" ) )
 	{
-
-	tmpstr = repl_string( MPQFilePath, "Disabled\\DIS", "\\" );
-	//MessageBox( 0, MPQFilePath, tmpstr, 0 );
-	sprintf_s( MPQFilePath, 2048, "%s\0", tmpstr );
-	free( tmpstr );
-	}*/
-
-	/*if ( strstr( MPQFilePath, ".blp" ) )
-	{
-	sprintf_s( MPQFilePath, 2048, "%s\0", "Textures\\BloodElfBallz.blp" );
-	}*/
-	/*else if ( strstr( MPQFilePath, ".mdx" ) )
-	{
-	sprintf_s( MPQFilePath, 2048, "%s\0", "Units\\Undead\\Skeleton\\Skeleton.mdx" );
-	}*/
+		tmpstr = repl_string( MPQFilePath, "Disabled\\DIS", "\\" );
+		sprintf_s( MPQFilePath, 4000, "%s\0", tmpstr );
+		free( tmpstr );
+	}
 }
 
 // Функция открытия файла и получения его размера.
 int __stdcall Storm_279my( const char* a1, int a2, int a3, size_t Size, int a5 )
 {
-	sprintf_s( MPQFilePath, 2048, "%s\0", a1 );
-	//ReplaceIconPathIfNeed( );
-	return Storm_279_ptr( MPQFilePath, a2, a3, Size, a5 );
+	int retval = Storm_279_ptr( a1, a2, a3, Size, a5 );
+	if ( !retval )
+	{
+		sprintf_s( MPQFilePath, 4000, "%s\0", a1 );
+		ReplaceIconPathIfNeed( );
+		retval = Storm_279_ptr( MPQFilePath, a2, a3, Size, a5 );
+	}
+	return retval;
 }
 
 
@@ -932,18 +921,17 @@ void __fastcall SetGameAreaFOV_my( FloatStruct1 * a1, int a2, float a3, float a4
 int SetGameAreaFOVoffset = 0;
 
 
-
-
 void InitHook( )
 {
 
-		SetGameAreaFOV_org = ( SetGameAreaFOV ) ( SetGameAreaFOVoffset + GameDll );
 
-		MH_CreateHook( SetGameAreaFOV_org, &SetGameAreaFOV_my, reinterpret_cast< void** >( &SetGameAreaFOV_ptr ) );
+	SetGameAreaFOV_org = ( SetGameAreaFOV ) ( SetGameAreaFOVoffset + GameDll );
 
-		MH_EnableHook( SetGameAreaFOV_org );
+	MH_CreateHook( SetGameAreaFOV_org, &SetGameAreaFOV_my, reinterpret_cast< void** >( &SetGameAreaFOV_ptr ) );
 
-	
+	MH_EnableHook( SetGameAreaFOV_org );
+
+
 	// Установить адрес для IsDrawSkillPanel_org
 	IsDrawSkillPanel_org = ( IsDrawSkillPanel ) ( IsDrawSkillPanelOffset + GameDll );
 	// Создать хук (перехват) для IsDrawSkillPanel_org и сохранить его в памяти
@@ -967,13 +955,13 @@ void InitHook( )
 	// Активировать хук для IsNeedDrawUnit2org
 	MH_EnableHook( IsNeedDrawUnit2org );
 
-	/*	StormDll = GetModuleHandle( "Storm.dll" );
+	StormDll = GetModuleHandle( "Storm.dll" );
 
-		Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDll, ( LPCSTR ) 279 ) );
-		MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
-		MH_EnableHook( Storm_279_org );
+	Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDll, ( LPCSTR ) 279 ) );
+	MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
+	MH_EnableHook( Storm_279_org );
 
-		*/
+
 
 
 	pOnChatMessage_org = ( pOnChatMessage ) ( GameDll + pOnChatMessage_offset );
@@ -1003,11 +991,11 @@ void UninitializeHook( )
 		IsNeedDrawUnit2org = 0;
 	}
 
-	/*	if ( Storm_279_org )
-		{
+	if ( Storm_279_org )
+	{
 		MH_DisableHook( Storm_279_org );
 		Storm_279_org = 0;
-		}*/
+	}
 
 	if ( pOnChatMessage_org )
 	{
@@ -1283,11 +1271,164 @@ void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook127a( )
 	}
 }
 
-int __stdcall PrintMoveSpeed( int addr, float * movespeed )
-{
-	bufferaddr = buffer;
-	sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
 
+int pGameClass1 = 0;
+
+int ReadObjectAddrFromGlobalMat( unsigned int a1, unsigned int a2 )
+{
+	BOOL found1;
+	int result;
+	int AddrType1;
+	int v5;
+
+	if ( !( a1 >> 31 ) )
+	{
+		if ( a1 < *( unsigned int * ) ( *( int* ) pGameClass1 + 28 ) )
+		{
+			found1 = *( int * ) ( *( int * ) ( *( int* ) pGameClass1 + 12 ) + 8 * a1 ) == -2;
+			if ( !found1 )
+				return 0;
+			if ( a1 >> 31 )
+			{
+				AddrType1 = *( int * ) ( *( int * ) ( *( int* ) pGameClass1 + 44 ) + 8 * a1 + 4 );
+				result = *( unsigned int * ) ( AddrType1 + 24 ) != a2 ? 0 : AddrType1;
+			}
+			else
+			{
+				v5 = *( int * ) ( *( int * ) ( *( int* ) pGameClass1 + 12 ) + 8 * a1 + 4 );
+				result = *( unsigned int * ) ( v5 + 24 ) != a2 ? 0 : v5;
+			}
+			return result;
+		}
+		return 0;
+	}
+	if ( ( a1 & 0x7FFFFFFF ) >= *( unsigned int * ) ( *( int* ) pGameClass1 + 60 ) )
+		return 0;
+	found1 = *( int * ) ( *( int * ) ( *( int* ) pGameClass1 + 44 ) + 8 * a1 ) == -2;
+	if ( !found1 )
+		return 0;
+	if ( a1 >> 31 )
+	{
+		AddrType1 = *( int * ) ( *( int * ) ( *( int* ) pGameClass1 + 44 ) + 8 * a1 + 4 );
+		result = *( unsigned int * ) ( AddrType1 + 24 ) != a2 ? 0 : AddrType1;
+	}
+	else
+	{
+		v5 = *( int * ) ( *( int * ) ( *( int* ) pGameClass1 + 12 ) + 8 * a1 + 4 );
+		result = *( unsigned int * ) ( v5 + 24 ) != a2 ? 0 : v5;
+	}
+	return result;
+}
+
+
+int GetObjectDataAddr( int addr )
+{
+	int mataddr;
+	int result; // eax@3
+
+	mataddr = ReadObjectAddrFromGlobalMat( *( unsigned int * ) addr, *( unsigned int * ) ( addr + 4 ) );
+
+	if ( !mataddr || *( unsigned int * ) ( mataddr + 32 ) )
+		result = 0;
+	else
+		result = *( unsigned int * ) ( mataddr + 84 );
+	return result;
+}
+
+
+vector<int> ReturnAbils;
+
+int * FindUnitAbils( int unitaddr, int * count, int abilcode = 0, int abilbasecode = 0 )
+{
+	if ( ReturnAbils.size( ) != 0 )
+		ReturnAbils.clear( );
+
+	int pAddr1 = unitaddr + 0x1DC;
+	int pAddr2 = unitaddr + 0x1E0;
+
+	int IsBad = *( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 );
+
+	if ( IsBad != -1 )
+	{
+		int pData = GetObjectDataAddr( pAddr1 );
+
+		while ( pData != 0 )
+		{
+			int pData2 = *( int* ) ( pData + 0x54 );
+			if ( pData2 != 0 )
+			{
+				if ( abilcode != 0 && *( int* ) ( pData2 + 0x34 ) == abilcode )
+				{
+					if ( abilbasecode != 0 && *( int* ) ( pData2 + 0x30 ) == abilbasecode )
+					{
+						ReturnAbils.push_back( pData );
+					}
+					else if ( abilbasecode == 0 )
+					{
+						ReturnAbils.push_back( pData );
+					}
+				}
+				else if ( abilcode == 0 )
+				{
+					if ( abilbasecode != 0 && *( int* ) ( pData2 + 0x30 ) == abilbasecode )
+					{
+						ReturnAbils.push_back( pData );
+					}
+					else if ( abilbasecode == 0 )
+					{
+						ReturnAbils.push_back( pData );
+					}
+				}
+			}
+			pData = GetObjectDataAddr( pData + 0x24 );
+		}
+
+		*count = ReturnAbils.size( );
+		if ( *count != 0 )
+		{
+			return &ReturnAbils[ 0 ];
+		}
+	}
+
+	return 0;
+}
+
+
+float __stdcall GetMagicProtectionForHero( int AmovAddr )
+{
+	int addr = *( int* ) ( AmovAddr + 0x30 );
+
+	if ( addr != 0 && addr != -1 )
+	{
+		double indmg = 100.0;
+		int abilscount = 0;
+		int * abils = FindUnitAbils( addr, &abilscount, 0, 'AIdd' );
+		for ( int i = 0; i < abilscount; i++ )
+		{
+			int pData = *( int* ) ( abils[ i ] + 0x54 );
+			if ( pData != 0 )
+			{
+				float DmgProt = *( float* ) ( pData + 0x20 + 0x68 * ( *( int* ) ( abils[ i ] + 0x50 ) + 1 ) );
+				indmg = indmg * DmgProt;
+			}
+		}
+
+		return ( float ) ( 100.0 - indmg );
+	}
+
+	return 0.0f;
+}
+
+int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
+{
+
+	float MagicProtection = GetMagicProtectionForHero( AmovAddr );
+	bufferaddr = buffer;
+
+	if ( MagicProtection == 0.0f )
+		sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
+	else
+		sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
 	__asm
 	{
 		PUSH 0x200;
@@ -1306,6 +1447,7 @@ void __declspec( naked )  PrintMoveSpeedHook126a( )
 		mov saveeax, eax;
 		mov eax, esp;
 		add eax, 4;
+		push ebx;
 		push eax;
 		push esi;
 		call PrintMoveSpeed;
@@ -1321,6 +1463,7 @@ void __declspec( naked )  PrintMoveSpeedHook127a( )
 		mov saveeax, eax;
 		mov eax, esp;
 		add eax, 4;
+		push edi;
 		push eax;
 		push ecx;
 		call PrintMoveSpeed;
@@ -1404,7 +1547,7 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 		if ( IsNotBadItem( itemaddr ) )
 		{
 			int itemowner = *( int* ) ( itemaddr + 0x74 );
-			if ( itemowner > 11 || itemowner < 0 )
+			if ( itemowner > 15 || itemowner < 0 )
 			{
 				sprintf_s( itemstr1, 128, "%%s%%s%%s%%s%%s" );
 				sprintf_s( itemstr2, 128, "%%s%%s%%s" );
@@ -1419,7 +1562,6 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 	return itemaddr;
 }
 
-int pGameClass1 = 0;
 
 int GetUnitAddressFloatsRelated( int unitaddr, int step )
 {
@@ -1736,16 +1878,6 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 
 
 
-const char * DISPATH_OK = "%sDIS%s";
-const char * DISPATH_NO = "%s%s";
-
-const char * DISPATH_SEARCH = "Disabled\\DIS";
-
-
-BOOL __stdcall IsFoundDISPATH( const char * path )
-{
-	return strstr( path, DISPATH_SEARCH ) > 0;
-}
 
 
 #pragma region HookFunctions
@@ -1807,42 +1939,6 @@ int JumpBackAddr9( )
 	MessageBox( 0, 0, 0, 9 );
 	return 0;
 }
-
-
-void __declspec( naked ) HookIconHelper126a( )
-{
-	__asm
-	{
-		push esi;
-		call IsFoundDISPATH;
-		cmp eax, 0;
-		je NODISPATH;
-		push DISPATH_NO;
-		jmp JumpBackAddr8;
-		NODISPATH:
-		push DISPATH_OK;
-		jmp JumpBackAddr8;
-	}
-}
-
-
-
-void __declspec( naked ) HookIconHelper127a( )
-{
-	__asm
-	{
-		push esi;
-		call IsFoundDISPATH;
-		cmp eax, 0;
-		je NODISPATH;
-		push DISPATH_NO;
-		jmp JumpBackAddr8;
-		NODISPATH:
-		push DISPATH_OK;
-		jmp JumpBackAddr8;
-	}
-}
-
 
 
 void __declspec( naked ) HookHPBarColorHelper126a( )
@@ -1951,7 +2047,7 @@ void __declspec( naked ) HookPrint1_126a( )
 	{
 		push bufferaddr;
 		lea eax, [ esp + 0xD8 ];
-		push 0x300;
+		push 0x200;
 		jmp JumpBackAddr2;
 	}
 }
@@ -1964,7 +2060,7 @@ void __declspec( naked ) HookPrint2_126a( )
 	{
 		push bufferaddr;
 		lea edx, [ esp + 0xD0 ];
-		push 0x300;
+		push 0x200;
 		jmp JumpBackAddr3;
 	}
 }
@@ -2003,7 +2099,7 @@ void __declspec( naked ) HookPrint1_127a( )
 	{
 		push bufferaddr;
 		lea eax, [ ebp - 0x2F0 ];
-		push 0x300;
+		push 0x200;
 		jmp JumpBackAddr2;
 	}
 }
@@ -2016,7 +2112,7 @@ void __declspec( naked ) HookPrint2_127a( )
 	{
 		push bufferaddr;
 		lea eax, [ ebp - 0x2F0 ];
-		push 0x300;
+		push 0x200;
 		jmp JumpBackAddr3;
 	}
 }
@@ -2114,6 +2210,14 @@ struct offsetdata
 std::vector<offsetdata> offsetslist;
 __declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
 {
+	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
+	{
+		if ( offsetslist[ i ].offaddr == address )
+		{
+			return 0;
+		}
+	}
+
 	offsetdata temp;
 	temp.offaddr = address;
 	temp.offdata = data;
@@ -2327,13 +2431,6 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pSetCooldown ), ( BYTE* ) HookSetCD_1000s_126a, 5 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr7 ), ( BYTE* ) ( GameDll + 0x37edf ), 5 );
 
-
-		int pICONHELPER = GameDll + 0x32093B;
-		AddNewOffset( pICONHELPER, *( int* ) pICONHELPER );
-		AddNewOffset( pICONHELPER + 3, *( int* ) ( pICONHELPER + 3 ) );
-		PlantDetourJMP( ( BYTE* ) ( pICONHELPER ), ( BYTE* ) HookIconHelper126a, 5 );
-		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr8 ), ( BYTE* ) ( GameDll + 0x320940 ), 5 );
-
 		int pHPBARHELPER = GameDll + 0x364beb;
 		AddNewOffset( pHPBARHELPER, *( int* ) pHPBARHELPER );
 		AddNewOffset( pHPBARHELPER + 3, *( int* ) ( pHPBARHELPER + 3 ) );
@@ -2468,14 +2565,6 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset( pSetCooldown + 3, *( int* ) ( pSetCooldown + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pSetCooldown ), ( BYTE* ) HookSetCD_1000s_127a, 6 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr7 ), ( BYTE* ) ( GameDll + 0x3F7185 ), 5 );
-
-
-
-		int pICONHELPER = GameDll + 0x336f68;
-		AddNewOffset( pICONHELPER, *( int* ) pICONHELPER );
-		AddNewOffset( pICONHELPER + 3, *( int* ) ( pICONHELPER + 3 ) );
-		PlantDetourJMP( ( BYTE* ) ( pICONHELPER ), ( BYTE* ) HookIconHelper127a, 5 );
-		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr8 ), ( BYTE* ) ( GameDll + 0x336f6d ), 5 );
 
 
 		calladdr1 = GameDll + 0xBFA30;
