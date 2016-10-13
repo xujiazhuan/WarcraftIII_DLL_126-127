@@ -15,3 +15,6 @@
 
 	"Ally skill view"
 ![Ally skill viewer](/Images/AllySkillView.jpg?raw=true "You can see ally skills")
+
+	"Ally manabar view"
+![Ally manabar viewer](/Images/ManaBar.jpg?raw=true "You can see ally manabars")
