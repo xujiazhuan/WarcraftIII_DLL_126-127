@@ -1,8 +1,12 @@
+
+
+#include "Main.h"
+#include "ViewAllySkill.h"
+
+
 #include <winsock2.h>
 #pragma comment(lib,"ws2_32.lib")
 
-
-#include "Warcraft.h"
 
 #include <stdint.h>
 #include "Crc32Dynamic.h"
@@ -13,60 +17,133 @@ bool FileExist( const std::string& name )
 	return f.good( );
 }
 
+//  Game.dll
+int GameDll = 0;
+//	Storm.dll
+int StormDll = 0;
+HMODULE GameDllModule = 0;
+HMODULE StormDllModule = 0;
+int GameVersion = 0;
 
-#define IsKeyPressed(CODE) (GetAsyncKeyState(CODE) & 0x8000) > 0
+#pragma region All Offsets Here
+
+int GlobalPlayerOffset = 0;
+int IsPlayerEnemyOffset = 0;
+int GetPlayerByIDOffset = 0;
+
+
+int DrawSkillPanelOffset = 0;
+int DrawSkillPanelOverlayOffset = 0;
+
+int IsDrawSkillPanelOffset = 0;
+int IsDrawSkillPanelOverlayOffset = 0;
+int IsNeedDrawUnitOriginOffset = 0;
+int IsNeedDrawUnit2offset = 0;
+int IsNeedDrawUnit2offsetRetAddress = 0;
+
+BOOL * InGame = 0;
+int IsWindowActive = 0;
+int ChatFound = 0;
+
+int pW3XGlobalClass = 0;
+int pGameClass1 = 0;
+int pWar3Data1 = 0;
+
+int UnitVtable = 0;
+int ItemVtable = 0;
+
+int pPrintText2 = 0;
+
+
+int MapNameOffset1 = 0;
+int MapNameOffset2 = 0;
+
+int pOnChatMessage_offset;
+
+int _BarVTable = 0;
+
+int pAttackSpeedLimit = 0;
+
+int GetItemInSlotAddr = 0;
+
+int GetWindowXoffset = 0;
+int GetWindowYoffset = 0;
+
+#pragma endregion
+
 
 HMODULE GetCurrentModule;
 #pragma region Game.dll JassNatives
 // Проверка являются ли игроки врагами
 typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 ); /*Game+3C9580*/
-int IsPlayerEnemyOffset = 0x3C9580;
 
 // Получить хэндл игрока по его номеру слота
 typedef UINT( __cdecl * GetPlayerByID )( int PlayerId ); /*Game+3BBB30*/
-int GetPlayerByIDOffset = 0x3BBB30;
+
 
 #pragma endregion
 
 
-typedef signed int( __fastcall * IsDrawSkillPanel )( void *UnitAddr, int addr1 ); /*Game+34F280*/
-IsDrawSkillPanel IsDrawSkillPanel_org;
-IsDrawSkillPanel IsDrawSkillPanel_ptr;
-int IsDrawSkillPanelOffset = 0x34F280;
-
-typedef signed int( __thiscall * DrawSkillPanel )( void *UnitAddr, int OID ); /*Game+2774C0*/
-int DrawSkillPanelOffset = 0x2774C0;
 
 
-
-typedef signed int( __fastcall * IsDrawSkillPanelOverlay )( void *UnitAddr, int addr1 ); /*Game+34F2C0*/
-IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_org;
-IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_ptr;
-int IsDrawSkillPanelOverlayOffset = 0x34F2C0;
-
-typedef signed int( __thiscall * DrawSkillPanelOverlay )( void *UnitAddr, int OID ); /*Game+277570*/
-int DrawSkillPanelOverlayOffset = 0x277570;
-
-
-
-typedef int( __thiscall * IsNeedDrawUnitOrigin )( void *UnitAddr );/*Game+285DC0*/
-int IsNeedDrawUnitOriginOffset = 0x285DC0;
-
-// Адрес Game.dll
-int GameDll = 0;
-HMODULE GameDllModule = 0;
-int GameVersion = 0;
-
-int GlobalPlayerOffset = 0xAB65F4;
 
 void * GetGlobalPlayerData( )
 {
 	return ( void * ) *( int * ) ( GlobalPlayerOffset + GameDll );
 }
 
+int GetPlayerByNumber( int number )
+{
+	void * arg1 = GetGlobalPlayerData( );
+	int result = -1;
+	if ( arg1 != nullptr )
+	{
+		result = ( int ) arg1 + ( number * 4 ) + 0x58;
 
-int pW3XGlobalClass = 0;
-int pPrintText2 = 0;
+		if ( result )
+		{
+			result = *( int* ) result;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	return result;
+}
+
+// Получить слот игрока
+int GetLocalPlayerId( )
+{
+	void * gldata = GetGlobalPlayerData( );
+
+	int playerslotaddr = ( int ) gldata + 0x28;
+
+	return ( int ) *( short * ) ( playerslotaddr );
+}
+
+int GetSelectedUnitCountBigger( int slot )
+{
+	int plr = GetPlayerByNumber( slot );
+	if ( plr )
+	{
+		int PlayerData1 = *( int* ) ( plr + 0x34 );
+		if ( PlayerData1 )
+		{
+			int unitcount = *( int * ) ( PlayerData1 + 0x10 );
+			int unitcount2 = *( int * ) ( PlayerData1 + 0x1D4 );
+
+			if ( unitcount > unitcount2 )
+				return unitcount;
+			else
+				return unitcount2;
+		}
+	}
+
+	return NULL;
+}
+
+
 
 
 void DisplayText( char *szText, float fDuration )
@@ -85,19 +162,10 @@ void DisplayText( char *szText, float fDuration )
 }
 
 
-// Получить слот игрока
-int GetLocalPlayerId( )
-{
-	void * gldata = GetGlobalPlayerData( );
-
-	int playerslotaddr = ( int ) gldata + 0x28;
-
-	return ( int ) *( short * ) ( playerslotaddr );
-}
 
 
 // Получить владельца юнита
-UINT GetUnitOwnerSlot( int unitaddr )
+UINT __stdcall GetUnitOwnerSlot( int unitaddr )
 {
 	return *( UINT* ) ( unitaddr + 88 );
 }
@@ -109,9 +177,9 @@ p_GetPlayerName GetPlayerName = NULL;
 
 
 // Является ли юнит героем
-BOOL IsHero( int unitaddr )
+BOOL __stdcall IsHero( int UnitAddr )
 {
-	UINT ishero = *( UINT* ) ( unitaddr + 48 );
+	UINT ishero = *( UINT* ) ( UnitAddr + 48 );
 	ishero = ishero >> 24;
 	ishero = ishero - 64;
 	return ishero < 0x19;
@@ -119,18 +187,15 @@ BOOL IsHero( int unitaddr )
 
 
 // Является ли юнит зданием
-BOOL IsTower( int unitaddr )
+BOOL __stdcall IsTower( int unitaddr )
 {
 	UINT istower = *( UINT* ) ( unitaddr + 0x5C );
 	return ( istower & 0x10000 );
 }
 
 
-int UnitVtable = 0;
-
-
 // Проверяет юнит или не юнит
-BOOL IsNotBadUnit( int unitaddr )
+BOOL __stdcall IsNotBadUnit( int unitaddr )
 {
 	if ( unitaddr > 0 )
 	{
@@ -160,7 +225,7 @@ BOOL IsNotBadUnit( int unitaddr )
 	return FALSE;
 }
 
-int ItemVtable = 0;
+
 
 
 // Проверяет предмет или не предмет
@@ -203,104 +268,8 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 	return 1;
 }
 
-signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
-{
-	signed int result; // eax@2
-	int GETOID; // eax@3
-	int OID; // esi@4
-
-	if ( addr1 )
-	{
-		GETOID = *( int * ) ( addr1 + 444 );
-		if ( GETOID <= 0 )
-			OID = 852290;
-		else
-			OID = *( int * ) ( GETOID + 8 );
-
-		// Сначала вызвать оригинальную функцию
-		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
-		{
-			( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
-		}
-		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( !IsEnemy( ( int ) UnitAddr ) )
-		{
-			if ( IsHero( ( int ) UnitAddr ) )
-				( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
-		}
-		result = 1;
-	}
-	else
-	{
-		result = 0;
-	}
-	return result;
-}
 
 
-signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
-{
-	signed int result; // eax@2
-	int GETOID; // eax@3
-	int OID; // esi@4
-
-	if ( addr1 )
-	{
-		GETOID = *( int * ) ( addr1 + 444 );
-		if ( GETOID <= 0 )
-			OID = 852290;
-		else
-			OID = *( int * ) ( GETOID + 8 );
-
-		// Сначала вызвать оригинальную функцию
-		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
-		{
-			( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
-		}
-		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( !IsEnemy( ( int ) UnitAddr ) )
-		{
-			if ( IsHero( ( int ) UnitAddr ) )
-				( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
-		}
-		result = 1;
-	}
-	else
-	{
-		result = 0;
-	}
-	return result;
-}
-
-
-typedef int( __thiscall * IsNeedDrawUnit2 )( int UnitAddr ); /* Game + 28E1D0*/
-IsNeedDrawUnit2 IsNeedDrawUnit2org;
-IsNeedDrawUnit2 IsNeedDrawUnit2ptr;
-int IsNeedDrawUnit2offset = 0x28E1D0;
-
-int IsNeedDrawUnit2offsetRetAddress = 0x2F9BB4;
-
-
-int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thiscall to fastcall*/ )
-{
-	/*int retaddr = ( int ) _ReturnAddress( ) - GameDll;
-
-
-	if ( retaddr + 2000 < IsNeedDrawUnit2offsetRetAddress && retaddr > IsNeedDrawUnit2offsetRetAddress )
-	{*/
-
-		if ( !IsEnemy( UnitAddr ) )
-		{
-			if ( IsHero( ( int ) UnitAddr ) )
-				return 1;
-		}
-	//}
-
-	return IsNeedDrawUnit2ptr( UnitAddr );
-}
-
-
-HMODULE StormDll;
 
 
 typedef int( __stdcall * pStorm_279 )( const char*  a1, int a2, int a3, size_t Size, int a5 );
@@ -544,8 +513,6 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 char CurrentMapPath[ MAX_PATH ];
 char NewMapPath[ MAX_PATH ];
 
-int MapNameOffset1 = 0;
-int MapNameOffset2 = 0;
 
 void SaveCurrentMapPath( )
 {
@@ -638,7 +605,7 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 		return;
 	}
 
-	DWORD sizeBuffer;
+	DWORD sizeBuffer = 0;
 	DWORD length = sizeof( sizeBuffer );
 	HttpQueryInfo( hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &sizeBuffer, &length, NULL );
 
@@ -755,7 +722,7 @@ __declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
 }
 
 
-int pOnChatMessage_offset;
+
 vector<char *> mutedplayers;
 //sub_6F2FB480
 typedef void( __fastcall * pOnChatMessage )( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
@@ -839,8 +806,6 @@ SetGameAreaFOV SetGameAreaFOV_ptr;
 
 float CustomFovFix = 1.0f;
 
-int GetWindowXoffset = 0;
-int GetWindowYoffset = 0;
 
 int __fastcall SetGameAreaFOV_new( FloatStruct1 * a1, int _unused, float a3, float a4, float a5, float a6 )
 {
@@ -919,10 +884,154 @@ void __fastcall SetGameAreaFOV_my( FloatStruct1 * a1, int a2, float a3, float a4
 
 
 int SetGameAreaFOVoffset = 0;
+/*
+typedef int *( __fastcall * sub_6F379A30 )( void * a1, int unused, int a2, int a3 );
+sub_6F379A30 sub_6F379A30_org;
+sub_6F379A30 sub_6F379A30_ptr;
+int * __fastcall sub_6F379A30my ( void * a1, int unused, int a2, int a3 )
+{
+	char msg[ 100 ];
+	sprintf_s( msg, 100, "%X,%X,%X,%X->%X", ( int ) a1, unused, a2, a3, 0  );
+	MessageBox( 0, msg, msg, 0 );
+	int * retval = sub_6F379A30_ptr( a1, unused, a2, a3 );
+	sprintf_s( msg, 100, "%X,%X,%X,%X->%X", ( int ) a1, unused, a2, a3, ( int ) retval );
+	MessageBox( 0, msg, msg, 0 );
+	return retval;
+}
+*/
+
+
+HWND Warcraft3Window = 0;
+
+typedef LRESULT( __stdcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
+WarcraftRealWNDProc WarcraftRealWNDProc_org;
+WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
+
+BOOL SkippAllMessages = TRUE;
+
+LPARAM lpF1ScanKeyUP = 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 );
+LPARAM lpF1ScanKeyDOWN = 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 );
+
+
+BOOL NeedPressKeyForHWND = FALSE;
+
+WPARAM NeedPressMsg = 0;
+WPARAM NeedPresswParam;
+LPARAM NeedPresslParam;
+
+HANDLE hPressKeyWithDelay = NULL;
+
+BOOL PressKeyWithDelayEND = FALSE;
+
+DWORD WINAPI PressKeyWithDelay( LPVOID )
+{
+	while ( true && !PressKeyWithDelayEND )
+	{
+		Sleep( 40 );
+		if ( NeedPressKeyForHWND )
+		{
+			NeedPressKeyForHWND = FALSE;
+			Sleep( 160 );
+			if ( NeedPressMsg == 0 )
+			{
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, NeedPresswParam, NeedPresslParam );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, NeedPresswParam, 0xC0000000 | NeedPresslParam );
+			}
+			else
+				WarcraftRealWNDProc_ptr( Warcraft3Window, NeedPressMsg, NeedPresswParam, NeedPresslParam );
+		}
+
+	}
+	PressKeyWithDelayEND = FALSE;
+	return 0;
+}
+
+
+LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
+{
+	if ( SkippAllMessages )
+		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+
+
+
+
+	if ( *( BOOL* ) IsWindowActive && *( int* ) ChatFound == 0 )
+	{
+		if ( Msg == WM_KEYDOWN )
+		{
+			if ( wParam >= 0x41 && wParam <= 0x5A )
+			{
+				if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
+				{
+					SkippAllMessages = TRUE;
+					WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+					WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+
+					NeedPressMsg = 0;
+					NeedPresswParam = wParam;
+					NeedPresslParam = lParam;
+					NeedPressKeyForHWND = TRUE;
+
+
+
+					SkippAllMessages = FALSE;
+				}
+			}
+		}
+		if ( Msg == WM_RBUTTONDOWN )
+		{
+			if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
+			{
+				SkippAllMessages = TRUE;
+				WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+
+				/*	NeedPressMsg = Msg;
+					NeedPresswParam = wParam;
+					NeedPresslParam = lParam;
+					NeedPressKeyForHWND = TRUE;
+	*/
+
+
+				SkippAllMessages = FALSE;
+			}
+		}
+	}
+
+
+	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+}
+
+
+
+__declspec( dllexport ) int __stdcall ToggleForcedSubSelection( BOOL enable )
+{
+	SkippAllMessages = !enable;
+	return 0;
+}
+
+
 
 
 void InitHook( )
 {
+	/*sub_6F379A30_org = ( sub_6F379A30 ) ( 0x379A30 + GameDll );
+
+	MH_CreateHook( sub_6F379A30_org, &sub_6F379A30my, reinterpret_cast< void** >( &sub_6F379A30_ptr ) );
+
+	MH_EnableHook( sub_6F379A30_org );
+	*/
+
+	if ( Warcraft3Window )
+	{
+		WarcraftRealWNDProc_org = ( WarcraftRealWNDProc ) GetWindowLongA( Warcraft3Window, GWL_WNDPROC );
+		if ( WarcraftRealWNDProc_org )
+		{
+			hPressKeyWithDelay = CreateThread( 0, 0, PressKeyWithDelay, 0, 0, 0 );
+			MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
+			MH_EnableHook( WarcraftRealWNDProc_org );
+		}
+	}
 
 
 	SetGameAreaFOV_org = ( SetGameAreaFOV ) ( SetGameAreaFOVoffset + GameDll );
@@ -955,9 +1064,8 @@ void InitHook( )
 	// Активировать хук для IsNeedDrawUnit2org
 	MH_EnableHook( IsNeedDrawUnit2org );
 
-	StormDll = GetModuleHandle( "Storm.dll" );
 
-	Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDll, ( LPCSTR ) 279 ) );
+	Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDllModule, ( LPCSTR ) 279 ) );
 	MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
 	MH_EnableHook( Storm_279_org );
 
@@ -972,6 +1080,12 @@ void InitHook( )
 
 void UninitializeHook( )
 {
+	if ( WarcraftRealWNDProc_org )
+	{
+		PressKeyWithDelayEND = TRUE;
+		WaitForSingleObject( PressKeyWithDelay, 1000 );
+		MH_DisableHook( WarcraftRealWNDProc_org );
+	}
 	// Отключить хук для IsDrawSkillPanel_org
 	if ( IsDrawSkillPanel_org )
 	{
@@ -1039,14 +1153,13 @@ BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, const int length )
 }
 
 
-int pAttackSpeedLimit = 0;
+
 
 char * bufferaddr = 0;
 
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 pGetHeroInt GetHeroInt;
 
-int GetItemInSlotAddr = 0;
 
 
 int __declspec( naked ) __cdecl GetUnitItemInSlot126a( int unitaddr, int slotid )
@@ -1272,7 +1385,6 @@ void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook127a( )
 }
 
 
-int pGameClass1 = 0;
 
 int ReadObjectAddrFromGlobalMat( unsigned int a1, unsigned int a2 )
 {
@@ -1421,20 +1533,22 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 
 int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 {
-
-	float MagicProtection = GetMagicProtectionForHero( AmovAddr );
-	bufferaddr = buffer;
-
-	if ( MagicProtection == 0.0f )
-		sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
-	else
-		sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
-	__asm
+	if ( AmovAddr )
 	{
-		PUSH 0x200;
-		PUSH bufferaddr;
-		PUSH addr;
-		CALL Storm_503;
+		float MagicProtection = GetMagicProtectionForHero( AmovAddr );
+		bufferaddr = buffer;
+
+		if ( MagicProtection == 0.0f )
+			sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
+		else
+			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
+		__asm
+		{
+			PUSH 0x200;
+			PUSH bufferaddr;
+			PUSH addr;
+			CALL Storm_503;
+		}
 	}
 
 }
@@ -1604,7 +1718,7 @@ float GetUnitMPregen( int unitaddr )
 
 int __stdcall SaveStringForHP_MP( int unitaddr )
 {
-	if ( IsKeyPressed( VK_LMENU ) )
+	if ( *( BOOL* ) IsWindowActive &&  IsKeyPressed( VK_LMENU ) )
 	{
 		if ( unitaddr )
 		{
@@ -1668,8 +1782,8 @@ float hpbarscaleHeroY[ 20 ];
 float hpbarscaleUnitY[ 20 ];
 float hpbarscaleTowerY[ 20 ];
 
-void __cdecl SetHPBarColorForPlayer( int playerid, unsigned int herocolor,
-									 unsigned int unitcolor, unsigned int towercolor )
+__declspec( dllexport ) void __stdcall SetHPBarColorForPlayer( int playerid, unsigned int herocolor,
+															   unsigned int unitcolor, unsigned int towercolor )
 {
 	if ( playerid >= 0 && playerid < 20 )
 	{
@@ -1680,8 +1794,8 @@ void __cdecl SetHPBarColorForPlayer( int playerid, unsigned int herocolor,
 }
 
 
-void __cdecl SetHPBarXScaleForPlayer( int playerid, float heroscale,
-									  float unitscale, float towerscale )
+__declspec( dllexport ) void __stdcall SetHPBarXScaleForPlayer( int playerid, float heroscale,
+																float unitscale, float towerscale )
 {
 	if ( playerid >= 0 && playerid < 20 )
 	{
@@ -1691,8 +1805,8 @@ void __cdecl SetHPBarXScaleForPlayer( int playerid, float heroscale,
 	}
 }
 
-void __cdecl SetHPBarYScaleForPlayer( int playerid, float heroscale,
-									  float unitscale, float towerscale )
+__declspec( dllexport ) void __stdcall SetHPBarYScaleForPlayer( int playerid, float heroscale,
+																float unitscale, float towerscale )
 {
 	if ( playerid >= 0 && playerid < 20 )
 	{
@@ -1704,112 +1818,31 @@ void __cdecl SetHPBarYScaleForPlayer( int playerid, float heroscale,
 
 
 
-struct BarStruct
-{
-	int _BarClass;
-	int _unk1_flag;
-	int _unk2_flag;
-	int _unk3_pointer;
-	int _unk4;
-	int _unk5;
-	int _unk6;
-	int _unk7;
-	int _unk8;
-	int _unk9;
-	int _unk10;
-	int _unk11;
-	int _unk12;
-	int _unk13;
-	int _unk14;
-	int _unk15_pointer;
-	int _unk16_pointer;
-	float offset1;
-	float offset2;
-	float offset3;
-	float offset4;
-	int _unk17_flag;
-	float ScaleX;
-	float ScaleY;
-	float Scale;
-	int _unk18;
-	int _unk19_pointer;
-	int _unk20;
-	int _unk21;
-	int _unk22;
-	int _unk23;
-	int _unk24;
-	int _unk25;
-	int bartype;
-	int _unk26;
-	int _unk27;
-	int _unk28;
-	float offset5;
-	float offset6;
-	float offset7;
-	float offset8;
-	float offset9;
-	int _unk29;
-	int _unk30;
-	int _unk31;
-	int _unk32;
-	int _unk33;
-	int _unk34;
-	int _unk35;
-	int _unk36;
-	int _unk37;
-	int _unk38;
-	int _unk39;
-	int _unk40_pointer;
-	int _unk41_pointer;
-	int _unk42;
-	int _unk43_pointer;
-	int _unk44_pointer;
-	int _unk45;
-	int _unk46_pointer;
-	int _unk47_pointer;
-	int _unk48;
-	int _unk49_pointer;
-	int _unk50_pointer;
-	int _unk51;
-	int _unk52_pointer;
-	int _unk53_pointer;
-	int _unk54;
-	int _unk55_pointer;
-	int _unk56_pointer;
-	int _unk57;
-	int _unk58_pointer;
-	int _unk59_pointer;
-	int _unk60;
-	float offset10;
-	float offset11;
-	float offset12;
-	int _unk61_pointer;
-	int _unk62;
-	int _unk63;
-	int _unk64_pointer;
-	int _unk65_pointer;
-	int _unk66;
-	int _unk67;
-	float offset13;
-	int unitaddr;
-	int _unk68;
-	int _unk69;
-};
+
+
 
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct )
 {
-
-
+	int retval = 0;
+	__asm mov retval, eax;
 	if ( !BarStruct )
-		return 0;
-	if ( !coloraddr )
-		return 0;
+	{
+		return retval;
+	}
+
+	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int ) BarVtableClone )
+	{
+		return retval;
+	}
 
 	int unitaddr = BarStruct->unitaddr;
-	if ( !unitaddr )
-		return 0;
+	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )
+		return retval;
 
 	int unitslot = GetUnitOwnerSlot( unitaddr );
+
+	if ( unitslot > 15 )
+		return retval;
 
 	if ( IsHero( unitaddr ) )
 	{
@@ -1825,7 +1858,8 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				BarStruct->ScaleY = hpbarscaleHeroY[ unitslot ];
 			}
 		}
-
+		if ( !coloraddr )
+			return retval;
 		if ( hpbarcolorsHero[ unitslot ] != 0 )
 		{
 			*coloraddr = hpbarcolorsHero[ unitslot ];
@@ -1846,6 +1880,8 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				BarStruct->ScaleY = hpbarscaleTowerY[ unitslot ];
 			}
 		}
+		if ( !coloraddr )
+			return retval;
 		if ( hpbarcolorsTower[ unitslot ] != 0 )
 		{
 			*coloraddr = hpbarcolorsTower[ unitslot ];
@@ -1865,7 +1901,8 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				BarStruct->ScaleY = hpbarscaleUnitY[ unitslot ];
 			}
 		}
-
+		if ( !coloraddr )
+			return retval;
 		if ( hpbarcolorsUnit[ unitslot ] != 0 )
 		{
 			*coloraddr = hpbarcolorsUnit[ unitslot ];
@@ -1873,7 +1910,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 	}
 
 
-	return unitaddr;
+	return retval;
 }
 
 
@@ -1939,6 +1976,7 @@ int JumpBackAddr9( )
 	MessageBox( 0, 0, 0, 9 );
 	return 0;
 }
+
 
 
 void __declspec( naked ) HookHPBarColorHelper126a( )
@@ -2228,67 +2266,76 @@ __declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
 #pragma endregion
 
 
-int InGame = 0;
 
-
-void * threadid = 0;
+void * RefreshTimerID = 0;
+BOOL RefreshTimerEND = FALSE;
 unsigned long __stdcall RefreshTimer( void * )
 {
-	while ( TRUE )
+	while ( TRUE && !RefreshTimerEND )
 	{
 		// Ждать установки InGame адреса
-		while ( !InGame )
+		if ( InGame != 0 )
 		{
-			Sleep( 1000 );
+			// Ждать входа в игру
+			while ( !( *InGame ) )
+			{
+				Sleep( 200 );
+
+				if ( RefreshTimerEND )
+				{
+					RefreshTimerEND = FALSE;
+					return 0;
+				}
+
+			}
+
+			// Ждать пока игра не закончится
+			while ( *InGame )
+			{
+				Sleep( 200 );
+
+				if ( RefreshTimerEND )
+				{
+					RefreshTimerEND = FALSE;
+					return 0;
+				}
+
+			}
+
+			// Выгрузить перехватчики функций
+			UninitializeHook( );
+			// Отключить мут
+			UnMutePlayer( 0 );
+
+			// Убрать все патчи и вернуть стандартные данные
+			// Т.к функция вызывается после завершения игры проблем быть не должно.
+			for ( UINT i = 0; i < offsetslist.size( ); i++ )
+			{
+				offsetdata temp = offsetslist[ i ];
+				DWORD oldprotect, oldprotect2;
+				VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect );
+				*( int* ) temp.offaddr = temp.offdata;
+				VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
+			}
+			offsetslist.clear( );
+
+			// Отключить ManaBar 
+			ManaBarSwitch( GameDll, StormDllModule, FALSE );
 		}
 
-		// Ждать входа в игру
-		while ( !*( BOOL* ) InGame )
-		{
-			Sleep( 1000 );
-		}
-
-		// Ждать пока игра не закончится
-		while ( *( BOOL* ) InGame )
-		{
-			Sleep( 1000 );
-		}
-
-		// Выгрузить перехватчики функций
-		UninitializeHook( );
-		// Отключить мут
-		UnMutePlayer( 0 );
-
-		// Убрать все патчи и вернуть стандартные данные
-		// Т.к функция вызывается после завершения игры проблем быть не должно.
-		for ( UINT i = 0; i < offsetslist.size( ); i++ )
-		{
-			offsetdata temp = offsetslist[ i ];
-			DWORD oldprotect, oldprotect2;
-			VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect );
-			*( int* ) temp.offaddr = temp.offdata;
-			VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
-		}
-		offsetslist.clear( );
-
-		while ( !*( BOOL* ) InGame )
-		{
-			Sleep( 1000 );
-		}
-
-		Sleep( 1000 );
+		Sleep( 200 );
 	}
-
+	RefreshTimerEND = FALSE;
 	return 0;
 }
 
-void PatchOffset( void * addr, void * buffer, unsigned int size )
+void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 {
 	DWORD OldProtect1, OldProtect2;
 	VirtualProtect( addr, size, PAGE_EXECUTE_READWRITE, &OldProtect1 );
 	for ( unsigned int i = 0; i < size; i++ )
 	{
-		*( unsigned char* ) ( ( int ) addr + i ) = *( unsigned char* ) ( ( int ) buffer + i );
+		*( unsigned char* ) ( ( int ) addr + i ) = *( unsigned char* ) ( ( int ) lpbuffer + i );
 	}
 
 	VirtualProtect( addr, size, OldProtect1, &OldProtect2 );
@@ -2296,22 +2343,22 @@ void PatchOffset( void * addr, void * buffer, unsigned int size )
 
 
 
-
-
-
 __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 {
-	if ( threadid )
+	if ( RefreshTimerID )
 	{
-		TerminateThread( threadid, 0 );
-		threadid = 0;
+		RefreshTimerEND = TRUE;
+		WaitForSingleObject( RefreshTimerID, 1000 );
+		RefreshTimerID = 0;
 	}
 	//RemoveMapSizeLimit( );
 	GameVersion = gameversion;
 
 	while ( mutedplayers.size( ) )
 	{
-		free( mutedplayers.back( ) );
+		void * fMemAddr = mutedplayers.back( );
+		if ( fMemAddr )
+			free( fMemAddr );
 		mutedplayers.pop_back( );
 	}
 
@@ -2325,6 +2372,8 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 	memset( hpbarscaleUnitY, 0, sizeof( hpbarscaleUnitY ) );
 	memset( hpbarscaleTowerY, 0, sizeof( hpbarscaleTowerY ) );
 
+	Warcraft3Window = 0;
+	SkippAllMessages = TRUE;
 
 	SetWidescreenFixState( FALSE );
 	SetCustomFovFix( 1.0f );
@@ -2353,13 +2402,15 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		ItemVtable = GameDll + 0x9320B4;
 		GetHeroInt = ( pGetHeroInt ) ( GameDll + 0x277850 );
 		Storm_503 = ( pStorm_503 ) ( *( int* ) ( GameDll + 0x86D584 ) );
-		InGame = GameDll + 0xAB62A4;
+		InGame = ( BOOL * ) (GameDll + 0xAB62A4);
 		GetItemInSlotAddr = GameDll + 0x3C7730 + 0xA;
 		GetItemTypeId = ( pGetItemTypeId ) ( GameDll + 0x3C4C60 );
 		GetPlayerColor = ( pGetPlayerColor ) ( GameDll + 0x3C1240 );
 		Player = ( pPlayer ) ( GameDll + 0x3BBB30 );
 		GetPlayerName = ( p_GetPlayerName ) ( GameDll + 0x2F8F90 );
-
+		_BarVTable = GameDll + 0x93E604;
+		IsWindowActive = GameDll + 0xA9E7A4;
+		ChatFound = GameDll + 0xAD15F0;
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -2451,8 +2502,19 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		GetWindowYoffset = 0xADE918;
 
 
+
+		pWar3Data1 = GameDll + 0xACBD40;
+		pWar3Data1 = *( int* ) pWar3Data1;
+		if ( pWar3Data1 )
+		{
+			Warcraft3Window = *( HWND* ) ( pWar3Data1 + 0x574 );
+		}
+
+		ManaBarSwitch( GameDll, StormDllModule, TRUE );
+
+
 		InitHook( );
-		threadid = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
+		RefreshTimerID = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
 		/* crc32 simple protection */
@@ -2488,13 +2550,15 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		ItemVtable = GameDll + 0xA4A2EC;
 		GetHeroInt = ( pGetHeroInt ) ( GameDll + 0x6677F0 );
 		Storm_503 = ( pStorm_503 ) ( *( int* ) ( GameDll + 0x94e684 ) );
-		InGame = GameDll + 0xBE6530;
+		InGame = ( BOOL * ) (GameDll + 0xBE6530);
 		GetItemInSlotAddr = GameDll + 0x1FAF50 + 0xC;
 		GetItemTypeId = ( pGetItemTypeId ) ( GameDll + 0x1E2CC0 );
 		GetPlayerColor = ( pGetPlayerColor ) ( GameDll + 0x1E3CA0 );
 		Player = ( pPlayer ) ( GameDll + 0x1F1E70 );
 		GetPlayerName = ( p_GetPlayerName ) ( GameDll + 0x34F730 );
-
+		_BarVTable = GameDll + 0x98F52C;
+		IsWindowActive = GameDll + 0xB673EC;
+		ChatFound = GameDll + 0xBDAA14;
 
 		int pDrawAttackSpeed = GameDll + 0x38C6E0;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -2589,9 +2653,20 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 
 		SetGameAreaFOVoffset = 0xD31D0;
 
-		InitHook( );
-		threadid = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
+		RefreshTimerID = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
+
+
+		pWar3Data1 = GameDll + 0xBC5420;
+		pWar3Data1 = *( int* ) pWar3Data1;
+		if ( pWar3Data1 )
+		{
+			Warcraft3Window = *( HWND* ) ( pWar3Data1 + 0x574 );
+		}
+
+		ManaBarSwitch( GameDll, StormDllModule, TRUE );
+
+		InitHook( );
 
 		/* crc32 simple protection */
 		char outfilename[ MAX_PATH ];
@@ -2604,6 +2679,10 @@ __declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
 		delete pobCrc32Dynamic;
 		return dwCrc32;
 	}
+
+
+
+
 
 	return 0;
 }
@@ -2618,14 +2697,14 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 	{
 		GameDllModule = GetModuleHandle( "Game.dll" );
 		GameDll = ( int ) GameDllModule;
-		if ( !GameDll )
-		{
-			MessageBox( 0, "Need inject after Game.dll.", "ERROR! No game.dll found!", 0 );
-		}
+		StormDllModule = GetModuleHandle( "Storm.dll" );
+		StormDll = ( int ) StormDllModule;
+
+
 		// Инициализация "перехватчика" функций
 		MH_Initialize( );
 
-		///InitDotaHelper( 0x26a );
+		//	InitDotaHelper( 0x26a );
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
@@ -2634,11 +2713,17 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		// Выгрузить "перехватчик" функций
 		MH_Uninitialize( );
 
+		// Уничтожить поток
+		if ( RefreshTimerID )
+		{
+			RefreshTimerEND = TRUE;
+			WaitForSingleObject( RefreshTimerID, 1000 );
+		}
+		// Отключить мут
+		UnMutePlayer( 0 );
 
-		if ( threadid )
-			TerminateThread( threadid, 0 );
-
-		// Восстановить все изменения перед тем как выгрузить DLL
+		// Убрать все патчи и вернуть стандартные данные
+		// Т.к функция вызывается после завершения игры проблем быть не должно.
 		for ( UINT i = 0; i < offsetslist.size( ); i++ )
 		{
 			offsetdata temp = offsetslist[ i ];
@@ -2649,6 +2734,8 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		}
 		offsetslist.clear( );
 
+		// Отключить ManaBar 
+		ManaBarSwitch( GameDll, StormDllModule, FALSE );
 	}
 	return TRUE;
 }

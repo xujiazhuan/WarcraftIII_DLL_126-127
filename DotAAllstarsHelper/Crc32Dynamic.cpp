@@ -1,5 +1,7 @@
-#include "Warcraft.h"
 #include "Crc32Dynamic.h"
+
+
+
 
 
 //***********************************************
@@ -287,13 +289,17 @@ DWORD CCrc32Dynamic::FileCrc32Filemap(LPCTSTR szFilename, DWORD &dwCrc32) const
 
 						dwByteCount = dwViewSize;
 						pByte = (LPBYTE)dwBaseAddress;
-						while(dwByteCount-- > 0)
-						{
-							CalcCrc32(*pByte, dwCrc32);
-							pByte++;
-						}
 
-						UnmapViewOfFile((LPVOID)dwBaseAddress);
+						if ( dwBaseAddress > 0 )
+						{
+							while ( dwByteCount-- > 0 )
+							{
+								CalcCrc32( *pByte, dwCrc32 );
+								pByte++;
+							}
+
+							UnmapViewOfFile( ( LPVOID ) dwBaseAddress );
+						}
 						qwFileOffset += dwViewSize;
 						qwFileSize -= dwViewSize;
 					}

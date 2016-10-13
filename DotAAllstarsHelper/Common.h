@@ -1,7 +1,7 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include "Warcraft.h"
+#include "Main.h"
 
 #ifndef _QWORD_DEFINED
 #define _QWORD_DEFINED

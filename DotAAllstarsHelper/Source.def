@@ -15,3 +15,8 @@ SetHPBarXScaleForPlayer @111
 SetHPBarYScaleForPlayer @112
 SetWidescreenFixState @113
 SetCustomFovFix @114
+SetManabarEnabled @115
+SetMPBarXScaleForPlayer @116
+SetMPBarYScaleForPlayer @117
+SetMPBarYOffsetForPlayer @118
+ToggleForcedSubSelection @119

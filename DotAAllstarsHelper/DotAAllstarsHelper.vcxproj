@@ -8,9 +8,10 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4B94B582-A36C-43FF-AB86-D01CF1299739}</ProjectGuid>
-    <RootNamespace>ExampleViewAllySkillPanel</RootNamespace>
+    <RootNamespace>DotAAllstarsHelper</RootNamespace>
     <WindowsTargetPlatformVersion>
     </WindowsTargetPlatformVersion>
+    <ProjectName>DotAAllstarsHelper688</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -29,17 +30,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);.\..\MinHook</LibraryPath>
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);.\..\MinHook</IncludePath>
-    <CodeAnalysisRuleSet>D:\Microsoft\Team Tools\Static Analysis Tools\Rule Sets\NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <LibraryPath>.\..\MinHook;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath)</IncludePath>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
@@ -62,7 +64,9 @@
     <ClCompile Include="Crc32Dynamic.cpp">
       <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
     </ClCompile>
+    <ClCompile Include="ManaBar.cpp" />
     <ClCompile Include="SourceCode.cpp" />
+    <ClCompile Include="ViewAllySkill.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def" />
@@ -70,7 +74,8 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="Crc32Dynamic.h" />
-    <ClInclude Include="Warcraft.h" />
+    <ClInclude Include="Main.h" />
+    <ClInclude Include="ViewAllySkill.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
