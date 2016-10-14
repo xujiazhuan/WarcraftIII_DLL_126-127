@@ -1,8 +1,8 @@
-#include "Main.h"
+ï»¿#include "Main.h"
 
 
 pGetHeroInt GetHeroInt;
-// Ïîëó÷èòü âëàäåëüöà þíèòà
+// ÐŸÐ¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ Ð²Ð»Ð°Ð´ÐµÐ»ÑŒÑ†Ð° ÑŽÐ½Ð¸Ñ‚Ð°
 int __stdcall GetUnitOwnerSlot( int unitaddr )
 {
 	return *( int* ) ( unitaddr + 88 );
@@ -10,7 +10,7 @@ int __stdcall GetUnitOwnerSlot( int unitaddr )
 
 
 
-// ßâëÿåòñÿ ëè þíèò ãåðîåì
+// Ð¯Ð²Ð»ÑÐµÑ‚ÑÑ Ð»Ð¸ ÑŽÐ½Ð¸Ñ‚ Ð³ÐµÑ€Ð¾ÐµÐ¼
 BOOL __stdcall IsHero( int unitaddr )
 {
 	if ( unitaddr )
@@ -24,7 +24,7 @@ BOOL __stdcall IsHero( int unitaddr )
 }
 
 
-// ßâëÿåòñÿ ëè þíèò çäàíèåì
+// Ð¯Ð²Ð»ÑÐµÑ‚ÑÑ Ð»Ð¸ ÑŽÐ½Ð¸Ñ‚ Ð·Ð´Ð°Ð½Ð¸ÐµÐ¼
 BOOL __stdcall IsTower( int unitaddr )
 {
 	if ( unitaddr )
@@ -36,7 +36,7 @@ BOOL __stdcall IsTower( int unitaddr )
 }
 
 
-// Ïðîâåðÿåò þíèò èëè íå þíèò
+// ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ ÑŽÐ½Ð¸Ñ‚ Ð¸Ð»Ð¸ Ð½Ðµ ÑŽÐ½Ð¸Ñ‚
 BOOL __stdcall IsNotBadUnit( int unitaddr )
 {
 	if ( unitaddr > 0 )
@@ -73,7 +73,7 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 
 
 
-// Ïðîâåðÿåò ïðåäìåò èëè íå ïðåäìåò
+// ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚ Ð¸Ð»Ð¸ Ð½Ðµ Ð¿Ñ€ÐµÐ´Ð¼ÐµÑ‚
 BOOL __stdcall IsNotBadItem( int itemaddr )
 {
 	if ( itemaddr > 0 )

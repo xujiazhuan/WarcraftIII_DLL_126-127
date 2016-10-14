@@ -1,4 +1,4 @@
-
+п»ї
 #include "Main.h"
 #include "ViewAllySkill.h"
 
@@ -69,10 +69,10 @@ int GetWindowYoffset = 0;
 
 HMODULE GetCurrentModule;
 #pragma region Game.dll JassNatives
-// Проверка являются ли игроки врагами
+// РџСЂРѕРІРµСЂРєР° СЏРІР»СЏСЋС‚СЃСЏ Р»Рё РёРіСЂРѕРєРё РІСЂР°РіР°РјРё
 typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 ); /*Game+3C9580*/
 
-// Получить хэндл игрока по его номеру слота
+// РџРѕР»СѓС‡РёС‚СЊ С…СЌРЅРґР» РёРіСЂРѕРєР° РїРѕ РµРіРѕ РЅРѕРјРµСЂСѓ СЃР»РѕС‚Р°
 typedef UINT( __cdecl * GetPlayerByID )( int PlayerId ); /*Game+3BBB30*/
 
 
@@ -107,7 +107,7 @@ int GetPlayerByNumber( int number )
 	return result;
 }
 
-// Получить слот игрока
+// РџРѕР»СѓС‡РёС‚СЊ СЃР»РѕС‚ РёРіСЂРѕРєР°
 int GetLocalPlayerId( )
 {
 	void * gldata = GetGlobalPlayerData( );
@@ -160,12 +160,12 @@ void DisplayText( char *szText, float fDuration )
 
 
 
-// Получить имя игрока по его слоту
+// РџРѕР»СѓС‡РёС‚СЊ РёРјСЏ РёРіСЂРѕРєР° РїРѕ РµРіРѕ СЃР»РѕС‚Сѓ
 typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
 p_GetPlayerName GetPlayerName = NULL;
 
 
-// Проверяет враг юнит локальному игроку или нет
+// РџСЂРѕРІРµСЂСЏРµС‚ РІСЂР°Рі СЋРЅРёС‚ Р»РѕРєР°Р»СЊРЅРѕРјСѓ РёРіСЂРѕРєСѓ РёР»Рё РЅРµС‚
 BOOL __stdcall IsEnemy( int UnitAddr )
 {
 	if ( !UnitAddr )
@@ -194,7 +194,7 @@ char MPQFilePath[ 4000 ];
 
 const char * DisabledIconSignature = "Disabled\\DIS";
 
-// Функция замены текста в строке.
+// Р¤СѓРЅРєС†РёСЏ Р·Р°РјРµРЅС‹ С‚РµРєСЃС‚Р° РІ СЃС‚СЂРѕРєРµ.
 char *repl_string( const char *str, const char *from, const char *to )
 {
 	size_t cache_sz_inc = 16;
@@ -282,7 +282,7 @@ void ReplaceIconPathIfNeed( )
 	}
 }
 
-// Функция открытия файла и получения его размера.
+// Р¤СѓРЅРєС†РёСЏ РѕС‚РєСЂС‹С‚РёСЏ С„Р°Р№Р»Р° Рё РїРѕР»СѓС‡РµРЅРёСЏ РµРіРѕ СЂР°Р·РјРµСЂР°.
 int __stdcall Storm_279my( const char* a1, int a2, int a3, size_t Size, int a5 )
 {
 	int retval = Storm_279_ptr( a1, a2, a3, Size, a5 );
@@ -675,27 +675,27 @@ void InitHook( )
 	MH_EnableHook( SetGameAreaFOV_org );
 
 
-	// Установить адрес для IsDrawSkillPanel_org
+	// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р°РґСЂРµСЃ РґР»СЏ IsDrawSkillPanel_org
 	IsDrawSkillPanel_org = ( IsDrawSkillPanel ) ( IsDrawSkillPanelOffset + GameDll );
-	// Создать хук (перехват) для IsDrawSkillPanel_org и сохранить его в памяти
+	// РЎРѕР·РґР°С‚СЊ С…СѓРє (РїРµСЂРµС…РІР°С‚) РґР»СЏ IsDrawSkillPanel_org Рё СЃРѕС…СЂР°РЅРёС‚СЊ РµРіРѕ РІ РїР°РјСЏС‚Рё
 	MH_CreateHook( IsDrawSkillPanel_org, &IsDrawSkillPanel_my, reinterpret_cast< void** >( &IsDrawSkillPanel_ptr ) );
-	// Активировать хук для IsDrawSkillPanel_org
+	// РђРєС‚РёРІРёСЂРѕРІР°С‚СЊ С…СѓРє РґР»СЏ IsDrawSkillPanel_org
 	MH_EnableHook( IsDrawSkillPanel_org );
 
 
-	// Установить адрес для IsDrawSkillPanelOverlay_org
+	// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р°РґСЂРµСЃ РґР»СЏ IsDrawSkillPanelOverlay_org
 	IsDrawSkillPanelOverlay_org = ( IsDrawSkillPanelOverlay ) ( IsDrawSkillPanelOverlayOffset + GameDll );
-	// Создать хук (перехват) для IsDrawSkillPanel_org и сохранить его в памяти
+	// РЎРѕР·РґР°С‚СЊ С…СѓРє (РїРµСЂРµС…РІР°С‚) РґР»СЏ IsDrawSkillPanel_org Рё СЃРѕС…СЂР°РЅРёС‚СЊ РµРіРѕ РІ РїР°РјСЏС‚Рё
 	MH_CreateHook( IsDrawSkillPanelOverlay_org, &IsDrawSkillPanelOverlay_my, reinterpret_cast< void** >( &IsDrawSkillPanelOverlay_ptr ) );
-	// Активировать хук для IsDrawSkillPanel_org
+	// РђРєС‚РёРІРёСЂРѕРІР°С‚СЊ С…СѓРє РґР»СЏ IsDrawSkillPanel_org
 	MH_EnableHook( IsDrawSkillPanelOverlay_org );
 
 
-	// Установить адрес для IsNeedDrawUnit2org
+	// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р°РґСЂРµСЃ РґР»СЏ IsNeedDrawUnit2org
 	IsNeedDrawUnit2org = ( IsNeedDrawUnit2 ) ( IsNeedDrawUnit2offset + GameDll );
-	// Создать хук (перехват) для IsNeedDrawUnit2org и сохранить его в памяти
+	// РЎРѕР·РґР°С‚СЊ С…СѓРє (РїРµСЂРµС…РІР°С‚) РґР»СЏ IsNeedDrawUnit2org Рё СЃРѕС…СЂР°РЅРёС‚СЊ РµРіРѕ РІ РїР°РјСЏС‚Рё
 	MH_CreateHook( IsNeedDrawUnit2org, &IsNeedDrawUnit2_my, reinterpret_cast< void** >( &IsNeedDrawUnit2ptr ) );
-	// Активировать хук для IsNeedDrawUnit2org
+	// РђРєС‚РёРІРёСЂРѕРІР°С‚СЊ С…СѓРє РґР»СЏ IsNeedDrawUnit2org
 	MH_EnableHook( IsNeedDrawUnit2org );
 
 
@@ -720,19 +720,19 @@ void UninitializeHook( )
 		WaitForSingleObject( PressKeyWithDelay, 1000 );
 		MH_DisableHook( WarcraftRealWNDProc_org );
 	}
-	// Отключить хук для IsDrawSkillPanel_org
+	// РћС‚РєР»СЋС‡РёС‚СЊ С…СѓРє РґР»СЏ IsDrawSkillPanel_org
 	if ( IsDrawSkillPanel_org )
 	{
 		MH_DisableHook( IsDrawSkillPanel_org );
 		IsDrawSkillPanel_org = 0;
 	}
-	// Отключить хук для IsDrawSkillPanelOverlay_org
+	// РћС‚РєР»СЋС‡РёС‚СЊ С…СѓРє РґР»СЏ IsDrawSkillPanelOverlay_org
 	if ( IsDrawSkillPanelOverlay_org )
 	{
 		MH_DisableHook( IsDrawSkillPanelOverlay_org );
 		IsDrawSkillPanelOverlay_org = 0;
 	}
-	// Отключить хук для IsNeedDrawUnit2org
+	// РћС‚РєР»СЋС‡РёС‚СЊ С…СѓРє РґР»СЏ IsNeedDrawUnit2org
 	if ( IsNeedDrawUnit2org )
 	{
 		MH_DisableHook( IsNeedDrawUnit2org );
@@ -765,7 +765,7 @@ char buffer[ 4096 ];
 typedef int( __stdcall * pStorm_503 )( int a1, int a2, int a3 );
 pStorm_503 Storm_503;
 
-// Создает "прыжок" с одного участка кода в другой.
+// РЎРѕР·РґР°РµС‚ "РїСЂС‹Р¶РѕРє" СЃ РѕРґРЅРѕРіРѕ СѓС‡Р°СЃС‚РєР° РєРѕРґР° РІ РґСЂСѓРіРѕР№.
 BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 {
 
@@ -851,7 +851,7 @@ BOOL IsClassEqual( int ClassID1, int ClassID2 )
 	return ClassID1 == ClassID2;
 }
 
-// Функция принимает данные о скорости атаки (и о увеличении урона от способностей) и сохраняет в буфер который будет использоваться при отрисовке
+// Р¤СѓРЅРєС†РёСЏ РїСЂРёРЅРёРјР°РµС‚ РґР°РЅРЅС‹Рµ Рѕ СЃРєРѕСЂРѕСЃС‚Рё Р°С‚Р°РєРё (Рё Рѕ СѓРІРµР»РёС‡РµРЅРёРё СѓСЂРѕРЅР° РѕС‚ СЃРїРѕСЃРѕР±РЅРѕСЃС‚РµР№) Рё СЃРѕС…СЂР°РЅСЏРµС‚ РІ Р±СѓС„РµСЂ РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ РїСЂРё РѕС‚СЂРёСЃРѕРІРєРµ
 int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float * BAT, int * unitaddr )
 {
 	if ( unitaddr != 0 )
@@ -1875,10 +1875,10 @@ unsigned long __stdcall RefreshTimer( void * )
 {
 	while ( TRUE && !RefreshTimerEND )
 	{
-		// Ждать установки InGame адреса
+		// Р–РґР°С‚СЊ СѓСЃС‚Р°РЅРѕРІРєРё InGame Р°РґСЂРµСЃР°
 		if ( InGame != 0 )
 		{
-			// Ждать входа в игру
+			// Р–РґР°С‚СЊ РІС…РѕРґР° РІ РёРіСЂСѓ
 			while ( !( *InGame ) )
 			{
 				Sleep( 200 );
@@ -1891,7 +1891,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 			}
 
-			// Ждать пока игра не закончится
+			// Р–РґР°С‚СЊ РїРѕРєР° РёРіСЂР° РЅРµ Р·Р°РєРѕРЅС‡РёС‚СЃСЏ
 			while ( *InGame )
 			{
 				Sleep( 200 );
@@ -1904,13 +1904,13 @@ unsigned long __stdcall RefreshTimer( void * )
 
 			}
 
-			// Выгрузить перехватчики функций
+			// Р’С‹РіСЂСѓР·РёС‚СЊ РїРµСЂРµС…РІР°С‚С‡РёРєРё С„СѓРЅРєС†РёР№
 			UninitializeHook( );
-			// Отключить мут
+			// РћС‚РєР»СЋС‡РёС‚СЊ РјСѓС‚
 			UnMutePlayer( 0 );
 
-			// Убрать все патчи и вернуть стандартные данные
-			// Т.к функция вызывается после завершения игры проблем быть не должно.
+			// РЈР±СЂР°С‚СЊ РІСЃРµ РїР°С‚С‡Рё Рё РІРµСЂРЅСѓС‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ
+			// Рў.Рє С„СѓРЅРєС†РёСЏ РІС‹Р·С‹РІР°РµС‚СЃСЏ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ РёРіСЂС‹ РїСЂРѕР±Р»РµРј Р±С‹С‚СЊ РЅРµ РґРѕР»Р¶РЅРѕ.
 			for ( UINT i = 0; i < offsetslist.size( ); i++ )
 			{
 				offsetdata temp = offsetslist[ i ];
@@ -1921,7 +1921,7 @@ unsigned long __stdcall RefreshTimer( void * )
 			}
 			offsetslist.clear( );
 
-			// Отключить ManaBar 
+			// РћС‚РєР»СЋС‡РёС‚СЊ ManaBar 
 			ManaBarSwitch( GameDll, StormDllModule, FALSE );
 		}
 
@@ -2303,29 +2303,29 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		StormDll = ( int ) StormDllModule;
 
 
-		// Инициализация "перехватчика" функций
+		// РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ "РїРµСЂРµС…РІР°С‚С‡РёРєР°" С„СѓРЅРєС†РёР№
 		MH_Initialize( );
 
 		//	InitDotaHelper( 0x26a );
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
-		// Отключить все "перехватчики" функций
+		// РћС‚РєР»СЋС‡РёС‚СЊ РІСЃРµ "РїРµСЂРµС…РІР°С‚С‡РёРєРё" С„СѓРЅРєС†РёР№
 		UninitializeHook( );
-		// Выгрузить "перехватчик" функций
+		// Р’С‹РіСЂСѓР·РёС‚СЊ "РїРµСЂРµС…РІР°С‚С‡РёРє" С„СѓРЅРєС†РёР№
 		MH_Uninitialize( );
 
-		// Уничтожить поток
+		// РЈРЅРёС‡С‚РѕР¶РёС‚СЊ РїРѕС‚РѕРє
 		if ( RefreshTimerID )
 		{
 			RefreshTimerEND = TRUE;
 			WaitForSingleObject( RefreshTimerID, 1000 );
 		}
-		// Отключить мут
+		// РћС‚РєР»СЋС‡РёС‚СЊ РјСѓС‚
 		UnMutePlayer( 0 );
 
-		// Убрать все патчи и вернуть стандартные данные
-		// Т.к функция вызывается после завершения игры проблем быть не должно.
+		// РЈР±СЂР°С‚СЊ РІСЃРµ РїР°С‚С‡Рё Рё РІРµСЂРЅСѓС‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ
+		// Рў.Рє С„СѓРЅРєС†РёСЏ РІС‹Р·С‹РІР°РµС‚СЃСЏ РїРѕСЃР»Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ РёРіСЂС‹ РїСЂРѕР±Р»РµРј Р±С‹С‚СЊ РЅРµ РґРѕР»Р¶РЅРѕ.
 		for ( UINT i = 0; i < offsetslist.size( ); i++ )
 		{
 			offsetdata temp = offsetslist[ i ];
@@ -2336,7 +2336,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		}
 		offsetslist.clear( );
 
-		// Отключить ManaBar 
+		// РћС‚РєР»СЋС‡РёС‚СЊ ManaBar 
 		ManaBarSwitch( GameDll, StormDllModule, FALSE );
 	}
 	return TRUE;

@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #pragma warning(disable:4668)
 #pragma warning(disable:4820)
 #pragma warning(disable:4710)
@@ -13,7 +13,7 @@
 
 #include <Windows.h>
 #pragma region Includes
-// Все WINAPI и прочие функции
+// Р’СЃРµ WINAPI Рё РїСЂРѕС‡РёРµ С„СѓРЅРєС†РёРё
 
 #include <intrin.h>
 #include <vector>
@@ -21,7 +21,7 @@
 #include <fstream> 
 #include <iostream>
 #pragma intrinsic(_ReturnAddress)
-// Перехват функций
+// РџРµСЂРµС…РІР°С‚ С„СѓРЅРєС†РёР№
 #include <MinHook.h>
 #include <string>
 using namespace std;

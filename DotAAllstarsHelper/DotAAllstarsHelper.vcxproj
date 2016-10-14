@@ -79,7 +79,11 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Crc32Dynamic.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="ViewAllySkill.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DotAAllstarsHelper688.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

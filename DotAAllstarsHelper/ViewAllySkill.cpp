@@ -1,4 +1,4 @@
-#include "Main.h"
+п»ї#include "Main.h"
 #include "ViewAllySkill.h"
 
 
@@ -29,12 +29,12 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 			OID = 852290;
 		else
 			OID = *( int * ) ( GETOID + 8 );
-		// Сначала вызвать оригинальную функцию
+		// РЎРЅР°С‡Р°Р»Р° РІС‹Р·РІР°С‚СЊ РѕСЂРёРіРёРЅР°Р»СЊРЅСѓСЋ С„СѓРЅРєС†РёСЋ
 		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
 			( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 		}
-		// Затем дополнительную которая отрисует скилы всем союзным героям.
+		// Р—Р°С‚РµРј РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РєРѕС‚РѕСЂР°СЏ РѕС‚СЂРёСЃСѓРµС‚ СЃРєРёР»С‹ РІСЃРµРј СЃРѕСЋР·РЅС‹Рј РіРµСЂРѕСЏРј.
 		else if ( !IsEnemy( ( int ) UnitAddr ) )
 		{
 			if ( IsHero( ( int ) UnitAddr ) )
@@ -62,12 +62,12 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 			OID = 852290;
 		else
 			OID = *( int * ) ( GETOID + 8 );
-		// Сначала вызвать оригинальную функцию
+		// РЎРЅР°С‡Р°Р»Р° РІС‹Р·РІР°С‚СЊ РѕСЂРёРіРёРЅР°Р»СЊРЅСѓСЋ С„СѓРЅРєС†РёСЋ
 		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
 			( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 		}
-		// Затем дополнительную которая отрисует скилы всем союзным героям.
+		// Р—Р°С‚РµРј РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅСѓСЋ РєРѕС‚РѕСЂР°СЏ РѕС‚СЂРёСЃСѓРµС‚ СЃРєРёР»С‹ РІСЃРµРј СЃРѕСЋР·РЅС‹Рј РіРµСЂРѕСЏРј.
 		else if ( !IsEnemy( ( int ) UnitAddr ) )
 		{
 			if ( IsHero( ( int ) UnitAddr ) )
