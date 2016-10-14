@@ -3,9 +3,9 @@
 
 pGetHeroInt GetHeroInt;
 // Получить владельца юнита
-UINT __stdcall GetUnitOwnerSlot( int unitaddr )
+int __stdcall GetUnitOwnerSlot( int unitaddr )
 {
-	return *( UINT* ) ( unitaddr + 88 );
+	return *( int* ) ( unitaddr + 88 );
 }
 
 
@@ -30,7 +30,7 @@ BOOL __stdcall IsTower( int unitaddr )
 	if ( unitaddr )
 	{
 		UINT istower = *( UINT* ) ( unitaddr + 0x5C );
-		return ( istower & 0x10000 );
+		return ( istower & 0x10000 ) > 0;
 	}
 	return FALSE;
 }
@@ -59,6 +59,9 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 			return FALSE;
 
 		if ( !( unitflag & 2u ) )
+			return FALSE;
+
+		if ( unitflag2 & 0x100u )
 			return FALSE;
 
 		return TRUE;

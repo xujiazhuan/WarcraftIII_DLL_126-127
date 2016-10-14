@@ -13,7 +13,7 @@ char szHeaders[ ] = "Content-Type: application/x-www-form-urlencoded\r\nCache-Co
 
 
 int DownStatus = 0;
-int DownProgress = 0;
+unsigned int DownProgress = 0;
 std::string LatestDownloadedString;
 
 std::string DownloadBytesGet( char* szUrl, char * getRequest )
@@ -38,7 +38,7 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 
 
 	struct hostent *host;
-	host = gethostbyname( szUrl );
+	host =  gethostbyname( szUrl );
 
 	if ( !host )
 	{
@@ -67,7 +67,7 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 
 	DownProgress = 20;
 
-	if ( send( Socket, sendbuffer, strlen( sendbuffer ), 0 ) == SOCKET_ERROR )
+	if ( send( Socket, sendbuffer, (int) strlen( sendbuffer ), 0 ) == SOCKET_ERROR )
 	{
 		closesocket( Socket );
 		WSACleanup( );
@@ -82,9 +82,8 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 	int nDataLength;
 	while ( ( nDataLength = recv( Socket, buffer, 10000, 0 ) ) > 0 )
 	{
-		int i = 0;
 		DownProgress = 60;
-		returnvalue.append( buffer, nDataLength );
+		returnvalue.append( buffer,(size_t) nDataLength );
 	}
 
 	DownProgress = 80;
@@ -182,7 +181,7 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 		return;
 	}
 
-	DWORD sizeBuffer = 0;
+	unsigned int sizeBuffer = 0;
 	DWORD length = sizeof( sizeBuffer );
 	HttpQueryInfo( hFile, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &sizeBuffer, &length, NULL );
 
@@ -281,7 +280,7 @@ __declspec( dllexport ) int __stdcall GetDownloadStatus( int )
 	return DownStatus;
 }
 
-__declspec( dllexport ) int __stdcall GetDownloadProgress( int )
+__declspec( dllexport ) unsigned int __stdcall GetDownloadProgress( int )
 {
 	return DownProgress;
 }

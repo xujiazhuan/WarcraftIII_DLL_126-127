@@ -3,7 +3,6 @@
 
 
 
-
 //***********************************************
 CCrc32Dynamic::CCrc32Dynamic() : m_pdwCrc32Table(NULL)
 {
@@ -21,7 +20,7 @@ void CCrc32Dynamic::Init(void)
 	// This is the official polynomial used by CRC32 in PKZip.
 	// Often times the polynomial shown reversed as 0x04C11DB7.
 	DWORD dwPolynomial = 0xEDB88320;
-	int i, j;
+	DWORD i, j;
 
 	Free();
 	m_pdwCrc32Table = new DWORD[256];
@@ -139,7 +138,7 @@ DWORD CCrc32Dynamic::FileCrc32Streams(LPCTSTR szFilename, DWORD &dwCrc32) const
 		// Open the file
 		file.open(szFilename, ios::in | ios::binary);
 		if(!file.is_open())
-			dwErrorCode = file.fail();
+			dwErrorCode = (DWORD)file.fail();
 		else
 		{
 			char buffer[MAX_BUFFER_SIZE];
@@ -148,7 +147,7 @@ DWORD CCrc32Dynamic::FileCrc32Streams(LPCTSTR szFilename, DWORD &dwCrc32) const
 			while(nCount)
 			{
 				for(nLoop = 0; nLoop < nCount; nLoop++)
-					CalcCrc32(buffer[nLoop], dwCrc32);
+					CalcCrc32((BYTE)buffer[nLoop], dwCrc32);
 				nCount = ( int ) file.read( buffer, sizeof( buffer ) ).gcount( );
 			}
 

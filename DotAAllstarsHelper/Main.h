@@ -1,4 +1,8 @@
 #pragma once
+#pragma warning(disable:4668)
+#pragma warning(disable:4820)
+#pragma warning(disable:4710)
+#pragma warning(disable:4100)
 
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
@@ -126,10 +130,9 @@ BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int UnitAddr );
 BOOL __stdcall IsTower( int unitaddr );
-UINT __stdcall GetUnitOwnerSlot( int unitaddr );
 
 #pragma region UnitAndItem.cpp
-UINT __stdcall GetUnitOwnerSlot( int unitaddr );
+int __stdcall GetUnitOwnerSlot( int unitaddr );
 BOOL __stdcall IsHero( int unitaddr );
 BOOL __stdcall IsTower( int unitaddr );
 BOOL __stdcall IsNotBadUnit( int unitaddr );

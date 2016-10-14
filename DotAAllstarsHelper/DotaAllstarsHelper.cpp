@@ -1,5 +1,4 @@
 
-
 #include "Main.h"
 #include "ViewAllySkill.h"
 
@@ -148,7 +147,7 @@ void DisplayText( char *szText, float fDuration )
 	__asm
 	{
 		PUSH 0xFFFFFFFF;
-		PUSH fDuration;
+		PUSH dwDuration;
 		PUSH szText;
 		MOV		ECX, [ pW3XGlobalClass ];
 		MOV		ECX, [ ECX ];
@@ -209,7 +208,7 @@ char *repl_string( const char *str, const char *from, const char *to )
 	size_t i, count = 0;
 	ptrdiff_t *pos_cache = NULL;
 	size_t cache_sz = 0;
-	size_t cpylen, orglen, retlen, tolen, fromlen = strlen( from );
+	size_t cpylen, orglen, retlen, tolen = 0, fromlen = strlen( from );
 
 	while ( ( pstr2 = strstr( pstr, from ) ) != NULL )
 	{
@@ -253,7 +252,7 @@ char *repl_string( const char *str, const char *from, const char *to )
 	else
 	{
 		pret = ret;
-		memcpy( pret, str, pos_cache[ 0 ] );
+		memcpy( pret, str, (size_t)pos_cache[ 0 ] );
 		pret += pos_cache[ 0 ];
 		for ( i = 0; i < count; i++ )
 		{
@@ -404,7 +403,7 @@ __declspec( dllexport ) int __stdcall UnMutePlayer( const char * str )
 		{
 			free( mutedplayers[ i ] );
 			mutedplayers[ i ] = NULL;
-			mutedplayers.erase( mutedplayers.begin( ) + i );
+			mutedplayers.erase(  mutedplayers.begin( ) + (int)i );
 			return 1;
 		}
 	}
@@ -544,8 +543,8 @@ WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 
 BOOL SkippAllMessages = TRUE;
 
-LPARAM lpF1ScanKeyUP = 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 );
-LPARAM lpF1ScanKeyDOWN = 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 );
+LPARAM lpF1ScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ));
+LPARAM lpF1ScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ));
 
 
 BOOL NeedPressKeyForHWND = FALSE;
@@ -570,7 +569,7 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 			if ( NeedPressMsg == 0 )
 			{
 				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, NeedPresswParam, NeedPresslParam );
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, NeedPresswParam, 0xC0000000 | NeedPresslParam );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, NeedPresswParam, ( LPARAM ) (0xC0000000 | NeedPresslParam) );
 			}
 			else
 				WarcraftRealWNDProc_ptr( Warcraft3Window, NeedPressMsg, NeedPresswParam, NeedPresslParam );
@@ -700,7 +699,7 @@ void InitHook( )
 	MH_EnableHook( IsNeedDrawUnit2org );
 
 
-	Storm_279_org = ( pStorm_279 ) ( GetProcAddress( StormDllModule, ( LPCSTR ) 279 ) );
+	Storm_279_org = ( pStorm_279 ) ( (int) GetProcAddress( StormDllModule, ( LPCSTR ) 279 ) );
 	MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
 	MH_EnableHook( Storm_279_org );
 
@@ -767,7 +766,7 @@ typedef int( __stdcall * pStorm_503 )( int a1, int a2, int a3 );
 pStorm_503 Storm_503;
 
 // Создает "прыжок" с одного участка кода в другой.
-BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, const int length )
+BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 {
 
 	DWORD oldProtection;
@@ -779,7 +778,7 @@ BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, const int length )
 	source[ 0 ] = 0xE9;
 	*( DWORD* ) ( source + 1 ) = ( DWORD ) ( destination - source ) - 5;
 
-	for ( int i = 5; i < length; i++ )
+	for ( unsigned int i = 5; i < length; i++ )
 		source[ i ] = 0x90;
 
 	VirtualProtect( source, length, oldProtection, &oldProtection );
@@ -1042,17 +1041,17 @@ int GetObjectDataAddr( int addr )
 
 	mataddr = ReadObjectAddrFromGlobalMat( *( unsigned int * ) addr, *( unsigned int * ) ( addr + 4 ) );
 
-	if ( !mataddr || *( unsigned int * ) ( mataddr + 32 ) )
+	if ( !mataddr || *(  int * ) ( mataddr + 32 ) )
 		result = 0;
 	else
-		result = *( unsigned int * ) ( mataddr + 84 );
+		result = *(  int * ) ( mataddr + 84 );
 	return result;
 }
 
 
 vector<int> ReturnAbils;
 
-int * FindUnitAbils( int unitaddr, int * count, int abilcode = 0, int abilbasecode = 0 )
+int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int abilbasecode = 0 )
 {
 	if ( ReturnAbils.size( ) != 0 )
 		ReturnAbils.clear( );
@@ -1060,9 +1059,7 @@ int * FindUnitAbils( int unitaddr, int * count, int abilcode = 0, int abilbaseco
 	int pAddr1 = unitaddr + 0x1DC;
 	int pAddr2 = unitaddr + 0x1E0;
 
-	int IsBad = *( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 );
-
-	if ( IsBad != -1 )
+	if ( (int)(*( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 )) != -1 )
 	{
 		int pData = GetObjectDataAddr( pAddr1 );
 
@@ -1115,9 +1112,9 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 	if ( addr != 0 && addr != -1 )
 	{
 		double indmg = 100.0;
-		int abilscount = 0;
+		unsigned int abilscount = 0;
 		int * abils = FindUnitAbils( addr, &abilscount, 0, 'AIdd' );
-		for ( int i = 0; i < abilscount; i++ )
+		for ( unsigned int i = 0; i < abilscount; i++ )
 		{
 			int pData = *( int* ) ( abils[ i ] + 0x54 );
 			if ( pData != 0 )
@@ -1135,6 +1132,8 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 
 int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 {
+	int retval = 0;
+	__asm mov retval, eax;
 	if ( AmovAddr )
 	{
 		float MagicProtection = GetMagicProtectionForHero( AmovAddr );
@@ -1150,9 +1149,10 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 			PUSH bufferaddr;
 			PUSH addr;
 			CALL Storm_503;
+			mov retval, eax;
 		}
 	}
-
+	return retval;
 }
 
 
@@ -1208,23 +1208,23 @@ pPlayer Player;
 
 
 
-int         PLAYER_COLOR_RED = 0;
-int         PLAYER_COLOR_BLUE = 1;
-int         PLAYER_COLOR_CYAN = 2;
-int         PLAYER_COLOR_PURPLE = 3;
-int         PLAYER_COLOR_YELLOW = 4;
-int         PLAYER_COLOR_ORANGE = 5;
-int         PLAYER_COLOR_GREEN = 6;
-int         PLAYER_COLOR_PINK = 7;
-int         PLAYER_COLOR_LIGHT_GRAY = 8;
-int         PLAYER_COLOR_LIGHT_BLUE = 9;
-int         PLAYER_COLOR_AQUA = 10;
-int         PLAYER_COLOR_BROWN = 11;
+unsigned int         PLAYER_COLOR_RED = 0;
+unsigned int         PLAYER_COLOR_BLUE = 1;
+unsigned int         PLAYER_COLOR_CYAN = 2;
+unsigned int         PLAYER_COLOR_PURPLE = 3;
+unsigned int         PLAYER_COLOR_YELLOW = 4;
+unsigned int         PLAYER_COLOR_ORANGE = 5;
+unsigned int         PLAYER_COLOR_GREEN = 6;
+unsigned int         PLAYER_COLOR_PINK = 7;
+unsigned int         PLAYER_COLOR_LIGHT_GRAY = 8;
+unsigned int         PLAYER_COLOR_LIGHT_BLUE = 9;
+unsigned int         PLAYER_COLOR_AQUA = 10;
+unsigned int         PLAYER_COLOR_BROWN = 11;
 
 
 const char * GetPlayerColorString( int player )
 {
-	int c = GetPlayerColor( player );
+	unsigned int c = GetPlayerColor( player );
 	if ( c == PLAYER_COLOR_RED )
 		return "|cffFF0202";
 	else if ( c == PLAYER_COLOR_BLUE )
@@ -1945,7 +1945,7 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 
 
 
-__declspec( dllexport ) int __stdcall InitDotaHelper( int gameversion )
+__declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 {
 	if ( RefreshTimerID )
 	{

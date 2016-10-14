@@ -503,7 +503,7 @@ void Hook( )
 			p += 5;
 			int X = ( int ) ReallocateMemoryForMPBar - ( int ) p;
 			p -= 5;
-			*reinterpret_cast< DWORD* >( p + 1 ) = X;
+			*reinterpret_cast< int* >( p + 1 ) = X;
 		}
 		{
 			unsigned char* p = reinterpret_cast< unsigned char* >( HPMP_DRAW );
@@ -511,7 +511,7 @@ void Hook( )
 			p += 5;
 			int X = ( int ) RedrawMPBar - ( int ) p;
 			p -= 5;
-			*reinterpret_cast< DWORD* >( p + 1 ) = X;
+			*reinterpret_cast< int* >( p + 1 ) = X;
 		}
 
 		VirtualProtect( STORM_401_malloc, 5, old1, &old3 );
