@@ -1,6 +1,4 @@
-#ifndef _CRC32DYNAMIC_H_
-#define _CRC32DYNAMIC_H_
-
+#pragma once
 #include "Common.h"
 
 class CCrc32Dynamic
@@ -25,4 +23,3 @@ protected:
 	DWORD *m_pdwCrc32Table;
 };
 
-#endif

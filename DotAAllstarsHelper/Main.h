@@ -1,5 +1,4 @@
-#ifndef MAININCLUDES
-#define MAININCLUDES
+#pragma once
 
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
@@ -12,7 +11,6 @@
 #pragma region Includes
 // Все WINAPI и прочие функции
 
-#include <WinInet.h>
 #include <intrin.h>
 #include <vector>
 #include <tchar.h>
@@ -24,7 +22,7 @@
 #include <string>
 using namespace std;
 #pragma comment(lib,"libMinHook.x86.lib")
-#pragma comment(lib,"Wininet.lib")
+
 #pragma endregion
 #define IsKeyPressed(CODE) (GetAsyncKeyState(CODE) & 0x8000) > 0
 
@@ -122,8 +120,7 @@ struct BarStruct
 	int _unk69;
 } ;
 
-
-#endif
+bool FileExist( const char * name );
 
 BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
@@ -131,26 +128,22 @@ BOOL __stdcall IsHero( int UnitAddr );
 BOOL __stdcall IsTower( int unitaddr );
 UINT __stdcall GetUnitOwnerSlot( int unitaddr );
 
-extern BYTE BarVtableClone[];
+#pragma region UnitAndItem.cpp
+UINT __stdcall GetUnitOwnerSlot( int unitaddr );
+BOOL __stdcall IsHero( int unitaddr );
+BOOL __stdcall IsTower( int unitaddr );
+BOOL __stdcall IsNotBadUnit( int unitaddr );
+BOOL __stdcall IsNotBadItem( int itemaddr );
+typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
+extern pGetHeroInt GetHeroInt;
+#pragma endregion
 
+#pragma region ManaBar.cpp
+extern BYTE BarVtableClone[];
 void ManaBarSwitch( int GameDLL, HMODULE StormDLL, BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#pragma endregion
 
 
 

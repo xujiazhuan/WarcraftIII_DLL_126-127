@@ -1,6 +1,4 @@
-#ifndef _COMMON_H_
-#define _COMMON_H_
-
+#pragma once
 #include "Main.h"
 
 #ifndef _QWORD_DEFINED
@@ -22,4 +20,3 @@ typedef __int64 QWORD, *LPQWORD;
 // Map a "view" size of 10MB (used in the filemap function)
 #define MAX_VIEW_SIZE	10485760
 
-#endif
