@@ -22,9 +22,6 @@ int GameVersion = 0;
 
 #pragma region All Offsets Here
 
-int GlobalPlayerOffset = 0;
-int IsPlayerEnemyOffset = 0;
-int GetPlayerByIDOffset = 0;
 
 
 int DrawSkillPanelOffset = 0;
@@ -67,55 +64,12 @@ int GetWindowYoffset = 0;
 #pragma endregion
 
 
+
+
+
 HMODULE GetCurrentModule;
-#pragma region Game.dll JassNatives
-// Проверка являются ли игроки врагами
-typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 ); /*Game+3C9580*/
-
-// Получить хэндл игрока по его номеру слота
-typedef UINT( __cdecl * GetPlayerByID )( int PlayerId ); /*Game+3BBB30*/
 
 
-#pragma endregion
-
-
-
-
-
-void * GetGlobalPlayerData( )
-{
-	return ( void * ) *( int * ) ( GlobalPlayerOffset + GameDll );
-}
-
-int GetPlayerByNumber( int number )
-{
-	void * arg1 = GetGlobalPlayerData( );
-	int result = -1;
-	if ( arg1 != nullptr )
-	{
-		result = ( int ) arg1 + ( number * 4 ) + 0x58;
-
-		if ( result )
-		{
-			result = *( int* ) result;
-		}
-		else
-		{
-			return 0;
-		}
-	}
-	return result;
-}
-
-// Получить слот игрока
-int GetLocalPlayerId( )
-{
-	void * gldata = GetGlobalPlayerData( );
-
-	int playerslotaddr = ( int ) gldata + 0x28;
-
-	return ( int ) *( short * ) ( playerslotaddr );
-}
 
 int GetSelectedUnitCountBigger( int slot )
 {
@@ -160,26 +114,6 @@ void DisplayText( char *szText, float fDuration )
 
 
 
-// Получить имя игрока по его слоту
-typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
-p_GetPlayerName GetPlayerName = NULL;
-
-
-// Проверяет враг юнит локальному игроку или нет
-BOOL __stdcall IsEnemy( int UnitAddr )
-{
-	if ( !UnitAddr )
-		return TRUE;
-
-	int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
-	if ( unitownerslot <= 15 )
-	{
-		UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
-		UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-		return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
-	}
-	return 1;
-}
 
 
 
@@ -252,7 +186,7 @@ char *repl_string( const char *str, const char *from, const char *to )
 	else
 	{
 		pret = ret;
-		memcpy( pret, str, (size_t)pos_cache[ 0 ] );
+		memcpy( pret, str, ( size_t ) pos_cache[ 0 ] );
 		pret += pos_cache[ 0 ];
 		for ( i = 0; i < count; i++ )
 		{
@@ -357,80 +291,7 @@ __declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
 
 
 
-vector<char *> mutedplayers;
-//sub_6F2FB480
-typedef void( __fastcall * pOnChatMessage )( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
-pOnChatMessage pOnChatMessage_org;
-pOnChatMessage pOnChatMessage_ptr;
-void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
-{
-	char * playername = GetPlayerName( PlayerID, 1 );
 
-	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
-	{
-		if ( _stricmp( playername, mutedplayers[ i ] ) == 0 )
-		{
-			return;
-		}
-	}
-
-	pOnChatMessage_ptr( a1, unused, PlayerID, message, a4, a5 );
-}
-
-
-__declspec( dllexport ) int __stdcall MutePlayer( const char * str )
-{
-	if ( !str || *str == 0 )
-		return 1;
-	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
-	{
-		if ( _stricmp( str, mutedplayers[ i ] ) == 0 )
-		{
-			return 1;
-		}
-	}
-	mutedplayers.push_back( _strdup( str ) );
-	return 1;
-}
-
-__declspec( dllexport ) int __stdcall UnMutePlayer( const char * str )
-{
-	if ( !str || *str == 0 )
-		return 1;
-	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
-	{
-		if ( _stricmp( str, mutedplayers[ i ] ) == 0 )
-		{
-			free( mutedplayers[ i ] );
-			mutedplayers[ i ] = NULL;
-			mutedplayers.erase(  mutedplayers.begin( ) + (int)i );
-			return 1;
-		}
-	}
-	return 1;
-}
-
-
-
-struct FloatStruct1
-{
-	float flt1;//0
-	float flt2;//4
-	float flt3;//8
-	float flt4;//12
-	float flt5;//16
-	float flt6;//20
-	float flt7;//24
-	float flt8;//28
-	float flt9;//32
-	float flt10;//36
-	float flt11;//40
-	float flt12;//44
-	float flt13;//48
-	float flt14;//52
-	float flt15;//56
-	float flt16;//60
-};
 
 
 typedef void( __fastcall * SetGameAreaFOV )( FloatStruct1 * a1, int a2, float a3, float a4, float a5, float a6 );
@@ -543,8 +404,8 @@ WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 
 BOOL SkippAllMessages = TRUE;
 
-LPARAM lpF1ScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ));
-LPARAM lpF1ScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ));
+LPARAM lpF1ScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ) );
+LPARAM lpF1ScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ) );
 
 
 BOOL NeedPressKeyForHWND = FALSE;
@@ -569,7 +430,7 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 			if ( NeedPressMsg == 0 )
 			{
 				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, NeedPresswParam, NeedPresslParam );
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, NeedPresswParam, ( LPARAM ) (0xC0000000 | NeedPresslParam) );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, NeedPresswParam, ( LPARAM ) ( 0xC0000000 | NeedPresslParam ) );
 			}
 			else
 				WarcraftRealWNDProc_ptr( Warcraft3Window, NeedPressMsg, NeedPresswParam, NeedPresslParam );
@@ -699,7 +560,7 @@ void InitHook( )
 	MH_EnableHook( IsNeedDrawUnit2org );
 
 
-	Storm_279_org = ( pStorm_279 ) ( (int) GetProcAddress( StormDllModule, ( LPCSTR ) 279 ) );
+	Storm_279_org = ( pStorm_279 ) ( ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 279 ) );
 	MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
 	MH_EnableHook( Storm_279_org );
 
@@ -844,6 +705,14 @@ int __cdecl GetItemTypeInSlot( int unitaddr, int slotid )
 	}
 
 	return 0;
+}
+
+int GetTypeId( int unit_item_abil_etc_addr )
+{
+	if ( unit_item_abil_etc_addr )
+		return *( int* ) ( unit_item_abil_etc_addr + 0x30 );
+	else
+		return 0;
 }
 
 BOOL IsClassEqual( int ClassID1, int ClassID2 )
@@ -1041,10 +910,10 @@ int GetObjectDataAddr( int addr )
 
 	mataddr = ReadObjectAddrFromGlobalMat( *( unsigned int * ) addr, *( unsigned int * ) ( addr + 4 ) );
 
-	if ( !mataddr || *(  int * ) ( mataddr + 32 ) )
+	if ( !mataddr || *( int * ) ( mataddr + 32 ) )
 		result = 0;
 	else
-		result = *(  int * ) ( mataddr + 84 );
+		result = *( int * ) ( mataddr + 84 );
 	return result;
 }
 
@@ -1059,7 +928,7 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int a
 	int pAddr1 = unitaddr + 0x1DC;
 	int pAddr2 = unitaddr + 0x1E0;
 
-	if ( (int)(*( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 )) != -1 )
+	if ( ( int ) ( *( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 ) ) != -1 )
 	{
 		int pData = GetObjectDataAddr( pAddr1 );
 
@@ -1370,152 +1239,6 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 	sprintf_s( unitstr2, 128, "%%u / %%u" );
 	return unitaddr;
 }
-
-
-unsigned int hpbarcolorsHero[ 20 ];
-unsigned int hpbarcolorsUnit[ 20 ];
-unsigned int hpbarcolorsTower[ 20 ];
-
-float hpbarscaleHeroX[ 20 ];
-float hpbarscaleUnitX[ 20 ];
-float hpbarscaleTowerX[ 20 ];
-
-float hpbarscaleHeroY[ 20 ];
-float hpbarscaleUnitY[ 20 ];
-float hpbarscaleTowerY[ 20 ];
-
-__declspec( dllexport ) void __stdcall SetHPBarColorForPlayer( int playerid, unsigned int herocolor,
-															   unsigned int unitcolor, unsigned int towercolor )
-{
-	if ( playerid >= 0 && playerid < 20 )
-	{
-		hpbarcolorsHero[ playerid ] = herocolor;
-		hpbarcolorsUnit[ playerid ] = unitcolor;
-		hpbarcolorsTower[ playerid ] = towercolor;
-	}
-}
-
-
-__declspec( dllexport ) void __stdcall SetHPBarXScaleForPlayer( int playerid, float heroscale,
-																float unitscale, float towerscale )
-{
-	if ( playerid >= 0 && playerid < 20 )
-	{
-		hpbarscaleHeroX[ playerid ] = heroscale;
-		hpbarscaleUnitX[ playerid ] = unitscale;
-		hpbarscaleTowerX[ playerid ] = towerscale;
-	}
-}
-
-__declspec( dllexport ) void __stdcall SetHPBarYScaleForPlayer( int playerid, float heroscale,
-																float unitscale, float towerscale )
-{
-	if ( playerid >= 0 && playerid < 20 )
-	{
-		hpbarscaleHeroY[ playerid ] = heroscale;
-		hpbarscaleUnitY[ playerid ] = unitscale;
-		hpbarscaleTowerY[ playerid ] = towerscale;
-	}
-}
-
-
-
-
-
-
-int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct )
-{
-	int retval = 0;
-	__asm mov retval, eax;
-	if ( !BarStruct )
-	{
-		return retval;
-	}
-
-	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int ) BarVtableClone )
-	{
-		return retval;
-	}
-
-	int unitaddr = BarStruct->unitaddr;
-	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )
-		return retval;
-
-	int unitslot = GetUnitOwnerSlot( unitaddr );
-
-	if ( unitslot > 15 )
-		return retval;
-
-	if ( IsHero( unitaddr ) )
-	{
-		if ( BarStruct->bartype == 1 )
-		{
-			if ( hpbarscaleHeroX[ unitslot ] != 0.0 )
-			{
-				BarStruct->ScaleX = hpbarscaleHeroX[ unitslot ];
-			}
-
-			if ( hpbarscaleHeroY[ unitslot ] != 0.0 )
-			{
-				BarStruct->ScaleY = hpbarscaleHeroY[ unitslot ];
-			}
-		}
-		if ( !coloraddr )
-			return retval;
-		if ( hpbarcolorsHero[ unitslot ] != 0 )
-		{
-			*coloraddr = hpbarcolorsHero[ unitslot ];
-		}
-
-	}
-	else if ( IsTower( unitaddr ) )
-	{
-		if ( BarStruct->bartype == 1 )
-		{
-			if ( hpbarscaleTowerX[ unitslot ] != 0.0 )
-			{
-				BarStruct->ScaleX = hpbarscaleTowerX[ unitslot ];
-			}
-
-			if ( hpbarscaleTowerY[ unitslot ] != 0.0 )
-			{
-				BarStruct->ScaleY = hpbarscaleTowerY[ unitslot ];
-			}
-		}
-		if ( !coloraddr )
-			return retval;
-		if ( hpbarcolorsTower[ unitslot ] != 0 )
-		{
-			*coloraddr = hpbarcolorsTower[ unitslot ];
-		}
-	}
-	else
-	{
-		if ( BarStruct->bartype == 1 )
-		{
-			if ( hpbarscaleUnitX[ unitslot ] != 0.0 )
-			{
-				BarStruct->ScaleX = hpbarscaleUnitX[ unitslot ];
-			}
-
-			if ( hpbarscaleUnitY[ unitslot ] != 0.0 )
-			{
-				BarStruct->ScaleY = hpbarscaleUnitY[ unitslot ];
-			}
-		}
-		if ( !coloraddr )
-			return retval;
-		if ( hpbarcolorsUnit[ unitslot ] != 0 )
-		{
-			*coloraddr = hpbarcolorsUnit[ unitslot ];
-		}
-	}
-
-
-	return retval;
-}
-
-
 
 
 
@@ -1921,6 +1644,13 @@ unsigned long __stdcall RefreshTimer( void * )
 			}
 			offsetslist.clear( );
 
+			// Очистить список кастом баров
+			for ( int i = 0; i < 20; i++ )
+			{
+				if ( !CustomHPBarList[ i ].empty( ) )
+					CustomHPBarList[ i ].clear( );
+			}
+
 			// Отключить ManaBar 
 			ManaBarSwitch( GameDll, StormDllModule, FALSE );
 		}
@@ -1942,6 +1672,7 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 
 	VirtualProtect( addr, size, OldProtect1, &OldProtect2 );
 }
+
 
 
 
@@ -1983,8 +1714,6 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 	if ( gameversion == 0x26a )
 	{
 		UninitializeHook( );
-
-
 		pOnChatMessage_offset = 0x2FB480;
 		IsNeedDrawUnit2offset = 0x28E1D0;
 		IsNeedDrawUnit2offsetRetAddress = 0x2F9B60;
@@ -2004,7 +1733,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		ItemVtable = GameDll + 0x9320B4;
 		GetHeroInt = ( pGetHeroInt ) ( GameDll + 0x277850 );
 		Storm_503 = ( pStorm_503 ) ( *( int* ) ( GameDll + 0x86D584 ) );
-		InGame = ( BOOL * ) (GameDll + 0xAB62A4);
+		InGame = ( BOOL * ) ( GameDll + 0xAB62A4 );
 		GetItemInSlotAddr = GameDll + 0x3C7730 + 0xA;
 		GetItemTypeId = ( pGetItemTypeId ) ( GameDll + 0x3C4C60 );
 		GetPlayerColor = ( pGetPlayerColor ) ( GameDll + 0x3C1240 );
@@ -2152,7 +1881,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		ItemVtable = GameDll + 0xA4A2EC;
 		GetHeroInt = ( pGetHeroInt ) ( GameDll + 0x6677F0 );
 		Storm_503 = ( pStorm_503 ) ( *( int* ) ( GameDll + 0x94e684 ) );
-		InGame = ( BOOL * ) (GameDll + 0xBE6530);
+		InGame = ( BOOL * ) ( GameDll + 0xBE6530 );
 		GetItemInSlotAddr = GameDll + 0x1FAF50 + 0xC;
 		GetItemTypeId = ( pGetItemTypeId ) ( GameDll + 0x1E2CC0 );
 		GetPlayerColor = ( pGetPlayerColor ) ( GameDll + 0x1E3CA0 );
@@ -2336,6 +2065,12 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		}
 		offsetslist.clear( );
 
+		// Очистить список кастом баров
+		for ( int i = 0; i < 20; i++ )
+		{
+			if ( !CustomHPBarList[ i ].empty( ) )
+				CustomHPBarList[ i ].clear( );
+		}
 		// Отключить ManaBar 
 		ManaBarSwitch( GameDll, StormDllModule, FALSE );
 	}

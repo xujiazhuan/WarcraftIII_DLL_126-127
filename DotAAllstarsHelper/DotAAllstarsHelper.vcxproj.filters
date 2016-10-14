@@ -18,12 +18,6 @@
     <ClCompile Include="Crc32Dynamic.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="ManaBar.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="ViewAllySkill.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="DotaWebHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -31,6 +25,18 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaAllstarsHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaHPBarHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaPlayerHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaMPBarHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaViewAllySkill.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

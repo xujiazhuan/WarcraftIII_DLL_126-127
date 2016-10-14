@@ -66,11 +66,13 @@
     <ClCompile Include="Crc32Dynamic.cpp">
       <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
     </ClCompile>
+    <ClCompile Include="DotaHPBarHelper.cpp" />
     <ClCompile Include="DotaWebHelper.cpp" />
-    <ClCompile Include="ManaBar.cpp" />
+    <ClCompile Include="DotaMPBarHelper.cpp" />
     <ClCompile Include="DotaAllstarsHelper.cpp" />
+    <ClCompile Include="DotaPlayerHelper.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
-    <ClCompile Include="ViewAllySkill.cpp" />
+    <ClCompile Include="DotaViewAllySkill.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def" />

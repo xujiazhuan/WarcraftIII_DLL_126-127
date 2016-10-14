@@ -71,6 +71,24 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 }
 
 
+// Проверяет враг юнит локальному игроку или нет
+BOOL __stdcall IsEnemy( int UnitAddr )
+{
+	if ( !UnitAddr )
+		return TRUE;
+
+	int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
+	if ( unitownerslot <= 15 )
+	{
+		UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
+		UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+		return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+	}
+	return 1;
+}
+
+
+
 
 
 // Проверяет предмет или не предмет

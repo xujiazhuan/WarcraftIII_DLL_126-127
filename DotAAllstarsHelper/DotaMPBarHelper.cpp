@@ -83,7 +83,7 @@ __declspec( dllexport ) void __stdcall SetMPBarYScaleForPlayer( int playerid, fl
 
 
 __declspec( dllexport ) void __stdcall SetMPBarYOffsetForPlayer( int playerid, float herooffset,
-																float unitoffset, float toweroffset )
+																 float unitoffset, float toweroffset )
 {
 	if ( playerid >= 0 && playerid < 20 )
 	{
@@ -113,78 +113,78 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	aMPBarOffsetY = aMPBarOffsetY_default;
 	SkipScaleFactor = FALSE;
 
-		if ( IsHero( unitaddr ) )
+	if ( IsHero( unitaddr ) )
+	{
+		if ( mpbarscaleHeroX[ unitslot ] != 0.0 )
 		{
-			if ( mpbarscaleHeroX[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
+			SkipScaleFactor = TRUE;
 
-				aMPBarSizeX = mpbarscaleHeroX[ unitslot ];
-			}
-
-			if ( mpbarscaleHeroY[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
-
-				aMPBarSizeY = mpbarscaleHeroY[ unitslot ];
-			}
-
-			if ( mpbaroffsetHeroY[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
-
-				aMPBarOffsetY = mpbaroffsetHeroY[ unitslot ];
-			}
-
+			aMPBarSizeX = mpbarscaleHeroX[ unitslot ];
 		}
-		else if ( IsHero( unitaddr ) )
+
+		if ( mpbarscaleHeroY[ unitslot ] != 0.0 )
 		{
-			if ( mpbarscaleTowerX[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
+			SkipScaleFactor = TRUE;
 
-				aMPBarSizeX = mpbarscaleTowerX[ unitslot ];
-			}
-
-			if ( mpbarscaleTowerY[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
-
-				aMPBarSizeY = mpbarscaleTowerY[ unitslot ];
-			}
-
-			if ( mpbaroffsetTowerY[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
-
-				aMPBarOffsetY = mpbaroffsetTowerY[ unitslot ];
-			}
-
+			aMPBarSizeY = mpbarscaleHeroY[ unitslot ];
 		}
-		else
+
+		if ( mpbaroffsetHeroY[ unitslot ] != 0.0 )
 		{
-			if ( mpbarscaleUnitX[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
+			SkipScaleFactor = TRUE;
 
-				aMPBarSizeX = mpbarscaleUnitX[ unitslot ];
-			}
-
-			if ( mpbarscaleUnitY[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
-
-				aMPBarSizeY = mpbarscaleUnitY[ unitslot ];
-			}
-
-			if ( mpbaroffsetUnitY[ unitslot ] != 0.0 )
-			{
-				SkipScaleFactor = TRUE;
-
-				aMPBarOffsetY = mpbaroffsetUnitY[ unitslot ];
-			}
-
+			aMPBarOffsetY = mpbaroffsetHeroY[ unitslot ];
 		}
+
+	}
+	else if ( IsHero( unitaddr ) )
+	{
+		if ( mpbarscaleTowerX[ unitslot ] != 0.0 )
+		{
+			SkipScaleFactor = TRUE;
+
+			aMPBarSizeX = mpbarscaleTowerX[ unitslot ];
+		}
+
+		if ( mpbarscaleTowerY[ unitslot ] != 0.0 )
+		{
+			SkipScaleFactor = TRUE;
+
+			aMPBarSizeY = mpbarscaleTowerY[ unitslot ];
+		}
+
+		if ( mpbaroffsetTowerY[ unitslot ] != 0.0 )
+		{
+			SkipScaleFactor = TRUE;
+
+			aMPBarOffsetY = mpbaroffsetTowerY[ unitslot ];
+		}
+
+	}
+	else
+	{
+		if ( mpbarscaleUnitX[ unitslot ] != 0.0 )
+		{
+			SkipScaleFactor = TRUE;
+
+			aMPBarSizeX = mpbarscaleUnitX[ unitslot ];
+		}
+
+		if ( mpbarscaleUnitY[ unitslot ] != 0.0 )
+		{
+			SkipScaleFactor = TRUE;
+
+			aMPBarSizeY = mpbarscaleUnitY[ unitslot ];
+		}
+
+		if ( mpbaroffsetUnitY[ unitslot ] != 0.0 )
+		{
+			SkipScaleFactor = TRUE;
+
+			aMPBarOffsetY = mpbaroffsetUnitY[ unitslot ];
+		}
+
+	}
 
 	return retval;
 }
@@ -382,7 +382,7 @@ void __declspec( naked ) f001527F0( )
 		cmp		eax, _BarVTable; // FIX CRASH
 		je OkayBar;
 		lea		ecx, BarVtableClone
-		cmp		eax, ecx; // FIX CRASH
+			cmp		eax, ecx; // FIX CRASH
 		je OkayBar;
 		jmp L091;
 		OkayBar:
@@ -404,7 +404,7 @@ void __declspec( naked ) f001527F0( )
 		call    sub_6F334180;   // ds:[0016FF68]=6F334C00 (Game.6F334C00)
 		//no
 		mov     ecx, dword ptr[ edi + 0x30 ];
-		mov     eax, 0;  
+		mov     eax, 0;
 		cmp		SkipScaleFactor, 1;
 		je		WithoutScaleFactor;
 		mov     eax, sub_6F32C880;  // [0016FF20]=6F32D300

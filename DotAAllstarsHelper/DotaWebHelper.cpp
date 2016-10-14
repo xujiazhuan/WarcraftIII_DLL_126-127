@@ -38,7 +38,7 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 
 
 	struct hostent *host;
-	host =  gethostbyname( szUrl );
+	host = gethostbyname( szUrl );
 
 	if ( !host )
 	{

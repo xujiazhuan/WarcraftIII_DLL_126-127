@@ -20,3 +20,4 @@ SetMPBarXScaleForPlayer @116
 SetMPBarYScaleForPlayer @117
 SetMPBarYOffsetForPlayer @118
 ToggleForcedSubSelection @119
+SetHPCustomHPBarUnit @120

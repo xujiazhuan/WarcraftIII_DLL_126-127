@@ -31,6 +31,36 @@ using namespace std;
 #define IsKeyPressed(CODE) (GetAsyncKeyState(CODE) & 0x8000) > 0
 
 
+struct CustomHPBar
+{
+	int unittypeid;
+	unsigned int color;
+	float scalex;
+	float scaley;
+};
+
+
+
+struct FloatStruct1//Matrix 4x4
+{
+	float flt1;//0
+	float flt2;//4
+	float flt3;//8
+	float flt4;//12
+	float flt5;//16
+	float flt6;//20
+	float flt7;//24
+	float flt8;//28
+	float flt9;//32
+	float flt10;//36
+	float flt11;//40
+	float flt12;//44
+	float flt13;//48
+	float flt14;//52
+	float flt15;//56
+	float flt16;//60
+};
+
 
 struct BarStruct
 {
@@ -122,14 +152,38 @@ struct BarStruct
 	int unitaddr;
 	int _unk68;
 	int _unk69;
-} ;
+};
 
 bool FileExist( const char * name );
+
+
 
 BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int UnitAddr );
 BOOL __stdcall IsTower( int unitaddr );
+BOOL IsClassEqual( int ClassID1, int ClassID2 );
+int GetTypeId( int unit_item_abil_etc_addr );
+
+#pragma region Player.cpp
+int GetLocalPlayerId( );
+int GetPlayerByNumber( int number );
+
+// Проверить являются ли игроки врагами
+typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 ); 
+// Получить игрока по ID
+typedef UINT( __cdecl * GetPlayerByID )( int PlayerId ); 
+typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
+extern p_GetPlayerName GetPlayerName;
+__declspec( dllexport ) int __stdcall MutePlayer( const char * str );
+__declspec( dllexport ) int __stdcall UnMutePlayer( const char * str );
+typedef void( __fastcall * pOnChatMessage )( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
+void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
+extern vector<char *> mutedplayers;
+//sub_6F2FB480
+extern pOnChatMessage pOnChatMessage_org;
+extern pOnChatMessage pOnChatMessage_ptr;
+#pragma endregion
 
 #pragma region UnitAndItem.cpp
 int __stdcall GetUnitOwnerSlot( int unitaddr );
@@ -142,13 +196,34 @@ extern pGetHeroInt GetHeroInt;
 #pragma endregion
 
 #pragma region ManaBar.cpp
-extern BYTE BarVtableClone[];
+extern BYTE BarVtableClone[ 0x80 ];
 void ManaBarSwitch( int GameDLL, HMODULE StormDLL, BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct );
 #pragma endregion
 
 
+#pragma region DotaHPBarHelper.cpp
+
+
+
+extern unsigned int hpbarcolorsHero[ 20 ];
+extern unsigned int hpbarcolorsUnit[ 20 ];
+extern unsigned int hpbarcolorsTower[ 20 ];
+
+extern float hpbarscaleHeroX[ 20 ];
+extern float hpbarscaleUnitX[ 20 ];
+extern float hpbarscaleTowerX[ 20 ];
+
+extern float hpbarscaleHeroY[ 20 ];
+extern float hpbarscaleUnitY[ 20 ];
+extern float hpbarscaleTowerY[ 20 ];
+
+
+extern vector<CustomHPBar> CustomHPBarList[ 20 ];
+
+
+#pragma endregion
 
 //  Game.dll
 extern int GameDll;
@@ -182,10 +257,10 @@ extern int pPrintText2;
 extern int MapNameOffset1;
 extern int MapNameOffset2;
 extern int pOnChatMessage_offset;
-extern int _BarVTable ;
+extern int _BarVTable;
 extern int pAttackSpeedLimit;
 extern int GetItemInSlotAddr;
 extern int GetWindowXoffset;
-extern int GetWindowYoffset ;
+extern int GetWindowYoffset;
 
 #pragma endregion
