@@ -725,7 +725,7 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 {
 	int retval = 0;
 	__asm mov retval, eax;
-	if ( unitaddr != 0 )
+	if ( unitaddr > 0 )
 	{
 		if ( IsNotBadUnit( *unitaddr ) && IsHero( *unitaddr ) )
 		{
@@ -924,53 +924,52 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int a
 {
 	if ( ReturnAbils.size( ) != 0 )
 		ReturnAbils.clear( );
-
-	int pAddr1 = unitaddr + 0x1DC;
-	int pAddr2 = unitaddr + 0x1E0;
-
-	if ( ( int ) ( *( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 ) ) != -1 )
+	*count = 0;
+	if ( unitaddr > 0 )
 	{
-		int pData = GetObjectDataAddr( pAddr1 );
+		int pAddr1 = unitaddr + 0x1DC;
+		int pAddr2 = unitaddr + 0x1E0;
 
-		while ( pData != 0 )
+		if ( ( int ) ( *( unsigned int * ) ( pAddr1 ) & *( unsigned int * ) ( pAddr2 ) ) != -1 )
 		{
-			int pData2 = *( int* ) ( pData + 0x54 );
-			if ( pData2 != 0 )
+			int pData = GetObjectDataAddr( pAddr1 );
+
+			while ( pData != 0 )
 			{
-				if ( abilcode != 0 && *( int* ) ( pData2 + 0x34 ) == abilcode )
+				int pData2 = *( int* ) ( pData + 0x54 );
+				if ( pData2 != 0 )
 				{
-					if ( abilbasecode != 0 && *( int* ) ( pData2 + 0x30 ) == abilbasecode )
+					if ( abilcode != 0 && *( int* ) ( pData2 + 0x34 ) == abilcode )
 					{
-						ReturnAbils.push_back( pData );
+						if ( abilbasecode != 0 && *( int* ) ( pData2 + 0x30 ) == abilbasecode )
+						{
+							ReturnAbils.push_back( pData );
+						}
+						else if ( abilbasecode == 0 )
+						{
+							ReturnAbils.push_back( pData );
+						}
 					}
-					else if ( abilbasecode == 0 )
+					else if ( abilcode == 0 )
 					{
-						ReturnAbils.push_back( pData );
+						if ( abilbasecode != 0 && *( int* ) ( pData2 + 0x30 ) == abilbasecode )
+						{
+							ReturnAbils.push_back( pData );
+						}
+						else if ( abilbasecode == 0 )
+						{
+							ReturnAbils.push_back( pData );
+						}
 					}
 				}
-				else if ( abilcode == 0 )
-				{
-					if ( abilbasecode != 0 && *( int* ) ( pData2 + 0x30 ) == abilbasecode )
-					{
-						ReturnAbils.push_back( pData );
-					}
-					else if ( abilbasecode == 0 )
-					{
-						ReturnAbils.push_back( pData );
-					}
-				}
+				pData = GetObjectDataAddr( pData + 0x24 );
 			}
-			pData = GetObjectDataAddr( pData + 0x24 );
-		}
 
-		*count = ReturnAbils.size( );
-		if ( *count != 0 )
-		{
-			return &ReturnAbils[ 0 ];
+			*count = ReturnAbils.size( );
 		}
 	}
 
-	return 0;
+	return &ReturnAbils[ 0 ];
 }
 
 
@@ -1149,16 +1148,19 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 
 int GetUnitAddressFloatsRelated( int unitaddr, int step )
 {
-	int offset1 = unitaddr + step;
-	int offset2 = *( int* ) pGameClass1;
-
-	if ( *( int* ) offset1 &&  offset2 )
+	if ( unitaddr > 0 )
 	{
-		offset1 = *( int* ) offset1;
-		offset2 = *( int* ) ( offset2 + 0xC );
-		if ( offset2 )
+		int offset1 = unitaddr + step;
+		int offset2 = *( int* ) pGameClass1;
+
+		if ( *( int* ) offset1 &&  offset2 )
 		{
-			return *( int* ) ( ( offset1 * 8 ) + offset2 + 4 );
+			offset1 = *( int* ) offset1;
+			offset2 = *( int* ) ( offset2 + 0xC );
+			if ( offset2 )
+			{
+				return *( int* ) ( ( offset1 * 8 ) + offset2 + 4 );
+			}
 		}
 	}
 	return 0;
@@ -1168,11 +1170,14 @@ int GetUnitAddressFloatsRelated( int unitaddr, int step )
 float GetUnitHPregen( int unitaddr )
 {
 	float result = 0.0f;
-	int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
-	if ( offset1 )
+	if ( unitaddr > 0 )
 	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
+		if ( offset1 )
+		{
 
-		result = *( float* ) ( offset1 + 0x7C );
+			result = *( float* ) ( offset1 + 0x7C );
+		}
 	}
 	return result;
 }
@@ -1180,10 +1185,13 @@ float GetUnitHPregen( int unitaddr )
 float GetUnitMPregen( int unitaddr )
 {
 	float result = 0.0f;
-	int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
-	if ( offset1 )
+	if ( unitaddr > 0 )
 	{
-		result = *( float* ) ( offset1 + 0x7C );
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
+		if ( offset1 )
+		{
+			result = *( float* ) ( offset1 + 0x7C );
+		}
 	}
 	return result;
 }
@@ -1229,7 +1237,6 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 			}
 
 		}
-		return unitaddr;
 	}
 	sprintf_s( unitstr1, 128, "%%u / %%u" );
 	sprintf_s( unitstr2, 128, "%%u / %%u" );

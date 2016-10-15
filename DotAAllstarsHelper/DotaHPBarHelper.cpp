@@ -86,6 +86,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 {
 	int retval = 0;
 	__asm mov retval, eax;
+
 	if ( !BarStruct )
 	{
 		return retval;
