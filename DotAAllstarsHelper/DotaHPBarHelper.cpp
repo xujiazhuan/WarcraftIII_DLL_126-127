@@ -203,5 +203,3 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 	return retval;
 }
 
-
-

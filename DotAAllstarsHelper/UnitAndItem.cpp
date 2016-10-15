@@ -5,7 +5,9 @@ pGetHeroInt GetHeroInt;
 // Получить владельца юнита
 int __stdcall GetUnitOwnerSlot( int unitaddr )
 {
-	return *( int* ) ( unitaddr + 88 );
+	if ( unitaddr )
+		return *( int* ) ( unitaddr + 88 );
+	return 0;
 }
 
 
@@ -78,13 +80,13 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 		return TRUE;
 
 	int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
-	if ( unitownerslot <= 15 )
+	if ( unitownerslot <= 15 && unitownerslot >= 0 )
 	{
 		UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
 		UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
 		return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
 	}
-	return 1;
+	return TRUE;
 }
 
 

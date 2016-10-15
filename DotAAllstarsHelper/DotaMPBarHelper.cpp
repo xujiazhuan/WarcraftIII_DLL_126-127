@@ -2,8 +2,6 @@
 
 
 
-#pragma optimize("",off)
-
 
 #define ADDRESS LPVOID  // data
 #define GADDRESS LPVOID // game call
@@ -57,6 +55,8 @@ float mpbaroffsetUnitY[ 20 ];
 float mpbarscaleTowerX[ 20 ];
 float mpbarscaleTowerY[ 20 ];
 float mpbaroffsetTowerY[ 20 ];
+
+
 
 __declspec( dllexport ) void __stdcall SetMPBarXScaleForPlayer( int playerid, float heroscale,
 																float unitscale, float towerscale )
@@ -188,6 +188,10 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 
 	return retval;
 }
+
+#pragma optimize("",off)
+
+
 
 void __declspec( naked ) FillMemoryForMPBar( )
 {
@@ -475,6 +479,9 @@ void __declspec( naked ) RedrawMPBar( )
 	}
 }
 
+
+#pragma optimize("",on)
+
 BOOL ManabarInitialized = FALSE;
 BOOL ManabarEnabled = FALSE;
 
@@ -592,5 +599,3 @@ __declspec( dllexport ) BOOL __stdcall SetManabarEnabled( BOOL enabled )
 	}
 	return ManabarInitialized;
 }
-
-#pragma optimize("",on)

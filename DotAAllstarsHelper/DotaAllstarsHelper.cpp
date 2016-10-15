@@ -723,79 +723,79 @@ BOOL IsClassEqual( int ClassID1, int ClassID2 )
 // Функция принимает данные о скорости атаки (и о увеличении урона от способностей) и сохраняет в буфер который будет использоваться при отрисовке
 int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float * BAT, int * unitaddr )
 {
+	int retval = 0;
+	__asm mov retval, eax;
 	if ( unitaddr != 0 )
 	{
-		if ( *unitaddr > 0 )
+		if ( IsNotBadUnit( *unitaddr ) && IsHero( *unitaddr ) )
 		{
-			if ( IsNotBadUnit( *unitaddr ) && IsHero( *unitaddr ) )
+			bufferaddr = buffer;
+			float realBAT = *( float* ) BAT;
+			float realattackspeed = *( float* ) attackspeed;
+			if ( realattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
+				realattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
+
+			if ( realattackspeed == 0 )
 			{
-				bufferaddr = buffer;
-				float realBAT = *( float* ) BAT;
-				float realattackspeed = *( float* ) attackspeed;
-				if ( realattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
-					realattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
+				realattackspeed = 0.0001f;
+			}
 
-				if ( realattackspeed == 0 )
+			if ( realBAT == 0 )
+			{
+				realBAT = 0.0001f;
+			}
+
+			int magicamp = GetHeroInt( *unitaddr, 0, TRUE ) / 16;
+			int magicampbonus = 0;
+
+			for ( int i = 0; i < 6; i++ )
+			{
+				if ( IsClassEqual( GetItemTypeInSlot( *unitaddr, i ), 'I0UF' ) )
 				{
-					realattackspeed = 0.0001f;
-				}
-
-				if ( realBAT == 0 )
-				{
-					realBAT = 0.0001f;
-				}
-
-				int magicamp = GetHeroInt( *unitaddr, 0, TRUE ) / 16;
-				int magicampbonus = 0;
-
-				for ( int i = 0; i < 6; i++ )
-				{
-					if ( IsClassEqual( GetItemTypeInSlot( *unitaddr, i ), 'I0UF' ) )
-					{
-						magicampbonus += 5;
-					}
-				}
-
-
-				if ( magicampbonus > 0 )
-				{
-					sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp, magicampbonus );
-				}
-				else
-				{
-					sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%%|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp );
-				}
-
-				__asm
-				{
-					PUSH 0x200;
-					PUSH bufferaddr;
-					PUSH addr;
-					CALL Storm_503;
+					magicampbonus += 5;
 				}
 			}
-			else if ( IsNotBadUnit( *unitaddr ) )
+
+
+			if ( magicampbonus > 0 )
 			{
-				bufferaddr = buffer;
-				float oldaddtackspeed = *( float* ) attackspeed;
-				float realattackspeed = oldaddtackspeed;
-				if ( realattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
-					realattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
+				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp, magicampbonus );
+			}
+			else
+			{
+				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%%|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp );
+			}
 
-				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ) );
-
-				__asm
-				{
-					PUSH 0x200;
-					PUSH bufferaddr;
-					PUSH addr;
-					CALL Storm_503;
-				}
+			__asm
+			{
+				PUSH 0x200;
+				PUSH bufferaddr;
+				PUSH addr;
+				CALL Storm_503;
 			}
 		}
+		else
+		{
+			bufferaddr = buffer;
+			float oldaddtackspeed = *( float* ) attackspeed;
+			float realattackspeed = oldaddtackspeed;
+			if ( realattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
+				realattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
+
+			sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ) );
+
+			__asm
+			{
+				PUSH 0x200;
+				PUSH bufferaddr;
+				PUSH addr;
+				CALL Storm_503;
+			}
+		}
+
 	}
 
-	return 0;
+	return retval;
 }
 
 int saveeax = 0;
@@ -1018,7 +1018,6 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 			PUSH bufferaddr;
 			PUSH addr;
 			CALL Storm_503;
-			mov retval, eax;
 		}
 	}
 	return retval;
@@ -1168,22 +1167,25 @@ int GetUnitAddressFloatsRelated( int unitaddr, int step )
 
 float GetUnitHPregen( int unitaddr )
 {
+	float result = 0.0f;
 	int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
 	if ( offset1 )
 	{
-		return *( float* ) ( offset1 + 0x7C );
+
+		result = *( float* ) ( offset1 + 0x7C );
 	}
-	return 0.0f;
+	return result;
 }
 
 float GetUnitMPregen( int unitaddr )
 {
+	float result = 0.0f;
 	int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
 	if ( offset1 )
 	{
-		return *( float* ) ( offset1 + 0x7C );
+		result = *( float* ) ( offset1 + 0x7C );
 	}
-	return 0.0f;
+	return result;
 }
 
 
@@ -1191,47 +1193,41 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 {
 	if ( *( BOOL* ) IsWindowActive &&  IsKeyPressed( VK_LMENU ) )
 	{
-		if ( unitaddr )
+		if ( IsNotBadUnit( unitaddr ) )
 		{
-			if ( IsNotBadUnit( unitaddr ) )
+			float unitreghp = GetUnitHPregen( unitaddr );
+			float unitregmp = GetUnitMPregen( unitaddr );
+
+
+
+			if ( unitreghp == 0.0f )
 			{
-				float unitreghp = GetUnitHPregen( unitaddr );
-				float unitregmp = GetUnitMPregen( unitaddr );
-
-
-
-				if ( unitreghp == 0.0f )
-				{
-					sprintf_s( unitstr1, 128, "%%u|r |cFF00FF00+0.00|r" );
-				}
-				else if ( unitreghp < 9999.0f )
-				{
-					sprintf_s( unitstr1, 128, "%%u|r |cFF00FF00+%.1f|r", unitreghp );
-				}
-				else
-				{
-					sprintf_s( unitstr1, 128, "%%u |cFF00FF00+BIG|r" );
-				}
-
-
-
-				if ( unitregmp == 0.0f )
-				{
-					sprintf_s( unitstr2, 128, "%%u|r |cFF00FFFF+0.00|r" );
-				}
-				else if ( unitregmp < 9999.0f )
-				{
-					sprintf_s( unitstr2, 128, "%%u|r |cFF00FFFF+%.1f|r", unitregmp );
-				}
-				else
-				{
-					sprintf_s( unitstr2, 128, "%%u |cFF00FFFF+BIG|r" );
-				}
-
-
-
-
+				sprintf_s( unitstr1, 128, "%%u|r |cFF00FF00+0.00|r" );
 			}
+			else if ( unitreghp < 9999.0f )
+			{
+				sprintf_s( unitstr1, 128, "%%u|r |cFF00FF00+%.1f|r", unitreghp );
+			}
+			else
+			{
+				sprintf_s( unitstr1, 128, "%%u |cFF00FF00+BIG|r" );
+			}
+
+
+
+			if ( unitregmp == 0.0f )
+			{
+				sprintf_s( unitstr2, 128, "%%u|r |cFF00FFFF+0.00|r" );
+			}
+			else if ( unitregmp < 9999.0f )
+			{
+				sprintf_s( unitstr2, 128, "%%u|r |cFF00FFFF+%.1f|r", unitregmp );
+			}
+			else
+			{
+				sprintf_s( unitstr2, 128, "%%u |cFF00FFFF+BIG|r" );
+			}
+
 		}
 		return unitaddr;
 	}

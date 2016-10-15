@@ -32,7 +32,7 @@ int GetPlayerByNumber( int number )
 	return result;
 }
 
-// Получить слот игрока
+// Получить ID игрока
 int GetLocalPlayerId( )
 {
 	void * gldata = GetGlobalPlayerData( );
