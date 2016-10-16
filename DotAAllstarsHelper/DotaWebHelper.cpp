@@ -18,6 +18,7 @@ std::string LatestDownloadedString;
 
 std::string DownloadBytesGet( char* szUrl, char * getRequest )
 {
+	AddNewLineToDotaHelperLog( "DownloadBytesGet" );
 	DownStatus = 0;
 	std::string returnvalue = "";
 	WSADATA wsaData;
@@ -137,6 +138,7 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 
 void DownloadNewMapToFile( char* szUrl, char * filepath )
 {
+	AddNewLineToDotaHelperLog( "DownloadNewMapToFile" );
 	DownStatus = 0;
 	HINTERNET hOpen = NULL;
 	HINTERNET hFile = NULL;

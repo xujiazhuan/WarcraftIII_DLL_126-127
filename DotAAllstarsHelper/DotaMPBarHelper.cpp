@@ -100,12 +100,13 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	int retval = 0;
 	__asm mov retval, eax;
 
-	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )
+	if ( unitaddr <= 0 || !IsNotBadUnit( unitaddr ) )
 		return retval;
 
+	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer" );
 
 	int unitslot = GetUnitOwnerSlot( unitaddr );
-	if ( unitslot > 15 )
+	if ( unitslot > 15 || unitslot < 0 )
 		return retval;
 
 	aMPBarSizeX = aMPBarSizeX_default;

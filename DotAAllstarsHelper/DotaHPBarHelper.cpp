@@ -87,15 +87,19 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 	int retval = 0;
 	__asm mov retval, eax;
 
-	if ( !BarStruct )
+	if ( BarStruct <= 0 )
 	{
 		return retval;
 	}
+
+	AddNewLineToDotaHelperLog( "SetColorForUnit" );
+
 
 	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int ) BarVtableClone )
 	{
 		return retval;
 	}
+
 
 	int unitaddr = BarStruct->unitaddr;
 	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )

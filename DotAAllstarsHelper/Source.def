@@ -21,3 +21,4 @@ SetMPBarYScaleForPlayer @117
 SetMPBarYOffsetForPlayer @118
 ToggleForcedSubSelection @119
 SetHPCustomHPBarUnit @120
+ToggleBlockKeyAndMouseEmulation @121

@@ -35,6 +35,7 @@ int GetPlayerByNumber( int number )
 // Получить ID игрока
 int GetLocalPlayerId( )
 {
+	AddNewLineToDotaHelperLog( "GetLocalPlayerId" );
 	void * gldata = GetGlobalPlayerData( );
 
 	int playerslotaddr = ( int ) gldata + 0x28;
@@ -55,6 +56,7 @@ pOnChatMessage pOnChatMessage_org;
 pOnChatMessage pOnChatMessage_ptr;
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
 {
+	AddNewLineToDotaHelperLog( "pOnChatMessage_my" );
 	char * playername = GetPlayerName( PlayerID, 1 );
 
 	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )

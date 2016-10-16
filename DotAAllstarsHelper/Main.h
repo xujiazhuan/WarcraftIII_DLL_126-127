@@ -165,7 +165,8 @@ BOOL __stdcall IsTower( int unitaddr );
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
 
-#pragma region Player.cpp
+#pragma region DotaPlayerHelper.cpp
+
 int GetLocalPlayerId( );
 int GetPlayerByNumber( int number );
 
@@ -183,9 +184,11 @@ extern vector<char *> mutedplayers;
 //sub_6F2FB480
 extern pOnChatMessage pOnChatMessage_org;
 extern pOnChatMessage pOnChatMessage_ptr;
+
 #pragma endregion
 
 #pragma region UnitAndItem.cpp
+
 int __stdcall GetUnitOwnerSlot( int unitaddr );
 BOOL __stdcall IsHero( int unitaddr );
 BOOL __stdcall IsTower( int unitaddr );
@@ -193,19 +196,20 @@ BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsNotBadItem( int itemaddr );
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 extern pGetHeroInt GetHeroInt;
+
 #pragma endregion
 
-#pragma region ManaBar.cpp
+#pragma region DotaMPBarHelper.cpp
+
 extern BYTE BarVtableClone[ 0x80 ];
 void ManaBarSwitch( int GameDLL, HMODULE StormDLL, BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct );
+
 #pragma endregion
 
 
 #pragma region DotaHPBarHelper.cpp
-
-
 
 extern unsigned int hpbarcolorsHero[ 20 ];
 extern unsigned int hpbarcolorsUnit[ 20 ];
@@ -219,11 +223,26 @@ extern float hpbarscaleHeroY[ 20 ];
 extern float hpbarscaleUnitY[ 20 ];
 extern float hpbarscaleTowerY[ 20 ];
 
-
 extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 
+#pragma endregion
+
+#pragma region ErrorHandler.cpp
+
+void EnableErrorHandler( );
+void DisableErrorHandler( );
+void AddNewLineToDotaHelperLog( string s );
+
+
+typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, DWORD a5 );
+extern StormErrorHandler StormErrorHandler_org;
+typedef int( __fastcall *LookupNative )( LPSTR );
+extern LookupNative LookupNative_org;
+typedef signed int( __fastcall * LookupJassFunc )( int a1, int unused, char * funcname );
+extern LookupJassFunc LookupJassFunc_org;
 
 #pragma endregion
+
 
 //  Game.dll
 extern int GameDll;

@@ -39,6 +39,9 @@
     <ClCompile Include="DotaViewAllySkill.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="ErrorHandler.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">

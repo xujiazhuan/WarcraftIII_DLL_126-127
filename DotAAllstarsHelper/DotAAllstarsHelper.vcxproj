@@ -75,6 +75,7 @@
     <ClCompile Include="DotaMPBarHelper.cpp" />
     <ClCompile Include="DotaAllstarsHelper.cpp" />
     <ClCompile Include="DotaPlayerHelper.cpp" />
+    <ClCompile Include="ErrorHandler.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
     <ClCompile Include="DotaViewAllySkill.cpp" />
   </ItemGroup>
