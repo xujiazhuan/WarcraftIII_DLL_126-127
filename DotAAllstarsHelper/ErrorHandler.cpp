@@ -3,6 +3,7 @@
 vector<string> DotaHelperLog;
 vector<string> JassNativesLog;
 vector<string> JassFuncLog;
+vector<int> CNetEvents;
 
 void AddNewLineToDotaHelperLog( string s )
 {
@@ -30,6 +31,16 @@ void AddNewLineToJassFuncLog( string s )
 		JassFuncLog.erase( JassFuncLog.begin( ) );
 	}
 	JassFuncLog.push_back( s );
+}
+
+
+void AddNewCNetEventLog( int EventID )
+{
+	if ( CNetEvents.size( ) > 30 )
+	{
+		CNetEvents.erase( CNetEvents.begin( ) );
+	}
+	CNetEvents.push_back( EventID );
 }
 
 
@@ -62,6 +73,123 @@ signed int __fastcall LookupJassFunc_my ( int a1, int unused, char * funcname )
 }
 
 
+const char * GetNetEventStrByID( int EventID )
+{
+	switch ( EventID )
+	{
+		case 1:
+			return "CNetEventConnect";
+		case 2:
+			return "CNetEventDisconnect";
+		case 3:
+			return "CNetEventGameListStart";
+		case 4:
+			return "CNetEventGameListStop";
+		case 5:
+			return "CNetEventGameListError";
+		case 6:
+			return "CNetEventGameListAdd";
+		case 7:
+			return "CNetEventGameListUpdate";
+		case 8:
+			return "CNetEventGameListDelete";
+		case 9:
+			return "CNetEventTeamGameListStart";
+		case 10:
+			return "CNetEventTeamGameListStop";
+		case 11:
+			return "CNetEventTeamGameListAdd";
+		case 12:
+			return "CNetEventTeamGameListUpdate";
+		case 13:
+			return "CNetEventTeamGameListDelete";
+		case 14:
+			return "CNetEventAnonGameFind";
+		case 15:
+			return "CNetEventAnonGameJoin";
+		case 16:
+			return "CNetEventGameCreate";
+		case 17:
+			return "CNetEventGameAd";
+		case 18:
+			return "CNetEventTeamGameAd";
+		case 19:
+			return "CNetEventTeamInfo";
+		case 20:
+			return "CNetEventGameFind";
+		case 21:
+			return "CNetEventGameJoin";
+		case 22:
+			return "CNetEventPlayerJoin";
+		case 23:
+			return "CNetEventPlayerLeave";
+		case 24:
+			return "CNetEventPlayerReady";
+		case 25:
+			return "CNetEventGameSetup";
+		case 26:
+			return "CNetEventGameClose";
+		case 27:
+			return "CNetEventGameStart";
+		case 28:
+			return "CNetEventGameReady";
+		case 29:
+			return "CNetEventPlayerUpdate";
+		case 36:
+			return "CNetEventGameSuspend";
+		case 37:
+			return "CNetEventPlayerResume";
+		case 38:
+			return "CNetEventRouterHandoffSearching";
+		case 39:
+			return "CNetEventRouterHandoffSyncing";
+		case 40:
+			return "CNetEventRouterHandoffDone";
+		case 41:
+			return "CNetEventRouterUnresponsive";
+		case 42:
+			return "CNetEventRouterResponsive";
+		case 43:
+			return "CNetEventDistFileStart";
+		case 44:
+			return "CNetEventDistFileProgress";
+		case 45:
+			return "CNetEventDistFileComplete";
+		case 46:
+			return "CNetEventOfficialPlayers";
+		case 33:
+			return "CNetEventSetTurnsLatency";
+		case 47:
+			return "CNetEventTrigger";
+		case 34:
+			return "CNETEVENT_ID_TURNSSYNC";
+		case 35:
+			return "EVENT_ID_TURNSSYNCMISMATCH";
+		case 48:
+			return "CNetEventTrustedDesync";
+		case 49:
+			return "CNetEventTrustedResult";
+		case 31: 
+			return "CNetGameEvents";
+		default:
+			break;
+	}
+	return "Unknown CNETEvent";
+}
+
+
+ProcessNetEvents ProcessNetEvents_org;
+ProcessNetEvents ProcessNetEvents_ptr;
+
+
+void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
+{
+	int EventID = *( BYTE* ) ( Event + 20 );
+	ProcessNetEvents_ptr( data, unused, Event );
+	AddNewCNetEventLog( EventID );
+}
+
+
 StormErrorHandler StormErrorHandler_org;
 StormErrorHandler StormErrorHandler_ptr;
 
@@ -84,6 +212,11 @@ LONG __fastcall  StormErrorHandler_my (int a1, void( *PrintErrorLog )( int, cons
 	for ( string s : JassFuncLog )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
+	}
+	PrintErrorLog( a3, "%s", "[Dota Allstars CNET events]" );
+	for ( int EventID : CNetEvents )
+	{
+		PrintErrorLog( a3, "%s(%i)", GetNetEventStrByID(EventID), EventID );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler END]" );
 	return result;
@@ -109,6 +242,12 @@ void EnableErrorHandler( )
 		MH_EnableHook( LookupJassFunc_org );
 	}
 
+	if ( ProcessNetEvents_org )
+	{
+		MH_CreateHook( ProcessNetEvents_org, &ProcessNetEvents_my, reinterpret_cast< void** >( &ProcessNetEvents_ptr ) );
+		MH_EnableHook( ProcessNetEvents_org );
+	}
+	
 	
 }
 
@@ -128,7 +267,10 @@ void DisableErrorHandler( )
 	{
 		MH_DisableHook( LookupJassFunc_org );
 	}
-
+	if ( ProcessNetEvents_org )
+	{
+		MH_DisableHook( ProcessNetEvents_org );
+	}
 
 	if ( !DotaHelperLog.empty( ) )
 		DotaHelperLog.clear( );
@@ -138,5 +280,8 @@ void DisableErrorHandler( )
 
 	if ( !DotaHelperLog.empty( ) )
 		JassFuncLog.clear( );
+
+	if ( !CNetEvents.empty( ) )
+		CNetEvents.clear( );
 }
 

@@ -240,7 +240,8 @@ typedef int( __fastcall *LookupNative )( LPSTR );
 extern LookupNative LookupNative_org;
 typedef signed int( __fastcall * LookupJassFunc )( int a1, int unused, char * funcname );
 extern LookupJassFunc LookupJassFunc_org;
-
+typedef void( __fastcall * ProcessNetEvents )( void * data, int unused_, int Event );
+extern ProcessNetEvents ProcessNetEvents_org;
 #pragma endregion
 
 

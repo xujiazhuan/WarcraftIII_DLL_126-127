@@ -65,7 +65,7 @@ int GetWindowYoffset = 0;
 int StormErrorHandlerOffset = 0;
 int JassNativeLookupOffset = 0;
 int JassFuncLookupOffset = 0;
-
+int ProcessNetEventsOffset = 0;
 #pragma endregion
 
 
@@ -552,7 +552,7 @@ void InitHook( )
 	StormErrorHandler_org = ( StormErrorHandler ) StormErrorHandlerOffset;
 	LookupNative_org = ( LookupNative ) JassNativeLookupOffset;
 	LookupJassFunc_org = ( LookupJassFunc ) JassFuncLookupOffset;
-
+	ProcessNetEvents_org = ( ProcessNetEvents ) ProcessNetEventsOffset;
 
 	EnableErrorHandler( );
 	/*sub_6F379A30_org = ( sub_6F379A30 ) ( 0x379A30 + GameDll );
@@ -1806,6 +1806,8 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		StormErrorHandlerOffset = StormDll + 0x28F0;
 		JassNativeLookupOffset = GameDll + 0x44EA00;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
+		ProcessNetEventsOffset = GameDll + 0x551D80;
+
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -1958,6 +1960,9 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		StormErrorHandlerOffset = StormDll + 0x8230;
 		JassNativeLookupOffset = GameDll + 0x7E2FE0;
 		JassFuncLookupOffset = GameDll + 0x7EFBB0;
+		ProcessNetEventsOffset = GameDll + 0x3098D0;
+
+
 
 		int pDrawAttackSpeed = GameDll + 0x38C6E0;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
