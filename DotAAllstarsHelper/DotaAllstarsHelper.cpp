@@ -12,6 +12,9 @@ bool FileExist( const char * name )
 	return f.good( );
 }
 
+//DWORD GameDLLsz = 0;
+//DWORD StormDLLsz = 0;
+
 //  Game.dll
 int GameDll = 0;
 //	Storm.dll
@@ -58,47 +61,42 @@ int pAttackSpeedLimit = 0;
 
 int GetItemInSlotAddr = 0;
 
-int GetWindowXoffset = 0;
-int GetWindowYoffset = 0;
+float * GetWindowXoffset = 0;
+float * GetWindowYoffset = 0;
 
 
 int StormErrorHandlerOffset = 0;
 int JassNativeLookupOffset = 0;
 int JassFuncLookupOffset = 0;
 int ProcessNetEventsOffset = 0;
+int BlizzardDebug1Offset = 0;
+int BlizzardDebug2Offset = 0;
+int BlizzardDebug3Offset = 0;
+int BlizzardDebug4Offset = 0;
+int BlizzardDebug5Offset = 0;
+int BlizzardDebug6Offset = 0;
+int GameFrameAtMouseStructOffset = 0;
+
+
+int GameGetFileOffset = 0;
+
 #pragma endregion
+
+BOOL MainFuncWork = FALSE;
+
+__declspec( dllexport ) int __stdcall SetMainFuncWork( BOOL state )
+{
+	MainFuncWork = state;
+	return 0;
+}
 
 
 BOOL BlockKeyAndMouseEmulation = FALSE;
-
+BOOL EnableSelectHelper = FALSE;
+BOOL ClickHelper = FALSE;
 
 
 HMODULE GetCurrentModule;
-
-
-
-int GetSelectedUnitCountBigger( int slot )
-{
-	AddNewLineToDotaHelperLog( "GetSelectedUnitCountBigger" );
-	int plr = GetPlayerByNumber( slot );
-	if ( plr )
-	{
-		int PlayerData1 = *( int* ) ( plr + 0x34 );
-		if ( PlayerData1 )
-		{
-			int unitcount = *( int * ) ( PlayerData1 + 0x10 );
-			int unitcount2 = *( int * ) ( PlayerData1 + 0x1D4 );
-
-			if ( unitcount > unitcount2 )
-				return unitcount;
-			else
-				return unitcount2;
-		}
-	}
-
-	return NULL;
-}
-
 
 
 
@@ -121,123 +119,6 @@ void DisplayText( char *szText, float fDuration )
 
 
 
-
-
-
-
-
-
-typedef int( __stdcall * pStorm_279 )( const char*  a1, int a2, int a3, size_t Size, int a5 );
-pStorm_279 Storm_279_org;
-pStorm_279 Storm_279_ptr;
-
-
-char MPQFilePath[ 4000 ];
-
-const char * DisabledIconSignature = "Disabled\\DIS";
-
-// Функция замены текста в строке.
-char *repl_string( const char *str, const char *from, const char *to )
-{
-	AddNewLineToDotaHelperLog( "repl_string" );
-	size_t cache_sz_inc = 16;
-
-	const size_t cache_sz_inc_factor = 3;
-
-	const size_t cache_sz_inc_max = 1048576;
-
-	char *pret, *ret = NULL;
-	const char *pstr2, *pstr = str;
-	size_t i, count = 0;
-	ptrdiff_t *pos_cache = NULL;
-	size_t cache_sz = 0;
-	size_t cpylen, orglen, retlen, tolen = 0, fromlen = strlen( from );
-
-	while ( ( pstr2 = strstr( pstr, from ) ) != NULL )
-	{
-		count++;
-		if ( cache_sz < count )
-		{
-			cache_sz += cache_sz_inc;
-			pos_cache = ( ptrdiff_t * ) realloc( pos_cache, sizeof( *pos_cache ) * cache_sz );
-			if ( pos_cache == NULL )
-			{
-				goto end_repl_string;
-			}
-			cache_sz_inc *= cache_sz_inc_factor;
-			if ( cache_sz_inc > cache_sz_inc_max )
-			{
-				cache_sz_inc = cache_sz_inc_max;
-			}
-		}
-
-		pos_cache[ count - 1 ] = pstr2 - str;
-		pstr = pstr2 + fromlen;
-	}
-
-	orglen = pstr - str + strlen( pstr );
-	if ( count > 0 )
-	{
-		tolen = strlen( to );
-		retlen = orglen + ( tolen - fromlen ) * count;
-	}
-	else	retlen = orglen;
-	ret = ( char* ) malloc( retlen + 1 );
-	if ( ret == NULL )
-	{
-		goto end_repl_string;
-	}
-
-	if ( count == 0 )
-	{
-		CopyMemory( ret, str, retlen + 1 );
-	}
-	else
-	{
-		pret = ret;
-		memcpy( pret, str, ( size_t ) pos_cache[ 0 ] );
-		pret += pos_cache[ 0 ];
-		for ( i = 0; i < count; i++ )
-		{
-			memcpy( pret, to, tolen );
-			pret += tolen;
-			pstr = str + pos_cache[ i ] + fromlen;
-			cpylen = ( i == count - 1 ? orglen : pos_cache[ i + 1 ] ) - pos_cache[ i ] - fromlen;
-			memcpy( pret, pstr, cpylen );
-			pret += cpylen;
-		}
-		ret[ retlen ] = '\0';
-	}
-
-	end_repl_string:
-	free( pos_cache );
-	return ret;
-}
-
-void ReplaceIconPathIfNeed( )
-{
-	AddNewLineToDotaHelperLog( "ReplaceIconPathIfNeed" );
-	char * tmpstr = 0;
-	if ( strstr( MPQFilePath, "Disabled\\DIS" ) )
-	{
-		tmpstr = repl_string( MPQFilePath, "Disabled\\DIS", "\\" );
-		sprintf_s( MPQFilePath, 4000, "%s\0", tmpstr );
-		free( tmpstr );
-	}
-}
-
-// Функция открытия файла и получения его размера.
-int __stdcall Storm_279my( const char* a1, int a2, int a3, size_t Size, int a5 )
-{
-	int retval = Storm_279_ptr( a1, a2, a3, Size, a5 );
-	if ( !retval )
-	{
-		sprintf_s( MPQFilePath, 4000, "%s\0", a1 );
-		ReplaceIconPathIfNeed( );
-		retval = Storm_279_ptr( MPQFilePath, a2, a3, Size, a5 );
-	}
-	return retval;
-}
 
 
 
@@ -306,7 +187,7 @@ __declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
 
 
 
-typedef void( __fastcall * SetGameAreaFOV )( FloatStruct1 * a1, int a2, float a3, float a4, float a5, float a6 );
+typedef int( __fastcall * SetGameAreaFOV )( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
 SetGameAreaFOV SetGameAreaFOV_org;
 SetGameAreaFOV SetGameAreaFOV_ptr;
 
@@ -314,11 +195,14 @@ SetGameAreaFOV SetGameAreaFOV_ptr;
 float CustomFovFix = 1.0f;
 
 
-int __fastcall SetGameAreaFOV_new( FloatStruct1 * a1, int _unused, float a3, float a4, float a5, float a6 )
+int __fastcall SetGameAreaFOV_new( Matrix1 * a1, int _unused, float a3, float a4, float a5, float a6 )
 {
+	if ( GetWindowXoffset == 0 || GetWindowYoffset == 0 )
+		return SetGameAreaFOV_ptr( a1, _unused, a3, a4, a5, a6 );
 
-	float ScreenX = *( float* ) ( GameDll + GetWindowXoffset );
-	float ScreenY = *( float* ) ( GameDll + GetWindowYoffset );
+
+	float ScreenX = *GetWindowXoffset;
+	float ScreenY = *GetWindowYoffset;
 
 	float v1 = 1.0f / sqrt( a4 * a4 + 1.0f );
 	float v2 = tan( v1 * a3 * 0.5f );
@@ -375,7 +259,7 @@ __declspec( dllexport ) int __stdcall SetCustomFovFix( float _CustomFovFix )
 }
 
 
-void __fastcall SetGameAreaFOV_my( FloatStruct1 * a1, int a2, float a3, float a4, float a5, float a6 )
+void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 )
 {
 	if ( EnableFixFOV )
 	{
@@ -408,153 +292,26 @@ int * __fastcall sub_6F379A30my ( void * a1, int unused, int a2, int a3 )
 */
 
 
-HWND Warcraft3Window = 0;
-
-typedef LRESULT( __stdcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
-WarcraftRealWNDProc WarcraftRealWNDProc_org;
-WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
-
-BOOL SkippAllMessages = TRUE;
-
-LPARAM lpF1ScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ) );
-LPARAM lpF1ScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_F1, 0 ) << 16 ) );
-
-
-BOOL NeedPressKeyForHWND = FALSE;
-
-WPARAM NeedPressMsg = 0;
-WPARAM NeedPresswParam;
-LPARAM NeedPresslParam;
-
-HANDLE hPressKeyWithDelay = NULL;
-
-BOOL PressKeyWithDelayEND = FALSE;
-
-DWORD WINAPI PressKeyWithDelay( LPVOID )
-{
-	while ( true && !PressKeyWithDelayEND )
-	{
-		Sleep( 40 );
-		if ( NeedPressKeyForHWND )
-		{
-			NeedPressKeyForHWND = FALSE;
-			Sleep( 160 );
-			if ( NeedPressMsg == 0 )
-			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, NeedPresswParam, NeedPresslParam );
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, NeedPresswParam, ( LPARAM ) ( 0xC0000000 | NeedPresslParam ) );
-			}
-			else
-				WarcraftRealWNDProc_ptr( Warcraft3Window, NeedPressMsg, NeedPresswParam, NeedPresslParam );
-		}
-
-	}
-	PressKeyWithDelayEND = FALSE;
-	return 0;
-}
-
-
-
-LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam )
-{
-	if ( SkippAllMessages )
-		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-
-
-
-
-	if ( *( BOOL* ) IsWindowActive && *( int* ) ChatFound == 0 )
-	{
-		if ( Msg == WM_KEYDOWN )
-		{
-			if ( wParam >= 0x41 && wParam <= 0x5A )
-			{
-				if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
-				{
-					AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc" );
-					SkippAllMessages = TRUE;
-					WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-					WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
-
-					NeedPressMsg = 0;
-					NeedPresswParam = wParam;
-					NeedPresslParam = lParam;
-					NeedPressKeyForHWND = TRUE;
-
-
-
-					SkippAllMessages = FALSE;
-				}
-			}
-		}
-		if ( Msg == WM_RBUTTONDOWN )
-		{
-			if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
-			{
-				AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc2" );
-				SkippAllMessages = TRUE;
-				WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-				WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
-
-				/*	NeedPressMsg = Msg;
-					NeedPresswParam = wParam;
-					NeedPresslParam = lParam;
-					NeedPressKeyForHWND = TRUE;
-	*/
-
-
-				SkippAllMessages = FALSE;
-			}
-		}
-	}
-	else if ( BlockKeyAndMouseEmulation )
-	{
-		if ( Msg == WM_RBUTTONDOWN )
-		{
-			return 0;
-		}
-		if ( Msg == WM_KEYDOWN )
-		{
-			return 0;
-		}
-		if ( Msg == WM_KEYUP )
-		{
-			return 0;
-		}
-	}
-
-
-	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-}
-
-
-
-__declspec( dllexport ) int __stdcall ToggleBlockKeyAndMouseEmulation( BOOL enable )
-{
-	BlockKeyAndMouseEmulation = enable;
-	return 0;
-}
-
-
-
-__declspec( dllexport ) int __stdcall ToggleForcedSubSelection( BOOL enable )
-{
-	SkippAllMessages = !enable;
-	return 0;
-}
-
-
-
 
 void InitHook( )
 {
+
+
+
 	AddNewLineToDotaHelperLog( "InitHook" );
 	StormErrorHandler_org = ( StormErrorHandler ) StormErrorHandlerOffset;
 	LookupNative_org = ( LookupNative ) JassNativeLookupOffset;
 	LookupJassFunc_org = ( LookupJassFunc ) JassFuncLookupOffset;
 	ProcessNetEvents_org = ( ProcessNetEvents ) ProcessNetEventsOffset;
+	BlizzardDebug1_org = ( BlizzardDebug1 ) BlizzardDebug1Offset;
+	BlizzardDebug2_org = ( BlizzardDebug2 ) BlizzardDebug2Offset;
+	BlizzardDebug3_org = ( BlizzardDebug3 ) BlizzardDebug3Offset;
+	BlizzardDebug4_org = ( BlizzardDebug4 ) BlizzardDebug4Offset;
+	BlizzardDebug5_org = ( BlizzardDebug5 ) BlizzardDebug5Offset;
+	BlizzardDebug6_org = ( BlizzardDebug6 ) BlizzardDebug6Offset;
 
 	EnableErrorHandler( );
+
 	/*sub_6F379A30_org = ( sub_6F379A30 ) ( 0x379A30 + GameDll );
 
 	MH_CreateHook( sub_6F379A30_org, &sub_6F379A30my, reinterpret_cast< void** >( &sub_6F379A30_ptr ) );
@@ -564,15 +321,16 @@ void InitHook( )
 
 	if ( Warcraft3Window )
 	{
+
 		WarcraftRealWNDProc_org = ( WarcraftRealWNDProc ) GetWindowLongA( Warcraft3Window, GWL_WNDPROC );
 		if ( WarcraftRealWNDProc_org )
 		{
 			hPressKeyWithDelay = CreateThread( 0, 0, PressKeyWithDelay, 0, 0, 0 );
 			MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
 			MH_EnableHook( WarcraftRealWNDProc_org );
+
 		}
 	}
-
 
 	SetGameAreaFOV_org = ( SetGameAreaFOV ) ( SetGameAreaFOVoffset + GameDll );
 
@@ -606,17 +364,16 @@ void InitHook( )
 	MH_EnableHook( IsNeedDrawUnit2org );
 
 
-	Storm_279_org = ( pStorm_279 ) ( ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 279 ) );
-	MH_CreateHook( Storm_279_org, &Storm_279my, reinterpret_cast< void** >( &Storm_279_ptr ) );
-	MH_EnableHook( Storm_279_org );
 
-
+	GameGetFile_org = ( GameGetFile ) ( GameDll + GameGetFileOffset );
+	MH_CreateHook( GameGetFile_org, &GameGetFile_my, reinterpret_cast< void** >( &GameGetFile_ptr ) );
+	MH_EnableHook( GameGetFile_org );
 
 
 	pOnChatMessage_org = ( pOnChatMessage ) ( GameDll + pOnChatMessage_offset );
 	MH_CreateHook( pOnChatMessage_org, &pOnChatMessage_my, reinterpret_cast< void** >( &pOnChatMessage_ptr ) );
 	MH_EnableHook( pOnChatMessage_org );
-
+	IssueFixerInit( );
 }
 
 void UninitializeHook( )
@@ -624,48 +381,68 @@ void UninitializeHook( )
 	AddNewLineToDotaHelperLog( "UninitializeHook" );
 	DisableErrorHandler( );
 
-	if ( WarcraftRealWNDProc_org )
+
+#pragma region Game.dll hook
+	if ( GetModuleHandle( "Game.dll" ) != 0 )
 	{
-		PressKeyWithDelayEND = TRUE;
-		WaitForSingleObject( PressKeyWithDelay, 1000 );
-		MH_DisableHook( WarcraftRealWNDProc_org );
-	}
-	// Отключить хук для IsDrawSkillPanel_org
-	if ( IsDrawSkillPanel_org )
-	{
-		MH_DisableHook( IsDrawSkillPanel_org );
-		IsDrawSkillPanel_org = 0;
-	}
-	// Отключить хук для IsDrawSkillPanelOverlay_org
-	if ( IsDrawSkillPanelOverlay_org )
-	{
-		MH_DisableHook( IsDrawSkillPanelOverlay_org );
-		IsDrawSkillPanelOverlay_org = 0;
-	}
-	// Отключить хук для IsNeedDrawUnit2org
-	if ( IsNeedDrawUnit2org )
-	{
-		MH_DisableHook( IsNeedDrawUnit2org );
-		IsNeedDrawUnit2org = 0;
+		if ( WarcraftRealWNDProc_org )
+		{
+			PressKeyWithDelayEND = TRUE;
+			WaitForSingleObject( PressKeyWithDelay, 1000 );
+			MH_DisableHook( WarcraftRealWNDProc_org );
+		}
+
+		// Отключить хук для IsDrawSkillPanel_org
+		if ( IsDrawSkillPanel_org )
+		{
+			MH_DisableHook( IsDrawSkillPanel_org );
+			IsDrawSkillPanel_org = 0;
+		}
+		// Отключить хук для IsDrawSkillPanelOverlay_org
+		if ( IsDrawSkillPanelOverlay_org )
+		{
+			MH_DisableHook( IsDrawSkillPanelOverlay_org );
+			IsDrawSkillPanelOverlay_org = 0;
+		}
+		// Отключить хук для IsNeedDrawUnit2org
+		if ( IsNeedDrawUnit2org )
+		{
+			MH_DisableHook( IsNeedDrawUnit2org );
+			IsNeedDrawUnit2org = 0;
+		}
+
+		if ( pOnChatMessage_org )
+		{
+			MH_DisableHook( pOnChatMessage_org );
+			pOnChatMessage_org = 0;
+		}
+
+		if ( SetGameAreaFOV_org )
+		{
+			MH_DisableHook( SetGameAreaFOV_org );
+			SetGameAreaFOV_org = 0;
+		}
+
+		if ( GameGetFile_org )
+		{
+			MH_DisableHook( GameGetFile_org );
+			GameGetFile_org = 0;
+		}
 	}
 
-	if ( Storm_279_org )
+#pragma endregion
+
+
+#pragma region Storm.dll hook
+
+	if ( GetModuleHandle( "Storm.dll" ) != 0 )
 	{
-		MH_DisableHook( Storm_279_org );
-		Storm_279_org = 0;
+		
 	}
 
-	if ( pOnChatMessage_org )
-	{
-		MH_DisableHook( pOnChatMessage_org );
-		pOnChatMessage_org = 0;
-	}
+#pragma endregion
 
-	if ( SetGameAreaFOV_org )
-	{
-		MH_DisableHook( SetGameAreaFOV_org );
-		SetGameAreaFOV_org = 0;
-	}
+	IssueFixerDisable( );
 }
 
 
@@ -675,7 +452,6 @@ char buffer[ 4096 ];
 typedef int( __stdcall * pStorm_503 )( int a1, int a2, int a3 );
 pStorm_503 Storm_503;
 
-// Создает "прыжок" с одного участка кода в другой.
 BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 {
 	AddNewLineToDotaHelperLog( "PlantDetourJMP" );
@@ -703,9 +479,6 @@ char * bufferaddr = 0;
 
 
 
-
-
-
 int __declspec( naked ) __cdecl GetUnitItemInSlot126a( int unitaddr, int slotid )
 {
 	__asm
@@ -716,7 +489,6 @@ int __declspec( naked ) __cdecl GetUnitItemInSlot126a( int unitaddr, int slotid 
 		jmp GetItemInSlotAddr;
 	}
 }
-
 
 int __declspec( naked ) __cdecl GetUnitItemInSlot127a( int unitaddr, int slotid )
 {
@@ -1697,9 +1469,11 @@ unsigned long __stdcall RefreshTimer( void * )
 			{
 				offsetdata temp = offsetslist[ i ];
 				DWORD oldprotect, oldprotect2;
-				VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect );
-				*( int* ) temp.offaddr = temp.offdata;
-				VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
+				if ( VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
+				{
+					*( int* ) temp.offaddr = temp.offdata;
+					VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
+				}
 			}
 			offsetslist.clear( );
 
@@ -1711,7 +1485,15 @@ unsigned long __stdcall RefreshTimer( void * )
 			}
 
 			// Отключить ManaBar 
-			ManaBarSwitch( GameDll, StormDllModule, FALSE );
+			ManaBarSwitch( GameDll, FALSE );
+
+			FreeAllIHelpers( );
+			if ( !ModelCollisionFixList.empty( ) )
+				ModelCollisionFixList.clear( );
+			if ( !ModelTextureFixList.empty( ) )
+				ModelTextureFixList.clear( );
+			if ( !ModelPatchList.empty( ) )
+				ModelPatchList.clear( );
 		}
 
 		Sleep( 200 );
@@ -1766,14 +1548,17 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 	memset( hpbarscaleTowerY, 0, sizeof( hpbarscaleTowerY ) );
 
 	Warcraft3Window = 0;
-	SkippAllMessages = TRUE;
-
+	EnableSelectHelper = FALSE;
+	BlockKeyAndMouseEmulation = FALSE;
 	SetWidescreenFixState( FALSE );
+	MainFuncWork = FALSE;
 	SetCustomFovFix( 1.0f );
 
 	if ( gameversion == 0x26a )
 	{
 		UninitializeHook( );
+
+		FreeAllIHelpers( );
 		pOnChatMessage_offset = 0x2FB480;
 		IsNeedDrawUnit2offset = 0x28E1D0;
 		IsNeedDrawUnit2offsetRetAddress = 0x2F9B60;
@@ -1807,7 +1592,27 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		JassNativeLookupOffset = GameDll + 0x44EA00;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
 		ProcessNetEventsOffset = GameDll + 0x551D80;
+		BlizzardDebug1Offset = GameDll + 0x7AEC10;
+		BlizzardDebug2Offset = GameDll + 0x537e80;
+		BlizzardDebug3Offset = GameDll + 0x20BC60;
+		BlizzardDebug4Offset = GameDll + 0x41F5E0;
+		BlizzardDebug5Offset = GameDll + 0x39E970;
+		BlizzardDebug6Offset = GameDll + 0x579C10;
 
+
+
+		IssueWithoutTargetOrderOffset = 0x339C60;
+		IssueTargetOrPointOrder2Offset = 0x339CC0;
+		sub_6F339D50Offset = 0x339D50;
+		IssueTargetOrPointOrderOffset = 0x339DD0;
+		sub_6F339E60Offset = 0x339E60;
+		sub_6F339F00Offset = 0x339F00;
+		sub_6F339F80Offset = 0x339F80;
+		sub_6F33A010Offset = 0x33A010;
+
+		GameGetFileOffset = 0x4C1550;
+
+		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -1895,19 +1700,17 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		SetGameAreaFOVoffset = 0x7B66F0;
 
-		GetWindowXoffset = 0xADE91C;
-		GetWindowYoffset = 0xADE918;
+		GetWindowXoffset = ( float * ) ( GameDll + 0xADE91C );
+		GetWindowYoffset = ( float * ) ( GameDll + 0xADE918 );
 
 
 
 		pWar3Data1 = GameDll + 0xACBD40;
 		pWar3Data1 = *( int* ) pWar3Data1;
-		if ( pWar3Data1 )
-		{
-			Warcraft3Window = *( HWND* ) ( pWar3Data1 + 0x574 );
-		}
+		Warcraft3Window = *( HWND* ) ( GameDll + 0xAD1398 );
 
-		ManaBarSwitch( GameDll, StormDllModule, TRUE );
+
+		ManaBarSwitch( GameDll, TRUE );
 
 
 		InitHook( );
@@ -1923,11 +1726,14 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		pobCrc32Dynamic->FileCrc32Assembly( outfilename, dwCrc32 );
 		pobCrc32Dynamic->Free( );
 		delete pobCrc32Dynamic;
+		AddNewLineToDotaHelperLog( "InitEnd" );
 		return dwCrc32;
 	}
 	else if ( gameversion == 0x27a )
 	{
 		UninitializeHook( );
+
+		FreeAllIHelpers( );
 		pOnChatMessage_offset = 0x355CF0;
 		IsNeedDrawUnit2offset = 0x66E710;
 		IsNeedDrawUnit2offsetRetAddress = 0x359D60;
@@ -1961,6 +1767,28 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		JassNativeLookupOffset = GameDll + 0x7E2FE0;
 		JassFuncLookupOffset = GameDll + 0x7EFBB0;
 		ProcessNetEventsOffset = GameDll + 0x3098D0;
+		BlizzardDebug1Offset = GameDll + 0x179f20;
+		BlizzardDebug2Offset = GameDll + 0x30F990;
+		BlizzardDebug3Offset = GameDll + 0x520f0;
+		BlizzardDebug4Offset = GameDll + 0x273290;
+		BlizzardDebug5Offset = GameDll + 0x1c14f0;
+		BlizzardDebug6Offset = GameDll + 0x2eeb70;
+
+
+		IssueWithoutTargetOrderOffset = 0x3AE4E0;
+		IssueTargetOrPointOrder2Offset = 0x3AE540;
+		sub_6F339D50Offset = 0x3AE810;
+		IssueTargetOrPointOrderOffset = 0x3AE660;
+		sub_6F339E60Offset = 0x3AE5D0;
+		sub_6F339F00Offset = 0x3AE880;
+		sub_6F339F80Offset = 0x3AE6F0;
+		sub_6F33A010Offset = 0x3AE780;
+
+
+
+		GameGetFileOffset = 0x048C10;
+
+		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
 
 
@@ -1968,6 +1796,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
 		AddNewOffset( pDrawAttackSpeed + 3, *( int* ) ( pDrawAttackSpeed + 3 ) );
 		PlantDetourJMP( ( BYTE* ) ( pDrawAttackSpeed ), ( BYTE* ) PrintAttackSpeedAndOtherInfoHook127a, 5 );
+
 
 
 		int pDrawMoveSpeed = GameDll + 0x38D440;
@@ -2052,8 +1881,8 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 
-		GetWindowXoffset = 0xBBA22C;
-		GetWindowYoffset = 0xBBA228;
+		GetWindowXoffset = ( float * ) ( GameDll + 0xBBA22C );
+		GetWindowYoffset = ( float * ) ( GameDll + 0xBBA228 );
 
 		SetGameAreaFOVoffset = 0xD31D0;
 
@@ -2063,12 +1892,10 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		pWar3Data1 = GameDll + 0xBC5420;
 		pWar3Data1 = *( int* ) pWar3Data1;
-		if ( pWar3Data1 )
-		{
-			Warcraft3Window = *( HWND* ) ( pWar3Data1 + 0x574 );
-		}
+		Warcraft3Window = *( HWND* ) ( GameDll + 0xBDA9CC );
 
-		ManaBarSwitch( GameDll, StormDllModule, TRUE );
+
+		ManaBarSwitch( GameDll, TRUE );
 
 		InitHook( );
 
@@ -2081,17 +1908,19 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		pobCrc32Dynamic->FileCrc32Assembly( outfilename, dwCrc32 );
 		pobCrc32Dynamic->Free( );
 		delete pobCrc32Dynamic;
+
+		AddNewLineToDotaHelperLog( "InitEnd" );
 		return dwCrc32;
 	}
 
 
 
-
+	AddNewLineToDotaHelperLog( "InitBadVersion" );
 
 	return 0;
 }
 
-
+Ordinal403 Storm_403_org;
 
 #pragma region Main
 BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
@@ -2104,11 +1933,23 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		StormDllModule = GetModuleHandle( "Storm.dll" );
 		StormDll = ( int ) StormDllModule;
 
+	//	MODULEINFO modinfo;
+
+		//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
+		//GameDLLsz = modinfo.SizeOfImage;
+
+		//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
+		//StormDLLsz = modinfo.SizeOfImage;
+
+		Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
+		Storm_403_org = ( Ordinal403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 
 		// Инициализация "перехватчика" функций
 		MH_Initialize( );
 
-		//	InitDotaHelper( 0x26a );
+		//MessageBox( 0, "Init for 1.26a", "ok", MB_OK );
+		//InitDotaHelper( 0x26a );
+
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
@@ -2117,7 +1958,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		// Выгрузить "перехватчик" функций
 		MH_Uninitialize( );
 
-		// Уничтожить поток
+		// Завершить поток
 		if ( RefreshTimerID )
 		{
 			RefreshTimerEND = TRUE;
@@ -2132,11 +1973,14 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		{
 			offsetdata temp = offsetslist[ i ];
 			DWORD oldprotect, oldprotect2;
-			VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect );
-			*( int* ) temp.offaddr = temp.offdata;
+			if ( VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
+			{
+				*( int* ) temp.offaddr = temp.offdata;
+			}
 			VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
 		}
 		offsetslist.clear( );
+
 
 		// Очистить список кастом баров
 		for ( int i = 0; i < 20; i++ )
@@ -2145,7 +1989,20 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 				CustomHPBarList[ i ].clear( );
 		}
 		// Отключить ManaBar 
-		ManaBarSwitch( GameDll, StormDllModule, FALSE );
+		ManaBarSwitch( GameDll, FALSE );
+
+		FreeAllIHelpers( );
+		if ( !ModelCollisionFixList.empty( ) )
+			ModelCollisionFixList.clear( );
+		if ( !ModelTextureFixList.empty( ) )
+			ModelTextureFixList.clear( );
+		if ( !ModelPatchList.empty( ) )
+			ModelPatchList.clear( );
+
+		if ( GetModuleHandle( "Game.dll" ) == NULL )
+		{
+			ExitProcess( 0 );
+		}
 	}
 	return TRUE;
 }

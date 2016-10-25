@@ -115,3 +115,30 @@ BOOL __stdcall IsNotBadItem( int itemaddr )
 	return FALSE;
 }
 
+
+
+
+
+int GetSelectedUnitCountBigger( int slot )
+{
+	AddNewLineToDotaHelperLog( "GetSelectedUnitCountBigger" );
+	int plr = GetPlayerByNumber( slot );
+	if ( plr )
+	{
+		int PlayerData1 = *( int* ) ( plr + 0x34 );
+		if ( PlayerData1 )
+		{
+			int unitcount = *( int * ) ( PlayerData1 + 0x10 );
+			int unitcount2 = *( int * ) ( PlayerData1 + 0x1D4 );
+
+			if ( unitcount > unitcount2 )
+				return unitcount;
+			else
+				return unitcount2;
+		}
+	}
+
+	return NULL;
+}
+
+

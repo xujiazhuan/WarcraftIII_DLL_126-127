@@ -39,7 +39,28 @@
     <ClCompile Include="DotaViewAllySkill.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="ErrorHandler.cpp">
+    <ClCompile Include="DotaClickHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaChatHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaErrorHandler.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="blpaletter.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="jpgwrapper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="quantizer.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="hash_64.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaIconAndMdlHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,6 +83,24 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="blpaletter.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="buffer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="jpgwrapper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="quantizer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="fnv.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="longlong.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

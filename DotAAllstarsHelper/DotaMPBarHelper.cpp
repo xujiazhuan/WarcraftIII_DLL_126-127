@@ -12,7 +12,7 @@ GADDRESS sub_6F6061B0;   // 606860 6f606860
 GADDRESS sub_6F605CC0;   // 606370 6f606370
 GADDRESS sub_6F359CC0;   // 35A740 6f35A740
 GADDRESS sub_6F32C880; // 32D300   6f
-ADDRESS Storm_401; //storm 0x191 #401
+Storm_401 Storm_401_org; //storm 0x191 #401
 GADDRESS sub_6F2C74B0;
 
 ADDRESS a16F08C;
@@ -249,7 +249,7 @@ void __declspec( naked ) ReallocateMemoryForMPBar( )
 		pop     eax;
 		add     eax, eax;
 		push    eax;
-		call    Storm_401;
+		call    Storm_401_org;
 		pushad;
 		mov     a16F004, eax;
 		mov     esi, a16F004;
@@ -486,10 +486,10 @@ void __declspec( naked ) RedrawMPBar( )
 BOOL ManabarInitialized = FALSE;
 BOOL ManabarEnabled = FALSE;
 
-char STORM_401_malloc_old[ 5 ];
+char Storm_401_org_malloc_old[ 5 ];
 char HPMP_DRAW_old[ 5 ];
 
-ADDRESS STORM_401_malloc;
+ADDRESS Storm_401_org_malloc;
 ADDRESS HPMP_DRAW;
 
 void Hook( )
@@ -499,14 +499,14 @@ void Hook( )
 		DWORD old1, old2, old3;
 		ManabarEnabled = TRUE;
 
-		VirtualProtect( STORM_401_malloc, 5, PAGE_EXECUTE_READWRITE, &old1 );
+		VirtualProtect( Storm_401_org_malloc, 5, PAGE_EXECUTE_READWRITE, &old1 );
 		VirtualProtect( HPMP_DRAW, 5, PAGE_EXECUTE_READWRITE, &old2 );
 
-		CopyMemory( STORM_401_malloc_old, STORM_401_malloc, 5 );
+		CopyMemory( Storm_401_org_malloc_old, Storm_401_org_malloc, 5 );
 		CopyMemory( HPMP_DRAW_old, HPMP_DRAW, 5 );
 
 		{
-			unsigned char* p = reinterpret_cast< unsigned char* >( STORM_401_malloc );
+			unsigned char* p = reinterpret_cast< unsigned char* >( Storm_401_org_malloc );
 			*p = 0xe8;
 			p += 5;
 			int X = ( int ) ReallocateMemoryForMPBar - ( int ) p;
@@ -522,7 +522,7 @@ void Hook( )
 			*reinterpret_cast< int* >( p + 1 ) = X;
 		}
 
-		VirtualProtect( STORM_401_malloc, 5, old1, &old3 );
+		VirtualProtect( Storm_401_org_malloc, 5, old1, &old3 );
 		VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
 
 	}
@@ -534,30 +534,30 @@ void Unhook( )
 {
 	if ( ManabarEnabled )
 	{
-		DWORD old1, old2, old3;
-		ManabarEnabled = FALSE;
+		if ( GetModuleHandle( "Game.dll" ) != 0 )
+		{
+			DWORD old1, old2, old3;
+			ManabarEnabled = FALSE;
 
-		VirtualProtect( STORM_401_malloc, 5, PAGE_EXECUTE_READWRITE, &old1 );
-		VirtualProtect( HPMP_DRAW, 5, PAGE_EXECUTE_READWRITE, &old2 );
-
-		CopyMemory( STORM_401_malloc, STORM_401_malloc_old, 5 );
-		CopyMemory( HPMP_DRAW, HPMP_DRAW_old, 5 );
-
-
-		VirtualProtect( STORM_401_malloc, 5, old1, &old3 );
-		VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
-
+			if ( VirtualProtect( Storm_401_org_malloc, 5, PAGE_EXECUTE_READWRITE, &old1 ) )
+			{
+				CopyMemory( Storm_401_org_malloc, Storm_401_org_malloc_old, 5 );
+				VirtualProtect( Storm_401_org_malloc, 5, old1, &old3 );
+			}
+			if ( VirtualProtect( HPMP_DRAW, 5, PAGE_EXECUTE_READWRITE, &old2 ) )
+			{
+				CopyMemory( HPMP_DRAW, HPMP_DRAW_old, 5 );
+				VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
+			}
+		}
 	}
 
 }
 
 
-void ManaBarSwitch( int GameDLL, HMODULE StormDLL, BOOL b )
+void ManaBarSwitch( int GameDLL, BOOL b )
 {
 	*( int* ) &a3000AC = 1;
-
-	HMODULE hMod = StormDLL;
-	Storm_401 = ( ADDRESS ) GetProcAddress( hMod, ( LPCSTR ) 401 );
 
 	if ( GameVersion == 0x26a )
 	{
@@ -569,8 +569,38 @@ void ManaBarSwitch( int GameDLL, HMODULE StormDLL, BOOL b )
 		*( int* ) &sub_6F32C880 = ( int ) GameDLL + 0x32C880;  // 0x32D3C0
 		*( int* ) &sub_6F2C74B0 = ( int ) GameDLL + 0x2C74B0;    // 0x6f2C7FD0??
 
-		*( int* ) &STORM_401_malloc = ( int ) GameDLL + 0x379AE3;  // 0x6f37A623
+		*( int* ) &Storm_401_org_malloc = ( int ) GameDLL + 0x379AE3;  // 0x6f37A623
 		*( int* ) &HPMP_DRAW = ( int ) GameDLL + 0x379EE8;  // 0x6F37AA28
+
+		if ( b )
+			Hook( );
+		else
+		{
+			memset( mpbarscaleHeroX, 0, sizeof( mpbarscaleHeroX ) );
+			memset( mpbarscaleHeroY, 0, sizeof( mpbarscaleHeroY ) );
+			memset( mpbaroffsetHeroY, 0, sizeof( mpbaroffsetHeroY ) );
+
+			memset( mpbarscaleUnitX, 0, sizeof( mpbarscaleUnitX ) );
+			memset( mpbarscaleUnitY, 0, sizeof( mpbarscaleUnitY ) );
+			memset( mpbaroffsetUnitY, 0, sizeof( mpbaroffsetUnitY ) );
+
+			Unhook( );
+		}
+
+		ManabarInitialized = TRUE;
+	}
+	else if ( GameVersion == 0x27a )
+	{
+		*( int* ) &sub_6F27AE90 = ( int ) GameDLL + 0x669B40; // 669B40
+		*( int* ) &sub_6F334180 = ( int ) GameDLL + 0x358CF0; // 358CF0
+		*( int* ) &sub_6F6061B0 = ( int ) GameDLL + 0x0BD830; // 0BD830
+		*( int* ) &sub_6F605CC0 = ( int ) GameDLL + 0x0BD630; // 0BD630
+		*( int* ) &sub_6F359CC0 = ( int ) GameDLL + 0x383F60; // 383F60
+		*( int* ) &sub_6F32C880 = ( int ) GameDLL + 0x327020; // 327020
+		*( int* ) &sub_6F2C74B0 = ( int ) GameDLL + 0x6374A0; // 6374A0
+
+		*( int* ) &Storm_401_org_malloc = ( int ) GameDLL + 0x374F14; // 374F14
+		*( int* ) &HPMP_DRAW = ( int ) GameDLL + 0x3784CA; 
 
 		if ( b )
 			Hook( );

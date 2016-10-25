@@ -3,6 +3,7 @@
 #pragma warning(disable:4820)
 #pragma warning(disable:4710)
 #pragma warning(disable:4100)
+#pragma warning(disable:4514)
 
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
@@ -10,25 +11,27 @@
 #define NTDDI_VERSION 0x05010000
 #define VC_EXTRALEAN
 #define WIN32_LEAN_AND_MEAN
+//#define PSAPI_VERSION 1
 
-#include <Windows.h>
 #pragma region Includes
 // Все WINAPI и прочие функции
-
+#include <Windows.h>
+#include <Windowsx.h>
 #include <intrin.h>
 #include <vector>
 #include <tchar.h>
 #include <fstream> 
 #include <iostream>
-#pragma intrinsic(_ReturnAddress)
+//#include <Psapi.h>
 // Перехват функций
 #include <MinHook.h>
 #include <string>
 using namespace std;
-#pragma comment(lib,"libMinHook.x86.lib")
-
+#pragma comment(lib, "libMinHook.x86.lib")
+//#pragma comment(lib, "Psapi.lib")
 #pragma endregion
-#define IsKeyPressed(CODE) (GetAsyncKeyState(CODE) & 0x8000) > 0
+#define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
+
 
 
 struct CustomHPBar
@@ -41,7 +44,7 @@ struct CustomHPBar
 
 
 
-struct FloatStruct1//Matrix 4x4
+struct Matrix1//Matrix 4x4
 {
 	float flt1;//0
 	float flt2;//4
@@ -165,15 +168,17 @@ BOOL __stdcall IsTower( int unitaddr );
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
 
+extern BOOL MainFuncWork;
+
 #pragma region DotaPlayerHelper.cpp
 
 int GetLocalPlayerId( );
 int GetPlayerByNumber( int number );
 
 // Проверить являются ли игроки врагами
-typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 ); 
+typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 );
 // Получить игрока по ID
-typedef UINT( __cdecl * GetPlayerByID )( int PlayerId ); 
+typedef UINT( __cdecl * GetPlayerByID )( int PlayerId );
 typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
 extern p_GetPlayerName GetPlayerName;
 __declspec( dllexport ) int __stdcall MutePlayer( const char * str );
@@ -196,16 +201,17 @@ BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsNotBadItem( int itemaddr );
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 extern pGetHeroInt GetHeroInt;
-
+int GetSelectedUnitCountBigger( int slot );
 #pragma endregion
 
 #pragma region DotaMPBarHelper.cpp
 
 extern BYTE BarVtableClone[ 0x80 ];
-void ManaBarSwitch( int GameDLL, HMODULE StormDLL, BOOL b );
+void ManaBarSwitch( int GameDLL, BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct );
-
+typedef void *( __stdcall * Storm_401 )( size_t Size, const char * srcfile, int line, int val );
+extern Storm_401 Storm_401_org;
 #pragma endregion
 
 
@@ -242,6 +248,18 @@ typedef signed int( __fastcall * LookupJassFunc )( int a1, int unused, char * fu
 extern LookupJassFunc LookupJassFunc_org;
 typedef void( __fastcall * ProcessNetEvents )( void * data, int unused_, int Event );
 extern ProcessNetEvents ProcessNetEvents_org;
+typedef void( __fastcall * BlizzardDebug1 ) ( const char*str );
+extern BlizzardDebug1 BlizzardDebug1_org;
+typedef void( __cdecl * BlizzardDebug2 )( const char * src, int lineid, const char * classname );
+extern BlizzardDebug2 BlizzardDebug2_org;
+typedef void( __cdecl * BlizzardDebug3 )( const char *format, ... );
+extern BlizzardDebug3 BlizzardDebug3_org;
+typedef void( __cdecl * BlizzardDebug4 )( BOOL type1, const char *format, ... );
+extern BlizzardDebug4 BlizzardDebug4_org;
+typedef void( __cdecl * BlizzardDebug5 )( const char *format, ... );
+extern BlizzardDebug5 BlizzardDebug5_org;
+typedef void( __cdecl * BlizzardDebug6 )( const char *format, ... );
+extern BlizzardDebug6 BlizzardDebug6_org;
 #pragma endregion
 
 
@@ -252,6 +270,7 @@ extern int StormDll;
 extern HMODULE GameDllModule;
 extern HMODULE StormDllModule;
 extern int GameVersion;
+extern HWND Warcraft3Window;
 
 #pragma region All Offsets Here
 
@@ -280,7 +299,85 @@ extern int pOnChatMessage_offset;
 extern int _BarVTable;
 extern int pAttackSpeedLimit;
 extern int GetItemInSlotAddr;
-extern int GetWindowXoffset;
-extern int GetWindowYoffset;
+extern float * GetWindowXoffset;
+extern float * GetWindowYoffset;
+extern int GameFrameAtMouseStructOffset;
 
+#pragma endregion
+
+
+
+#pragma region DotaClickHelper.cpp
+
+extern BOOL BlockKeyAndMouseEmulation;
+extern BOOL EnableSelectHelper;
+extern BOOL ClickHelper;
+
+typedef LRESULT( __stdcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
+extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
+extern WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
+
+extern HANDLE hPressKeyWithDelay;
+LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
+extern BOOL PressKeyWithDelayEND;
+DWORD WINAPI PressKeyWithDelay( LPVOID );
+
+
+extern int IssueWithoutTargetOrderOffset;
+extern int IssueTargetOrPointOrder2Offset;
+extern int sub_6F339D50Offset;
+extern int IssueTargetOrPointOrderOffset;
+extern int sub_6F339E60Offset;
+extern int sub_6F339F00Offset;
+extern int sub_6F339F80Offset;
+extern int sub_6F33A010Offset;
+void IssueFixerInit( );
+void IssueFixerDisable( );
+#pragma endregion
+
+
+#pragma region DotaIconAndMdlHelper.cpp
+
+struct ModelCollisionFixStruct
+{
+	char FilePath[ 512 ];
+	float X, Y, Z, Radius;
+};
+
+struct ModelTextureFixStruct
+{
+	char FilePath[ 512 ];
+	int TextureID;
+	char NewTexturePath[ 0x100 ];
+};
+
+
+struct ModelPatchStruct
+{
+	char FilePath[ 512 ];
+	char patchPath[ 512 ];
+};
+
+
+extern vector<ModelCollisionFixStruct> ModelCollisionFixList;
+extern vector<ModelTextureFixStruct> ModelTextureFixList;
+extern vector<ModelPatchStruct> ModelPatchList;
+
+struct FileRedirectStruct
+{
+	char NewFilePath[ 512 ];
+	char RealFilePath[ 512 ];
+};
+
+extern vector<FileRedirectStruct> FileRedirectList;
+
+typedef signed int( __stdcall * Ordinal403 )( void *a1, const char * str, int line, int id );
+extern Ordinal403 Storm_403_org;
+
+typedef BOOL( __fastcall * GameGetFile )( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+BOOL __fastcall GameGetFile_my( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+extern GameGetFile GameGetFile_org;
+extern GameGetFile GameGetFile_ptr;
+
+void FreeAllIHelpers( );
 #pragma endregion

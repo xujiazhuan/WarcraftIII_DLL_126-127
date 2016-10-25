@@ -30,15 +30,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath)</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath)</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>
-      <Optimization>MinSpace</Optimization>
       <FunctionLevelLinking>
       </FunctionLevelLinking>
       <IntrinsicFunctions>
@@ -50,11 +49,13 @@
       <FavorSizeOrSpeed>
       </FavorSizeOrSpeed>
       <EnablePREfast>false</EnablePREfast>
-      <StructMemberAlignment>1Byte</StructMemberAlignment>
       <ExceptionHandling>Async</ExceptionHandling>
       <OmitFramePointers />
       <EnableFiberSafeOptimizations />
       <WholeProgramOptimization />
+      <Optimization>Disabled</Optimization>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -64,28 +65,61 @@
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="blpaletter.cpp" />
     <ClCompile Include="Crc32Dynamic.cpp">
       <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
     </ClCompile>
-    <ClCompile Include="DotaHPBarHelper.cpp" />
-    <ClCompile Include="DotaWebHelper.cpp" />
-    <ClCompile Include="DotaMPBarHelper.cpp" />
-    <ClCompile Include="DotaAllstarsHelper.cpp" />
-    <ClCompile Include="DotaPlayerHelper.cpp" />
-    <ClCompile Include="ErrorHandler.cpp" />
-    <ClCompile Include="UnitAndItem.cpp" />
-    <ClCompile Include="DotaViewAllySkill.cpp" />
+    <ClCompile Include="DotaChatHelper.cpp" />
+    <ClCompile Include="DotaClickHelper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaHPBarHelper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaIconAndMdlHelper.cpp" />
+    <ClCompile Include="DotaWebHelper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaMPBarHelper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaAllstarsHelper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaPlayerHelper.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaErrorHandler.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="hash_64.cpp" />
+    <ClCompile Include="jpgwrapper.cpp" />
+    <ClCompile Include="quantizer.cpp" />
+    <ClCompile Include="UnitAndItem.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="DotaViewAllySkill.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="blpaletter.h" />
+    <ClInclude Include="buffer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Crc32Dynamic.h" />
+    <ClInclude Include="fnv.h" />
+    <ClInclude Include="jpgwrapper.h" />
+    <ClInclude Include="longlong.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="quantizer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ViewAllySkill.h" />
   </ItemGroup>
