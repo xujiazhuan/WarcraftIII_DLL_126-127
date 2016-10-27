@@ -322,6 +322,8 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM wParam, LPA
 extern BOOL PressKeyWithDelayEND;
 DWORD WINAPI PressKeyWithDelay( LPVOID );
 
+extern unsigned char ShiftPressed;
+extern BOOL SkipAllMessages;
 
 extern int IssueWithoutTargetOrderOffset;
 extern int IssueTargetOrPointOrder2Offset;
@@ -348,7 +350,7 @@ struct ModelTextureFixStruct
 {
 	char FilePath[ 512 ];
 	int TextureID;
-	char NewTexturePath[ 0x100 ];
+	char NewTexturePath[ 260 ];
 };
 
 
@@ -359,9 +361,36 @@ struct ModelPatchStruct
 };
 
 
+struct ModelRemoveTagStruct
+{
+	char FilePath[ 512 ];
+	char TagName[ 5 ];
+};
+
+struct ModelSequenceReSpeedStruct
+{
+	char FilePath[ 512 ];
+	char AnimationName[ 100 ];
+	float SpeedUp;
+};
+
+
+
+struct ModelSequenceValueStruct
+{
+	char FilePath[ 512 ];
+	char AnimationName[ 100 ];
+	int Indx;
+	float Value;
+};
+
+
 extern vector<ModelCollisionFixStruct> ModelCollisionFixList;
 extern vector<ModelTextureFixStruct> ModelTextureFixList;
 extern vector<ModelPatchStruct> ModelPatchList;
+extern vector<ModelRemoveTagStruct> ModelRemoveTagList;
+extern vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
+extern vector<ModelSequenceValueStruct> ModelSequenceValueList;
 
 struct FileRedirectStruct
 {

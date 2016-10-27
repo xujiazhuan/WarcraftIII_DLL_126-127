@@ -15,7 +15,10 @@ using namespace std;
 #pragma warning(disable:4710)
 #pragma warning(disable:4100)
 #pragma warning(disable:4514)
+#pragma warning(disable:4201)
 
+unsigned char FixBounds( int i );
+unsigned char FixBounds( double i );
 
 union BGRAPix
 {
@@ -27,7 +30,7 @@ union BGRAPix
 		unsigned char A;
 	};
 	unsigned long bgra;
-	
+
 	BGRAPix( unsigned char B, unsigned char G, unsigned char R, unsigned char A )
 	{
 		this->bgra = ( unsigned long ) ( ( A << 24 ) | ( R << 16 ) | ( G << 8 ) | B );
@@ -37,6 +40,7 @@ union BGRAPix
 		this->bgra = 0;
 	}
 };
+
 
 class CQuantizer
 {
@@ -76,8 +80,8 @@ public:
 
 protected:
 	unsigned int GetLeafCount( Node* pTree );
-	void AddColor( Node** ppNode, unsigned char r, unsigned char g, unsigned char b, unsigned char a, unsigned int nColorBits, unsigned int nLevel, unsigned int* pLeafCount, Node** pReducibleNodes );
-	void* CreateNode( unsigned int nLevel, unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes );
+	void AddColor( Node** ppNode, unsigned char r, unsigned char g, unsigned char b, unsigned char a, unsigned int nColorBits, int nLevel, unsigned int* pLeafCount, Node** pReducibleNodes );
+	void* CreateNode(  int nLevel, unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes );
 	void ReduceTree( unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes );
 	void DeleteTree( Node** ppNode );
 	void GetPaletteColors( Node* pTree, BGRAPix* prgb, unsigned int* pIndex, unsigned int* pSum );
@@ -85,3 +89,4 @@ protected:
 	bool ColorsAreEqual( BGRAPix* a, BGRAPix* b );
 };
 #endif
+

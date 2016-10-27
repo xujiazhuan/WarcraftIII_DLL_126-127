@@ -94,13 +94,13 @@
     <ClInclude Include="jpgwrapper.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="quantizer.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="fnv.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="longlong.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="quantizer.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

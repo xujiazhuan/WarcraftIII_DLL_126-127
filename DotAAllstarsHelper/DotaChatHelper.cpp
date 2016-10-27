@@ -36,7 +36,12 @@ LPARAM lpReturnScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey(
 LPARAM lpReturnScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_RETURN, 0 ) << 16 ) );
 
 
-__declspec( dllexport )  int __stdcall SendMessageToChat( const char * msg )
+
+LPARAM lpShiftScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
+LPARAM lpShiftScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
+
+
+__declspec( dllexport )  int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 {
 	BYTE tmpbuf[ 256 ];
 	BYTE tmpbuf2[ 256 ];
@@ -45,29 +50,89 @@ __declspec( dllexport )  int __stdcall SendMessageToChat( const char * msg )
 	SetKeyboardState( tmpbuf2 );
 
 	char * pChatString = GetChatString( );
-	if ( msg && pChatString && Warcraft3Window)
+	if ( msg && pChatString && Warcraft3Window )
 	{
-		if ( *( int* ) ChatFound > 0 )
+		if ( *( int* ) ChatFound > 0 && !toAll )
 		{
-			if ( *pChatString != '\0' )
-			{
-				pChatString[ 0 ] = '\0';
-			}
-
 			sprintf_s( pChatString, 150, "%s", msg );
 
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
 		}
-		else
+		else if ( *( int* ) ChatFound > 0 && toAll )
 		{
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
 
-			sprintf_s( pChatString, 150, "%s", msg );
+			if ( ShiftPressed == 0 )
+			{
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_LSHIFT, lpShiftScanKeyDOWN );
 
-			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
-			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_LSHIFT, lpShiftScanKeyUP );
+
+				sprintf_s( pChatString, 150, "%s", msg );
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+				
+			}
+			else
+			{
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+				sprintf_s( pChatString, 150, "%s", msg );
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+			}
+		}
+		else
+		{
+			if ( toAll && ShiftPressed == 0 )
+			{
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_LSHIFT, lpShiftScanKeyDOWN );
+
+
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_LSHIFT, lpShiftScanKeyUP );
+
+				sprintf_s( pChatString, 150, "%s", msg );
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+
+
+			}
+			else if ( toAll && ShiftPressed == 1 )
+			{
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+				sprintf_s( pChatString, 150, "%s", msg );
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+			}
+			else
+			{
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+
+				sprintf_s( pChatString, 150, "%s", msg );
+
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+			}
 		}
 
 	}

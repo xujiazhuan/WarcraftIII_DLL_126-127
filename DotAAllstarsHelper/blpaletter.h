@@ -16,6 +16,9 @@
 #define XMD_H
 #include "jpgwrapper.h"
 
+
+
+
 enum IconType
 {
 	Active,

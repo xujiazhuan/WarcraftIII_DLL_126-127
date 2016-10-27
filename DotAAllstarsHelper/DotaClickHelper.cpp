@@ -21,8 +21,6 @@ BOOL EmulateKeyInputForHWND = FALSE;
 
 
 unsigned char ShiftPressed = 0;
-
-
 BOOL SkipAllMessages = FALSE;
 
 
@@ -33,6 +31,30 @@ struct DelayedPress
 	LPARAM NeedPresslParam;
 	DWORD TimeOut;
 };
+
+
+void PressKeyboard( int VK )
+{
+	BOOL PressedKey = FALSE;
+	INPUT Input = { 0 };
+	Input.type = INPUT_KEYBOARD;
+	Input.ki.wScan = ( WORD ) MapVirtualKey( ( UINT ) VK, 0 );
+	Input.ki.wVk = ( WORD ) VK;
+	if ( IsKeyPressed( VK ) )
+	{
+		PressedKey = TRUE;
+		Input.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput( 1, &Input, sizeof( INPUT ) );
+	}
+
+	Input.ki.dwFlags = 0;
+	SendInput( 1, &Input, sizeof( INPUT ) );
+	if ( !PressedKey )
+	{
+		Input.ki.dwFlags = KEYEVENTF_KEYUP;
+		SendInput( 1, &Input, sizeof( INPUT ) );
+	}
+}
 
 
 vector<DelayedPress> DelayedPressList;
@@ -57,14 +79,18 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 			{
 				if ( DelayedPressList[ i ].NeedPressMsg == 0 )
 				{
-					WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, DelayedPressList[ i ].NeedPresswParam, DelayedPressList[ i ].NeedPresslParam );
-					WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, DelayedPressList[ i ].NeedPresswParam, ( LPARAM ) ( 0xC0000000 | DelayedPressList[ i ].NeedPresslParam ) );
+					SkipAllMessages = TRUE;
+					PressKeyboard( ( int ) DelayedPressList[ i ].NeedPresswParam );
+					//	WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, DelayedPressList[ i ].NeedPresswParam, DelayedPressList[ i ].NeedPresslParam );
+					//	WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, DelayedPressList[ i ].NeedPresswParam, ( LPARAM ) ( 0xC0000000 | DelayedPressList[ i ].NeedPresslParam ) );
+					SkipAllMessages = FALSE;
 				}
 				else
 				{
 					WarcraftRealWNDProc_ptr( Warcraft3Window, DelayedPressList[ i ].NeedPressMsg, DelayedPressList[ i ].NeedPresswParam, DelayedPressList[ i ].NeedPresslParam );
 				}
-
+				DelayedPressList.erase( DelayedPressList.begin( ) + ( int ) i );
+				i--;
 			}
 
 		}
@@ -132,6 +158,8 @@ void SetHeroFrameXY_old( )
 	}
 }
 
+
+
 void MouseClickX( int toX, int toY )
 {
 	POINT cursorPos;
@@ -148,15 +176,19 @@ void MouseClickX( int toX, int toY )
 	Input.mi.dy = LONG( dy );
 	SendInput( 1, &Input, sizeof( INPUT ) );
 	SetHeroFrameXY( );
+
 	SendInput( 1, &Input, sizeof( INPUT ) );
+	SetHeroFrameXY( );
 
 	Input.type = INPUT_MOUSE;
 	Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
 	SendInput( 1, &Input, sizeof( INPUT ) );
+	SetHeroFrameXY( );
 
 	Input.type = INPUT_MOUSE;
 	Input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
 	SendInput( 1, &Input, sizeof( INPUT ) );
+	SetHeroFrameXY( );
 
 	dx = cursorPos.x*( 65535.0f / screenRes_width );
 	dy = cursorPos.y*( 65535.0f / screenRes_height );
@@ -166,21 +198,28 @@ void MouseClickX( int toX, int toY )
 	Input.mi.dx = LONG( dx );
 	Input.mi.dy = LONG( dy );
 	SendInput( 1, &Input, sizeof( INPUT ) );
+	SetHeroFrameXY( );
 }
 
-int toXX, toYY;
 
-DWORD WINAPI ThreadTest( LPVOID )
+
+
+DWORD WINAPI ThreadTest( void * lpp )
 {
-	MouseClickX( toXX, toYY );
+	POINT * p = ( POINT * ) lpp;
+	SkipAllMessages = TRUE;
+	MouseClickX( p->x, p->y );
+	SkipAllMessages = FALSE;
+	delete p;
 	return 0;
 }
 
 void MouseClick( int toX, int toY )
 {
-	toXX = toX;
-	toYY = toY;
-	CreateThread( 0, 0, ThreadTest, 0, 0, 0 );
+	POINT * ClickPoint = new POINT( );
+	ClickPoint->x = toX;
+	ClickPoint->y = toY;
+	CreateThread( 0, 0, ThreadTest, ClickPoint, 0, 0 );
 }
 
 void JustClickMouse( )
@@ -229,7 +268,7 @@ void PressMouseAtSelectedHero( )
 
 		cursor.x = cursor.x + x;
 		cursor.y = cursor.y + y;
-
+		//( toXX, toYY );
 
 		MouseClick( cursor.x, cursor.y );
 	}
@@ -244,7 +283,7 @@ struct mMessage
 
 vector<mMessage> SkipMessagesList;
 
-BOOL SHIFTPRESSED = FALSE;
+
 WPARAM LastShift = 0;
 
 LPARAM MakeLParamVK( UINT VK, BOOL up, BOOL Extended = FALSE )
@@ -252,6 +291,9 @@ LPARAM MakeLParamVK( UINT VK, BOOL up, BOOL Extended = FALSE )
 	if ( up ) return ( LPARAM ) ( 0xC0000001 | ( ( UINT ) Extended << 24 ) | ( LPARAM ) ( MapVirtualKey( VK, 0 ) << 16 ) );
 	else return ( LPARAM ) ( 0x00000001 | ( ( UINT ) Extended << 24 ) | ( LPARAM ) ( MapVirtualKey( VK, 0 ) << 16 ) );
 }
+
+
+DWORD LastPressedKeysTime[ 256 ];
 
 LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam )
 {
@@ -263,8 +305,6 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-
-	int  scanCode = ( int ) ( ( lParam >> 24 ) & 0x1 );
 
 	if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
 	{
@@ -287,6 +327,9 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 		wParam == 0x28
 		) )
 	{
+		int  scanCode = ( int ) ( ( lParam >> 24 ) & 0x1 );
+
+
 		if ( scanCode != 1 )
 		{
 			switch ( wParam )
@@ -355,8 +398,6 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 
 			if ( Msg == WM_KEYDOWN )
 			{
-
-
 				if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
 				{
 
@@ -371,7 +412,7 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 							tmpDelayPress.NeedPresslParam = lParam;
 							tmpDelayPress.NeedPresswParam = wParam;
 							tmpDelayPress.NeedPressMsg = 0;
-							tmpDelayPress.TimeOut = 150;
+							tmpDelayPress.TimeOut = 20;
 							DelayedPressList.push_back( tmpDelayPress );
 						}
 					}
@@ -384,29 +425,21 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 						}
 						else
 						{
-							if ( LastKeyPressedTime == 0 )
-							{
-								LastKeyPressedTime = GetTickCount( );
-								LastKeyPressedKey = wParam;
-							}
-							else
-							{
 
-								if ( wParam == LastKeyPressedKey )
+							if ( LastPressedKeysTime[ wParam ] + 400 > GetTickCount( ) )
+							{
+								if ( IsCursorSelectTarget( ) )
 								{
-									if ( LastKeyPressedTime + 250 > GetTickCount( ) )
+									PressMouseAtSelectedHero( );
+									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
 									{
-										PressMouseAtSelectedHero( );
-										if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
-										{
-											return DefWindowProc( hWnd, Msg, wParam, lParam );
-										}
+										return DefWindowProc( hWnd, Msg, wParam, lParam );
 									}
+									LastPressedKeysTime[ wParam ] = 0;
 								}
-
-								LastKeyPressedKey = wParam;
-								LastKeyPressedTime = GetTickCount( );
 							}
+
+							LastPressedKeysTime[ wParam ] = GetTickCount( );
 						}
 					}
 				}

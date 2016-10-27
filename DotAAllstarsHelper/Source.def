@@ -27,7 +27,10 @@ StartExtraErrorHandler @123
 SendMessageToChat @124
 FixModelCollisionSphere @125
 FixModelTexturePath @126
-PatchModel @127
-RedirectFile @128
-ApplyTerrainFilterDirectly @129
-SetMainFuncWork @130
+ChangeAnimationSpeed @127
+SetSequenceValue @128
+PatchModel @129
+RemoveTagFromModel @130
+RedirectFile @131
+ApplyTerrainFilterDirectly @132
+SetMainFuncWork @133

@@ -388,7 +388,7 @@ void UninitializeHook( )
 		if ( WarcraftRealWNDProc_org )
 		{
 			PressKeyWithDelayEND = TRUE;
-			WaitForSingleObject( PressKeyWithDelay, 1000 );
+			WaitForSingleObject( PressKeyWithDelay, 2000 );
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		}
 
@@ -437,7 +437,7 @@ void UninitializeHook( )
 
 	if ( GetModuleHandle( "Storm.dll" ) != 0 )
 	{
-		
+
 	}
 
 #pragma endregion
@@ -1441,7 +1441,6 @@ unsigned long __stdcall RefreshTimer( void * )
 					RefreshTimerEND = FALSE;
 					return 0;
 				}
-
 			}
 
 			// Ждать пока игра не закончится
@@ -1454,7 +1453,6 @@ unsigned long __stdcall RefreshTimer( void * )
 					RefreshTimerEND = FALSE;
 					return 0;
 				}
-
 			}
 
 			AddNewLineToDotaHelperLog( "RefreshTimerEnd" );
@@ -1494,6 +1492,12 @@ unsigned long __stdcall RefreshTimer( void * )
 				ModelTextureFixList.clear( );
 			if ( !ModelPatchList.empty( ) )
 				ModelPatchList.clear( );
+			if ( !ModelRemoveTagList.empty( ) )
+				ModelRemoveTagList.clear( );
+			if ( !ModelSequenceReSpeedList.empty( ) )
+				ModelSequenceReSpeedList.clear( );
+			if ( !ModelSequenceValueList.empty( ) )
+				ModelSequenceValueList.clear( );
 		}
 
 		Sleep( 200 );
@@ -1523,7 +1527,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 	if ( RefreshTimerID )
 	{
 		RefreshTimerEND = TRUE;
-		WaitForSingleObject( RefreshTimerID, 1000 );
+		WaitForSingleObject( RefreshTimerID, 2000 );
 		RefreshTimerID = 0;
 	}
 	//RemoveMapSizeLimit( );
@@ -1698,11 +1702,14 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		MapNameOffset2 = 8;
 
 
-		SetGameAreaFOVoffset = 0x7B66F0;
 
 		GetWindowXoffset = ( float * ) ( GameDll + 0xADE91C );
 		GetWindowYoffset = ( float * ) ( GameDll + 0xADE918 );
 
+		SetGameAreaFOVoffset = 0x7B66F0;
+
+		
+		RefreshTimerID = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
 		pWar3Data1 = GameDll + 0xACBD40;
@@ -1712,10 +1719,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		ManaBarSwitch( GameDll, TRUE );
 
-
 		InitHook( );
-		RefreshTimerID = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
-
 
 		/* crc32 simple protection */
 		char outfilename[ MAX_PATH ];
@@ -1901,7 +1905,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		/* crc32 simple protection */
 		char outfilename[ MAX_PATH ];
-		GetModuleFileNameA( GetCurrentModule, outfilename, MAX_PATH );
+		GetModuleFileName( GetCurrentModule, outfilename, MAX_PATH );
 		DWORD dwCrc32;
 		CCrc32Dynamic *pobCrc32Dynamic = new CCrc32Dynamic;
 		pobCrc32Dynamic->Init( );
@@ -1933,13 +1937,13 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		StormDllModule = GetModuleHandle( "Storm.dll" );
 		StormDll = ( int ) StormDllModule;
 
-	//	MODULEINFO modinfo;
+		//	MODULEINFO modinfo;
 
-		//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
-		//GameDLLsz = modinfo.SizeOfImage;
+			//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
+			//GameDLLsz = modinfo.SizeOfImage;
 
-		//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
-		//StormDLLsz = modinfo.SizeOfImage;
+			//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
+			//StormDLLsz = modinfo.SizeOfImage;
 
 		Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
 		Storm_403_org = ( Ordinal403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
@@ -1962,7 +1966,8 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		if ( RefreshTimerID )
 		{
 			RefreshTimerEND = TRUE;
-			WaitForSingleObject( RefreshTimerID, 1000 );
+			//WaitForSingleObject( RefreshTimerID, 2000 );
+			RefreshTimerID = NULL;
 		}
 		// Отключить мут
 		UnMutePlayer( 0 );
@@ -1998,11 +2003,18 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 			ModelTextureFixList.clear( );
 		if ( !ModelPatchList.empty( ) )
 			ModelPatchList.clear( );
+		if ( !ModelRemoveTagList.empty( ) )
+			ModelRemoveTagList.clear( );
+		if ( !ModelSequenceReSpeedList.empty( ) )
+			ModelSequenceReSpeedList.clear( );
+		if ( !ModelSequenceValueList.empty( ) )
+			ModelSequenceValueList.clear( );
 
-		if ( GetModuleHandle( "Game.dll" ) == NULL )
+		if ( !GetModuleHandle( "Game.dll" ) )
 		{
-			ExitProcess( 0 );
+			ExitThread( 0 );
 		}
+
 	}
 	return TRUE;
 }
