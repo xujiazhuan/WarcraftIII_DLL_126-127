@@ -67,7 +67,7 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 
 		for ( unsigned int i = 0; i < DelayedPressList.size( ); i++ )
 		{
-			if ( DelayedPressList[ i ].TimeOut > 0 && DelayedPressList[ i ].TimeOut >= 20 )
+			if ( DelayedPressList[ i ].TimeOut >= 20 )
 			{
 				DelayedPressList[ i ].TimeOut -= 20;
 			}
@@ -295,6 +295,28 @@ LPARAM MakeLParamVK( UINT VK, BOOL up, BOOL Extended = FALSE )
 
 DWORD LastPressedKeysTime[ 256 ];
 
+
+
+BOOL KeyboardHaveTriggerEvent = FALSE;
+UINT KeyboardTriggerHandle = 0;
+int KeyboardAddrForKey = 0;
+int KeyboardAddrForKeyEvent = 0;
+
+__declspec( dllexport ) int __stdcall TriggerRegisterPlayerKeyboardEvent( int AddrForKey, int AddrForKeyEvent, UINT TriggerHandle )
+{
+	if ( !KeyboardHaveTriggerEvent )
+	{
+		KeyboardTriggerHandle = TriggerHandle;
+
+		KeyboardHaveTriggerEvent = TRUE;
+	}
+	return 0;
+}
+
+
+
+
+
 LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam )
 {
 	WPARAM wParam = _wParam;
@@ -306,93 +328,94 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
-	if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
-	{
-		ShiftPressed = ( unsigned char ) ( Msg == WM_KEYDOWN ? 0x1u : 0x0u );
-	}
-
-	if ( Msg == WM_RBUTTONDOWN )
-	{
-		ShiftPressed = ( unsigned char ) ( IsKeyPressed( VK_SHIFT ) ? 0x1u : 0x0u );
-	}
-
-
-	// SHIFT+NUMPAD TRICK
-	if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && (
-		wParam == 0xC ||
-		wParam == 0x23 ||
-		wParam == 0x24 ||
-		wParam == 0x25 ||
-		wParam == 0x26 ||
-		wParam == 0x28
-		) )
-	{
-		int  scanCode = ( int ) ( ( lParam >> 24 ) & 0x1 );
-
-
-		if ( scanCode != 1 )
-		{
-			switch ( wParam )
-			{
-				case 0x23:
-					wParam = VK_NUMPAD1;
-					break;
-				case 0x28:
-					wParam = VK_NUMPAD2;
-					break;
-				case 0x25:
-					wParam = VK_NUMPAD4;
-					break;
-				case 0xC:
-					wParam = VK_NUMPAD5;
-					break;
-				case 0x24:
-					wParam = VK_NUMPAD7;
-					break;
-				case 0x26:
-					wParam = VK_NUMPAD8;
-					break;
-				default:
-					break;
-			}
-			if ( wParam != _wParam )
-			{
-				if ( !IsKeyPressed( VK_SHIFT ) )
-				{
-					BOOL NumLock = ( ( ( unsigned short ) GetKeyState( VK_NUMLOCK ) ) & 0xffff ) != 0;
-					if ( NumLock )
-						ShiftPressed = 0x1;
-					else
-						ShiftPressed = 0x0;
-				}
-			}
-
-		}
-		else
-		{
-			if ( !IsKeyPressed( VK_SHIFT ) )
-			{
-				ShiftPressed = 0;
-			}
-		}
-	}
-
-	for ( unsigned int i = 0; i < SkipMessagesList.size( ); i++ )
-	{
-		if ( SkipMessagesList[ i ].Msg == Msg && SkipMessagesList[ i ].wParam == wParam )
-		{
-			SkipMessagesList.erase( SkipMessagesList.begin( ) + ( int ) i );
-			return DefWindowProc( hWnd, Msg, wParam, lParam );
-		}
-	}
-
-	if ( Msg == WM_MOUSEMOVE && BLOCKMOUSEMOVING )
-	{
-		return DefWindowProc( hWnd, Msg, wParam, lParam );
-	}
 
 	if ( *( BOOL* ) IsWindowActive )
 	{
+		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
+		{
+			ShiftPressed = ( unsigned char ) ( Msg == WM_KEYDOWN ? 0x1u : 0x0u );
+		}
+
+		if ( Msg == WM_RBUTTONDOWN )
+		{
+			ShiftPressed = ( unsigned char ) ( IsKeyPressed( VK_SHIFT ) ? 0x1u : 0x0u );
+		}
+
+
+		// SHIFT+NUMPAD TRICK
+		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && (
+			wParam == 0xC ||
+			wParam == 0x23 ||
+			wParam == 0x24 ||
+			wParam == 0x25 ||
+			wParam == 0x26 ||
+			wParam == 0x28
+			) )
+		{
+			int  scanCode = ( int ) ( ( lParam >> 24 ) & 0x1 );
+
+
+			if ( scanCode != 1 )
+			{
+				switch ( wParam )
+				{
+					case 0x23:
+						wParam = VK_NUMPAD1;
+						break;
+					case 0x28:
+						wParam = VK_NUMPAD2;
+						break;
+					case 0x25:
+						wParam = VK_NUMPAD4;
+						break;
+					case 0xC:
+						wParam = VK_NUMPAD5;
+						break;
+					case 0x24:
+						wParam = VK_NUMPAD7;
+						break;
+					case 0x26:
+						wParam = VK_NUMPAD8;
+						break;
+					default:
+						break;
+				}
+				if ( wParam != _wParam )
+				{
+					if ( !IsKeyPressed( VK_SHIFT ) )
+					{
+						BOOL NumLock = ( ( ( unsigned short ) GetKeyState( VK_NUMLOCK ) ) & 0xffff ) != 0;
+						if ( NumLock )
+							ShiftPressed = 0x1;
+						else
+							ShiftPressed = 0x0;
+					}
+				}
+
+			}
+			else
+			{
+				if ( !IsKeyPressed( VK_SHIFT ) )
+				{
+					ShiftPressed = 0;
+				}
+			}
+		}
+
+		for ( unsigned int i = 0; i < SkipMessagesList.size( ); i++ )
+		{
+			if ( SkipMessagesList[ i ].Msg == Msg && SkipMessagesList[ i ].wParam == wParam )
+			{
+				SkipMessagesList.erase( SkipMessagesList.begin( ) + ( int ) i );
+				return DefWindowProc( hWnd, Msg, wParam, lParam );
+			}
+		}
+
+		if ( Msg == WM_MOUSEMOVE && BLOCKMOUSEMOVING )
+		{
+			return DefWindowProc( hWnd, Msg, wParam, lParam );
+		}
+
 		if ( *( int* ) ChatFound == 0 )
 		{
 
@@ -412,7 +435,7 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 							tmpDelayPress.NeedPresslParam = lParam;
 							tmpDelayPress.NeedPresswParam = wParam;
 							tmpDelayPress.NeedPressMsg = 0;
-							tmpDelayPress.TimeOut = 20;
+							tmpDelayPress.TimeOut = 40;
 							DelayedPressList.push_back( tmpDelayPress );
 						}
 					}
@@ -466,7 +489,9 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 				}
 			}
 		}
-
+	}
+	else
+	{
 		if ( BlockKeyAndMouseEmulation )
 		{
 			if ( Msg == WM_RBUTTONDOWN || Msg == WM_KEYDOWN || Msg == WM_KEYUP )

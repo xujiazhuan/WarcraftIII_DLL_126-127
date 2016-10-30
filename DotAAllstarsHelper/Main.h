@@ -22,6 +22,7 @@
 #include <tchar.h>
 #include <fstream> 
 #include <iostream>
+#include <sstream>
 //#include <Psapi.h>
 // Перехват функций
 #include <MinHook.h>
@@ -160,6 +161,8 @@ struct BarStruct
 bool FileExist( const char * name );
 
 
+typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
+extern _TriggerExecute TriggerExecute;
 
 BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
@@ -302,7 +305,7 @@ extern int GetItemInSlotAddr;
 extern float * GetWindowXoffset;
 extern float * GetWindowYoffset;
 extern int GameFrameAtMouseStructOffset;
-
+extern int pTriggerExecute;
 #pragma endregion
 
 
@@ -312,6 +315,7 @@ extern int GameFrameAtMouseStructOffset;
 extern BOOL BlockKeyAndMouseEmulation;
 extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
+extern BOOL KeyboardHaveTriggerEvent;
 
 typedef LRESULT( __stdcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
 extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
@@ -338,7 +342,7 @@ void IssueFixerDisable( );
 #pragma endregion
 
 
-#pragma region DotaIconAndMdlHelper.cpp
+#pragma region DotaFilesHelper.cpp
 
 struct ModelCollisionFixStruct
 {
@@ -410,3 +414,23 @@ extern GameGetFile GameGetFile_ptr;
 
 void FreeAllIHelpers( );
 #pragma endregion
+
+
+#pragma region DotaFovFix.cpp
+
+__declspec( dllexport ) int __stdcall SetWidescreenFixState( BOOL widefixenable );
+__declspec( dllexport ) int __stdcall SetCustomFovFix( float _CustomFovFix );
+void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
+typedef int( __fastcall * SetGameAreaFOV )( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
+extern SetGameAreaFOV SetGameAreaFOV_org;
+extern SetGameAreaFOV SetGameAreaFOV_ptr;
+
+
+#pragma endregion
+
+
+#pragma region DotaWebHelper.cpp
+
+std::string DownloadBytesGet( string szUrl, string getRequest );
+
+#pragma endregion 

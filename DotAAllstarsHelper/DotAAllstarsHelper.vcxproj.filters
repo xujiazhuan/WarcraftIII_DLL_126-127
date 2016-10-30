@@ -60,7 +60,10 @@
     <ClCompile Include="hash_64.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaIconAndMdlHelper.cpp">
+    <ClCompile Include="DotaFilesHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaFOVfix.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

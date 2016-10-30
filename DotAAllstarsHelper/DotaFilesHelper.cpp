@@ -86,7 +86,9 @@ void FreeAllIHelpers( )
 	{
 		delete[ ] ih.buf;
 	}
+
 	ICONMDLCACHELIST.clear( );
+	FileRedirectList.clear( );
 }
 
 
@@ -239,6 +241,7 @@ int idddd = 0;
 
 void ApplyTerrainFilter( char * filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
 {
+	AddNewLineToDotaHelperLog( "ApplyTerrainFilter" );
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
 	if ( FoundOldHelper )
@@ -317,7 +320,7 @@ void ApplyTerrainFilter( char * filename, int * OutDataPointer, size_t * OutSize
 			tmpih.hashlen = strlen( filename );
 			tmpih.hash = GetBufHash( filename, tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsFileRedirected( filename ) && !IsMemInCache( *OutDataPointer ) )
+			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int ) tmpih.buf;
 			*OutSize = tmpih.size;
@@ -337,6 +340,7 @@ __declspec( dllexport ) int __stdcall ApplyTerrainFilterDirectly( char * filenam
 
 void ApplyUnitFilter( char * filename, int * OutDataPointer, size_t * OutSize )
 {
+	AddNewLineToDotaHelperLog( "ApplyUnitFilter" );
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
 	if ( FoundOldHelper )
@@ -398,7 +402,7 @@ void ApplyUnitFilter( char * filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = strlen( filename );
 			tmpih.hash = GetBufHash( filename, tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsFileRedirected( filename ) && !IsMemInCache( *OutDataPointer ) )
+			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int ) tmpih.buf;
 			*OutSize = tmpih.size;
@@ -412,6 +416,7 @@ void ApplyUnitFilter( char * filename, int * OutDataPointer, size_t * OutSize )
 
 void ApplyIconFilter( char * filename, int * OutDataPointer, size_t * OutSize )
 {
+	AddNewLineToDotaHelperLog( "ApplyIconFilter" );
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
 	if ( FoundOldHelper )
@@ -566,7 +571,7 @@ void ApplyIconFilter( char * filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = strlen( filename );
 			tmpih.hash = GetBufHash( filename, tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsFileRedirected( filename ) && !IsMemInCache( *OutDataPointer ) )
+			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int ) tmpih.buf;
 			*OutSize = tmpih.size;
@@ -580,6 +585,7 @@ BOOL FixDisabledIconPath( char * filename, int * OutDataPointer, size_t * OutSiz
 	if ( !strstr( filename, "blp" ) )
 		return 0;
 
+	AddNewLineToDotaHelperLog( "FixDisabledIconPath" );
 
 	BOOL CreateDarkIcon = FALSE;
 	BOOL result = FALSE;
@@ -610,6 +616,16 @@ BOOL FixDisabledIconPath( char * filename, int * OutDataPointer, size_t * OutSiz
 	if ( !result )
 	{
 		char * tmpstr = repl_string( filename, CommandButtonsDisabledIconSignature, "PassiveButtons\\" );
+		result = GameGetFile_ptr( tmpstr, OutDataPointer, OutSize, unknown );
+		free( tmpstr );
+		if ( result )
+			CreateDarkIcon = TRUE;
+	}
+
+
+	if ( !result )
+	{
+		char * tmpstr = repl_string( filename, CommandButtonsDisabledIconSignature, "AutoCastButtons\\" );
 		result = GameGetFile_ptr( tmpstr, OutDataPointer, OutSize, unknown );
 		free( tmpstr );
 		if ( result )
@@ -879,6 +895,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 
 void ProcessMdx( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
+	AddNewLineToDotaHelperLog( "Process model" );
 	BYTE * ModelBytes = ( BYTE* ) *OutDataPointer;
 	size_t sz = *OutSize;
 
@@ -1493,7 +1510,7 @@ void ProcessMdx( char * filename, int * OutDataPointer, size_t * OutSize, BOOL u
 }
 
 
-__declspec( dllexport ) int __stdcall RedirectFile( const char * NewFilePath, const char * RealFilePath )
+__declspec( dllexport ) int __stdcall RedirectFile( const char * RealFilePath, const char * NewFilePath )
 {
 	FileRedirectStruct tmpModelFix;
 	sprintf_s( tmpModelFix.NewFilePath, 512, "%s", NewFilePath );
@@ -1512,7 +1529,7 @@ void PrintLog( const char * str )
 
 BOOL ProcessFile( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
-
+	AddNewLineToDotaHelperLog( "ProcessFile" );
 	//PrintLog( filename );
 	BOOL IsFileExist = IsFileExistOld;
 
@@ -1555,8 +1572,10 @@ BOOL ProcessFile( char * filename, int * OutDataPointer, size_t * OutSize, BOOL 
 }
 
 
-BOOL __fastcall GameGetFile_my( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+BOOL __fastcall GameGetFile_my( char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
+	AddNewLineToDotaHelperLog( "FileHelper" );
+	char * filename = filename_;
 	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
 	if ( !*InGame && !MainFuncWork )
@@ -1589,11 +1608,49 @@ BOOL __fastcall GameGetFile_my( char * filename, int * OutDataPointer, size_t * 
 			{
 				if ( _stricmp( filename, DotaRedirectHelp.NewFilePath ) == 0 )
 				{
-					IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath, OutDataPointer, OutSize, unknown );
-					if ( IsFileExist )
+					ICONMDLCACHE * tmpih = new ICONMDLCACHE( );
+					BOOL FoundOldHelper = GetFromIconMdlCache( DotaRedirectHelp.NewFilePath, tmpih );
+
+					if ( !FoundOldHelper )
 					{
-						ProcessFile( filename, OutDataPointer, OutSize, unknown, IsFileExist );
+						IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath, OutDataPointer, OutSize, unknown );
+						if ( IsFileExist )
+						{
+							char * DataPointer = ( char * ) *OutDataPointer;
+							size_t DataSize = *OutSize;
+
+							Buffer ResultBuffer;
+							ResultBuffer.buf = new char[ DataSize ];
+							ResultBuffer.length = DataSize;
+
+							memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
+
+							tmpih->buf = ResultBuffer.buf;
+							tmpih->size = ResultBuffer.length;
+
+							tmpih->hashlen = strlen( DotaRedirectHelp.NewFilePath );
+							tmpih->hash = GetBufHash( DotaRedirectHelp.NewFilePath, tmpih->hashlen );
+
+							ICONMDLCACHELIST.push_back( *tmpih );
+
+							*OutDataPointer = ( int ) tmpih->buf;
+							*OutSize = tmpih->size;
+
+							ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+							return IsFileExist;
+						}
 					}
+					else
+					{
+
+						*OutDataPointer = ( int ) tmpih->buf;
+						*OutSize = tmpih->size;
+
+						ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+						return TRUE;
+					}
+
+					delete[ ] tmpih;
 				}
 			}
 

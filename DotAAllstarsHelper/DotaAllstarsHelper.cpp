@@ -76,8 +76,8 @@ int BlizzardDebug4Offset = 0;
 int BlizzardDebug5Offset = 0;
 int BlizzardDebug6Offset = 0;
 int GameFrameAtMouseStructOffset = 0;
-
-
+int pTriggerExecute = 0;
+int SetGameAreaFOVoffset = 0;
 int GameGetFileOffset = 0;
 
 #pragma endregion
@@ -99,6 +99,7 @@ BOOL ClickHelper = FALSE;
 HMODULE GetCurrentModule;
 
 
+_TriggerExecute TriggerExecute;
 
 void DisplayText( char *szText, float fDuration )
 {
@@ -187,112 +188,6 @@ __declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
 
 
 
-typedef int( __fastcall * SetGameAreaFOV )( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
-SetGameAreaFOV SetGameAreaFOV_org;
-SetGameAreaFOV SetGameAreaFOV_ptr;
-
-
-float CustomFovFix = 1.0f;
-
-
-int __fastcall SetGameAreaFOV_new( Matrix1 * a1, int _unused, float a3, float a4, float a5, float a6 )
-{
-	if ( GetWindowXoffset == 0 || GetWindowYoffset == 0 )
-		return SetGameAreaFOV_ptr( a1, _unused, a3, a4, a5, a6 );
-
-
-	float ScreenX = *GetWindowXoffset;
-	float ScreenY = *GetWindowYoffset;
-
-	float v1 = 1.0f / sqrt( a4 * a4 + 1.0f );
-	float v2 = tan( v1 * a3 * 0.5f );
-
-	float v3 = v2 * a5;
-	float v4 = v3 * a4;
-
-	//0,0
-	//1,0
-	//2,0
-
-	a1->flt1 = ( ( a5 * ( 4.0f / 3.0f ) ) / ( ScreenX / ScreenY ) * CustomFovFix ) / v4; // Fix 4:3 to WindowX/WindowY
-	a1->flt2 = 0.0f;
-	a1->flt3 = 0.0f;
-	a1->flt4 = 0.0f;
-	a1->flt5 = 0.0f;
-
-
-	a1->flt6 = a5 / v3;
-	a1->flt7 = 0.0f;
-	a1->flt8 = 0.0f;
-	a1->flt9 = 0.0f;
-	a1->flt10 = 0.0f;
-
-
-	a1->flt11 = ( a5 + a6 ) / ( a6 - a5 );
-	a1->flt12 = 1.0f;
-	a1->flt13 = 0.0f;
-	a1->flt14 = 0.0f;
-
-
-	a1->flt15 = a5 * ( a6 * -2.0f ) / ( a6 - a5 );
-	a1->flt16 = 0.0f;
-
-
-	return 0;
-}
-
-
-BOOL EnableFixFOV = FALSE;
-
-
-__declspec( dllexport ) int __stdcall SetWidescreenFixState( BOOL widefixenable )
-{
-	EnableFixFOV = widefixenable;
-	return 0;
-}
-
-
-__declspec( dllexport ) int __stdcall SetCustomFovFix( float _CustomFovFix )
-{
-	CustomFovFix = _CustomFovFix;
-	return 0;
-}
-
-
-void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 )
-{
-	if ( EnableFixFOV )
-	{
-		SetGameAreaFOV_new( a1, a2, a3, a4, a5, a6 );
-	}
-	else
-	{
-		SetGameAreaFOV_ptr( a1, a2, a3, a4, a5, a6 );
-	}
-}
-
-
-
-
-int SetGameAreaFOVoffset = 0;
-/*
-typedef int *( __fastcall * sub_6F379A30 )( void * a1, int unused, int a2, int a3 );
-sub_6F379A30 sub_6F379A30_org;
-sub_6F379A30 sub_6F379A30_ptr;
-int * __fastcall sub_6F379A30my ( void * a1, int unused, int a2, int a3 )
-{
-	char msg[ 100 ];
-	sprintf_s( msg, 100, "%X,%X,%X,%X->%X", ( int ) a1, unused, a2, a3, 0  );
-	MessageBox( 0, msg, msg, 0 );
-	int * retval = sub_6F379A30_ptr( a1, unused, a2, a3 );
-	sprintf_s( msg, 100, "%X,%X,%X,%X->%X", ( int ) a1, unused, a2, a3, ( int ) retval );
-	MessageBox( 0, msg, msg, 0 );
-	return retval;
-}
-*/
-
-
-
 void InitHook( )
 {
 
@@ -312,12 +207,6 @@ void InitHook( )
 
 	EnableErrorHandler( );
 
-	/*sub_6F379A30_org = ( sub_6F379A30 ) ( 0x379A30 + GameDll );
-
-	MH_CreateHook( sub_6F379A30_org, &sub_6F379A30my, reinterpret_cast< void** >( &sub_6F379A30_ptr ) );
-
-	MH_EnableHook( sub_6F379A30_org );
-	*/
 
 	if ( Warcraft3Window )
 	{
@@ -835,8 +724,12 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 
 		if ( MagicProtection == 0.0f )
 			sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
+		else if ( MagicProtection > 30.0f )
+			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: |cFF00C800%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
+		else if ( MagicProtection <= 30.0f && MagicProtection > 0.0f)
+			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection ); 
 		else
-			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
+			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: |cFFD82005%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
 		__asm
 		{
 			PUSH 0x200;
@@ -1419,8 +1312,14 @@ __declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
 }
 #pragma endregion
 
+HANDLE MainThread = 0;
 
-
+void ForceTerminateIfNeed( BOOL _Throw = FALSE)
+{
+	/*
+	
+	*/
+}
 void * RefreshTimerID = 0;
 BOOL RefreshTimerEND = FALSE;
 unsigned long __stdcall RefreshTimer( void * )
@@ -1439,6 +1338,8 @@ unsigned long __stdcall RefreshTimer( void * )
 				if ( RefreshTimerEND )
 				{
 					RefreshTimerEND = FALSE;
+
+					ForceTerminateIfNeed( TRUE );
 					return 0;
 				}
 			}
@@ -1450,6 +1351,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
+					ForceTerminateIfNeed( TRUE );
 					RefreshTimerEND = FALSE;
 					return 0;
 				}
@@ -1498,11 +1400,14 @@ unsigned long __stdcall RefreshTimer( void * )
 				ModelSequenceReSpeedList.clear( );
 			if ( !ModelSequenceValueList.empty( ) )
 				ModelSequenceValueList.clear( );
+			KeyboardHaveTriggerEvent = FALSE;
 		}
 
 		Sleep( 200 );
 	}
 	RefreshTimerEND = FALSE;
+	ForceTerminateIfNeed( TRUE );
+
 	return 0;
 }
 
@@ -1591,7 +1496,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		_BarVTable = GameDll + 0x93E604;
 		IsWindowActive = GameDll + 0xA9E7A4;
 		ChatFound = GameDll + 0xAD15F0;
-
+		TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
 		StormErrorHandlerOffset = StormDll + 0x28F0;
 		JassNativeLookupOffset = GameDll + 0x44EA00;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
@@ -1766,7 +1671,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		_BarVTable = GameDll + 0x98F52C;
 		IsWindowActive = GameDll + 0xB673EC;
 		ChatFound = GameDll + 0xBDAA14;
-
+		TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
 		StormErrorHandlerOffset = StormDll + 0x8230;
 		JassNativeLookupOffset = GameDll + 0x7E2FE0;
 		JassFuncLookupOffset = GameDll + 0x7EFBB0;
@@ -1926,12 +1831,19 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 Ordinal403 Storm_403_org;
 
+
+LONG WINAPI ForceEnd( EXCEPTION_POINTERS * pExcept )
+{
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 #pragma region Main
 BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 {
 	GetCurrentModule = Module;
 	if ( reason == DLL_PROCESS_ATTACH )
 	{
+		MainThread = GetCurrentThread( );
 		GameDllModule = GetModuleHandle( "Game.dll" );
 		GameDll = ( int ) GameDllModule;
 		StormDllModule = GetModuleHandle( "Storm.dll" );
@@ -1966,7 +1878,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		if ( RefreshTimerID )
 		{
 			RefreshTimerEND = TRUE;
-			//WaitForSingleObject( RefreshTimerID, 2000 );
+			WaitForSingleObject( RefreshTimerID, 2000 );
 			RefreshTimerID = NULL;
 		}
 		// Отключить мут
@@ -2009,10 +1921,13 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 			ModelSequenceReSpeedList.clear( );
 		if ( !ModelSequenceValueList.empty( ) )
 			ModelSequenceValueList.clear( );
+		KeyboardHaveTriggerEvent = FALSE;
 
-		if ( !GetModuleHandle( "Game.dll" ) )
+		if ( !GetModuleHandle( "Game.dll" ) && GetModuleHandle("Storm.dll") )
 		{
-			ExitThread( 0 );
+			AddVectoredExceptionHandler( 1, ForceEnd );
+			SetUnhandledExceptionFilter( ForceEnd );
+			throw logic_error( "Force unload" );
 		}
 
 	}

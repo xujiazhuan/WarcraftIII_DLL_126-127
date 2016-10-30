@@ -34,3 +34,4 @@ RemoveTagFromModel @130
 RedirectFile @131
 ApplyTerrainFilterDirectly @132
 SetMainFuncWork @133
+TriggerRegisterPlayerKeyboardEvent @134

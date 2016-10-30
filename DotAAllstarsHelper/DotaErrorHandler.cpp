@@ -14,7 +14,7 @@ vector<int> CNetEvents;
 
 void AddNewLineToDotaHelperLog( string s )
 {
-	if ( DotaHelperLog.size( ) > 50 )
+	if ( DotaHelperLog.size( ) > 35 )
 	{
 		DotaHelperLog.erase( DotaHelperLog.begin( ) );
 	}
@@ -23,7 +23,7 @@ void AddNewLineToDotaHelperLog( string s )
 
 void AddNewLineToJassNativesLog( string s )
 {
-	if ( JassNativesLog.size( ) > 50 )
+	if ( JassNativesLog.size( ) > 35 )
 	{
 		JassNativesLog.erase( JassNativesLog.begin( ) );
 	}
@@ -33,7 +33,7 @@ void AddNewLineToJassNativesLog( string s )
 
 void AddNewLineToJassFuncLog( string s )
 {
-	if ( JassFuncLog.size( ) > 50 )
+	if ( JassFuncLog.size( ) > 35 )
 	{
 		JassFuncLog.erase( JassFuncLog.begin( ) );
 	}
@@ -42,7 +42,7 @@ void AddNewLineToJassFuncLog( string s )
 
 void AddNewLineToBlizzard1Log( string s )
 {
-	if ( Blizzard1Log.size( ) > 50 )
+	if ( Blizzard1Log.size( ) > 35 )
 	{
 		Blizzard1Log.erase( Blizzard1Log.begin( ) );
 	}
@@ -52,7 +52,7 @@ void AddNewLineToBlizzard1Log( string s )
 
 void AddNewLineToBlizzard2Log( string s )
 {
-	if ( Blizzard2Log.size( ) > 50 )
+	if ( Blizzard2Log.size( ) > 35 )
 	{
 		Blizzard2Log.erase( Blizzard2Log.begin( ) );
 	}
@@ -62,7 +62,7 @@ void AddNewLineToBlizzard2Log( string s )
 
 void AddNewLineToBlizzard3Log( string s )
 {
-	if ( Blizzard3Log.size( ) > 50 )
+	if ( Blizzard3Log.size( ) > 35 )
 	{
 		Blizzard3Log.erase( Blizzard3Log.begin( ) );
 	}
@@ -72,7 +72,7 @@ void AddNewLineToBlizzard3Log( string s )
 
 void AddNewLineToBlizzard4Log( string s )
 {
-	if ( Blizzard4Log.size( ) > 50 )
+	if ( Blizzard4Log.size( ) > 35 )
 	{
 		Blizzard4Log.erase( Blizzard4Log.begin( ) );
 	}
@@ -81,7 +81,7 @@ void AddNewLineToBlizzard4Log( string s )
 
 void AddNewLineToBlizzard4Log_2( string s )
 {
-	if ( Blizzard4Log_2.size( ) > 50 )
+	if ( Blizzard4Log_2.size( ) > 35 )
 	{
 		Blizzard4Log_2.erase( Blizzard4Log_2.begin( ) );
 	}
@@ -92,7 +92,7 @@ void AddNewLineToBlizzard4Log_2( string s )
 
 void AddNewLineToBlizzard5Log( string s )
 {
-	if ( Blizzard5Log.size( ) > 50 )
+	if ( Blizzard5Log.size( ) > 35 )
 	{
 		Blizzard5Log.erase( Blizzard5Log.begin( ) );
 	}
@@ -102,14 +102,14 @@ void AddNewLineToBlizzard5Log( string s )
 
 void AddNewLineToBlizzard6Log( string s )
 {
-	if ( Blizzard6Log.size( ) > 50 )
+	if ( Blizzard6Log.size( ) > 35 )
 	{
 		Blizzard6Log.erase( Blizzard6Log.begin( ) );
 	}
 	Blizzard6Log.push_back( s );
 }
 
-void AddNewCNetEventLog( int EventID )
+void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 {
 	if ( CNetEvents.size( ) > 50 )
 	{
@@ -117,7 +117,7 @@ void AddNewCNetEventLog( int EventID )
 	}
 	CNetEvents.push_back( EventID );
 
-	if ( EventID == 35 || EventID == 48 )
+	if ( EventID == 35 && EventByte2 >= 0xB )
 	{
 		AddNewLineToDotaHelperLog( "Warning desync detected. Start force crash for detect problem" );
 		//ShowWindow( Warcraft3Window, SW_HIDE );
@@ -263,7 +263,7 @@ void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
 	int EventID = *( BYTE* ) ( Event + 20 );
 	ProcessNetEvents_ptr( data, unused, Event );
-	AddNewCNetEventLog( EventID );
+	AddNewCNetEventLog( EventID, data, Event , *( BYTE* ) ( Event + 12) );
 }
 
 
@@ -279,20 +279,29 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
 	result = StormErrorHandler_ptr( a1, PrintErrorLog, a3, a4, a5 );
 	PrintErrorLog( a3, "%s", "[Dota Allstars DLL log]" );
+
+	stringstream BugReport;
+	BugReport << "%5BDotaHelperLog%5D";
 	for ( string s : DotaHelperLog )
 	{
+		BugReport << s << "%20";
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Native log]" );
+	BugReport << "%0A%5BJassNativesLog%5D";
 	for ( string s : JassNativesLog )
 	{
+		BugReport << s << "%20";
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Func log]" );
+	BugReport << "%0A%5BJassFuncLog%5D";
 	for ( string s : JassFuncLog )
 	{
+		BugReport << s << "%20";
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
+	BugReport << "%5BEND%5D";
 	PrintErrorLog( a3, "%s", "[Dota Allstars CNET events]" );
 	for ( int EventID : CNetEvents )
 	{
@@ -334,6 +343,9 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler END]" );
+
+	DownloadBytesGet( "d1stats.ru", "/fatal.php?msg=" + BugReport.str( ) ).clear( );
+
 	return result;
 }
 

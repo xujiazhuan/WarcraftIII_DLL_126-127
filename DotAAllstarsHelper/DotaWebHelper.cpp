@@ -9,14 +9,12 @@
 
 
 
-char szHeaders[ ] = "Content-Type: application/x-www-form-urlencoded\r\nCache-Control: no-cache, no-store, must-revalidate\r\nPragma: no-cache\r\nExpires: 0\r\n";
-
 
 int DownStatus = 0;
 unsigned int DownProgress = 0;
 std::string LatestDownloadedString;
 
-std::string DownloadBytesGet( char* szUrl, char * getRequest )
+std::string DownloadBytesGet( string szUrl, string getRequest )
 {
 	AddNewLineToDotaHelperLog( "DownloadBytesGet" );
 	DownStatus = 0;
@@ -39,7 +37,7 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 
 
 	struct hostent *host;
-	host = 0;// gethostbyname( szUrl );
+	host = gethostbyname( szUrl.c_str( ) );
 
 	if ( !host )
 	{
@@ -63,13 +61,15 @@ std::string DownloadBytesGet( char* szUrl, char * getRequest )
 		return returnvalue;
 	}
 
-	char sendbuffer[ 512 ];
-	sprintf_s( sendbuffer, 512, "%s%s%s%s\r\nConnection: close\r\n\r\n", "GET ", getRequest, " HTTP/1.1\r\nHost: ", szUrl );
+	char sendbuffer[ 8192 ];
+	sprintf_s( sendbuffer, 8192, "%s%s%s%s\r\nConnection: close\r\n\r\n", "GET ", getRequest.c_str( ), " HTTP/1.0\r\nHost: ", szUrl.c_str( ) );
 
+	MessageBox( 0, sendbuffer, " ", 0 );
 	DownProgress = 20;
 
 	if ( send( Socket, sendbuffer, (int) strlen( sendbuffer ), 0 ) == SOCKET_ERROR )
 	{
+		MessageBox( 0, "ERROR", " ", 0 );
 		closesocket( Socket );
 		WSACleanup( );
 		DownStatus = -1;

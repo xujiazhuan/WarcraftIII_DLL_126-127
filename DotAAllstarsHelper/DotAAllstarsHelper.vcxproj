@@ -81,7 +81,7 @@
     <ClCompile Include="DotaHPBarHelper.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Disabled</Optimization>
     </ClCompile>
-    <ClCompile Include="DotaIconAndMdlHelper.cpp" />
+    <ClCompile Include="DotaFilesHelper.cpp" />
     <ClCompile Include="DotaWebHelper.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
     </ClCompile>
@@ -97,6 +97,7 @@
     <ClCompile Include="DotaErrorHandler.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
     </ClCompile>
+    <ClCompile Include="DotaFOVfix.cpp" />
     <ClCompile Include="hash_64.cpp" />
     <ClCompile Include="jpgwrapper.cpp" />
     <ClCompile Include="quantizer.cpp" />
