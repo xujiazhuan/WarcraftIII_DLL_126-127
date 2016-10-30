@@ -407,8 +407,8 @@ extern vector<FileRedirectStruct> FileRedirectList;
 typedef signed int( __stdcall * Ordinal403 )( void *a1, const char * str, int line, int id );
 extern Ordinal403 Storm_403_org;
 
-typedef BOOL( __fastcall * GameGetFile )( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
-BOOL __fastcall GameGetFile_my( char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 extern GameGetFile GameGetFile_org;
 extern GameGetFile GameGetFile_ptr;
 

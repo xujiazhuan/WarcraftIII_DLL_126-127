@@ -119,6 +119,11 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 
 	if ( EventID == 35 && EventByte2 >= 0xB )
 	{
+		char Tmps[ 200 ];
+		sprintf_s( Tmps, 200, "%X %X %X %X", EventID, data, addr2, EventByte2 );
+		MessageBox( 0, Tmps, " ", 0 );
+
+
 		AddNewLineToDotaHelperLog( "Warning desync detected. Start force crash for detect problem" );
 		//ShowWindow( Warcraft3Window, SW_HIDE );
 		//MessageBox( Warcraft3Window, "Warning desync detected. Start force crash for detect problem", "Desync detected!", 0 );
