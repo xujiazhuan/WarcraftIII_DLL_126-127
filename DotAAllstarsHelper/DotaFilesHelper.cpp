@@ -1551,9 +1551,9 @@ BOOL ProcessFile( char * filename, int * OutDataPointer, size_t * OutSize, BOOL 
 			}
 			else
 			{
-				if ( strstr( FilePathLower.c_str( ), "terrainart" ) == FilePathLower.c_str( ) ||
+			/*	if ( strstr( FilePathLower.c_str( ), "terrainart" ) == FilePathLower.c_str( ) ||
 					 strstr( FilePathLower.c_str( ), "replaceabletextures\\cliff" ) == FilePathLower.c_str( ) )
-					ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );
+					ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
 			}
 		}
 		else if ( strcmp( FilePathLower.c_str( ) + ( PathLen - 4 ), ".mdx" ) == 0 )
