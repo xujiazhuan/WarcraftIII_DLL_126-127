@@ -2,7 +2,7 @@
 
 
 
-SetGameAreaFOV SetGameAreaFOV_org;
+SetGameAreaFOV SetGameAreaFOV_org = NULL;
 SetGameAreaFOV SetGameAreaFOV_ptr;
 
 

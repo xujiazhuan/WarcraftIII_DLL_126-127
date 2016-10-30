@@ -84,6 +84,15 @@ int GameGetFileOffset = 0;
 
 BOOL MainFuncWork = FALSE;
 
+void TestLog( const char * s )
+{
+	/*FILE *f;
+	fopen_s( &f, ".\\log.txt", "a+" );
+	fprintf( f, "%s\n", s );
+	fclose( f );*/
+}
+
+
 __declspec( dllexport ) int __stdcall SetMainFuncWork( BOOL state )
 {
 	MainFuncWork = state;
@@ -192,7 +201,7 @@ void InitHook( )
 {
 
 
-
+	TestLog( "InitHook" );
 	AddNewLineToDotaHelperLog( "InitHook" );
 	StormErrorHandler_org = ( StormErrorHandler ) StormErrorHandlerOffset;
 	LookupNative_org = ( LookupNative ) JassNativeLookupOffset;
@@ -263,6 +272,8 @@ void InitHook( )
 	MH_CreateHook( pOnChatMessage_org, &pOnChatMessage_my, reinterpret_cast< void** >( &pOnChatMessage_ptr ) );
 	MH_EnableHook( pOnChatMessage_org );
 	IssueFixerInit( );
+
+	TestLog( "InitHook end" );
 }
 
 void UninitializeHook( )
@@ -272,52 +283,45 @@ void UninitializeHook( )
 
 
 #pragma region Game.dll hook
-	if ( GetModuleHandle( "Game.dll" ) != 0 )
+
+
+	// Отключить хук для IsDrawSkillPanel_org
+	if ( IsDrawSkillPanel_org )
 	{
-		if ( WarcraftRealWNDProc_org )
-		{
-			PressKeyWithDelayEND = TRUE;
-			WaitForSingleObject( PressKeyWithDelay, 2000 );
-			MH_DisableHook( WarcraftRealWNDProc_org );
-		}
-
-		// Отключить хук для IsDrawSkillPanel_org
-		if ( IsDrawSkillPanel_org )
-		{
-			MH_DisableHook( IsDrawSkillPanel_org );
-			IsDrawSkillPanel_org = 0;
-		}
-		// Отключить хук для IsDrawSkillPanelOverlay_org
-		if ( IsDrawSkillPanelOverlay_org )
-		{
-			MH_DisableHook( IsDrawSkillPanelOverlay_org );
-			IsDrawSkillPanelOverlay_org = 0;
-		}
-		// Отключить хук для IsNeedDrawUnit2org
-		if ( IsNeedDrawUnit2org )
-		{
-			MH_DisableHook( IsNeedDrawUnit2org );
-			IsNeedDrawUnit2org = 0;
-		}
-
-		if ( pOnChatMessage_org )
-		{
-			MH_DisableHook( pOnChatMessage_org );
-			pOnChatMessage_org = 0;
-		}
-
-		if ( SetGameAreaFOV_org )
-		{
-			MH_DisableHook( SetGameAreaFOV_org );
-			SetGameAreaFOV_org = 0;
-		}
-
-		if ( GameGetFile_org )
-		{
-			MH_DisableHook( GameGetFile_org );
-			GameGetFile_org = 0;
-		}
+		MH_DisableHook( IsDrawSkillPanel_org );
+		IsDrawSkillPanel_org = 0;
 	}
+	// Отключить хук для IsDrawSkillPanelOverlay_org
+	if ( IsDrawSkillPanelOverlay_org )
+	{
+		MH_DisableHook( IsDrawSkillPanelOverlay_org );
+		IsDrawSkillPanelOverlay_org = 0;
+	}
+	// Отключить хук для IsNeedDrawUnit2org
+	if ( IsNeedDrawUnit2org )
+	{
+		MH_DisableHook( IsNeedDrawUnit2org );
+		IsNeedDrawUnit2org = 0;
+	}
+
+	if ( pOnChatMessage_org )
+	{
+		MH_DisableHook( pOnChatMessage_org );
+		pOnChatMessage_org = 0;
+	}
+
+	if ( SetGameAreaFOV_org )
+	{
+		MH_DisableHook( SetGameAreaFOV_org );
+		SetGameAreaFOV_org = 0;
+	}
+
+	if ( GameGetFile_org )
+	{
+		MH_DisableHook( GameGetFile_org );
+		GameGetFile_org = 0;
+	}
+
 
 #pragma endregion
 
@@ -726,8 +730,8 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 			sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
 		else if ( MagicProtection > 30.0f )
 			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: |cFF00C800%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
-		else if ( MagicProtection <= 30.0f && MagicProtection > 0.0f)
-			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection ); 
+		else if ( MagicProtection <= 30.0f && MagicProtection > 0.0f )
+			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
 		else
 			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: |cFFD82005%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
 		__asm
@@ -1312,15 +1316,86 @@ __declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
 }
 #pragma endregion
 
-HANDLE MainThread = 0;
 
-void ForceTerminateIfNeed( BOOL _Throw = FALSE)
+void __stdcall RestoreAllOffsets( )
 {
-	/*
-	
-	*/
+	TestLog( "RestoreAllOffsets" );
+	for ( UINT i = 0; i < offsetslist.size( ); i++ )
+	{
+		offsetdata temp = offsetslist[ i ];
+		DWORD oldprotect, oldprotect2;
+		if ( VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
+		{
+			*( int* ) temp.offaddr = temp.offdata;
+			VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
+		}
+	}
+	offsetslist.clear( );
 }
-void * RefreshTimerID = 0;
+
+void __stdcall ClearCustomsBars( )
+{
+	TestLog( "ClearCustomsBars" );
+	for ( int i = 0; i < 20; i++ )
+	{
+		if ( !CustomHPBarList[ i ].empty( ) )
+			CustomHPBarList[ i ].clear( );
+	}
+}
+
+void __stdcall FreeAllVectors( )
+{
+	TestLog( "FreeAllVectors" );
+	if ( !ModelCollisionFixList.empty( ) )
+		ModelCollisionFixList.clear( );
+	if ( !ModelTextureFixList.empty( ) )
+		ModelTextureFixList.clear( );
+	if ( !ModelPatchList.empty( ) )
+		ModelPatchList.clear( );
+	if ( !ModelRemoveTagList.empty( ) )
+		ModelRemoveTagList.clear( );
+	if ( !ModelSequenceReSpeedList.empty( ) )
+		ModelSequenceReSpeedList.clear( );
+	if ( !ModelSequenceValueList.empty( ) )
+		ModelSequenceValueList.clear( );
+}
+
+void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
+{
+	if ( WarcraftRealWNDProc_org )
+	{
+		SkipAllMessages = TRUE;
+		PressKeyWithDelayEND = TRUE;
+		WaitForSingleObject( hPressKeyWithDelay, 2000 );
+		PressKeyWithDelayEND = FALSE;
+		if ( !Force )
+			MH_DisableHook( WarcraftRealWNDProc_org );
+		SkipAllMessages = FALSE;
+	}
+}
+
+void __stdcall DisableAllHooks( )
+{
+	TestLog( "DisableAllHooks" );
+	// Выгрузить перехватчики функций
+	UnloadHWNDHandler( );
+	UninitializeHook( );
+	// Отключить мут
+	UnMutePlayer( 0 );
+	// Убрать все патчи и вернуть стандартные данные
+	RestoreAllOffsets( );
+	// Очистить список кастом баров
+	ClearCustomsBars( );
+	// Отключить ManaBar 
+	ManaBarSwitch( GameDll, FALSE );
+
+	FreeAllIHelpers( );
+	FreeAllVectors( );
+
+	KeyboardHaveTriggerEvent = FALSE;
+}
+
+void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
 unsigned long __stdcall RefreshTimer( void * )
 {
@@ -1329,6 +1404,7 @@ unsigned long __stdcall RefreshTimer( void * )
 		// Ждать установки InGame адреса
 		if ( InGame != 0 )
 		{
+			TestLog( "RefreshTimer" );
 			AddNewLineToDotaHelperLog( "RefreshTimer" );
 			// Ждать входа в игру
 			while ( !( *InGame ) )
@@ -1337,9 +1413,6 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
-					RefreshTimerEND = FALSE;
-
-					ForceTerminateIfNeed( TRUE );
 					return 0;
 				}
 			}
@@ -1351,63 +1424,17 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
-					ForceTerminateIfNeed( TRUE );
-					RefreshTimerEND = FALSE;
 					return 0;
 				}
 			}
 
+			DisableAllHooks( );
+			TestLog( "RefreshTimerEnd" );
 			AddNewLineToDotaHelperLog( "RefreshTimerEnd" );
-			// Выгрузить перехватчики функций
-			UninitializeHook( );
-			// Отключить мут
-			UnMutePlayer( 0 );
 
-			// Убрать все патчи и вернуть стандартные данные
-			// Т.к функция вызывается после завершения игры проблем быть не должно.
-			for ( UINT i = 0; i < offsetslist.size( ); i++ )
-			{
-				offsetdata temp = offsetslist[ i ];
-				DWORD oldprotect, oldprotect2;
-				if ( VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
-				{
-					*( int* ) temp.offaddr = temp.offdata;
-					VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
-				}
-			}
-			offsetslist.clear( );
-
-			// Очистить список кастом баров
-			for ( int i = 0; i < 20; i++ )
-			{
-				if ( !CustomHPBarList[ i ].empty( ) )
-					CustomHPBarList[ i ].clear( );
-			}
-
-			// Отключить ManaBar 
-			ManaBarSwitch( GameDll, FALSE );
-
-			FreeAllIHelpers( );
-			if ( !ModelCollisionFixList.empty( ) )
-				ModelCollisionFixList.clear( );
-			if ( !ModelTextureFixList.empty( ) )
-				ModelTextureFixList.clear( );
-			if ( !ModelPatchList.empty( ) )
-				ModelPatchList.clear( );
-			if ( !ModelRemoveTagList.empty( ) )
-				ModelRemoveTagList.clear( );
-			if ( !ModelSequenceReSpeedList.empty( ) )
-				ModelSequenceReSpeedList.clear( );
-			if ( !ModelSequenceValueList.empty( ) )
-				ModelSequenceValueList.clear( );
-			KeyboardHaveTriggerEvent = FALSE;
 		}
-
 		Sleep( 200 );
 	}
-	RefreshTimerEND = FALSE;
-	ForceTerminateIfNeed( TRUE );
-
 	return 0;
 }
 
@@ -1428,12 +1455,14 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 
 __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 {
+	TestLog( "InitDotaHelper" );
 	AddNewLineToDotaHelperLog( "InitDotaHelper" );
-	if ( RefreshTimerID )
+	if ( hRefreshTimer )
 	{
 		RefreshTimerEND = TRUE;
-		WaitForSingleObject( RefreshTimerID, 2000 );
-		RefreshTimerID = 0;
+		WaitForSingleObject( hRefreshTimer, 2000 );
+		RefreshTimerEND = FALSE;
+		hRefreshTimer = 0;
 	}
 	//RemoveMapSizeLimit( );
 	GameVersion = gameversion;
@@ -1613,8 +1642,8 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		SetGameAreaFOVoffset = 0x7B66F0;
 
-		
-		RefreshTimerID = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
+
+		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
 		pWar3Data1 = GameDll + 0xACBD40;
@@ -1636,6 +1665,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		pobCrc32Dynamic->Free( );
 		delete pobCrc32Dynamic;
 		AddNewLineToDotaHelperLog( "InitEnd" );
+		TestLog( "InitEnd" );
 		return dwCrc32;
 	}
 	else if ( gameversion == 0x27a )
@@ -1796,7 +1826,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		SetGameAreaFOVoffset = 0xD31D0;
 
 
-		RefreshTimerID = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
+		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
 		pWar3Data1 = GameDll + 0xBC5420;
@@ -1818,6 +1848,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		pobCrc32Dynamic->Free( );
 		delete pobCrc32Dynamic;
 
+		TestLog( "InitEnd" );
 		AddNewLineToDotaHelperLog( "InitEnd" );
 		return dwCrc32;
 	}
@@ -1829,33 +1860,28 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 	return 0;
 }
 
-Ordinal403 Storm_403_org;
+Ordinal403 Storm_403_org = NULL;
 
+const char * GameDllName = "Game.dll";
+const char * StormDllName = "Storm.dll";
 
-LONG WINAPI ForceEnd( EXCEPTION_POINTERS * pExcept )
+__declspec( dllexport ) int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char * _StormDllName )
 {
-	return EXCEPTION_EXECUTE_HANDLER;
-}
+	GameDllModule = GetModuleHandle( _GameDllName );
+	GameDll = ( int ) GameDllModule;
 
-#pragma region Main
-BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
-{
-	GetCurrentModule = Module;
-	if ( reason == DLL_PROCESS_ATTACH )
+	StormDllModule = GetModuleHandle( _StormDllName );
+	StormDll = ( int ) StormDllModule;
+
+	if ( StormDllModule && GameDllModule )
 	{
-		MainThread = GetCurrentThread( );
-		GameDllModule = GetModuleHandle( "Game.dll" );
-		GameDll = ( int ) GameDllModule;
-		StormDllModule = GetModuleHandle( "Storm.dll" );
-		StormDll = ( int ) StormDllModule;
-
 		//	MODULEINFO modinfo;
 
-			//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
-			//GameDLLsz = modinfo.SizeOfImage;
+		//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
+		//GameDLLsz = modinfo.SizeOfImage;
 
-			//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
-			//StormDLLsz = modinfo.SizeOfImage;
+		//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
+		//StormDLLsz = modinfo.SizeOfImage;
 
 		Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
 		Storm_403_org = ( Ordinal403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
@@ -1863,72 +1889,79 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		// Инициализация "перехватчика" функций
 		MH_Initialize( );
 
+	}
+	return 0;
+}
+
+
+
+#pragma region Main
+BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
+{
+	GetCurrentModule = Module;
+	if ( reason == DLL_PROCESS_ATTACH )
+	{
+
+		GameDllModule = GetModuleHandle( GameDllName );
+		GameDll = ( int ) GameDllModule;
+		DisableThreadLibraryCalls( Module );
+		StormDllModule = GetModuleHandle( StormDllName );
+		StormDll = ( int ) StormDllModule;
+
+		if ( StormDllModule && GameDllModule )
+		{
+			//	MODULEINFO modinfo;
+
+				//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
+				//GameDLLsz = modinfo.SizeOfImage;
+
+				//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
+				//StormDLLsz = modinfo.SizeOfImage;
+
+			Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
+			Storm_403_org = ( Ordinal403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
+
+			// Инициализация "перехватчика" функций
+			MH_Initialize( );
+
+		}
 		//MessageBox( 0, "Init for 1.26a", "ok", MB_OK );
 		//InitDotaHelper( 0x26a );
 
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
-		// Отключить все "перехватчики" функций
-		UninitializeHook( );
-		// Выгрузить "перехватчик" функций
-		MH_Uninitialize( );
-
-		// Завершить поток
-		if ( RefreshTimerID )
+		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
+		{
+			ExitProcess( 0 );
+		}
+		// Cleanup
+		if ( hRefreshTimer )
 		{
 			RefreshTimerEND = TRUE;
-			WaitForSingleObject( RefreshTimerID, 2000 );
-			RefreshTimerID = NULL;
+			WaitForSingleObject( hRefreshTimer, 2000 );
+			RefreshTimerEND = FALSE;
+			hRefreshTimer = 0;
 		}
-		// Отключить мут
+		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
+		{
+			ExitProcess( 0 );
+		}
+		UnloadHWNDHandler( TRUE );
+		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
+		{
+			ExitProcess( 0 );
+		}
+		ClearCustomsBars( );
+		FreeAllVectors( );
+		FreeAllIHelpers( );
+		KeyboardHaveTriggerEvent = FALSE;
+		RestoreAllOffsets( );
 		UnMutePlayer( 0 );
 
-		// Убрать все патчи и вернуть стандартные данные
-		// Т.к функция вызывается после завершения игры проблем быть не должно.
-		for ( UINT i = 0; i < offsetslist.size( ); i++ )
-		{
-			offsetdata temp = offsetslist[ i ];
-			DWORD oldprotect, oldprotect2;
-			if ( VirtualProtect( ( void* ) temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
-			{
-				*( int* ) temp.offaddr = temp.offdata;
-			}
-			VirtualProtect( ( void* ) temp.offaddr, 4, oldprotect, &oldprotect2 );
-		}
-		offsetslist.clear( );
-
-
-		// Очистить список кастом баров
-		for ( int i = 0; i < 20; i++ )
-		{
-			if ( !CustomHPBarList[ i ].empty( ) )
-				CustomHPBarList[ i ].clear( );
-		}
-		// Отключить ManaBar 
 		ManaBarSwitch( GameDll, FALSE );
+		MH_Uninitialize( );
 
-		FreeAllIHelpers( );
-		if ( !ModelCollisionFixList.empty( ) )
-			ModelCollisionFixList.clear( );
-		if ( !ModelTextureFixList.empty( ) )
-			ModelTextureFixList.clear( );
-		if ( !ModelPatchList.empty( ) )
-			ModelPatchList.clear( );
-		if ( !ModelRemoveTagList.empty( ) )
-			ModelRemoveTagList.clear( );
-		if ( !ModelSequenceReSpeedList.empty( ) )
-			ModelSequenceReSpeedList.clear( );
-		if ( !ModelSequenceValueList.empty( ) )
-			ModelSequenceValueList.clear( );
-		KeyboardHaveTriggerEvent = FALSE;
-
-		if ( !GetModuleHandle( "Game.dll" ) && GetModuleHandle("Storm.dll") )
-		{
-			AddVectoredExceptionHandler( 1, ForceEnd );
-			SetUnhandledExceptionFilter( ForceEnd );
-			throw logic_error( "Force unload" );
-		}
 
 	}
 	return TRUE;

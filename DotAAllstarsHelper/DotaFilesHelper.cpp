@@ -234,7 +234,7 @@ char *repl_string( const char *str, const char *from, const char *to )
 }
 
 
-GameGetFile GameGetFile_org;
+GameGetFile GameGetFile_org = NULL;
 GameGetFile GameGetFile_ptr;
 
 int idddd = 0;

@@ -52,7 +52,7 @@ p_GetPlayerName GetPlayerName = NULL;
 
 vector<char *> mutedplayers;
 //sub_6F2FB480
-pOnChatMessage pOnChatMessage_org;
+pOnChatMessage pOnChatMessage_org = NULL;
 pOnChatMessage pOnChatMessage_ptr;
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
 {

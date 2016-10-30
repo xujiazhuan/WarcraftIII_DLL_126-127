@@ -64,12 +64,11 @@ std::string DownloadBytesGet( string szUrl, string getRequest )
 	char sendbuffer[ 8192 ];
 	sprintf_s( sendbuffer, 8192, "%s%s%s%s\r\nConnection: close\r\n\r\n", "GET ", getRequest.c_str( ), " HTTP/1.0\r\nHost: ", szUrl.c_str( ) );
 
-	MessageBox( 0, sendbuffer, " ", 0 );
 	DownProgress = 20;
 
 	if ( send( Socket, sendbuffer, (int) strlen( sendbuffer ), 0 ) == SOCKET_ERROR )
 	{
-		MessageBox( 0, "ERROR", " ", 0 );
+
 		closesocket( Socket );
 		WSACleanup( );
 		DownStatus = -1;

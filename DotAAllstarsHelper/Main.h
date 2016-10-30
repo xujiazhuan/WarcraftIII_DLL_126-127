@@ -163,7 +163,7 @@ bool FileExist( const char * name );
 
 typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
 extern _TriggerExecute TriggerExecute;
-
+void TestLog( const char * s );
 BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int UnitAddr );

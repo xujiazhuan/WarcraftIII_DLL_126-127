@@ -127,7 +127,7 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 }
 
 LookupNative LookupNative_org = NULL;
-LookupNative LookupNative_ptr = NULL;
+LookupNative LookupNative_ptr;
 
 int __fastcall LookupNative_my( LPSTR funcname )
 {
@@ -139,7 +139,7 @@ int __fastcall LookupNative_my( LPSTR funcname )
 	return retval;
 }
 
-LookupJassFunc LookupJassFunc_org;
+LookupJassFunc LookupJassFunc_org = NULL;
 LookupJassFunc LookupJassFunc_ptr;
 
 signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
@@ -256,21 +256,21 @@ const char * GetNetEventStrByID( int EventID )
 	return "Unknown CNETEvent";
 }
 
-ProcessNetEvents ProcessNetEvents_org;
+ProcessNetEvents ProcessNetEvents_org = NULL;
 ProcessNetEvents ProcessNetEvents_ptr;
 
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
 	int EventID = *( BYTE* ) ( Event + 20 );
 	ProcessNetEvents_ptr( data, unused, Event );
-	AddNewCNetEventLog( EventID, data, Event , *( BYTE* ) ( Event + 12) );
+	AddNewCNetEventLog( EventID, data, Event, *( BYTE* ) ( Event + 12 ) );
 }
 
 
 
 
 
-StormErrorHandler StormErrorHandler_org;
+StormErrorHandler StormErrorHandler_org = NULL;
 StormErrorHandler StormErrorHandler_ptr;
 
 LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, const char *, ... ), int a3, BYTE *a4, DWORD a5 )
@@ -353,7 +353,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 
 
-BlizzardDebug1 BlizzardDebug1_org;
+BlizzardDebug1 BlizzardDebug1_org = NULL;
 BlizzardDebug1 BlizzardDebug1_ptr;
 
 int __fastcall BlizzardDebug1_my( const char * str )
@@ -364,7 +364,7 @@ int __fastcall BlizzardDebug1_my( const char * str )
 	return retval;
 }
 
-BlizzardDebug2 BlizzardDebug2_org;
+BlizzardDebug2 BlizzardDebug2_org = NULL;
 BlizzardDebug2 BlizzardDebug2_ptr;
 
 int __cdecl BlizzardDebug2_my( const char * src, int lineid, const char * classname )
@@ -380,7 +380,7 @@ int __cdecl BlizzardDebug2_my( const char * src, int lineid, const char * classn
 	return retval;
 }
 
-BlizzardDebug3 BlizzardDebug3_org;
+BlizzardDebug3 BlizzardDebug3_org = NULL;
 BlizzardDebug3 BlizzardDebug3_ptr;
 
 int __cdecl BlizzardDebug3_my( const char * format, ... )
@@ -396,7 +396,7 @@ int __cdecl BlizzardDebug3_my( const char * format, ... )
 	return retval;
 }
 
-BlizzardDebug4 BlizzardDebug4_org;
+BlizzardDebug4 BlizzardDebug4_org = NULL;
 BlizzardDebug4 BlizzardDebug4_ptr;
 int __cdecl BlizzardDebug4_my( BOOL type1, const char * format, ... )
 {
@@ -414,7 +414,7 @@ int __cdecl BlizzardDebug4_my( BOOL type1, const char * format, ... )
 	return retval;
 }
 
-BlizzardDebug5 BlizzardDebug5_org;
+BlizzardDebug5 BlizzardDebug5_org = NULL;
 BlizzardDebug5 BlizzardDebug5_ptr;
 
 int __cdecl BlizzardDebug5_my( const char * format, ... )
@@ -430,7 +430,7 @@ int __cdecl BlizzardDebug5_my( const char * format, ... )
 	return retval;
 }
 
-BlizzardDebug6 BlizzardDebug6_org;
+BlizzardDebug6 BlizzardDebug6_org = NULL;
 BlizzardDebug6 BlizzardDebug6_ptr;
 
 int __cdecl BlizzardDebug6_my( const char * format, ... )
@@ -518,58 +518,6 @@ __declspec( dllexport )  int __stdcall StartExtraErrorHandler( int )
 
 void DisableErrorHandler( )
 {
-	if ( GetModuleHandle( "Game.dll" ) != 0 )
-	{
-		if ( StormErrorHandler_org )
-		{
-			MH_DisableHook( StormErrorHandler_org );
-		}
-
-		if ( LookupNative_org )
-		{
-			MH_DisableHook( LookupNative_org );
-		}
-
-		if ( LookupJassFunc_org )
-		{
-			MH_DisableHook( LookupJassFunc_org );
-		}
-
-		if ( ProcessNetEvents_org )
-		{
-			MH_DisableHook( ProcessNetEvents_org );
-		}
-
-		if ( BlizzardDebug1_org )
-		{
-			MH_DisableHook( BlizzardDebug1_org );
-		}
-
-		if ( BlizzardDebug2_org )
-		{
-			MH_DisableHook( BlizzardDebug2_org );
-		}
-
-		if ( BlizzardDebug3_org )
-		{
-			MH_DisableHook( BlizzardDebug3_org );
-		}
-
-		if ( BlizzardDebug4_org )
-		{
-			MH_DisableHook( BlizzardDebug3_org );
-		}
-
-		if ( BlizzardDebug5_org )
-		{
-			MH_DisableHook( BlizzardDebug5_org );
-		}
-
-		if ( BlizzardDebug6_org )
-		{
-			MH_DisableHook( BlizzardDebug6_org );
-		}
-	}
 
 
 	if ( !DotaHelperLog.empty( ) )
@@ -604,5 +552,58 @@ void DisableErrorHandler( )
 
 	if ( !Blizzard6Log.empty( ) )
 		Blizzard6Log.clear( );
+
+	if ( StormErrorHandler_org )
+	{
+		MH_DisableHook( StormErrorHandler_org );
+	}
+
+	if ( LookupNative_org )
+	{
+		MH_DisableHook( LookupNative_org );
+	}
+
+	if ( LookupJassFunc_org )
+	{
+		MH_DisableHook( LookupJassFunc_org );
+	}
+
+	if ( ProcessNetEvents_org )
+	{
+		MH_DisableHook( ProcessNetEvents_org );
+	}
+
+	if ( BlizzardDebug1_org )
+	{
+		MH_DisableHook( BlizzardDebug1_org );
+	}
+
+	if ( BlizzardDebug2_org )
+	{
+		MH_DisableHook( BlizzardDebug2_org );
+	}
+
+	if ( BlizzardDebug3_org )
+	{
+		MH_DisableHook( BlizzardDebug3_org );
+	}
+
+	if ( BlizzardDebug4_org )
+	{
+		MH_DisableHook( BlizzardDebug4_org );
+	}
+
+	if ( BlizzardDebug5_org )
+	{
+		MH_DisableHook( BlizzardDebug5_org );
+	}
+
+	if ( BlizzardDebug6_org )
+	{
+		MH_DisableHook( BlizzardDebug6_org );
+	}
+
+
+
 }
 

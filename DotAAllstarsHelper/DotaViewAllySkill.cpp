@@ -5,9 +5,9 @@
 IsNeedDrawUnit2 IsNeedDrawUnit2org;
 IsNeedDrawUnit2 IsNeedDrawUnit2ptr;
 
-IsDrawSkillPanel IsDrawSkillPanel_org;
+IsDrawSkillPanel IsDrawSkillPanel_org = NULL;
 IsDrawSkillPanel IsDrawSkillPanel_ptr;
-IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_org;
+IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_org = NULL;
 IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_ptr;
 
 

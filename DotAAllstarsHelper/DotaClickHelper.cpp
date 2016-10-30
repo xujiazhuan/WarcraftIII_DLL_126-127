@@ -5,7 +5,7 @@
 
 HWND Warcraft3Window = 0;
 
-WarcraftRealWNDProc WarcraftRealWNDProc_org;
+WarcraftRealWNDProc WarcraftRealWNDProc_org = NULL;
 WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 
 
@@ -97,7 +97,7 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 
 
 	}
-	PressKeyWithDelayEND = FALSE;
+	
 	return 0;
 }
 
