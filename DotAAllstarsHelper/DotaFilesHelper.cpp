@@ -12,7 +12,7 @@ extern "C" { FILE __iob_func[ 3 ] = { *stdin,*stdout,*stderr }; }
 u_int64_t GetBufHash( const char * data, size_t data_len )
 {
 	u_int64_t hash;
-	hash = fnv_64_buf( (void *)data, ( size_t ) data_len, FNV1_64_INIT );
+	hash = fnv_64_buf( ( void * ) data, ( size_t ) data_len, FNV1_64_INIT );
 	hash = ( hash >> 56 ) ^ ( hash & MASK_56 );
 	return hash;
 }
@@ -895,7 +895,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 
 }
 
-void ProcessMdx(const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 	AddNewLineToDotaHelperLog( "Process model" );
 	BYTE * ModelBytes = ( BYTE* ) *OutDataPointer;
@@ -1524,9 +1524,13 @@ __declspec( dllexport ) int __stdcall RedirectFile( const char * RealFilePath, c
 void PrintLog( const char * str )
 {
 	FILE * f;
+
 	fopen_s( &f, ".\\text.txt", "a+" );
-	fprintf_s( f, "%s\n", str );
-	fclose( f );
+	if ( f != NULL )
+	{
+		fprintf_s( f, "%s\n", str );
+		fclose( f );
+	}
 }
 
 BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )

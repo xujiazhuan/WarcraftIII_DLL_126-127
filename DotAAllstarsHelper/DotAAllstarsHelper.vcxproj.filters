@@ -66,6 +66,9 @@
     <ClCompile Include="DotaFOVfix.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="HttpClass.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">
@@ -104,6 +107,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="quantizer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpClass.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

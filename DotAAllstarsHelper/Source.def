@@ -36,3 +36,4 @@ ApplyTerrainFilterDirectly @132
 SetMainFuncWork @133
 TriggerRegisterPlayerKeyboardEvent @134
 SetCustomGameDLLandStormDLL @135
+JassLog @136

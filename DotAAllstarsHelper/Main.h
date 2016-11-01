@@ -29,6 +29,8 @@
 #include <string>
 using namespace std;
 #pragma comment(lib, "libMinHook.x86.lib")
+#include <winsock2.h>
+#pragma comment (lib, "Ws2_32.lib")
 //#pragma comment(lib, "Psapi.lib")
 #pragma endregion
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
@@ -431,6 +433,8 @@ extern SetGameAreaFOV SetGameAreaFOV_ptr;
 
 #pragma region DotaWebHelper.cpp
 
-std::string DownloadBytesGet( string szUrl, string getRequest );
+string SendHttpPostRequest( const char * host, const char * path, const char * data );
+
+string SendHttpGetRequest( const char * host, const char * path );
 
 #pragma endregion 

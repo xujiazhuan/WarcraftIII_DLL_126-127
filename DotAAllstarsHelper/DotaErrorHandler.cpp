@@ -10,6 +10,7 @@ vector<string> Blizzard4Log;
 vector<string> Blizzard4Log_2;
 vector<string> Blizzard5Log;
 vector<string> Blizzard6Log;
+vector<string> JassLogList;
 vector<int> CNetEvents;
 
 void AddNewLineToDotaHelperLog( string s )
@@ -109,6 +110,21 @@ void AddNewLineToBlizzard6Log( string s )
 	Blizzard6Log.push_back( s );
 }
 
+void AddNewLineToJassLog( string s )
+{
+	if ( JassLogList.size( ) > 35 )
+	{
+		JassLogList.erase( JassLogList.begin( ) );
+	}
+	JassLogList.push_back( s );
+}
+
+__declspec( dllexport )  int __stdcall JassLog( const char * s )
+{
+	AddNewLineToJassLog( s );
+	return 0;
+}
+
 void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 {
 	if ( CNetEvents.size( ) > 50 )
@@ -135,7 +151,7 @@ LookupNative LookupNative_ptr;
 int __fastcall LookupNative_my( LPSTR funcname )
 {
 	int retval = LookupNative_ptr( funcname );
-	if ( funcname && *funcname )
+	if ( funcname && *funcname != '\0' )
 	{
 		AddNewLineToJassNativesLog( funcname );
 	}
@@ -148,7 +164,7 @@ LookupJassFunc LookupJassFunc_ptr;
 signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
 {
 	signed int retval = LookupJassFunc_ptr( a1, unused, funcname );
-	if ( funcname && *funcname )
+	if ( funcname &&  *funcname != '\0' )
 	{
 		AddNewLineToJassFuncLog( funcname );
 	}
@@ -253,6 +269,8 @@ const char * GetNetEventStrByID( int EventID )
 			return "CNetEventTrustedResult";
 		case 31:
 			return "CNetGameEvents";
+		case 32:
+			return "CNet::EVENT_MESSAGE";
 		default:
 			break;
 	}
@@ -264,6 +282,7 @@ ProcessNetEvents ProcessNetEvents_ptr;
 
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
+	AddNewLineToDotaHelperLog( "ProcessNetEvents" );
 	int EventID = *( BYTE* ) ( Event + 20 );
 	ProcessNetEvents_ptr( data, unused, Event );
 	AddNewCNetEventLog( EventID, data, Event, *( BYTE* ) ( Event + 12 ) );
@@ -282,29 +301,120 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
 	result = StormErrorHandler_ptr( a1, PrintErrorLog, a3, a4, a5 );
 	PrintErrorLog( a3, "%s", "[Dota Allstars DLL log]" );
+	string LogTempStr;
+	int FuncCount = 0;
+
 
 	stringstream BugReport;
 	BugReport << "%5BDotaHelperLog%5D";
 	for ( string s : DotaHelperLog )
 	{
-		BugReport << s << "%20";
-		PrintErrorLog( a3, "%s", s.c_str( ) );
+		if ( s == LogTempStr )
+		{
+			FuncCount++;
+		}
+		else
+		{
+			if ( FuncCount > 0 )
+			{
+				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
+				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+			}
+			else
+			{
+				BugReport << s << "%20";
+				PrintErrorLog( a3, "%s", s.c_str( ) );
+			}
+			LogTempStr = s;
+			FuncCount = 0;
+		}
 	}
+	FuncCount = 0;
+
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Native log]" );
 	BugReport << "%0A%5BJassNativesLog%5D";
 	for ( string s : JassNativesLog )
 	{
-		BugReport << s << "%20";
-		PrintErrorLog( a3, "%s", s.c_str( ) );
+		if ( s == LogTempStr )
+		{
+			FuncCount++;
+		}
+		else
+		{
+			if ( FuncCount > 0 )
+			{
+				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
+				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+			}
+			else
+			{
+				BugReport << s << "%20";
+				PrintErrorLog( a3, "%s", s.c_str( ) );
+			}
+			LogTempStr = s;
+			FuncCount = 0;
+		}
 	}
+	FuncCount = 0;
+
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Func log]" );
 	BugReport << "%0A%5BJassFuncLog%5D";
 	for ( string s : JassFuncLog )
 	{
-		BugReport << s << "%20";
-		PrintErrorLog( a3, "%s", s.c_str( ) );
+		if ( s == LogTempStr )
+		{
+			FuncCount++;
+		}
+		else
+		{
+			if ( FuncCount > 0 )
+			{
+				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
+				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+			}
+			else
+			{
+				BugReport << s << "%20";
+				PrintErrorLog( a3, "%s", s.c_str( ) );
+			}
+			LogTempStr = s;
+			FuncCount = 0;
+		}
 	}
+
+
+	FuncCount = 0;
+
+	PrintErrorLog( a3, "%s", "[Dota Jass Log]" );
+	BugReport << "%0A%5BDotaJassLog%5D";
+	for ( string s : JassLogList )
+	{
+		if ( s == LogTempStr )
+		{
+			FuncCount++;
+		}
+		else
+		{
+			if ( FuncCount > 0 )
+			{
+				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
+				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+			}
+			else
+			{
+				BugReport << s << "%20";
+				PrintErrorLog( a3, "%s", s.c_str( ) );
+			}
+			LogTempStr = s;
+			FuncCount = 0;
+		}
+	}
+
+
 	BugReport << "%5BEND%5D";
+	SendHttpPostRequest( "d1stats.ru", "/fatal.php", ( "msg=QQPOSTQQ" + BugReport.str( ) ).c_str( ) );
+	//	SendHttpGetRequest( "d1stats.ru", ("/fatal.php?msg=QQGETQQ" + BugReport.str( ) ).c_str( ) );
+
 	PrintErrorLog( a3, "%s", "[Dota Allstars CNET events]" );
 	for ( int EventID : CNetEvents )
 	{
@@ -347,7 +457,6 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler END]" );
 
-	DownloadBytesGet( "d1stats.ru", "/fatal.php?msg=" + BugReport.str( ) ).clear( );
 
 	return result;
 }
