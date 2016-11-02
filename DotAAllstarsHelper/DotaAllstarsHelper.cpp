@@ -1317,6 +1317,14 @@ __declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
 #pragma endregion
 
 
+vector<LPVOID> FreeExecutableMemoryList;
+
+__declspec( dllexport ) int __stdcall FreeExecutableMemory( void * addr )
+{
+	FreeExecutableMemoryList.push_back( addr );
+	return 0;
+}
+
 void __stdcall RestoreAllOffsets( )
 {
 	TestLog( "RestoreAllOffsets" );
@@ -1388,6 +1396,10 @@ void __stdcall DisableAllHooks( )
 	ClearCustomsBars( );
 	// Отключить ManaBar 
 	ManaBarSwitch( GameDll, FALSE );
+
+	for ( LPVOID lpAddr : FreeExecutableMemoryList )
+		VirtualFree( lpAddr, 0, MEM_RELEASE );
+	FreeExecutableMemoryList.clear( );
 
 	FreeAllIHelpers( );
 	FreeAllVectors( );
@@ -1959,7 +1971,9 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		KeyboardHaveTriggerEvent = FALSE;
 		RestoreAllOffsets( );
 		UnMutePlayer( 0 );
-
+		for( LPVOID lpAddr : FreeExecutableMemoryList )
+			VirtualFree( lpAddr, 0, MEM_RELEASE );
+		FreeExecutableMemoryList.clear( );
 		ManaBarSwitch( GameDll, FALSE );
 		MH_Uninitialize( );
 

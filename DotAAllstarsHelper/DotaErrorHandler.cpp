@@ -380,16 +380,20 @@ std::string GetLastErrorAsString( )
 	if ( errorMessageID == 0 )
 		return std::string( ); //No error message has been recorded
 
-	LPSTR messageBuffer = nullptr;
+	LPSTR messageBuffer = NULL;
 	size_t size = FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-								  NULL, errorMessageID, MAKELANGID( LANG_ENGLISH, SUBLANG_NEUTRAL ), ( LPSTR ) &messageBuffer, 0, NULL );
+								  NULL, errorMessageID, MAKELANGID( LANG_ENGLISH, SUBLANG_ENGLISH_US ), ( LPSTR ) &messageBuffer, 0, NULL );
 
-	std::string message( messageBuffer, size );
+	if ( size > 2 && messageBuffer != NULL )
+	{
+		std::string message( messageBuffer, size );
 
-	//Free the buffer.
-	LocalFree( messageBuffer );
+		//Free the buffer.
+		LocalFree( messageBuffer );
 
-	return message;
+		return message;
+	}
+	return "NULL";
 }
 
 
@@ -430,8 +434,7 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
 	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
 	MessageBox( 0, LastExceptionError.c_str( ), "OK", 0 );
-	OriginFilter( ExceptionInfo );
-	return EXCEPTION_CONTINUE_SEARCH;
+	return OriginFilter( ExceptionInfo );
 }
 
 void InitTopLevelExceptionFilter( )
@@ -492,11 +495,11 @@ std::string GetPlatformName( )
 {
 	if ( GetModuleHandle( "iccwc3.icc" ) )
 		return "[iCCup]";
-	if ( GetModuleHandle( "InputHook.dll" ) && GetModuleHandle("Overlay.dll") )
+	if ( GetModuleHandle( "InputHook.dll" ) && GetModuleHandle( "Overlay.dll" ) )
 		return "[Garena Plus]";
 	if ( FindProcess( "rgc.exe" ) )
 		return "[RGC]";
-	if ( FindProcess( "myroc.exe" ) )
+	if ( GetModuleHandle( "mroc.dll" ) || FindProcess( "myroc.exe" ) )
 		return "[RGC]";
 	if ( !GetModuleHandle( "w3lh.dll" ) )
 		return "[Unknown Or Battle.net]";
@@ -513,18 +516,50 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	string LogTempStr;
 	int FuncCount = 0;
 
-	char gamever[ 10 ];
-	char lasterror[ 10 ];
-	sprintf_s( gamever, 10, "%X", GameVersion );
-	sprintf_s( lasterror, 10, "%lX", GetLastError( ) );
+	char gamever[ 20 ];
+	char lasterror[ 20 ];
+	sprintf_s( gamever, 20, "%X", GameVersion );
+	sprintf_s( lasterror, 20, "%#010x", (UINT) GetLastError( ) );
 	ostringstream BugReport;
-	BugReport << "[DotaHelperLog]";
+	BugReport << "[DotaHelperLog]" << std::endl;
+
+
+
 	BugReport << "GameVer: 1." << gamever << std::endl;
 	BugReport << ( const char * ) ( *InGame ? "InGame" : "NotInGame" ) << std::endl;
 	BugReport << ( const char * ) ( *( BOOL* ) IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
+
+
+	if ( *InGame )
+	{
+		const char * currentplayername = GetPlayerName( GetLocalPlayerId( ), 1 );
+		if ( currentplayername && *currentplayername != '\0' )
+			BugReport << "[PlayerName]:" << currentplayername << std::endl;
+		else
+			BugReport << "[PlayerName]:" << "Error!" << std::endl;
+		BugReport << "[PlayerList]:" << std::endl;
+		for ( int i = 0; i < 15; i++ )
+		{
+			currentplayername = GetPlayerName( i, 1 );
+			if ( currentplayername && *currentplayername != '\0' )
+			{
+				if ( strstr( currentplayername, "Player " ) )
+					continue;
+				if ( strstr( currentplayername, "Neutral " ) )
+					continue;
+				if ( strstr( currentplayername, "The " ) )
+					continue;
+
+				BugReport << "[_" << i << "_]:" << currentplayername << std::endl;
+			}
+		}
+		BugReport << "[EndPlayerList]:" << std::endl;
+	}
+
+
 	BugReport << "SystemTime: " << a5->wYear << "." << a5->wMonth << "." << a5->wDay << " " << a5->wHour << ":" << a5->wMinute << ":" << a5->wSecond << std::endl;
 	BugReport << "LastError: \"" << GetLastErrorAsString( ) << "\", CODE: " << lasterror << std::endl;
-	BugReport <<"[Platform] :" << GetPlatformName( ) << std::endl;
+	BugReport << "[Platform] :" << GetPlatformName( ) << std::endl;
 	BugReport << "[Exception Info:]" << std::endl;
 	BugReport << LastExceptionError;
 
