@@ -897,7 +897,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 
 void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
-	AddNewLineToDotaHelperLog( "Process model" );
+	AddNewLineToDotaHelperLog( "ProcessModel" );
 	BYTE * ModelBytes = ( BYTE* ) *OutDataPointer;
 	size_t sz = *OutSize;
 
@@ -1543,7 +1543,7 @@ BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize,
 		string FilePathLower = ToLower( filename );
 		string FilePathOrigin( filename );
 		size_t PathLen = FilePathLower.length( );
-		AddNewLineToDotaHelperLog( "ProcessFile Start" );
+		AddNewLineToDotaHelperLog( "ProcessFileStart" );
 		if ( PathLen > 4 )
 		{
 			if ( strcmp( FilePathLower.c_str( ) + ( PathLen - 4 ), ".tga" ) == 0 )
@@ -1576,7 +1576,10 @@ BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize,
 			}
 		}
 	}
-	return IsFileExist;
+	else 
+		AddNewLineToDotaHelperLog( "BADFILENAMEFOUND" );
+	
+		return IsFileExist;
 }
 
 
@@ -1594,7 +1597,7 @@ BOOL __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, si
 		IsFileExist = ProcessFile( filename, OutDataPointer, OutSize, unknown, IsFileExist );
 	}
 
-	AddNewLineToDotaHelperLog( "ProcessFile END" );
+	AddNewLineToDotaHelperLog( "ProcessFileEND" );
 	/*if ( IsFileExist == 1 && filename && *filename != '\0' )
 	{
 		if ( strstr( filename, "TerrainArt" ) || strstr( filename, "Cliff" ) )

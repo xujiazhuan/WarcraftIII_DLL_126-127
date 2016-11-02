@@ -1,4 +1,88 @@
 #include "Main.h"
+#include <iomanip>
+#include <eh.h>
+#define PSAPI_VERSION 1
+
+
+#include <Psapi.h>
+#pragma comment(lib,"Psapi.lib")
+
+class InfoFromSE
+{
+public:
+	typedef unsigned int exception_code_t;
+
+	static const char* opDescription( const ULONG opcode )
+	{
+		switch ( opcode )
+		{
+			case 0: return "read";
+			case 1: return "write";
+			case 8: return "user-mode data execution prevention (DEP) violation";
+			default: return "unknown";
+		}
+	}
+
+	static const char* seDescription( const exception_code_t& code )
+	{
+		switch ( code )
+		{
+			case EXCEPTION_ACCESS_VIOLATION:         return "EXCEPTION_ACCESS_VIOLATION";
+			case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:    return "EXCEPTION_ARRAY_BOUNDS_EXCEEDED";
+			case EXCEPTION_BREAKPOINT:               return "EXCEPTION_BREAKPOINT";
+			case EXCEPTION_DATATYPE_MISALIGNMENT:    return "EXCEPTION_DATATYPE_MISALIGNMENT";
+			case EXCEPTION_FLT_DENORMAL_OPERAND:     return "EXCEPTION_FLT_DENORMAL_OPERAND";
+			case EXCEPTION_FLT_DIVIDE_BY_ZERO:       return "EXCEPTION_FLT_DIVIDE_BY_ZERO";
+			case EXCEPTION_FLT_INEXACT_RESULT:       return "EXCEPTION_FLT_INEXACT_RESULT";
+			case EXCEPTION_FLT_INVALID_OPERATION:    return "EXCEPTION_FLT_INVALID_OPERATION";
+			case EXCEPTION_FLT_OVERFLOW:             return "EXCEPTION_FLT_OVERFLOW";
+			case EXCEPTION_FLT_STACK_CHECK:          return "EXCEPTION_FLT_STACK_CHECK";
+			case EXCEPTION_FLT_UNDERFLOW:            return "EXCEPTION_FLT_UNDERFLOW";
+			case EXCEPTION_ILLEGAL_INSTRUCTION:      return "EXCEPTION_ILLEGAL_INSTRUCTION";
+			case EXCEPTION_IN_PAGE_ERROR:            return "EXCEPTION_IN_PAGE_ERROR";
+			case EXCEPTION_INT_DIVIDE_BY_ZERO:       return "EXCEPTION_INT_DIVIDE_BY_ZERO";
+			case EXCEPTION_INT_OVERFLOW:             return "EXCEPTION_INT_OVERFLOW";
+			case EXCEPTION_INVALID_DISPOSITION:      return "EXCEPTION_INVALID_DISPOSITION";
+			case EXCEPTION_NONCONTINUABLE_EXCEPTION: return "EXCEPTION_NONCONTINUABLE_EXCEPTION";
+			case EXCEPTION_PRIV_INSTRUCTION:         return "EXCEPTION_PRIV_INSTRUCTION";
+			case EXCEPTION_SINGLE_STEP:              return "EXCEPTION_SINGLE_STEP";
+			case EXCEPTION_STACK_OVERFLOW:           return "EXCEPTION_STACK_OVERFLOW";
+			default: return "UNKNOWN EXCEPTION";
+		}
+	}
+
+	static std::string information( struct _EXCEPTION_POINTERS* ep, bool has_exception_code = false, exception_code_t code = 0 )
+	{
+		HMODULE hm;
+		::GetModuleHandleEx( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast< LPCTSTR >( ep->ExceptionRecord->ExceptionAddress ), &hm );
+		MODULEINFO mi;
+		::GetModuleInformation( ::GetCurrentProcess( ), hm, &mi, sizeof( mi ) );
+		char fn[ MAX_PATH ];
+		::GetModuleFileNameExA( ::GetCurrentProcess( ), hm, fn, MAX_PATH );
+
+		std::ostringstream oss;
+		oss << "SE " << ( has_exception_code ? seDescription( code ) : "" ) << " at address 0x" << std::hex << ep->ExceptionRecord->ExceptionAddress << std::dec
+			<< " inside " << fn << " loaded at base address 0x" << std::hex << mi.lpBaseOfDll << "\n";
+
+		if ( has_exception_code && (
+			code == EXCEPTION_ACCESS_VIOLATION ||
+			code == EXCEPTION_IN_PAGE_ERROR ) )
+		{
+			oss << "Invalid operation: " << opDescription( ep->ExceptionRecord->ExceptionInformation[ 0 ] ) << " at address 0x" << std::hex << ep->ExceptionRecord->ExceptionInformation[ 1 ] << std::dec << "\n";
+		}
+
+		if ( has_exception_code && code == EXCEPTION_IN_PAGE_ERROR )
+		{
+			oss << "Underlying NTSTATUS code that resulted in the exception " << ep->ExceptionRecord->ExceptionInformation[ 2 ] << "\n";
+		}
+
+		return oss.str( );
+	}
+
+
+};
+
+
 
 vector<string> DotaHelperLog;
 vector<string> JassNativesLog;
@@ -137,7 +221,7 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 	{
 		if ( MessageBox( Warcraft3Window, "Warning desync detected. Start force crash for detect problem?", "DESYNC, CRASH, YES OR NO?", MB_YESNO | MB_ICONWARNING ) == IDYES )
 		{
-			AddNewLineToDotaHelperLog( "Warning desync detected. Start force crash for detect problem" );
+			AddNewLineToDotaHelperLog( "WarningDesyncDetected.StartForceCrashForDetectProblem" );
 			//ShowWindow( Warcraft3Window, SW_HIDE );
 			//MessageBox( Warcraft3Window, "Warning desync detected. Start force crash for detect problem", "Desync detected!", 0 );
 			throw logic_error( "Warning desync detected. Start force crash for detect problem" );
@@ -289,13 +373,138 @@ void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 }
 
 
+std::string GetLastErrorAsString( )
+{
+	//Get the error message, if any.
+	DWORD errorMessageID = ::GetLastError( );
+	if ( errorMessageID == 0 )
+		return std::string( ); //No error message has been recorded
 
+	LPSTR messageBuffer = nullptr;
+	size_t size = FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+								  NULL, errorMessageID, MAKELANGID( LANG_ENGLISH, SUBLANG_NEUTRAL ), ( LPSTR ) &messageBuffer, 0, NULL );
+
+	std::string message( messageBuffer, size );
+
+	//Free the buffer.
+	LocalFree( messageBuffer );
+
+	return message;
+}
 
 
 StormErrorHandler StormErrorHandler_org = NULL;
 StormErrorHandler StormErrorHandler_ptr;
 
-LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, const char *, ... ), int a3, BYTE *a4, DWORD a5 )
+string url_encode( const string &value )
+{
+	ostringstream escaped;
+	escaped.fill( '0' );
+	escaped << hex;
+
+	for ( string::const_iterator i = value.begin( ), n = value.end( ); i != n; ++i )
+	{
+		string::value_type c = ( *i );
+
+		// Keep alphanumeric and other accepted characters intact
+		if ( isalnum( c ) || c == '-' || c == '_' || c == '.' )
+		{
+			escaped << c;
+			continue;
+		}
+
+		// Any other characters are percent-encoded
+		escaped << uppercase;
+		escaped << '%' << setw( 2 ) << int( ( unsigned char ) c );
+		escaped << nouppercase;
+	}
+
+	return escaped.str( );
+}
+
+string LastExceptionError;
+
+LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
+
+LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
+{
+	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+	MessageBox( 0, LastExceptionError.c_str( ), "OK", 0 );
+	OriginFilter( ExceptionInfo );
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+
+void InitTopLevelExceptionFilter( )
+{
+	SetUnhandledExceptionFilter( TopLevelExceptionFilter );
+}
+
+void ResetTopLevelExceptionFilter( )
+{
+	SetUnhandledExceptionFilter( OriginFilter );
+}
+
+#define MAX_PROCESSES 1024 
+
+
+DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
+{
+	LPDWORD lpdwProcessIds;
+	LPTSTR  lpszBaseName;
+	HANDLE  hProcess;
+	DWORD   i, cdwProcesses, dwProcessId = 0;
+
+	lpdwProcessIds = ( LPDWORD ) HeapAlloc( GetProcessHeap( ), 0, MAX_PROCESSES * sizeof( DWORD ) );
+	if ( lpdwProcessIds != NULL )
+	{
+		if ( EnumProcesses( lpdwProcessIds, MAX_PROCESSES * sizeof( DWORD ), &cdwProcesses ) )
+		{
+			lpszBaseName = ( LPTSTR ) HeapAlloc( GetProcessHeap( ), 0, MAX_PATH * sizeof( TCHAR ) );
+			if ( lpszBaseName != NULL )
+			{
+				cdwProcesses /= sizeof( DWORD );
+				for ( i = 0; i < cdwProcesses; i++ )
+				{
+					hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, lpdwProcessIds[ i ] );
+					if ( hProcess != NULL )
+					{
+						if ( GetModuleBaseName( hProcess, NULL, lpszBaseName, MAX_PATH ) > 0 )
+						{
+							if ( !lstrcmpi( lpszBaseName, lpcszFileName ) )
+							{
+								dwProcessId = lpdwProcessIds[ i ];
+								CloseHandle( hProcess );
+								break;
+							}
+						}
+						CloseHandle( hProcess );
+					}
+				}
+				HeapFree( GetProcessHeap( ), 0, ( LPVOID ) lpszBaseName );
+			}
+		}
+		HeapFree( GetProcessHeap( ), 0, ( LPVOID ) lpdwProcessIds );
+	}
+	return dwProcessId;
+}
+
+std::string GetPlatformName( )
+{
+	if ( GetModuleHandle( "iccwc3.icc" ) )
+		return "[iCCup]";
+	if ( GetModuleHandle( "InputHook.dll" ) && GetModuleHandle("Overlay.dll") )
+		return "[Garena Plus]";
+	if ( FindProcess( "rgc.exe" ) )
+		return "[RGC]";
+	if ( FindProcess( "myroc.exe" ) )
+		return "[RGC]";
+	if ( !GetModuleHandle( "w3lh.dll" ) )
+		return "[Unknown Or Battle.net]";
+
+	return "[Unknown PVPGN server]";
+}
+
+LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 )
 {
 	LONG result = NULL;
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
@@ -304,9 +513,24 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	string LogTempStr;
 	int FuncCount = 0;
 
+	char gamever[ 10 ];
+	char lasterror[ 10 ];
+	sprintf_s( gamever, 10, "%X", GameVersion );
+	sprintf_s( lasterror, 10, "%lX", GetLastError( ) );
+	ostringstream BugReport;
+	BugReport << "[DotaHelperLog]";
+	BugReport << "GameVer: 1." << gamever << std::endl;
+	BugReport << ( const char * ) ( *InGame ? "InGame" : "NotInGame" ) << std::endl;
+	BugReport << ( const char * ) ( *( BOOL* ) IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
+	BugReport << "SystemTime: " << a5->wYear << "." << a5->wMonth << "." << a5->wDay << " " << a5->wHour << ":" << a5->wMinute << ":" << a5->wSecond << std::endl;
+	BugReport << "LastError: \"" << GetLastErrorAsString( ) << "\", CODE: " << lasterror << std::endl;
+	BugReport <<"[Platform] :" << GetPlatformName( ) << std::endl;
+	BugReport << "[Exception Info:]" << std::endl;
+	BugReport << LastExceptionError;
 
-	stringstream BugReport;
-	BugReport << "%5BDotaHelperLog%5D";
+
+	BugReport << std::endl << "[DLL_LOG]" << std::endl;
+
 	for ( string s : DotaHelperLog )
 	{
 		if ( s == LogTempStr )
@@ -317,12 +541,12 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		{
 			if ( FuncCount > 0 )
 			{
-				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
-				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+				BugReport << s << ( "(" + std::to_string( FuncCount + 1 ) + "x)" ) << " ";
+				PrintErrorLog( a3, "%s (%ix)", s.c_str( ), ( FuncCount + 1 ) );
 			}
 			else
 			{
-				BugReport << s << "%20";
+				BugReport << s << " ";
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
@@ -332,7 +556,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	FuncCount = 0;
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Native log]" );
-	BugReport << "%0A%5BJassNativesLog%5D";
+	BugReport << std::endl << "[JassNativesLog]" << std::endl;
 	for ( string s : JassNativesLog )
 	{
 		if ( s == LogTempStr )
@@ -343,12 +567,12 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		{
 			if ( FuncCount > 0 )
 			{
-				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
-				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+				BugReport << s << ( "(" + std::to_string( FuncCount + 1 ) + "x)" ) << " ";
+				PrintErrorLog( a3, "%s (%ix)", s.c_str( ), ( FuncCount + 1 ) );
 			}
 			else
 			{
-				BugReport << s << "%20";
+				BugReport << s << " ";
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
@@ -358,7 +582,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	FuncCount = 0;
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Func log]" );
-	BugReport << "%0A%5BJassFuncLog%5D";
+	BugReport << std::endl << "[JassFuncLog]" << std::endl;
 	for ( string s : JassFuncLog )
 	{
 		if ( s == LogTempStr )
@@ -369,12 +593,12 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		{
 			if ( FuncCount > 0 )
 			{
-				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
-				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+				BugReport << s << ( "(" + std::to_string( FuncCount + 1 ) + "x)" ) << " ";
+				PrintErrorLog( a3, "%s (%ix)", s.c_str( ), ( FuncCount + 1 ) );
 			}
 			else
 			{
-				BugReport << s << "%20";
+				BugReport << s << " ";
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
@@ -386,7 +610,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	FuncCount = 0;
 
 	PrintErrorLog( a3, "%s", "[Dota Jass Log]" );
-	BugReport << "%0A%5BDotaJassLog%5D";
+	BugReport << std::endl << "[DotaJassLog]" << std::endl;
 	for ( string s : JassLogList )
 	{
 		if ( s == LogTempStr )
@@ -397,12 +621,12 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		{
 			if ( FuncCount > 0 )
 			{
-				BugReport << s << ( "%28" + std::to_string( FuncCount + 1 ) + "x%29" ) << "%20";
-				PrintErrorLog( a3, "%s%20%28%ix%29", s.c_str( ), ( FuncCount + 1 ) );
+				BugReport << s << ( "(" + std::to_string( FuncCount + 1 ) + "x)" ) << " ";
+				PrintErrorLog( a3, "%s (%ix)", s.c_str( ), ( FuncCount + 1 ) );
 			}
 			else
 			{
-				BugReport << s << "%20";
+				BugReport << s << " ";
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
@@ -411,8 +635,10 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	}
 
 
-	BugReport << "%5BEND%5D";
-	SendHttpPostRequest( "d1stats.ru", "/fatal.php", ( "msg=QQPOSTQQ" + BugReport.str( ) ).c_str( ) );
+	BugReport << std::endl << "[END]";
+
+	string strBugReport = url_encode( BugReport.str( ) );
+	SendHttpPostRequest( "d1stats.ru", "/fatal.php", ( "msg=" + strBugReport ).c_str( ) );
 	//	SendHttpGetRequest( "d1stats.ru", ("/fatal.php?msg=QQGETQQ" + BugReport.str( ) ).c_str( ) );
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars CNET events]" );
@@ -561,6 +787,10 @@ int __cdecl BlizzardDebug6_my( const char * format, ... )
 
 void EnableErrorHandler( )
 {
+
+	InitTopLevelExceptionFilter( );
+
+
 	if ( StormErrorHandler_org )
 	{
 		MH_CreateHook( StormErrorHandler_org, &StormErrorHandler_my, reinterpret_cast< void** >( &StormErrorHandler_ptr ) );
@@ -590,6 +820,8 @@ void EnableErrorHandler( )
 
 __declspec( dllexport )  int __stdcall StartExtraErrorHandler( int )
 {
+
+
 	if ( BlizzardDebug1_org )
 	{
 		MH_CreateHook( BlizzardDebug1_org, &BlizzardDebug1_my, reinterpret_cast< void** >( &BlizzardDebug1_ptr ) );
@@ -630,6 +862,7 @@ __declspec( dllexport )  int __stdcall StartExtraErrorHandler( int )
 
 void DisableErrorHandler( )
 {
+	ResetTopLevelExceptionFilter( );
 
 
 	if ( !DotaHelperLog.empty( ) )

@@ -1537,7 +1537,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		BlizzardDebug5Offset = GameDll + 0x39E970;
 		BlizzardDebug6Offset = GameDll + 0x579C10;
 
-
+		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER ) ( StormDll + 0x16880 );
 
 		IssueWithoutTargetOrderOffset = 0x339C60;
 		IssueTargetOrPointOrder2Offset = 0x339CC0;
@@ -1713,6 +1713,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		BlizzardDebug5Offset = GameDll + 0x1c14f0;
 		BlizzardDebug6Offset = GameDll + 0x2eeb70;
 
+		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER ) ( StormDll + 0x1BB60 );
 
 		IssueWithoutTargetOrderOffset = 0x3AE4E0;
 		IssueTargetOrPointOrder2Offset = 0x3AE540;

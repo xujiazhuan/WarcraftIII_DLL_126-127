@@ -244,8 +244,9 @@ void EnableErrorHandler( );
 void DisableErrorHandler( );
 void AddNewLineToDotaHelperLog( string s );
 
+extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 
-typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, DWORD a5 );
+typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
 extern StormErrorHandler StormErrorHandler_org;
 typedef int( __fastcall *LookupNative )( LPSTR );
 extern LookupNative LookupNative_org;
