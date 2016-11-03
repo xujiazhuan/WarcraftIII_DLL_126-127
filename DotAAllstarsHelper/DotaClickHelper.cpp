@@ -110,6 +110,9 @@ BOOL IsCursorSelectTarget( )
 	int pOffset1 = *( int* ) ( pW3XGlobalClass );
 	if ( pOffset1 > 0 && *( int* ) ( pOffset1 + 0x1BC ) == 1 )
 	{
+		/*char tmp[ 100 ];
+		sprintf_s( tmp, 100, "%X", pOffset1 );
+		MessageBox( 0, tmp, tmp, 0 );*/
 		return TRUE;
 	}
 	return FALSE;
@@ -454,10 +457,10 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 								if ( IsCursorSelectTarget( ) )
 								{
 									PressMouseAtSelectedHero( );
-									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
+									/*if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
 									{
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
-									}
+									}*/
 									LastPressedKeysTime[ wParam ] = 0;
 								}
 							}

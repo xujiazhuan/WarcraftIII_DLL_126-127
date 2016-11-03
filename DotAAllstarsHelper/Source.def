@@ -38,3 +38,4 @@ TriggerRegisterPlayerKeyboardEvent @134
 SetCustomGameDLLandStormDLL @135
 JassLog @136
 FreeExecutableMemory @137
+DllLogEnable @138

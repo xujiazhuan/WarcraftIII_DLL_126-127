@@ -1405,6 +1405,7 @@ void __stdcall DisableAllHooks( )
 	FreeAllVectors( );
 
 	KeyboardHaveTriggerEvent = FALSE;
+	bDllLogEnable = TRUE;
 }
 
 void * hRefreshTimer = 0;
@@ -1976,7 +1977,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		FreeExecutableMemoryList.clear( );
 		ManaBarSwitch( GameDll, FALSE );
 		MH_Uninitialize( );
-
+		bDllLogEnable = TRUE; 
 
 	}
 	return TRUE;

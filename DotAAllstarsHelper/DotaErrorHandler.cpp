@@ -82,11 +82,42 @@ public:
 
 };
 
+std::string ReadRegistryKeyString( const char *registryKey, const char *registryValue )
+{
+	// Open the key
+	HKEY hKey;
+	if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, registryKey, 0, KEY_QUERY_VALUE, &hKey ) != ERROR_SUCCESS )
+		return 0;
 
+	char str[ 256 ] = { };
+	DWORD dwLen = 255;
+	LONG ret = RegQueryValueExA( hKey, registryValue, NULL, NULL, ( LPBYTE ) str, &dwLen );
+	RegCloseKey( hKey );
 
+	if ( ret == ERROR_SUCCESS )
+		return str;
+	else
+		return std::string( );
+}
+
+std::string GetOSDisplayString( )
+{
+	std::string productName = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "ProductName" );
+	std::string servicePack = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "CSDVersion" );
+	std::string bitness = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "BuildLabEx" );
+
+	if ( productName.length( ) == 0 )
+		productName = "Win98/2000?";
+
+	if ( bitness.find( "amd64" ) != std::string::npos )
+		bitness = "64-bit";
+	else
+		bitness = "32-bit";
+
+	return productName + " " + bitness + " " + servicePack;
+}
 vector<string> DotaHelperLog;
-vector<string> JassNativesLog;
-vector<string> JassFuncLog;
+vector<string> JassNativesFuncLog;
 vector<string> Blizzard1Log;
 vector<string> Blizzard2Log;
 vector<string> Blizzard3Log;
@@ -99,31 +130,25 @@ vector<int> CNetEvents;
 
 void AddNewLineToDotaHelperLog( string s )
 {
-	if ( DotaHelperLog.size( ) > 35 )
+	if ( bDllLogEnable )
 	{
-		DotaHelperLog.erase( DotaHelperLog.begin( ) );
+		if ( DotaHelperLog.size( ) > 35 )
+		{
+			DotaHelperLog.erase( DotaHelperLog.begin( ) );
+		}
+		DotaHelperLog.push_back( s );
 	}
-	DotaHelperLog.push_back( s );
 }
 
 void AddNewLineToJassNativesLog( string s )
 {
-	if ( JassNativesLog.size( ) > 35 )
+	if ( JassNativesFuncLog.size( ) > 50 )
 	{
-		JassNativesLog.erase( JassNativesLog.begin( ) );
+		JassNativesFuncLog.erase( JassNativesFuncLog.begin( ) );
 	}
-	JassNativesLog.push_back( s );
+	JassNativesFuncLog.push_back( s );
 }
 
-
-void AddNewLineToJassFuncLog( string s )
-{
-	if ( JassFuncLog.size( ) > 35 )
-	{
-		JassFuncLog.erase( JassFuncLog.begin( ) );
-	}
-	JassFuncLog.push_back( s );
-}
 
 void AddNewLineToBlizzard1Log( string s )
 {
@@ -209,6 +234,16 @@ __declspec( dllexport )  int __stdcall JassLog( const char * s )
 	return 0;
 }
 
+
+BOOL bDllLogEnable = TRUE;
+__declspec( dllexport )  int __stdcall DllLogEnable( BOOL enable )
+{
+	bDllLogEnable = enable;
+	return 0;
+}
+
+//JassNativesFuncLog
+
 void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 {
 	if ( CNetEvents.size( ) > 50 )
@@ -250,7 +285,7 @@ signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
 	signed int retval = LookupJassFunc_ptr( a1, unused, funcname );
 	if ( funcname &&  *funcname != '\0' )
 	{
-		AddNewLineToJassFuncLog( funcname );
+		AddNewLineToJassNativesLog( funcname );
 	}
 	return retval;
 }
@@ -433,7 +468,6 @@ LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
 	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
-	MessageBox( 0, LastExceptionError.c_str( ), "OK", 0 );
 	return OriginFilter( ExceptionInfo );
 }
 
@@ -558,6 +592,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 
 	BugReport << "SystemTime: " << a5->wYear << "." << a5->wMonth << "." << a5->wDay << " " << a5->wHour << ":" << a5->wMinute << ":" << a5->wSecond << std::endl;
+	BugReport << "OS: " << GetOSDisplayString( ) << std::endl;
 	BugReport << "LastError: \"" << GetLastErrorAsString( ) << "\", CODE: " << lasterror << std::endl;
 	BugReport << "[Platform] :" << GetPlatformName( ) << std::endl;
 	BugReport << "[Exception Info:]" << std::endl;
@@ -592,33 +627,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Native log]" );
 	BugReport << std::endl << "[JassNativesLog]" << std::endl;
-	for ( string s : JassNativesLog )
-	{
-		if ( s == LogTempStr )
-		{
-			FuncCount++;
-		}
-		else
-		{
-			if ( FuncCount > 0 )
-			{
-				BugReport << s << ( "(" + std::to_string( FuncCount + 1 ) + "x)" ) << " ";
-				PrintErrorLog( a3, "%s (%ix)", s.c_str( ), ( FuncCount + 1 ) );
-			}
-			else
-			{
-				BugReport << s << " ";
-				PrintErrorLog( a3, "%s", s.c_str( ) );
-			}
-			LogTempStr = s;
-			FuncCount = 0;
-		}
-	}
-	FuncCount = 0;
-
-	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Func log]" );
-	BugReport << std::endl << "[JassFuncLog]" << std::endl;
-	for ( string s : JassFuncLog )
+	for ( string s : JassNativesFuncLog )
 	{
 		if ( s == LogTempStr )
 		{
@@ -903,11 +912,8 @@ void DisableErrorHandler( )
 	if ( !DotaHelperLog.empty( ) )
 		DotaHelperLog.clear( );
 
-	if ( !DotaHelperLog.empty( ) )
-		JassNativesLog.clear( );
-
-	if ( !DotaHelperLog.empty( ) )
-		JassFuncLog.clear( );
+	if ( !JassNativesFuncLog.empty( ) )
+		JassNativesFuncLog.clear( );
 
 	if ( !CNetEvents.empty( ) )
 		CNetEvents.clear( );
