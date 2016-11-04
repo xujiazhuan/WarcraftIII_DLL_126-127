@@ -11,7 +11,7 @@
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
     <WindowsTargetPlatformVersion>
     </WindowsTargetPlatformVersion>
-    <ProjectName>DotAAllstarsHelper688b</ProjectName>
+    <ProjectName>DotAAllstarsHelper688a</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

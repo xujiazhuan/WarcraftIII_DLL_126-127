@@ -487,7 +487,7 @@ void InitTopLevelExceptionFilter( )
 
 void ResetTopLevelExceptionFilter( )
 {
-	SetUnhandledExceptionFilter( OriginFilter );
+	//SetUnhandledExceptionFilter( OriginFilter );
 }
 
 #define MAX_PROCESSES 1024 
@@ -925,7 +925,8 @@ __declspec( dllexport )  int __stdcall StartExtraErrorHandler( int )
 
 void DisableErrorHandler( )
 {
-	
+	ResetTopLevelExceptionFilter( );
+
 
 	if ( !DotaHelperLog.empty( ) )
 		DotaHelperLog.clear( );
