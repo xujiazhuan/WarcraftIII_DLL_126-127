@@ -161,8 +161,7 @@ struct BarStruct
 };
 
 bool FileExist( const char * name );
-
-
+DWORD GetDllCrc32( );
 typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
 extern _TriggerExecute TriggerExecute;
 void TestLog( const char * s );

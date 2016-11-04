@@ -1585,19 +1585,44 @@ BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize,
 
 BOOL __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
-	AddNewLineToDotaHelperLog( "FileHelper" );
+
 	const char * filename = filename_;
+
+	if ( filename && *filename != '\0' )
+		AddNewLineToDotaHelperLog( "FileHelper:" + string( filename_ ) );
+	else 
+		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
+
 	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
 	if ( !*InGame && !MainFuncWork )
 		return IsFileExist;
+
+
+	if ( !IsFileExist )
+	{
+		AddNewLineToDotaHelperLog( "NoFileFound" );
+	}
+	else
+	{
+		AddNewLineToDotaHelperLog( "FileFound" );
+	}
 
 	if ( filename && *filename != '\0' )
 	{
 		IsFileExist = ProcessFile( filename, OutDataPointer, OutSize, unknown, IsFileExist );
 	}
 
-	AddNewLineToDotaHelperLog( "ProcessFileEND" );
+	AddNewLineToDotaHelperLog( "ProcessFileENDING" );
+
+	if ( !IsFileExist )
+	{
+		AddNewLineToDotaHelperLog( "NoFileFound" );
+	}
+	else
+	{
+		AddNewLineToDotaHelperLog( "FileFound" );
+	}
 	/*if ( IsFileExist == 1 && filename && *filename != '\0' )
 	{
 		if ( strstr( filename, "TerrainArt" ) || strstr( filename, "Cliff" ) )
@@ -1678,6 +1703,8 @@ BOOL __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, si
 			MessageBox( 0, filename, "File not found", 0 );
 		}*/
 	}
+
+	AddNewLineToDotaHelperLog( "ProcessFileEND" );
 
 	return IsFileExist;
 }

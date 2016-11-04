@@ -402,7 +402,7 @@ pGetItemTypeId GetItemTypeId;
 
 int __cdecl GetItemTypeInSlot( int unitaddr, int slotid )
 {
-	AddNewLineToDotaHelperLog( "GetItemTypeInSlot" );
+	//AddNewLineToDotaHelperLog( "GetItemTypeInSlot" );
 	int itemhandle = 0;
 
 	if ( GameVersion == 0x26a )
@@ -442,7 +442,7 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 	__asm mov retval, eax;
 	if ( unitaddr > 0 )
 	{
-		AddNewLineToDotaHelperLog( "PrintAttackSpeedAndOtherInfo" );
+		//AddNewLineToDotaHelperLog( "PrintAttackSpeedAndOtherInfo" );
 		if ( IsNotBadUnit( *unitaddr ) && IsHero( *unitaddr ) )
 		{
 			bufferaddr = buffer;
@@ -643,7 +643,7 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int a
 	*count = 0;
 	if ( unitaddr > 0 )
 	{
-		AddNewLineToDotaHelperLog( "FindUnitAbils" );
+		//AddNewLineToDotaHelperLog( "FindUnitAbils" );
 		int pAddr1 = unitaddr + 0x1DC;
 		int pAddr2 = unitaddr + 0x1E0;
 
@@ -696,7 +696,7 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 
 	if ( addr != 0 && addr != -1 )
 	{
-		AddNewLineToDotaHelperLog( "GetMagicProtectionForHero" );
+		//AddNewLineToDotaHelperLog( "GetMagicProtectionForHero" );
 		double indmg = 100.0;
 		unsigned int abilscount = 0;
 		int * abils = FindUnitAbils( addr, &abilscount, 0, 'AIdd' );
@@ -722,18 +722,18 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 	__asm mov retval, eax;
 	if ( AmovAddr > 0 )
 	{
-		AddNewLineToDotaHelperLog( "PrintMoveSpeed" );
+		//AddNewLineToDotaHelperLog( "PrintMoveSpeed" );
 		float MagicProtection = GetMagicProtectionForHero( AmovAddr );
 		bufferaddr = buffer;
 
 		if ( MagicProtection == 0.0f )
 			sprintf_s( buffer, sizeof( buffer ), "%.1f", ( *( float* ) movespeed ) );
 		else if ( MagicProtection > 30.0f )
-			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: |cFF00C800%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
+			sprintf_s( buffer, sizeof( buffer ), "%.1f|nMagic Protection: |cFF00C800%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
 		else if ( MagicProtection <= 30.0f && MagicProtection > 0.0f )
-			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
+			sprintf_s( buffer, sizeof( buffer ), "%.1f|nMagic Protection: %.1f%%", ( *( float* ) movespeed ), MagicProtection );
 		else
-			sprintf_s( buffer, sizeof( buffer ), "%.1f\nMagic Protection: |cFFD82005%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
+			sprintf_s( buffer, sizeof( buffer ), "%.1f|nMagic Protection: |cFFD82005%.1f|r%%", ( *( float* ) movespeed ), MagicProtection );
 		__asm
 		{
 			PUSH 0x200;
@@ -850,7 +850,7 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 {
 	if ( itemaddr > 0 )
 	{
-		AddNewLineToDotaHelperLog( "SaveStringsForPrintItem" );
+		//AddNewLineToDotaHelperLog( "SaveStringsForPrintItem" );
 		if ( IsNotBadItem( itemaddr ) )
 		{
 			int itemowner = *( int* ) ( itemaddr + 0x74 );
@@ -925,7 +925,7 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 {
 	if ( *( BOOL* ) IsWindowActive &&  IsKeyPressed( VK_LMENU ) )
 	{
-		AddNewLineToDotaHelperLog( "SaveStringForHP_MP" );
+		//AddNewLineToDotaHelperLog( "SaveStringForHP_MP" );
 		if ( IsNotBadUnit( unitaddr ) )
 		{
 			float unitreghp = GetUnitHPregen( unitaddr );
@@ -1406,6 +1406,12 @@ void __stdcall DisableAllHooks( )
 
 	KeyboardHaveTriggerEvent = FALSE;
 	bDllLogEnable = TRUE;
+	EnableSelectHelper = FALSE;
+	BlockKeyAndMouseEmulation = FALSE;
+	ClickHelper = FALSE;
+	SetWidescreenFixState( FALSE );
+	MainFuncWork = FALSE;
+	SetCustomFovFix( 1.0f );
 }
 
 void * hRefreshTimer = 0;
@@ -1463,7 +1469,18 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 	VirtualProtect( addr, size, OldProtect1, &OldProtect2 );
 }
 
-
+DWORD GetDllCrc32( )
+{
+	char outfilename[ MAX_PATH ];
+	GetModuleFileName( GetCurrentModule, outfilename, MAX_PATH );
+	DWORD dwCrc32;
+	CCrc32Dynamic *pobCrc32Dynamic = new CCrc32Dynamic;
+	pobCrc32Dynamic->Init( );
+	pobCrc32Dynamic->FileCrc32Assembly( outfilename, dwCrc32 );
+	pobCrc32Dynamic->Free( );
+	delete pobCrc32Dynamic;
+	return dwCrc32;
+}
 
 
 __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
@@ -1501,6 +1518,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 	Warcraft3Window = 0;
 	EnableSelectHelper = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
+	ClickHelper = FALSE;
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	SetCustomFovFix( 1.0f );
@@ -1669,17 +1687,10 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		InitHook( );
 
 		/* crc32 simple protection */
-		char outfilename[ MAX_PATH ];
-		GetModuleFileName( GetCurrentModule, outfilename, MAX_PATH );
-		DWORD dwCrc32;
-		CCrc32Dynamic *pobCrc32Dynamic = new CCrc32Dynamic;
-		pobCrc32Dynamic->Init( );
-		pobCrc32Dynamic->FileCrc32Assembly( outfilename, dwCrc32 );
-		pobCrc32Dynamic->Free( );
-		delete pobCrc32Dynamic;
+		DWORD crc32 = GetDllCrc32( );
 		AddNewLineToDotaHelperLog( "InitEnd" );
 		TestLog( "InitEnd" );
-		return dwCrc32;
+		return crc32;
 	}
 	else if ( gameversion == 0x27a )
 	{
@@ -1853,18 +1864,10 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		InitHook( );
 
 		/* crc32 simple protection */
-		char outfilename[ MAX_PATH ];
-		GetModuleFileName( GetCurrentModule, outfilename, MAX_PATH );
-		DWORD dwCrc32;
-		CCrc32Dynamic *pobCrc32Dynamic = new CCrc32Dynamic;
-		pobCrc32Dynamic->Init( );
-		pobCrc32Dynamic->FileCrc32Assembly( outfilename, dwCrc32 );
-		pobCrc32Dynamic->Free( );
-		delete pobCrc32Dynamic;
-
-		TestLog( "InitEnd" );
+		DWORD crc32 = GetDllCrc32( );
 		AddNewLineToDotaHelperLog( "InitEnd" );
-		return dwCrc32;
+		TestLog( "InitEnd" );
+		return crc32;
 	}
 
 
@@ -1978,7 +1981,12 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		ManaBarSwitch( GameDll, FALSE );
 		MH_Uninitialize( );
 		bDllLogEnable = TRUE; 
-
+		EnableSelectHelper = FALSE;
+		BlockKeyAndMouseEmulation = FALSE;
+		ClickHelper = FALSE;
+		SetWidescreenFixState( FALSE );
+		MainFuncWork = FALSE;
+		SetCustomFovFix( 1.0f );
 	}
 	return TRUE;
 }

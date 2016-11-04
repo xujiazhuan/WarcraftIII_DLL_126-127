@@ -132,7 +132,7 @@ void AddNewLineToDotaHelperLog( string s )
 {
 	if ( bDllLogEnable )
 	{
-		if ( DotaHelperLog.size( ) > 35 )
+		if ( DotaHelperLog.size( ) > 15 )
 		{
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
 		}
@@ -552,8 +552,10 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	char gamever[ 20 ];
 	char lasterror[ 20 ];
+	char dllcrc32[ 20 ];
 	sprintf_s( gamever, 20, "%X", GameVersion );
 	sprintf_s( lasterror, 20, "%#010x", (UINT) GetLastError( ) );
+	sprintf_s( dllcrc32, 20, "%#010x", ( UINT ) GetDllCrc32( ) );
 	ostringstream BugReport;
 	BugReport << "[DotaHelperLog]" << std::endl;
 
@@ -591,15 +593,18 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	}
 
 
-	BugReport << "SystemTime: " << a5->wYear << "." << a5->wMonth << "." << a5->wDay << " " << a5->wHour << ":" << a5->wMinute << ":" << a5->wSecond << std::endl;
-	BugReport << "OS: " << GetOSDisplayString( ) << std::endl;
-	BugReport << "LastError: \"" << GetLastErrorAsString( ) << "\", CODE: " << lasterror << std::endl;
-	BugReport << "[Platform] :" << GetPlatformName( ) << std::endl;
-	BugReport << "[Exception Info:]" << std::endl;
-	BugReport << LastExceptionError;
+	BugReport << "[SystemTime]: " << a5->wYear << "." << a5->wMonth << "." << a5->wDay << " " << a5->wHour << ":" << a5->wMinute << ":" << a5->wSecond << std::endl;
+	BugReport << "[OS]: " << GetOSDisplayString( ) << std::endl;
+	BugReport << "[CMD]: " << GetCommandLineA( ) << std::endl;
 
+	BugReport << "[LastError]: \"" << GetLastErrorAsString( ) << "\", CODE: " << lasterror << std::endl;
+	BugReport << "[Platform]: " << GetPlatformName( ) << std::endl;
+	BugReport << "[Exception Info]: " << std::endl;
+	BugReport << LastExceptionError << std::endl;
+	BugReport << "[DLL_CRC32]: "<< dllcrc32 << std::endl;
+	BugReport << "[DLL_LOG]: " << std::endl;
 
-	BugReport << std::endl << "[DLL_LOG]" << std::endl;
+	string LastError1, LastError2, LastError3;
 
 	for ( string s : DotaHelperLog )
 	{
@@ -620,6 +625,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
+			LastError1 = s;
 			FuncCount = 0;
 		}
 	}
@@ -627,6 +633,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Native log]" );
 	BugReport << std::endl << "[JassNativesLog]" << std::endl;
+
 	for ( string s : JassNativesFuncLog )
 	{
 		if ( s == LogTempStr )
@@ -646,6 +653,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
+			LastError2 = s;
 			FuncCount = 0;
 		}
 	}
@@ -655,6 +663,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	PrintErrorLog( a3, "%s", "[Dota Jass Log]" );
 	BugReport << std::endl << "[DotaJassLog]" << std::endl;
+	
 	for ( string s : JassLogList )
 	{
 		if ( s == LogTempStr )
@@ -674,11 +683,12 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 				PrintErrorLog( a3, "%s", s.c_str( ) );
 			}
 			LogTempStr = s;
+			LastError3 = s;
 			FuncCount = 0;
 		}
 	}
-
-
+	BugReport << std::endl;
+	BugReport << "Crash at:" << "[DLL]:" << LastError1 << ", [JASSFUNC]:" << LastError2 << ", [JASSLOG]:" << LastError3;
 	BugReport << std::endl << "[END]";
 
 	string strBugReport = url_encode( BugReport.str( ) );
