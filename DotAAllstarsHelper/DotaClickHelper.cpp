@@ -457,11 +457,11 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 								if ( IsCursorSelectTarget( ) )
 								{
 									PressMouseAtSelectedHero( );
-									/*if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
+									LastPressedKeysTime[ wParam ] = 0;
+									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
 									{
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
-									}*/
-									LastPressedKeysTime[ wParam ] = 0;
+									}
 								}
 							}
 

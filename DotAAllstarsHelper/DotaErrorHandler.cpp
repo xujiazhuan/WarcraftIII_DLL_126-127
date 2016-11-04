@@ -468,6 +468,15 @@ LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
 	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+	FILE * f;
+	fopen_s( &f, "lasterror.txt", "w" );
+	if ( f )
+	{
+		fwrite( LastExceptionError.c_str( ), LastExceptionError.length( ), 1, f );
+	}
+
+	fclose( f );
+
 	return OriginFilter( ExceptionInfo );
 }
 
