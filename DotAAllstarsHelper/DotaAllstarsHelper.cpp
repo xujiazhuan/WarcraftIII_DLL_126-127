@@ -1,5 +1,4 @@
-﻿
-#include "Main.h"
+﻿#include "Main.h"
 #include "ViewAllySkill.h"
 
 
