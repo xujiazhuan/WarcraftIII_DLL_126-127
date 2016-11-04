@@ -97,7 +97,7 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 
 
 	}
-	
+	hPressKeyWithDelay = NULL;
 	return 0;
 }
 

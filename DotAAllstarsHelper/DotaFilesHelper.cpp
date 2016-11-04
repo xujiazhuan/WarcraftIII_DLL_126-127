@@ -82,13 +82,17 @@ void SaveNewIHelperIcon( char * filename, char * buf, size_t buflen )
 
 void FreeAllIHelpers( )
 {
-	for ( ICONMDLCACHE ih : ICONMDLCACHELIST )
+	if ( !ICONMDLCACHELIST.empty( ) )
 	{
-		delete[ ] ih.buf;
-	}
+		for ( ICONMDLCACHE ih : ICONMDLCACHELIST )
+		{
+			delete[ ] ih.buf;
+		}
 
-	ICONMDLCACHELIST.clear( );
-	FileRedirectList.clear( );
+		ICONMDLCACHELIST.clear( );
+	}
+	if ( !FileRedirectList.empty( ) )
+		FileRedirectList.clear( );
 }
 
 
@@ -1576,10 +1580,10 @@ BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize,
 			}
 		}
 	}
-	else 
+	else
 		AddNewLineToDotaHelperLog( "BADFILENAMEFOUND" );
-	
-		return IsFileExist;
+
+	return IsFileExist;
 }
 
 
@@ -1590,7 +1594,7 @@ BOOL __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, si
 
 	if ( filename && *filename != '\0' )
 		AddNewLineToDotaHelperLog( "FileHelper:" + string( filename_ ) );
-	else 
+	else
 		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
 
 	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );

@@ -1388,8 +1388,6 @@ void __stdcall DisableAllHooks( )
 	// Выгрузить перехватчики функций
 	UnloadHWNDHandler( );
 	UninitializeHook( );
-	// Отключить мут
-	UnMutePlayer( 0 );
 	// Убрать все патчи и вернуть стандартные данные
 	RestoreAllOffsets( );
 	// Очистить список кастом баров
@@ -1397,9 +1395,12 @@ void __stdcall DisableAllHooks( )
 	// Отключить ManaBar 
 	ManaBarSwitch( GameDll, FALSE );
 
-	for ( LPVOID lpAddr : FreeExecutableMemoryList )
-		VirtualFree( lpAddr, 0, MEM_RELEASE );
-	FreeExecutableMemoryList.clear( );
+	if ( !FreeExecutableMemoryList.empty( ) )
+	{
+		for ( LPVOID lpAddr : FreeExecutableMemoryList )
+			VirtualFree( lpAddr, 0, MEM_RELEASE );
+		FreeExecutableMemoryList.clear( );
+	}
 
 	FreeAllIHelpers( );
 	FreeAllVectors( );
@@ -1974,7 +1975,13 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		FreeAllIHelpers( );
 		KeyboardHaveTriggerEvent = FALSE;
 		RestoreAllOffsets( );
-		UnMutePlayer( 0 );
+		while ( mutedplayers.size( ) )
+		{
+			void * fMemAddr = mutedplayers.back( );
+			if ( fMemAddr )
+				free( fMemAddr );
+			mutedplayers.pop_back( );
+		}
 		for( LPVOID lpAddr : FreeExecutableMemoryList )
 			VirtualFree( lpAddr, 0, MEM_RELEASE );
 		FreeExecutableMemoryList.clear( );

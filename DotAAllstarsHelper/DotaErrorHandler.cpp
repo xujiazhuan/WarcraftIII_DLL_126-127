@@ -487,7 +487,7 @@ void InitTopLevelExceptionFilter( )
 
 void ResetTopLevelExceptionFilter( )
 {
-	SetUnhandledExceptionFilter( OriginFilter );
+	//SetUnhandledExceptionFilter( OriginFilter );
 }
 
 #define MAX_PROCESSES 1024 
