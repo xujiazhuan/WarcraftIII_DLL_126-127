@@ -242,7 +242,7 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 void EnableErrorHandler( );
 void DisableErrorHandler( );
 void AddNewLineToDotaHelperLog( string s );
-
+extern void ResetTopLevelExceptionFilter( );
 extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 extern BOOL bDllLogEnable;
 typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
@@ -406,8 +406,8 @@ struct FileRedirectStruct
 
 extern vector<FileRedirectStruct> FileRedirectList;
 
-typedef signed int( __stdcall * Ordinal403 )( void *a1, const char * str, int line, int id );
-extern Ordinal403 Storm_403_org;
+typedef signed int( __stdcall * Storm_403 )( void *a1, const char * str, int line, int id );
+extern Storm_403 Storm_403_org;
 
 typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
