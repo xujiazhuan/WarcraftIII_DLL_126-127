@@ -1401,10 +1401,9 @@ void __stdcall DisableAllHooks( )
 			VirtualFree( lpAddr, 0, MEM_RELEASE );
 		FreeExecutableMemoryList.clear( );
 	}
-
+	TestLog( "DisableAllHooks2" );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
-
 	KeyboardHaveTriggerEvent = FALSE;
 	bDllLogEnable = TRUE;
 	EnableSelectHelper = FALSE;
@@ -1413,6 +1412,7 @@ void __stdcall DisableAllHooks( )
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	SetCustomFovFix( 1.0f );
+	TestLog( "DisableAllHooksEnd" );
 }
 
 void * hRefreshTimer = 0;
@@ -1878,7 +1878,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 	return 0;
 }
 
-Ordinal403 Storm_403_org = NULL;
+Storm_403 Storm_403_org = NULL;
 
 const char * GameDllName = "Game.dll";
 const char * StormDllName = "Storm.dll";
@@ -1893,20 +1893,10 @@ __declspec( dllexport ) int __stdcall SetCustomGameDLLandStormDLL( const char * 
 
 	if ( StormDllModule && GameDllModule )
 	{
-		//	MODULEINFO modinfo;
-
-		//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
-		//GameDLLsz = modinfo.SizeOfImage;
-
-		//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
-		//StormDLLsz = modinfo.SizeOfImage;
-
 		Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
-		Storm_403_org = ( Ordinal403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
+		Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 
-		// Инициализация "перехватчика" функций
 		MH_Initialize( );
-
 	}
 	return 0;
 }
@@ -1919,7 +1909,6 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 	GetCurrentModule = Module;
 	if ( reason == DLL_PROCESS_ATTACH )
 	{
-
 		GameDllModule = GetModuleHandle( GameDllName );
 		GameDll = ( int ) GameDllModule;
 		DisableThreadLibraryCalls( Module );
@@ -1928,29 +1917,18 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 
 		if ( StormDllModule && GameDllModule )
 		{
-			//	MODULEINFO modinfo;
-
-				//GetModuleInformation( GetCurrentProcess( ), GameDllModule, &modinfo, sizeof( MODULEINFO ) );
-				//GameDLLsz = modinfo.SizeOfImage;
-
-				//GetModuleInformation( GetCurrentProcess( ), StormDllModule, &modinfo, sizeof( MODULEINFO ) );
-				//StormDLLsz = modinfo.SizeOfImage;
-
 			Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
-			Storm_403_org = ( Ordinal403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
+			Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 
-			// Инициализация "перехватчика" функций
 			MH_Initialize( );
 
 		}
-		//MessageBox( 0, "Init for 1.26a", "ok", MB_OK );
-		//InitDotaHelper( 0x26a );
-
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
 		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
 		{
+			// Unable to cleanup, need just terminate process :(
 			ExitProcess( 0 );
 		}
 		// Cleanup
@@ -1958,7 +1936,6 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		{
 			RefreshTimerEND = TRUE;
 			WaitForSingleObject( hRefreshTimer, 2000 );
-			RefreshTimerEND = FALSE;
 			hRefreshTimer = 0;
 		}
 		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
@@ -1973,7 +1950,6 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 		ClearCustomsBars( );
 		FreeAllVectors( );
 		FreeAllIHelpers( );
-		KeyboardHaveTriggerEvent = FALSE;
 		RestoreAllOffsets( );
 		while ( mutedplayers.size( ) )
 		{
@@ -1982,18 +1958,15 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 				free( fMemAddr );
 			mutedplayers.pop_back( );
 		}
-		for( LPVOID lpAddr : FreeExecutableMemoryList )
-			VirtualFree( lpAddr, 0, MEM_RELEASE );
-		FreeExecutableMemoryList.clear( );
+		if ( !FreeExecutableMemoryList.empty( ) )
+		{
+			for ( LPVOID lpAddr : FreeExecutableMemoryList )
+				VirtualFree( lpAddr, 0, MEM_RELEASE );
+			FreeExecutableMemoryList.clear( );
+		}
 		ManaBarSwitch( GameDll, FALSE );
 		MH_Uninitialize( );
-		bDllLogEnable = TRUE; 
-		EnableSelectHelper = FALSE;
-		BlockKeyAndMouseEmulation = FALSE;
-		ClickHelper = FALSE;
-		SetWidescreenFixState( FALSE );
-		MainFuncWork = FALSE;
-		SetCustomFovFix( 1.0f );
+		ResetTopLevelExceptionFilter( );
 	}
 	return TRUE;
 }
