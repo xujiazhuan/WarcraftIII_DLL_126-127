@@ -1885,7 +1885,28 @@ __declspec( dllexport ) int __stdcall SetCustomGameDLLandStormDLL( const char * 
 	return 0;
 }
 
+__declspec( dllexport ) int __stdcall SetGameDllAddr( HMODULE GameDLL )
+{
+	if ( !GameDllModule || !GameDll )
+	{
+		GameDllModule = GameDLL;
+		GameDll = ( int ) GameDllModule;
+		if ( StormDllModule && GameDllModule )
+		{
+			Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
+			Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 
+			MH_Initialize( );
+
+		}
+	}
+	else
+	{
+		GameDllModule = GameDLL;
+		GameDll = ( int ) GameDllModule;
+	}
+	return 0;
+}
 
 #pragma region Main
 BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
