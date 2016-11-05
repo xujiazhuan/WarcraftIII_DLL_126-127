@@ -237,7 +237,7 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 #pragma endregion
 
 #pragma region ErrorHandler.cpp
-
+void AddNewLineToDotaChatLog( string s );
 void EnableErrorHandler( );
 void DisableErrorHandler( );
 void AddNewLineToDotaHelperLog( string s );

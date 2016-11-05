@@ -116,6 +116,8 @@ std::string GetOSDisplayString( )
 
 	return productName + " " + bitness + " " + servicePack;
 }
+
+vector<string> DotaChatLog;
 vector<string> DotaHelperLog;
 vector<string> JassNativesFuncLog;
 vector<string> Blizzard1Log;
@@ -128,11 +130,25 @@ vector<string> Blizzard6Log;
 vector<string> JassLogList;
 vector<int> CNetEvents;
 
+
+
+void AddNewLineToDotaChatLog( string s )
+{
+	if ( bDllLogEnable )
+	{
+		if ( DotaChatLog.size( ) > 11 )
+		{
+			DotaChatLog.erase( DotaChatLog.begin( ) );
+		}
+		DotaChatLog.push_back( s );
+	}
+}
+
 void AddNewLineToDotaHelperLog( string s )
 {
 	if ( bDllLogEnable )
 	{
-		if ( DotaHelperLog.size( ) > 15 )
+		if ( DotaHelperLog.size( ) > 13 )
 		{
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
 		}
@@ -142,7 +158,7 @@ void AddNewLineToDotaHelperLog( string s )
 
 void AddNewLineToJassNativesLog( string s )
 {
-	if ( JassNativesFuncLog.size( ) > 50 )
+	if ( JassNativesFuncLog.size( ) > 40 )
 	{
 		JassNativesFuncLog.erase( JassNativesFuncLog.begin( ) );
 	}
@@ -435,6 +451,7 @@ std::string GetLastErrorAsString( )
 StormErrorHandler StormErrorHandler_org = NULL;
 StormErrorHandler StormErrorHandler_ptr;
 
+
 string url_encode( const string &value )
 {
 	ostringstream escaped;
@@ -446,11 +463,11 @@ string url_encode( const string &value )
 		string::value_type c = ( *i );
 
 		// Keep alphanumeric and other accepted characters intact
-		if ( isalnum( c ) || c == '-' || c == '_' || c == '.' )
+		/*if ( isalnum( c ) || c == '-' || c == '_' || c == '.' )
 		{
 			escaped << c;
 			continue;
-		}
+		}*/
 
 		// Any other characters are percent-encoded
 		escaped << uppercase;
@@ -613,7 +630,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << "[DLL_CRC32]: "<< dllcrc32 << std::endl;
 	BugReport << "[DLL_LOG]: " << std::endl;
 
-	string LastError1, LastError2, LastError3;
+	string LastError1, LastError2, LastError3,LastError4;
 
 	for ( string s : DotaHelperLog )
 	{
@@ -672,7 +689,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	PrintErrorLog( a3, "%s", "[Dota Jass Log]" );
 	BugReport << std::endl << "[DotaJassLog]" << std::endl;
-	
+
 	for ( string s : JassLogList )
 	{
 		if ( s == LogTempStr )
@@ -696,8 +713,40 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 			FuncCount = 0;
 		}
 	}
+
+	FuncCount = 0;
+
+	//PrintErrorLog( a3, "%s", "[Dota Chat Log]" );
+	BugReport << std::endl << "[DotaChatLog]" << std::endl;
+
+	
+	for ( string s : DotaChatLog )
+	{
+		if ( s == LogTempStr )
+		{
+			FuncCount++;
+		}
+		else
+		{
+			if ( FuncCount > 0 )
+			{
+				BugReport << s << ( "(" + std::to_string( FuncCount + 1 ) + "x)" ) << std::endl;
+				//PrintErrorLog( a3, "%s (%ix)", s.c_str( ), ( FuncCount + 1 ) );
+			}
+			else
+			{
+				BugReport << s << std::endl;
+				//PrintErrorLog( a3, "%s", url_encode( s).c_str( ) );
+			}
+			LogTempStr = s;
+			LastError4 = s;
+			FuncCount = 0;
+		}
+	}
+	BugReport << std::endl << "[DotaChatLogEnd]" << std::endl;
+
 	BugReport << std::endl;
-	BugReport << "Crash at:" << "[DLL]:" << LastError1 << ", [JASSFUNC]:" << LastError2 << ", [JASSLOG]:" << LastError3;
+	BugReport << "Crash at:" << "[DLL]:" << LastError1 << ", [JASSFUNC]:" << LastError2 << ", [JASSLOG]:" << LastError3 << ", [CHAT]:" << LastError4;
 	BugReport << std::endl << "[END]";
 
 	string strBugReport = url_encode( BugReport.str( ) );
@@ -925,7 +974,11 @@ __declspec( dllexport )  int __stdcall StartExtraErrorHandler( int )
 
 void DisableErrorHandler( )
 {
-	
+	if ( !DotaChatLog.empty( ) )
+		DotaChatLog.clear( );
+
+	if ( !JassLogList.empty( ) )
+		JassLogList.clear( );
 
 	if ( !DotaHelperLog.empty( ) )
 		DotaHelperLog.clear( );

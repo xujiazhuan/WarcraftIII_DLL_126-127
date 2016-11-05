@@ -159,82 +159,20 @@ const char * DisabledIconSignature = "Disabled\\DIS";
 const char * DisabledIconSignature2 = "Disabled\\DISDIS";
 const char * CommandButtonsDisabledIconSignature = "CommandButtonsDisabled\\DIS";
 
-// Функция замены текста в строке.
-char *repl_string( const char *str, const char *from, const char *to )
+
+BOOL replaceAll( std::string& str, const std::string& from, const std::string& to )
 {
-	AddNewLineToDotaHelperLog( "repl_string" );
-	size_t cache_sz_inc = 16;
-
-	const size_t cache_sz_inc_factor = 3;
-
-	const size_t cache_sz_inc_max = 1048576;
-
-	char *pret, *ret = NULL;
-	const char *pstr2, *pstr = str;
-	size_t i, count = 0;
-	ptrdiff_t *pos_cache = NULL;
-	size_t cache_sz = 0;
-	size_t cpylen, orglen, retlen, tolen = 0, fromlen = strlen( from );
-
-	while ( ( pstr2 = strstr( pstr, from ) ) != NULL )
+	BOOL Replaced = FALSE;
+	if ( from.empty( ) )
+		return Replaced;
+	size_t start_pos = 0;
+	while ( ( start_pos = str.find( from, start_pos ) ) != std::string::npos )
 	{
-		count++;
-		if ( cache_sz < count )
-		{
-			cache_sz += cache_sz_inc;
-			pos_cache = ( ptrdiff_t * ) realloc( pos_cache, sizeof( *pos_cache ) * cache_sz );
-			if ( !pos_cache )
-			{
-				goto end_repl_string;
-			}
-			cache_sz_inc *= cache_sz_inc_factor;
-			if ( cache_sz_inc > cache_sz_inc_max )
-			{
-				cache_sz_inc = cache_sz_inc_max;
-			}
-		}
-
-		pos_cache[ count - 1 ] = pstr2 - str;
-		pstr = pstr2 + fromlen;
+		str.replace( start_pos, from.length( ), to );
+		start_pos += to.length( );
+		Replaced = TRUE;
 	}
-
-	orglen = pstr - str + strlen( pstr );
-	if ( count > 0 )
-	{
-		tolen = strlen( to );
-		retlen = orglen + ( tolen - fromlen ) * count;
-	}
-	else	retlen = orglen;
-	ret = ( char* ) malloc( retlen + 1 );
-	if ( ret == NULL )
-	{
-		goto end_repl_string;
-	}
-
-	if ( count == 0 )
-	{
-		CopyMemory( ret, str, retlen + 1 );
-	}
-	else
-	{
-		pret = ret;
-		memcpy( pret, str, ( size_t ) pos_cache[ 0 ] );
-		pret += pos_cache[ 0 ];
-		for ( i = 0; i < count; i++ )
-		{
-			memcpy( pret, to, tolen );
-			pret += tolen;
-			pstr = str + pos_cache[ i ] + fromlen;
-			cpylen = ( i == count - 1 ? orglen : pos_cache[ i + 1 ] ) - pos_cache[ i ] - fromlen;
-			memcpy( pret, pstr, cpylen );
-			pret += cpylen;
-		}
-		ret[ retlen ] = '\0';
-	}
-
-	end_repl_string:
-	free( pos_cache );
-	return ret;
+	return Replaced;
 }
 
 
@@ -584,64 +522,71 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 
 }
 
-BOOL FixDisabledIconPath( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+BOOL FixDisabledIconPath( const char * _filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
+	string filename = string( _filename );
 	AddNewLineToDotaHelperLog( "FixDisabledIconPath" );
-
-
-	if ( !strstr( filename, "blp" ) )
-		return 0;
-
 
 	BOOL CreateDarkIcon = FALSE;
 	BOOL result = FALSE;
-	if ( strstr( filename, DisabledIconSignature2 ) )
+	if ( filename.find( DisabledIconSignature2 ) != string::npos )
 	{
-		char * tmpstr = repl_string( filename, DisabledIconSignature2, "\\" );
-		result = GameGetFile_ptr( tmpstr, OutDataPointer, OutSize, unknown );
-		free( tmpstr );
-		if ( result )
-			CreateDarkIcon = TRUE;
-	}
-
-
-	if ( !result )
-	{
-		CreateDarkIcon = FALSE;
-		if ( strstr( filename, DisabledIconSignature ) )
+		if ( replaceAll( filename, DisabledIconSignature2, "\\" ) )
 		{
-			char * tmpstr = repl_string( filename, DisabledIconSignature, "\\" );
-			result = GameGetFile_ptr( tmpstr, OutDataPointer, OutSize, unknown );
-			free( tmpstr );
+			result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
 			if ( result )
 				CreateDarkIcon = TRUE;
 		}
-
-	}
-
-	if ( !result )
-	{
-		char * tmpstr = repl_string( filename, CommandButtonsDisabledIconSignature, "PassiveButtons\\" );
-		result = GameGetFile_ptr( tmpstr, OutDataPointer, OutSize, unknown );
-		free( tmpstr );
-		if ( result )
-			CreateDarkIcon = TRUE;
 	}
 
 
 	if ( !result )
 	{
-		char * tmpstr = repl_string( filename, CommandButtonsDisabledIconSignature, "AutoCastButtons\\" );
-		result = GameGetFile_ptr( tmpstr, OutDataPointer, OutSize, unknown );
-		free( tmpstr );
-		if ( result )
-			CreateDarkIcon = TRUE;
+		filename = _filename;
+		if ( filename.find( DisabledIconSignature ) != string::npos )
+		{
+			if ( replaceAll( filename, DisabledIconSignature, "\\" ) )
+			{
+				result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
+				if ( result )
+					CreateDarkIcon = TRUE;
+			}
+		}
+	}
+
+	if ( !result )
+	{
+		filename = _filename;
+		if ( filename.find( DisabledIconSignature ) != string::npos )
+		{
+			if ( replaceAll( filename, CommandButtonsDisabledIconSignature, "PassiveButtons\\" ) )
+			{
+				result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
+				if ( result )
+					CreateDarkIcon = TRUE;
+			}
+		}
+	}
+
+
+	if ( !result )
+	{
+		filename = _filename;
+		if ( filename.find( DisabledIconSignature ) != string::npos )
+		{
+			if ( replaceAll( filename, CommandButtonsDisabledIconSignature, "AutoCastButtons\\" ) )
+			{
+				result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
+				if ( result )
+					CreateDarkIcon = TRUE;
+			}
+		}
 	}
 
 
 	if ( CreateDarkIcon )
 	{
-		ApplyIconFilter( filename, OutDataPointer, OutSize );
+		ApplyIconFilter( _filename, OutDataPointer, OutSize );
 	}
 	//else MessageBox( 0, filename, "Bad file path:", 0 );
 

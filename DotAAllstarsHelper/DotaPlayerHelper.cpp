@@ -7,16 +7,16 @@ int GetPlayerByIDOffset = 0;
 
 
 
-void * GetGlobalPlayerData( )
+int GetGlobalPlayerData( )
 {
-	return ( void * ) *( int * ) ( GlobalPlayerOffset + GameDll );
+	return  *( int * ) ( GlobalPlayerOffset + GameDll );
 }
 
 int GetPlayerByNumber( int number )
 {
-	void * arg1 = GetGlobalPlayerData( );
-	int result = -1;
-	if ( arg1 != nullptr )
+	int arg1 = GetGlobalPlayerData( );
+	int result = 0;
+	if ( arg1 > NULL )
 	{
 		result = ( int ) arg1 + ( number * 4 ) + 0x58;
 
@@ -36,11 +36,12 @@ int GetPlayerByNumber( int number )
 int GetLocalPlayerId( )
 {
 	AddNewLineToDotaHelperLog( "GetLocalPlayerId" );
-	void * gldata = GetGlobalPlayerData( );
-
-	int playerslotaddr = ( int ) gldata + 0x28;
-
-	return ( int ) *( short * ) ( playerslotaddr );
+	int gldata = GetGlobalPlayerData( );
+	if ( gldata > 0 )
+	{
+		return *( short * ) ( gldata + 0x28 );
+	}
+	return 0;
 }
 
 
@@ -59,11 +60,16 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 	AddNewLineToDotaHelperLog( "pOnChatMessage_my" );
 	char * playername = GetPlayerName( PlayerID, 1 );
 
-	for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
+	if ( playername && *playername != '\0' )
 	{
-		if ( _stricmp( playername, mutedplayers[ i ] ) == 0 )
+		AddNewLineToDotaChatLog( string( playername ) + ":" + string( message ) );
+
+		for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
 		{
-			return;
+			if ( _stricmp( playername, mutedplayers[ i ] ) == 0 )
+			{
+				return;
+			}
 		}
 	}
 

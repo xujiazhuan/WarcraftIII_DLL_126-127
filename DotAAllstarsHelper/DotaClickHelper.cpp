@@ -427,8 +427,12 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 				if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
 				{
 
+					AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc1_1" );
+
 					if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
 					{
+						AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc2_2" );
+
 						if ( EnableSelectHelper )
 						{
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
@@ -482,6 +486,8 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 			{
 				if ( EnableSelectHelper )
 				{
+					AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc1" );
+
 					if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
 					{
 						AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc2" );
