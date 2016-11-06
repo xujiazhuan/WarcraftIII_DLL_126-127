@@ -1,6 +1,7 @@
 #include "Main.h"
 #include <iomanip>
 #include <eh.h>
+
 #define PSAPI_VERSION 1
 
 
@@ -479,11 +480,13 @@ string url_encode( const string &value )
 }
 
 string LastExceptionError;
-
+DWORD ESP_for_DUMP = 0;
 LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
+	ESP_for_DUMP =  ExceptionInfo->ContextRecord->Esp;
+
 	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
 	FILE * f;
 	fopen_s( &f, "lasterror.txt", "w" );
@@ -492,6 +495,8 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 		fwrite( LastExceptionError.c_str( ), LastExceptionError.length( ), 1, f );
 	}
 
+
+	
 	fclose( f );
 
 	return OriginFilter( ExceptionInfo );
@@ -566,6 +571,27 @@ std::string GetPlatformName( )
 
 	return "[Unknown PVPGN server]";
 }
+string ConvertMemoryToHex( unsigned char * buffer, int size )
+{
+	stringstream ss;
+	ss << std::hex << std::setfill( '0' );
+	for ( int i = 0; i < size; ++i )
+	{
+		ss << std::setw( 2 ) << static_cast< unsigned >( buffer[ i ] );
+	}
+	return ss.str( );
+}
+
+string ConvertMemoryToHexReverse( unsigned char * buffer, int size )
+{
+	stringstream ss;
+	ss << std::hex << std::setfill( '0' );
+	for ( int i = size - 1 ; i >= 0; i-- )
+	{
+		ss << std::setw( 2 ) << static_cast< unsigned >( buffer[ i ] );
+	}
+	return ss.str( );
+}
 
 LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 )
 {
@@ -584,7 +610,9 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	sprintf_s( dllcrc32, 20, "%#010x", ( UINT ) GetDllCrc32( ) );
 	ostringstream BugReport;
 	BugReport << "[DotaHelperLog]" << std::endl;
-
+	char EspDump[ 16 ];
+	DWORD EspDumpBytes;
+	ReadProcessMemory( GetCurrentProcess( ), ( void * ) (ESP_for_DUMP-16), EspDump, 16, &EspDumpBytes );
 
 
 	BugReport << "GameVer: 1." << gamever << std::endl;
@@ -628,6 +656,8 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << "[Exception Info]: " << std::endl;
 	BugReport << LastExceptionError << std::endl;
 	BugReport << "[DLL_CRC32]: "<< dllcrc32 << std::endl;
+	BugReport << "[ESP]: " << ConvertMemoryToHexReverse( ( unsigned char* ) &ESP_for_DUMP, 4 ) << ". [DUMP]:" << ConvertMemoryToHexReverse( ( unsigned char* ) &EspDump, 16 ) << std::endl;
+
 	BugReport << "[DLL_LOG]: " << std::endl;
 
 	string LastError1, LastError2, LastError3,LastError4;
@@ -794,7 +824,6 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler END]" );
-
 
 	return result;
 }

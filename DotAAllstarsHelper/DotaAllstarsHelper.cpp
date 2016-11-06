@@ -1875,36 +1875,16 @@ __declspec( dllexport ) int __stdcall SetCustomGameDLLandStormDLL( const char * 
 	StormDllModule = GetModuleHandle( _StormDllName );
 	StormDll = ( int ) StormDllModule;
 
-	if ( StormDllModule && GameDllModule )
-	{
-		Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
-		Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
+	Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
+	Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 
-		MH_Initialize( );
-	}
 	return 0;
 }
 
 __declspec( dllexport ) int __stdcall SetGameDllAddr( HMODULE GameDLL )
 {
-	if ( !GameDllModule || !GameDll )
-	{
-		GameDllModule = GameDLL;
-		GameDll = ( int ) GameDllModule;
-		if ( StormDllModule && GameDllModule )
-		{
-			Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
-			Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
-
-			MH_Initialize( );
-
-		}
-	}
-	else
-	{
-		GameDllModule = GameDLL;
-		GameDll = ( int ) GameDllModule;
-	}
+	GameDllModule = GameDLL;
+	GameDll = ( int ) GameDllModule;
 	return 0;
 }
 
@@ -1914,20 +1894,16 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 	GetCurrentModule = Module;
 	if ( reason == DLL_PROCESS_ATTACH )
 	{
+		MH_Initialize( );
 		GameDllModule = GetModuleHandle( GameDllName );
 		GameDll = ( int ) GameDllModule;
 		DisableThreadLibraryCalls( Module );
 		StormDllModule = GetModuleHandle( StormDllName );
 		StormDll = ( int ) StormDllModule;
 
-		if ( StormDllModule && GameDllModule )
-		{
-			Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
-			Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 
-			MH_Initialize( );
-
-		}
+		Storm_401_org = ( Storm_401 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 401 );
+		Storm_403_org = ( Storm_403 ) ( int ) GetProcAddress( StormDllModule, ( LPCSTR ) 403 );
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{

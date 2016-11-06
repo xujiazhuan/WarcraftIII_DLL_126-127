@@ -4,6 +4,7 @@
 #pragma warning(disable:4710)
 #pragma warning(disable:4100)
 #pragma warning(disable:4514)
+#pragma warning(disable:4091)
 
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
