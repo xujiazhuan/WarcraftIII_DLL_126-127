@@ -1337,6 +1337,11 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 		SkipAllMessages = TRUE;
 		PressKeyWithDelayEND = TRUE;
 		WaitForSingleObject( hPressKeyWithDelay, 2000 );
+		if ( hPressKeyWithDelay )
+		{
+			TerminateThread( hPressKeyWithDelay, 0 );
+			hPressKeyWithDelay = 0;
+		}
 		PressKeyWithDelayEND = FALSE;
 		if ( !Force )
 			MH_DisableHook( WarcraftRealWNDProc_org );
@@ -1394,6 +1399,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
+					hRefreshTimer = 0;
 					return 0;
 				}
 			}
@@ -1405,6 +1411,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
+					hRefreshTimer = 0;
 					return 0;
 				}
 			}
@@ -1415,6 +1422,7 @@ unsigned long __stdcall RefreshTimer( void * )
 		}
 		Sleep( 200 );
 	}
+	hRefreshTimer = 0;
 	return 0;
 }
 
@@ -1452,7 +1460,11 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		RefreshTimerEND = TRUE;
 		WaitForSingleObject( hRefreshTimer, 2000 );
 		RefreshTimerEND = FALSE;
-		hRefreshTimer = 0;
+		if ( hRefreshTimer )
+		{
+			TerminateProcess( hRefreshTimer, 0 );
+			hRefreshTimer = 0;
+		}
 	}
 	//RemoveMapSizeLimit( );
 	GameVersion = gameversion;
@@ -1880,27 +1892,24 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
-		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
-		{
-			// Unable to cleanup, need just terminate process :(
-			ExitProcess( 0 );
-		}
+	
 		// Cleanup
 		if ( hRefreshTimer )
 		{
 			RefreshTimerEND = TRUE;
 			WaitForSingleObject( hRefreshTimer, 2000 );
-			hRefreshTimer = 0;
+			if ( hRefreshTimer )
+				TerminateProcess( hRefreshTimer, 0 );
 		}
-		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
-		{
-			ExitProcess( 0 );
-		}
+
 		UnloadHWNDHandler( TRUE );
+
 		if ( !GetModuleHandle( GameDllName ) || !GetModuleHandle( StormDllName ) )
 		{
+			// Unable to cleanup, need just terminate process :(
 			ExitProcess( 0 );
 		}
+
 		ClearCustomsBars( );
 		FreeAllVectors( );
 		FreeAllIHelpers( );

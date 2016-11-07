@@ -149,7 +149,7 @@ void AddNewLineToDotaHelperLog( string s )
 {
 	if ( bDllLogEnable )
 	{
-		if ( DotaHelperLog.size( ) > 13 )
+		if ( DotaHelperLog.size( ) > 20 )
 		{
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
 		}

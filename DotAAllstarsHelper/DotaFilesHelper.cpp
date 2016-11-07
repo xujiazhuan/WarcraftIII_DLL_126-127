@@ -30,10 +30,10 @@ vector<ICONMDLCACHE> ICONMDLCACHELIST;
 vector<FileRedirectStruct> FileRedirectList;
 
 
-BOOL GetFromIconMdlCache( const char * filename, ICONMDLCACHE * iconhelperout )
+BOOL GetFromIconMdlCache( string filename, ICONMDLCACHE * iconhelperout )
 {
-	size_t filelen = strlen( filename );
-	u_int64_t hash = GetBufHash( filename, filelen );
+	size_t filelen = filename.length( );
+	u_int64_t hash = GetBufHash( filename.c_str(), filelen );
 	for ( ICONMDLCACHE ih : ICONMDLCACHELIST )
 	{
 		if ( ih.hashlen == filelen && ih.hash == hash )
@@ -65,19 +65,6 @@ BOOL IsMemInCache( int addr )
 			return TRUE;
 	}
 	return FALSE;
-}
-
-
-void SaveNewIHelperIcon( char * filename, char * buf, size_t buflen )
-{
-	size_t filelen = strlen( filename );
-	u_int64_t hash = GetBufHash( filename, filelen );
-	ICONMDLCACHE tmpih;
-	tmpih.buf = buf;
-	tmpih.hashlen = filelen;
-	tmpih.hash = hash;
-	tmpih.size = buflen;
-	ICONMDLCACHELIST.push_back( tmpih );
 }
 
 void FreeAllIHelpers( )
@@ -181,11 +168,11 @@ GameGetFile GameGetFile_ptr;
 
 int idddd = 0;
 
-void ApplyTerrainFilter( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
+void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
 {
 	AddNewLineToDotaHelperLog( "ApplyTerrainFilter" );
 	ICONMDLCACHE tmpih;
-	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
+	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
 	if ( FoundOldHelper )
 	{
 		*OutDataPointer = ( int ) tmpih.buf;
@@ -204,9 +191,9 @@ void ApplyTerrainFilter( const char * filename, int * OutDataPointer, size_t * O
 	InBuffer.length = sz;
 	Buffer OutBuffer;
 	if ( IsTga )
-		rawImageSize = ( unsigned long ) TGA2Raw( InBuffer, OutBuffer, w, h, bpp, filename );
+		rawImageSize = ( unsigned long ) TGA2Raw( InBuffer, OutBuffer, w, h, bpp, filename.c_str( ) );
 	else
-		rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename );
+		rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 	if ( rawImageSize > 0 )
 	{
 		BGRAPix * OutImage = ( BGRAPix* ) OutBuffer.buf;
@@ -245,7 +232,7 @@ void ApplyTerrainFilter( const char * filename, int * OutDataPointer, size_t * O
 
 		Buffer ResultBuffer;
 
-		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename, w, h, bpp, alphaflag, mipmaps );
+		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename.c_str( ), w, h, bpp, alphaflag, mipmaps );
 
 		if ( OutBuffer.buf != NULL )
 		{
@@ -259,8 +246,8 @@ void ApplyTerrainFilter( const char * filename, int * OutDataPointer, size_t * O
 			//	MessageBox( 0, "OK5", "OK5", 0 );
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
-			tmpih.hashlen = strlen( filename );
-			tmpih.hash = GetBufHash( filename, tmpih.hashlen );
+			tmpih.hashlen = filename.length();
+			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
@@ -280,87 +267,11 @@ __declspec( dllexport ) int __stdcall ApplyTerrainFilterDirectly( char * filenam
 }
 
 
-void ApplyUnitFilter( char * filename, int * OutDataPointer, size_t * OutSize )
-{
-	AddNewLineToDotaHelperLog( "ApplyUnitFilter" );
-	ICONMDLCACHE tmpih;
-	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
-	if ( FoundOldHelper )
-	{
-		*OutDataPointer = ( int ) tmpih.buf;
-		*OutSize = tmpih.size;
-		return;
-	}
-
-	char * originfiledata = ( char * ) ( int ) *OutDataPointer;
-	size_t sz = *OutSize;
-
-
-	int w = 0, h = 0, bpp = 0, mipmaps = 0, alphaflag = 0, compress = 0, alphaenconding = 0;
-	unsigned long rawImageSize = 0;
-	Buffer InBuffer;
-	InBuffer.buf = ( char* ) originfiledata;
-	InBuffer.length = sz;
-	Buffer OutBuffer;
-
-	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename );
-	if ( rawImageSize > 0 )
-	{
-		BGRAPix * OutImage = ( BGRAPix* ) OutBuffer.buf;
-
-		for ( unsigned long i = 0; i < OutBuffer.length / 4; i++ )
-		{
-			if ( OutImage[ i ].A == 0xFF && ( OutImage[ i ].G > 20 || OutImage[ i ].B > 20 || OutImage[ i ].R > 20 ) )
-			{
-				OutImage[ i ].R = 5;
-				OutImage[ i ].G = 5;
-				OutImage[ i ].B = 5;
-			}
-			else if ( OutImage[ i ].A == 0xFF )
-			{
-				OutImage[ i ].R = 70;
-				OutImage[ i ].G = 70;
-				OutImage[ i ].B = 70;
-			}
-		}
-
-
-		Buffer ResultBuffer;
-
-		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename, w, h, bpp, alphaflag, mipmaps );
-
-		if ( OutBuffer.buf != NULL )
-		{
-			OutBuffer.length = 0;
-			delete[ ] OutBuffer.buf;
-			OutBuffer.buf = 0;
-		}
-
-		if ( ResultBuffer.buf != NULL )
-		{
-			//	MessageBox( 0, "OK5", "OK5", 0 );
-			tmpih.buf = ResultBuffer.buf;
-			tmpih.size = ResultBuffer.length;
-			tmpih.hashlen = strlen( filename );
-			tmpih.hash = GetBufHash( filename, tmpih.hashlen );
-			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) )
-				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
-			*OutDataPointer = ( int ) tmpih.buf;
-			*OutSize = tmpih.size;
-		}
-	}
-
-}
-
-
-
-
-void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutSize )
+void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 {
 	AddNewLineToDotaHelperLog( "ApplyIconFilter" );
 	ICONMDLCACHE tmpih;
-	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
+	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
 	if ( FoundOldHelper )
 	{
 		*OutDataPointer = ( int ) tmpih.buf;
@@ -379,7 +290,7 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 	InBuffer.length = sz;
 	Buffer OutBuffer;
 
-	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename );
+	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 	if ( rawImageSize > 0 )
 	{
 		BGRAPix * OutImage = ( BGRAPix* ) OutBuffer.buf;
@@ -389,40 +300,6 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 		BlackPix.R = 0;
 		BlackPix.G = 0;
 		BlackPix.B = 0;
-
-
-		/*	for ( int i = 0; i < h; i++ )
-			{
-				if ( i < 5 )
-				{
-					for ( int n = 0; n < w; n++ )
-					{
-						OutImage[ n + i * w ] = BlackPix;
-					}
-				}
-
-
-				if ( h - 5 < i )
-				{
-					for ( int n = 0; n < w; n++ )
-					{
-						OutImage[ n + i * w ] = BlackPix;
-					}
-				}
-
-				for ( int n = 1; n < 5; n++ )
-				{
-					OutImage[ n + i * w ] = BlackPix;
-				}
-
-
-				for ( int n = 1; n < 5; n++ )
-				{
-					OutImage[ w - n + i * w ] = BlackPix;
-				}
-
-			}*/
-
 
 		for ( int x = 0; x < 4; x++ )
 		{
@@ -447,18 +324,8 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 			}
 		}
 
-
-		/*	for ( int x = 0; x < 8; x++ )
-			{
-				for ( int y = 0; y < 8; y++ )
-				{
-					// x+4
-
-				}
-			}*/
-
-			//градиентные рамки
-			//8 полос градиента
+		//градиентные рамки
+		//8 полос градиента
 		for ( int x = 4; x < 12; x++ )
 		{
 			for ( int y = x; y < 64 - x; y++ )
@@ -483,21 +350,9 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 			}
 		}
 
-		/*for ( unsigned long i = 0; i < OutBuffer.length / 4; i++ )
-		{
-			BGRAPix CurPix = OutImage[ i ];
-			int ave = (( min( min( CurPix.R, CurPix.G ), CurPix.B ) + max( max( CurPix.R, CurPix.G ), CurPix.B ) ) / 2);
-			CurPix.R = ( unsigned char ) ( ( ave + CurPix.R ) / 4 );
-			CurPix.G = ( unsigned char ) ( ( ave + CurPix.G ) / 4 );
-			CurPix.B = ( unsigned char ) ( ( ave + CurPix.B ) / 4 );
-			OutImage[ i ] = CurPix;
-		}*/
-
-
-
 		Buffer ResultBuffer;
 
-		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename, w, h, bpp, alphaflag, mipmaps );
+		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename.c_str( ), w, h, bpp, alphaflag, mipmaps );
 
 		if ( OutBuffer.buf != NULL )
 		{
@@ -510,8 +365,8 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 		{
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
-			tmpih.hashlen = strlen( filename );
-			tmpih.hash = GetBufHash( filename, tmpih.hashlen );
+			tmpih.hashlen = filename.length( );
+			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
@@ -522,9 +377,9 @@ void ApplyIconFilter( const char * filename, int * OutDataPointer, size_t * OutS
 
 }
 
-BOOL FixDisabledIconPath( const char * _filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
-	string filename = string( _filename );
+	string filename = _filename;
 	AddNewLineToDotaHelperLog( "FixDisabledIconPath" );
 
 	BOOL CreateDarkIcon = FALSE;
@@ -844,7 +699,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 
 }
 
-void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 	AddNewLineToDotaHelperLog( "ProcessModel" );
 	BYTE * ModelBytes = ( BYTE* ) *OutDataPointer;
@@ -855,7 +710,7 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 	for ( unsigned int i = 0; i < ModelSequenceValueList.size( ); i++ )
 	{
 		ModelSequenceValueStruct mdlfix = ModelSequenceValueList[ i ];
-		if ( _stricmp( filename, mdlfix.FilePath ) == 0 )
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
 		{
 			size_t offset = 0;
 			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
@@ -920,7 +775,7 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 	for ( unsigned int i = 0; i < ModelSequenceReSpeedList.size( ); i++ )
 	{
 		ModelSequenceReSpeedStruct mdlfix = ModelSequenceReSpeedList[ i ];
-		if ( _stricmp( filename, mdlfix.FilePath ) == 0 )
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
 		{
 
 			int SequenceID = 0;
@@ -1209,7 +1064,7 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 	for ( unsigned int i = 0; i < ModelRemoveTagList.size( ); i++ )
 	{
 		ModelRemoveTagStruct mdlfix = ModelRemoveTagList[ i ];
-		if ( _stricmp( filename, mdlfix.FilePath ) == 0 )
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
 		{
 			BOOL TagFound = FALSE;
 			size_t TagStartOffset = 0;
@@ -1264,7 +1119,7 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 	for ( unsigned int i = 0; i < ModelPatchList.size( ); i++ )
 	{
 		ModelPatchStruct mdlfix = ModelPatchList[ i ];
-		if ( _stricmp( filename, mdlfix.FilePath ) == 0 )
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
 		{
 			int PatchFileData;
 			size_t PatchFileSize;
@@ -1317,8 +1172,8 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
 
-			tmpih->hashlen = strlen( filename );
-			tmpih->hash = GetBufHash( filename, tmpih->hashlen );
+			tmpih->hashlen = filename.length();
+			tmpih->hash = GetBufHash( filename.c_str(), tmpih->hashlen );
 
 			ICONMDLCACHELIST.push_back( *tmpih );
 
@@ -1350,7 +1205,7 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 	for ( unsigned int i = 0; i < ModelCollisionFixList.size( ); i++ )
 	{
 		ModelCollisionFixStruct mdlfix = ModelCollisionFixList[ i ];
-		if ( _stricmp( filename, mdlfix.FilePath ) == 0 )
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
 		{
 			size_t offset = 0;
 			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
@@ -1398,7 +1253,7 @@ void ProcessMdx( const char * filename, int * OutDataPointer, size_t * OutSize, 
 	{
 		ModelTextureFixStruct mdlfix = ModelTextureFixList[ i ];
 		int TextureID = 0;
-		if ( _stricmp( filename, mdlfix.FilePath ) == 0 )
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
 		{
 			size_t offset = 0;
 			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
@@ -1482,12 +1337,12 @@ void PrintLog( const char * str )
 	}
 }
 
-BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
+BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
 	BOOL IsFileExist = IsFileExistOld;
 
 	AddNewLineToDotaHelperLog( "ProcessFile" );
-	if ( strlen( filename ) > 4 )
+	if ( filename.length( ) > 4 )
 	{
 		string FilePathLower = ToLower( filename );
 		string FilePathOrigin( filename );
