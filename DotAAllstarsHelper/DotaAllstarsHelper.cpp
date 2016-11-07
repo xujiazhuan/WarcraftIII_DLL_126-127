@@ -101,36 +101,13 @@ HMODULE GetCurrentModule;
 
 _TriggerExecute TriggerExecute;
 
-void DisplayText( char *szText, float fDuration )
-{
-	AddNewLineToDotaHelperLog( "DisplayText" );
-	DWORD dwDuration = *( ( DWORD * ) &fDuration );
-	__asm
-	{
-		PUSH 0xFFFFFFFF;
-		PUSH dwDuration;
-		PUSH szText;
-		MOV		ECX, [ pW3XGlobalClass ];
-		MOV		ECX, [ ECX ];
-		MOV		EAX, pPrintText2;
-		CALL	EAX;
-	}
-}
-
-
-
-
-
-
-
-
 char CurrentMapPath[ MAX_PATH ];
 char NewMapPath[ MAX_PATH ];
 
 
 void SaveCurrentMapPath( )
 {
-	AddNewLineToDotaHelperLog( "SaveCurrentMapPath" );
+	AddNewLineToDotaHelperLog( __func__ );
 	memset( CurrentMapPath, 0, MAX_PATH );
 	int offset1 = *( int* ) MapNameOffset1;
 	if ( offset1 > 0 )
@@ -143,7 +120,7 @@ void SaveCurrentMapPath( )
 
 void BuildFilePath( char * fname )
 {
-	AddNewLineToDotaHelperLog( "BuildFilePath" );
+	AddNewLineToDotaHelperLog( __func__ );
 	SaveCurrentMapPath( );
 
 
@@ -191,7 +168,7 @@ __declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
 void InitHook( )
 {
 
-	AddNewLineToDotaHelperLog( "InitHook" );
+	AddNewLineToDotaHelperLog( __func__ );
 	StormErrorHandler_org = ( StormErrorHandler ) StormErrorHandlerOffset;
 	LookupNative_org = ( LookupNative ) JassNativeLookupOffset;
 	LookupJassFunc_org = ( LookupJassFunc ) JassFuncLookupOffset;
@@ -262,12 +239,12 @@ void InitHook( )
 	MH_EnableHook( pOnChatMessage_org );
 	IssueFixerInit( );
 
-	AddNewLineToDotaHelperLog( "InitHook end" );
+	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 }
 
 void UninitializeHook( )
 {
-	AddNewLineToDotaHelperLog( "UninitializeHook" );
+	AddNewLineToDotaHelperLog( __func__);
 	DisableErrorHandler( );
 
 
@@ -317,10 +294,6 @@ void UninitializeHook( )
 
 #pragma region Storm.dll hook
 
-	if ( GetModuleHandle( "Storm.dll" ) != 0 )
-	{
-
-	}
 
 #pragma endregion
 
@@ -336,7 +309,7 @@ pStorm_503 Storm_503;
 
 BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 {
-	AddNewLineToDotaHelperLog( "PlantDetourJMP" );
+	AddNewLineToDotaHelperLog( __func__ );
 	DWORD oldProtection;
 	BOOL bRet = VirtualProtect( source, length, PAGE_EXECUTE_READWRITE, &oldProtection );
 
@@ -391,7 +364,7 @@ pGetItemTypeId GetItemTypeId;
 
 int __cdecl GetItemTypeInSlot( int unitaddr, int slotid )
 {
-	//AddNewLineToDotaHelperLog( "GetItemTypeInSlot" );
+	AddNewLineToDotaHelperLog( __func__ );
 	int itemhandle = 0;
 
 	if ( GameVersion == 0x26a )
@@ -431,7 +404,7 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 	__asm mov retval, eax;
 	if ( unitaddr > 0 )
 	{
-		//AddNewLineToDotaHelperLog( "PrintAttackSpeedAndOtherInfo" );
+		AddNewLineToDotaHelperLog( __func__ );
 		if ( IsNotBadUnit( *unitaddr ) && IsHero( *unitaddr ) )
 		{
 			bufferaddr = buffer;
@@ -632,7 +605,7 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int a
 	*count = 0;
 	if ( unitaddr > 0 )
 	{
-		//AddNewLineToDotaHelperLog( "FindUnitAbils" );
+		AddNewLineToDotaHelperLog( __func__ );
 		int pAddr1 = unitaddr + 0x1DC;
 		int pAddr2 = unitaddr + 0x1E0;
 
@@ -685,7 +658,7 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 
 	if ( addr != 0 && addr != -1 )
 	{
-		//AddNewLineToDotaHelperLog( "GetMagicProtectionForHero" );
+		AddNewLineToDotaHelperLog( __func__ );
 		double indmg = 100.0;
 		unsigned int abilscount = 0;
 		int * abils = FindUnitAbils( addr, &abilscount, 0, 'AIdd' );
@@ -711,7 +684,7 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 	__asm mov retval, eax;
 	if ( AmovAddr > 0 )
 	{
-		//AddNewLineToDotaHelperLog( "PrintMoveSpeed" );
+		AddNewLineToDotaHelperLog( __func__ );
 		float MagicProtection = GetMagicProtectionForHero( AmovAddr );
 		bufferaddr = buffer;
 
@@ -839,7 +812,7 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 {
 	if ( itemaddr > 0 )
 	{
-		//AddNewLineToDotaHelperLog( "SaveStringsForPrintItem" );
+		AddNewLineToDotaHelperLog( __func__ );
 		if ( IsNotBadItem( itemaddr ) )
 		{
 			int itemowner = *( int* ) ( itemaddr + 0x74 );
@@ -914,7 +887,7 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 {
 	if ( *( BOOL* ) IsWindowActive &&  IsKeyPressed( VK_LMENU ) )
 	{
-		//AddNewLineToDotaHelperLog( "SaveStringForHP_MP" );
+		AddNewLineToDotaHelperLog( __func__ );
 		if ( IsNotBadUnit( unitaddr ) )
 		{
 			float unitreghp = GetUnitHPregen( unitaddr );
@@ -1316,7 +1289,7 @@ __declspec( dllexport ) int __stdcall FreeExecutableMemory( void * addr )
 
 void __stdcall RestoreAllOffsets( )
 {
-	AddNewLineToDotaHelperLog( "RestoreAllOffsets" );
+	AddNewLineToDotaHelperLog( __func__ );
 	for ( UINT i = 0; i < offsetslist.size( ); i++ )
 	{
 		offsetdata temp = offsetslist[ i ];
@@ -1332,7 +1305,7 @@ void __stdcall RestoreAllOffsets( )
 
 void __stdcall ClearCustomsBars( )
 {
-	AddNewLineToDotaHelperLog( "ClearCustomsBars" );
+	AddNewLineToDotaHelperLog( __func__ );
 	for ( int i = 0; i < 20; i++ )
 	{
 		if ( !CustomHPBarList[ i ].empty( ) )
@@ -1342,7 +1315,7 @@ void __stdcall ClearCustomsBars( )
 
 void __stdcall FreeAllVectors( )
 {
-	AddNewLineToDotaHelperLog( "FreeAllVectors" );
+	AddNewLineToDotaHelperLog( __func__ );
 	if ( !ModelCollisionFixList.empty( ) )
 		ModelCollisionFixList.clear( );
 	if ( !ModelTextureFixList.empty( ) )
@@ -1373,7 +1346,7 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 
 void __stdcall DisableAllHooks( )
 {
-	AddNewLineToDotaHelperLog( "DisableAllHooks" );
+	AddNewLineToDotaHelperLog( __func__ );
 	// Выгрузить перехватчики функций
 	UnloadHWNDHandler( );
 	UninitializeHook( );
@@ -1390,7 +1363,7 @@ void __stdcall DisableAllHooks( )
 			VirtualFree( lpAddr, 0, MEM_RELEASE );
 		FreeExecutableMemoryList.clear( );
 	}
-	AddNewLineToDotaHelperLog( "DisableAllHooks2" );
+	AddNewLineToDotaHelperLog( __func__ + to_string(2) );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
 	KeyboardHaveTriggerEvent = FALSE;
@@ -1401,7 +1374,7 @@ void __stdcall DisableAllHooks( )
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	SetCustomFovFix( 1.0f );
-	AddNewLineToDotaHelperLog( "DisableAllHooksEnd" );
+	AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
 }
 
 void * hRefreshTimer = 0;
@@ -1413,7 +1386,7 @@ unsigned long __stdcall RefreshTimer( void * )
 		// Ждать установки InGame адреса
 		if ( InGame != 0 )
 		{
-			AddNewLineToDotaHelperLog( "RefreshTimer" );
+			AddNewLineToDotaHelperLog( __func__ );
 			// Ждать входа в игру
 			while ( !( *InGame ) )
 			{
@@ -1437,7 +1410,7 @@ unsigned long __stdcall RefreshTimer( void * )
 			}
 
 			DisableAllHooks( );
-			AddNewLineToDotaHelperLog( "RefreshTimerEnd" );
+			AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 
 		}
 		Sleep( 200 );
@@ -1473,7 +1446,7 @@ DWORD GetDllCrc32( )
 
 __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 {
-	AddNewLineToDotaHelperLog( "InitDotaHelper" );
+	AddNewLineToDotaHelperLog( __func__ );
 	if ( hRefreshTimer )
 	{
 		RefreshTimerEND = TRUE;
@@ -1675,7 +1648,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
-		AddNewLineToDotaHelperLog( "InitEnd" );
+		AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 		return crc32;
 	}
 	else if ( gameversion == 0x27a )
@@ -1851,13 +1824,13 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
-		AddNewLineToDotaHelperLog( "InitEnd" );
+		AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 		return crc32;
 	}
 
 
 
-	AddNewLineToDotaHelperLog( "InitBadVersion" );
+	AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
 
 	return 0;
 }

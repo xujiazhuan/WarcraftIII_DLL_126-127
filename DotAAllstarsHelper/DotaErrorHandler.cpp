@@ -418,7 +418,7 @@ ProcessNetEvents ProcessNetEvents_ptr;
 
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
-	AddNewLineToDotaHelperLog( "ProcessNetEvents" );
+	AddNewLineToDotaHelperLog( __func__ );
 	int EventID = *( BYTE* ) ( Event + 20 );
 	ProcessNetEvents_ptr( data, unused, Event );
 	AddNewCNetEventLog( EventID, data, Event, *( BYTE* ) ( Event + 12 ) );

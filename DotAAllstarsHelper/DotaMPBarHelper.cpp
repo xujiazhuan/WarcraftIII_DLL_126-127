@@ -534,22 +534,20 @@ void Unhook( )
 {
 	if ( ManabarEnabled )
 	{
-		if ( GetModuleHandle( "Game.dll" ) != 0 )
-		{
-			DWORD old1, old2, old3;
-			ManabarEnabled = FALSE;
+		DWORD old1, old2, old3;
+		ManabarEnabled = FALSE;
 
-			if ( VirtualProtect( Storm_401_org_malloc, 5, PAGE_EXECUTE_READWRITE, &old1 ) )
-			{
-				CopyMemory( Storm_401_org_malloc, Storm_401_org_malloc_old, 5 );
-				VirtualProtect( Storm_401_org_malloc, 5, old1, &old3 );
-			}
-			if ( VirtualProtect( HPMP_DRAW, 5, PAGE_EXECUTE_READWRITE, &old2 ) )
-			{
-				CopyMemory( HPMP_DRAW, HPMP_DRAW_old, 5 );
-				VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
-			}
+		if ( VirtualProtect( Storm_401_org_malloc, 5, PAGE_EXECUTE_READWRITE, &old1 ) )
+		{
+			CopyMemory( Storm_401_org_malloc, Storm_401_org_malloc_old, 5 );
+			VirtualProtect( Storm_401_org_malloc, 5, old1, &old3 );
 		}
+		if ( VirtualProtect( HPMP_DRAW, 5, PAGE_EXECUTE_READWRITE, &old2 ) )
+		{
+			CopyMemory( HPMP_DRAW, HPMP_DRAW_old, 5 );
+			VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
+		}
+
 	}
 
 }
@@ -600,7 +598,7 @@ void ManaBarSwitch( int GameDLL, BOOL b )
 		*( int* ) &sub_6F2C74B0 = ( int ) GameDLL + 0x6374A0; // 6374A0
 
 		*( int* ) &Storm_401_org_malloc = ( int ) GameDLL + 0x374F14; // 374F14
-		*( int* ) &HPMP_DRAW = ( int ) GameDLL + 0x3784CA; 
+		*( int* ) &HPMP_DRAW = ( int ) GameDLL + 0x3784CA;
 
 		if ( b )
 			Hook( );

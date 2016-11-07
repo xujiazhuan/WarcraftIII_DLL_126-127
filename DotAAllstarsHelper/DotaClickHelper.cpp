@@ -427,11 +427,10 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 				if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
 				{
 
-					AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc1_1" );
+					AddNewLineToDotaHelperLog( __func__ );
 
 					if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
 					{
-						AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc2_2" );
 
 						if ( EnableSelectHelper )
 						{
@@ -445,6 +444,7 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 							tmpDelayPress.TimeOut = 40;
 							DelayedPressList.push_back( tmpDelayPress );
 						}
+						AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 					}
 					else if ( ClickHelper )
 					{
@@ -486,14 +486,13 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 			{
 				if ( EnableSelectHelper )
 				{
-					AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc1" );
+					AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
 
 					if ( GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) == 0 )
 					{
-						AddNewLineToDotaHelperLog( "BeforeWarcraftWNDProc2" );
-
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
 					}
 				}
 			}
@@ -629,7 +628,7 @@ int sub_6F33A010Offset = 0;
 
 void IssueFixerInit( )
 {
-	AddNewLineToDotaHelperLog( "IssueFixerInit" );
+	AddNewLineToDotaHelperLog( __func__ );
 	IssueWithoutTargetOrderorg = ( IssueWithoutTargetOrder ) ( GameDll + IssueWithoutTargetOrderOffset );
 	MH_CreateHook( IssueWithoutTargetOrderorg, &IssueWithoutTargetOrdermy, reinterpret_cast< void** >( &IssueWithoutTargetOrderptr ) );
 
@@ -665,22 +664,19 @@ void IssueFixerInit( )
 	MH_EnableHook( sub_6F339F80org );
 	MH_EnableHook( sub_6F33A010org );
 
-	AddNewLineToDotaHelperLog( "IssueFixerInitEnd" );
+	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 }
 
 
 void IssueFixerDisable( )
 {
-	AddNewLineToDotaHelperLog( "IssueFixerDisable" );
-	if ( GetModuleHandle( "Game.dll" ) != 0 )
-	{
-		MH_DisableHook( IssueWithoutTargetOrderorg );
-		MH_DisableHook( IssueTargetOrPointOrder2org );
-		MH_DisableHook( sub_6F339D50org );
-		MH_DisableHook( IssueTargetOrPointOrderorg );
-		MH_DisableHook( sub_6F339E60org );
-		MH_DisableHook( sub_6F339F00org );
-		MH_DisableHook( sub_6F339F80org );
-		MH_DisableHook( sub_6F33A010org );
-	}
+	AddNewLineToDotaHelperLog( __func__ );
+	MH_DisableHook( IssueWithoutTargetOrderorg );
+	MH_DisableHook( IssueTargetOrPointOrder2org );
+	MH_DisableHook( sub_6F339D50org );
+	MH_DisableHook( IssueTargetOrPointOrderorg );
+	MH_DisableHook( sub_6F339E60org );
+	MH_DisableHook( sub_6F339F00org );
+	MH_DisableHook( sub_6F339F80org );
+	MH_DisableHook( sub_6F33A010org );
 }
