@@ -163,8 +163,8 @@ struct BarStruct
 
 bool FileExist( const char * name );
 DWORD GetDllCrc32( );
-typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
-extern _TriggerExecute TriggerExecute;
+//typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
+//extern _TriggerExecute TriggerExecute;
 BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int UnitAddr );
@@ -307,7 +307,7 @@ extern int GetItemInSlotAddr;
 extern float * GetWindowXoffset;
 extern float * GetWindowYoffset;
 extern int GameFrameAtMouseStructOffset;
-extern int pTriggerExecute;
+//extern int pTriggerExecute;
 #pragma endregion
 
 
@@ -438,3 +438,13 @@ string SendHttpPostRequest( const char * host, const char * path, const char * d
 string SendHttpGetRequest( const char * host, const char * path );
 
 #pragma endregion 
+
+
+#pragma region SendGamePacket.cpp
+
+
+extern int PacketClassPtr;
+extern int pGAME_SendPacket;
+void SendPacket( BYTE* packetData, DWORD size );
+
+#pragma endregion

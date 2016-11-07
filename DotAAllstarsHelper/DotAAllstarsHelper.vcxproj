@@ -84,6 +84,7 @@
     <ClCompile Include="HttpClass.cpp" />
     <ClCompile Include="jpgwrapper.cpp" />
     <ClCompile Include="quantizer.cpp" />
+    <ClCompile Include="SendGamePacket.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
     <ClCompile Include="DotaViewAllySkill.cpp" />
   </ItemGroup>

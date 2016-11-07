@@ -301,23 +301,15 @@ DWORD LastPressedKeysTime[ 256 ];
 
 
 BOOL KeyboardHaveTriggerEvent = FALSE;
-UINT KeyboardTriggerHandle = 0;
-int KeyboardAddrForKey = 0;
-int KeyboardAddrForKeyEvent = 0;
-
-__declspec( dllexport ) int __stdcall TriggerRegisterPlayerKeyboardEvent( int AddrForKey, int AddrForKeyEvent, UINT TriggerHandle )
+__declspec( dllexport ) int __stdcall TriggerRegisterPlayerKeyboardEvent( int  )
 {
-	if ( !KeyboardHaveTriggerEvent )
-	{
-		KeyboardTriggerHandle = TriggerHandle;
-
-		KeyboardHaveTriggerEvent = TRUE;
-	}
+	KeyboardHaveTriggerEvent = TRUE;
 	return 0;
 }
 
 
-
+bool LastKeyState[ 256 ];
+vector<unsigned int> SendKeyEvent;
 
 
 LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam )
@@ -422,6 +414,43 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 		if ( *( int* ) ChatFound == 0 )
 		{
 
+			if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && wParam && wParam <= 255 )
+			{
+				if ( KeyboardHaveTriggerEvent )
+				{
+					if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
+					{
+						SkipAllMessages = TRUE;
+						SendKeyEvent.push_back( 0x85 );
+						SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
+						SendKeyEvent.push_back( Msg );
+						SendKeyEvent.push_back( wParam );
+						SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
+						SendKeyEvent.clear( );
+						SkipAllMessages = FALSE;
+						//*KeyboardAddrForKey = ( int ) wParam;
+						//*KeyboardAddrForKeyEvent = ( int ) Msg;
+					//	TriggerExecute( KeyboardTriggerHandle );
+					}
+					else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
+					{
+						SendKeyEvent.clear( );
+						SkipAllMessages = TRUE;
+						SendKeyEvent.push_back( 0x85 );
+						SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
+						SendKeyEvent.push_back( Msg );
+						SendKeyEvent.push_back( wParam );
+						SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
+						SendKeyEvent.clear( );
+						SkipAllMessages = FALSE;
+						//*KeyboardAddrForKey = ( int ) wParam;
+						//*KeyboardAddrForKeyEvent = ( int ) Msg;
+						//TriggerExecute( KeyboardTriggerHandle );
+					}
+
+				}
+			}
+
 			if ( Msg == WM_KEYDOWN )
 			{
 				if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
@@ -464,6 +493,14 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 									LastPressedKeysTime[ wParam ] = 0;
 									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
 									{
+										if ( Msg == WM_KEYDOWN )
+										{
+											LastKeyState[ wParam ] = true;
+										}
+										else if ( Msg == WM_KEYUP )
+										{
+											LastKeyState[ wParam ] = false;
+										}
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
 									}
 								}
@@ -497,6 +534,19 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 				}
 			}
 		}
+
+		if ( wParam && wParam <= 255 )
+		{
+			if ( Msg == WM_KEYDOWN )
+			{
+				LastKeyState[ wParam ] = true;
+			}
+			else if ( Msg == WM_KEYUP )
+			{
+				LastKeyState[ wParam ] = false;
+			}
+		}
+
 	}
 	else
 	{
@@ -629,6 +679,8 @@ int sub_6F33A010Offset = 0;
 void IssueFixerInit( )
 {
 	AddNewLineToDotaHelperLog( __func__ );
+	memset( LastKeyState, 0, sizeof( LastKeyState ) );
+
 	IssueWithoutTargetOrderorg = ( IssueWithoutTargetOrder ) ( GameDll + IssueWithoutTargetOrderOffset );
 	MH_CreateHook( IssueWithoutTargetOrderorg, &IssueWithoutTargetOrdermy, reinterpret_cast< void** >( &IssueWithoutTargetOrderptr ) );
 
@@ -671,6 +723,7 @@ void IssueFixerInit( )
 void IssueFixerDisable( )
 {
 	AddNewLineToDotaHelperLog( __func__ );
+	memset( LastKeyState, 0, sizeof( LastKeyState ) );
 	MH_DisableHook( IssueWithoutTargetOrderorg );
 	MH_DisableHook( IssueTargetOrPointOrder2org );
 	MH_DisableHook( sub_6F339D50org );

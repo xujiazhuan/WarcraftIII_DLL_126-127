@@ -75,7 +75,7 @@ int BlizzardDebug4Offset = 0;
 int BlizzardDebug5Offset = 0;
 int BlizzardDebug6Offset = 0;
 int GameFrameAtMouseStructOffset = 0;
-int pTriggerExecute = 0;
+//int pTriggerExecute = 0;
 int SetGameAreaFOVoffset = 0;
 int GameGetFileOffset = 0;
 
@@ -99,7 +99,7 @@ BOOL ClickHelper = FALSE;
 HMODULE GetCurrentModule;
 
 
-_TriggerExecute TriggerExecute;
+//_TriggerExecute TriggerExecute;
 
 char CurrentMapPath[ MAX_PATH ];
 char NewMapPath[ MAX_PATH ];
@@ -1528,7 +1528,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		_BarVTable = GameDll + 0x93E604;
 		IsWindowActive = GameDll + 0xA9E7A4;
 		ChatFound = GameDll + 0xAD15F0;
-		TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
+		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
 		StormErrorHandlerOffset = StormDll + 0x28F0;
 		JassNativeLookupOffset = GameDll + 0x44EA00;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
@@ -1554,6 +1554,10 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x4C1550;
 
 		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
+
+
+		PacketClassPtr = GameDll + 0x932D2C;
+		pGAME_SendPacket = GameDll + 0x54D970;
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
@@ -1696,7 +1700,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		_BarVTable = GameDll + 0x98F52C;
 		IsWindowActive = GameDll + 0xB673EC;
 		ChatFound = GameDll + 0xBDAA14;
-		TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
+		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
 		StormErrorHandlerOffset = StormDll + 0x8230;
 		JassNativeLookupOffset = GameDll + 0x7E2FE0;
 		JassFuncLookupOffset = GameDll + 0x7EFBB0;
@@ -1726,6 +1730,8 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
 
+		PacketClassPtr = GameDll + 0x973210;
+		pGAME_SendPacket = GameDll + 0x30F1B0;
 
 		int pDrawAttackSpeed = GameDll + 0x38C6E0;
 		AddNewOffset( pDrawAttackSpeed, *( int* ) pDrawAttackSpeed );
