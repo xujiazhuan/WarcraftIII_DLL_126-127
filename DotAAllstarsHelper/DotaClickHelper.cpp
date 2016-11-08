@@ -5,6 +5,7 @@
 
 HWND Warcraft3Window = 0;
 
+
 WarcraftRealWNDProc WarcraftRealWNDProc_org = NULL;
 WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 
@@ -299,11 +300,15 @@ LPARAM MakeLParamVK( UINT VK, BOOL up, BOOL Extended = FALSE )
 DWORD LastPressedKeysTime[ 256 ];
 
 
-
+vector<int> RegisteredKeyCodes;
 BOOL KeyboardHaveTriggerEvent = FALSE;
-__declspec( dllexport ) int __stdcall TriggerRegisterPlayerKeyboardEvent( int  )
+__declspec( dllexport ) int __stdcall TriggerRegisterPlayerKeyboardEvent( int KeyCode )
 {
+	if ( !KeyboardHaveTriggerEvent )
+		RegisteredKeyCodes.clear( );
 	KeyboardHaveTriggerEvent = TRUE;
+	RegisteredKeyCodes.push_back( KeyCode );
+
 	return 0;
 }
 
@@ -312,7 +317,7 @@ bool LastKeyState[ 256 ];
 vector<unsigned int> SendKeyEvent;
 
 
-LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam )
+LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam )
 {
 	WPARAM wParam = _wParam;
 	if ( SkipAllMessages )
@@ -320,9 +325,10 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
 
+	
+
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-
 
 	if ( *( BOOL* ) IsWindowActive )
 	{
@@ -414,40 +420,48 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 		if ( *( int* ) ChatFound == 0 )
 		{
 
-			if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && wParam && wParam <= 255 )
+			if ( KeyboardHaveTriggerEvent )
 			{
-				if ( KeyboardHaveTriggerEvent )
+				if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP )
 				{
-					if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
+					for ( int keyCode : RegisteredKeyCodes )
 					{
-						SkipAllMessages = TRUE;
-						SendKeyEvent.push_back( 0x85 );
-						SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
-						SendKeyEvent.push_back( Msg );
-						SendKeyEvent.push_back( wParam );
-						SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
-						SendKeyEvent.clear( );
-						SkipAllMessages = FALSE;
-						//*KeyboardAddrForKey = ( int ) wParam;
-						//*KeyboardAddrForKeyEvent = ( int ) Msg;
-					//	TriggerExecute( KeyboardTriggerHandle );
+						if (  keyCode == (int)wParam )
+						{
+						
+							if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
+							{
+							
+								SendKeyEvent.push_back( 0x85 );
+								SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
+								SendKeyEvent.push_back( Msg );
+								SendKeyEvent.push_back( wParam );
+								SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
+								SendKeyEvent.clear( );
+								
+								LastKeyState[ wParam ] = true;
+								//*KeyboardAddrForKey = ( int ) wParam;
+								//*KeyboardAddrForKeyEvent = ( int ) Msg;
+							//	TriggerExecute( KeyboardTriggerHandle );
+							}
+							else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
+							{
+							
+								SendKeyEvent.push_back( 0x85 );
+								SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
+								SendKeyEvent.push_back( Msg );
+								SendKeyEvent.push_back( wParam );
+								SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
+								SendKeyEvent.clear( );
+					
+								LastKeyState[ wParam ] = false;
+								//*KeyboardAddrForKey = ( int ) wParam;
+								//*KeyboardAddrForKeyEvent = ( int ) Msg;
+								//TriggerExecute( KeyboardTriggerHandle );
+							}
+							return DefWindowProcA( hWnd, Msg, wParam, lParam );
+						}
 					}
-					else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
-					{
-						SendKeyEvent.clear( );
-						SkipAllMessages = TRUE;
-						SendKeyEvent.push_back( 0x85 );
-						SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
-						SendKeyEvent.push_back( Msg );
-						SendKeyEvent.push_back( wParam );
-						SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
-						SendKeyEvent.clear( );
-						SkipAllMessages = FALSE;
-						//*KeyboardAddrForKey = ( int ) wParam;
-						//*KeyboardAddrForKeyEvent = ( int ) Msg;
-						//TriggerExecute( KeyboardTriggerHandle );
-					}
-
 				}
 			}
 
@@ -493,14 +507,7 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 									LastPressedKeysTime[ wParam ] = 0;
 									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
 									{
-										if ( Msg == WM_KEYDOWN )
-										{
-											LastKeyState[ wParam ] = true;
-										}
-										else if ( Msg == WM_KEYUP )
-										{
-											LastKeyState[ wParam ] = false;
-										}
+
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
 									}
 								}
@@ -532,18 +539,6 @@ LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LP
 						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
 					}
 				}
-			}
-		}
-
-		if ( wParam && wParam <= 255 )
-		{
-			if ( Msg == WM_KEYDOWN )
-			{
-				LastKeyState[ wParam ] = true;
-			}
-			else if ( Msg == WM_KEYUP )
-			{
-				LastKeyState[ wParam ] = false;
 			}
 		}
 

@@ -319,12 +319,13 @@ extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
 extern BOOL KeyboardHaveTriggerEvent;
 
-typedef LRESULT( __stdcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
+
+typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
 extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
 extern WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 
 extern HANDLE hPressKeyWithDelay;
-LRESULT __stdcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
+LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam );
 extern BOOL PressKeyWithDelayEND;
 DWORD WINAPI PressKeyWithDelay( LPVOID );
 

@@ -26,6 +26,9 @@ int GameVersion = 0;
 
 
 
+char buffer[ 4096 ];
+
+
 int DrawSkillPanelOffset = 0;
 int DrawSkillPanelOverlayOffset = 0;
 
@@ -78,6 +81,8 @@ int GameFrameAtMouseStructOffset = 0;
 //int pTriggerExecute = 0;
 int SetGameAreaFOVoffset = 0;
 int GameGetFileOffset = 0;
+
+int  Warcraft3WindowProcOffset = 0;
 
 #pragma endregion
 
@@ -186,14 +191,11 @@ void InitHook( )
 	if ( Warcraft3Window )
 	{
 
-		WarcraftRealWNDProc_org = ( WarcraftRealWNDProc ) GetWindowLongA( Warcraft3Window, GWL_WNDPROC );
-		if ( WarcraftRealWNDProc_org )
-		{
-			hPressKeyWithDelay = CreateThread( 0, 0, PressKeyWithDelay, 0, 0, 0 );
-			MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
-			MH_EnableHook( WarcraftRealWNDProc_org );
+		WarcraftRealWNDProc_org = ( WarcraftRealWNDProc ) Warcraft3WindowProcOffset;
+		hPressKeyWithDelay = CreateThread( 0, 0, PressKeyWithDelay, 0, 0, 0 );
+		MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
+		MH_EnableHook( WarcraftRealWNDProc_org );
 
-		}
 	}
 
 	SetGameAreaFOV_org = ( SetGameAreaFOV ) ( SetGameAreaFOVoffset + GameDll );
@@ -244,7 +246,7 @@ void InitHook( )
 
 void UninitializeHook( )
 {
-	AddNewLineToDotaHelperLog( __func__);
+	AddNewLineToDotaHelperLog( __func__ );
 	DisableErrorHandler( );
 
 
@@ -300,9 +302,6 @@ void UninitializeHook( )
 	IssueFixerDisable( );
 }
 
-
-
-char buffer[ 4096 ];
 
 typedef int( __stdcall * pStorm_503 )( int a1, int a2, int a3 );
 pStorm_503 Storm_503;
@@ -1368,7 +1367,7 @@ void __stdcall DisableAllHooks( )
 			VirtualFree( lpAddr, 0, MEM_RELEASE );
 		FreeExecutableMemoryList.clear( );
 	}
-	AddNewLineToDotaHelperLog( __func__ + to_string(2) );
+	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
 	KeyboardHaveTriggerEvent = FALSE;
@@ -1655,8 +1654,8 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		pWar3Data1 = GameDll + 0xACBD40;
 		pWar3Data1 = *( int* ) pWar3Data1;
-		Warcraft3Window = *( HWND* ) ( GameDll + 0xAD1398 );
-
+		Warcraft3Window = *( HWND* ) ( GameDll + 0xAD147C );
+		Warcraft3WindowProcOffset = GameDll + 0x6C6AA0;
 
 		ManaBarSwitch( GameDll, TRUE );
 
@@ -1833,8 +1832,8 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		pWar3Data1 = GameDll + 0xBC5420;
 		pWar3Data1 = *( int* ) pWar3Data1;
-		Warcraft3Window = *( HWND* ) ( GameDll + 0xBDA9CC );
-
+		Warcraft3Window = *( HWND* ) ( GameDll + 0xBDAB88 );
+		Warcraft3WindowProcOffset = GameDll + 0x153710;
 
 		ManaBarSwitch( GameDll, TRUE );
 
@@ -1898,7 +1897,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
-	
+
 		// Cleanup
 		if ( hRefreshTimer )
 		{
