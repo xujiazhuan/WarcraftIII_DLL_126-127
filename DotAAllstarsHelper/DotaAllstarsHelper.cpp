@@ -436,11 +436,11 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 
 			if ( magicampbonus > 0 )
 			{
-				sprintf_s( buffer, sizeof( buffer ), "%.3f attacks/s (Reloading: %.2f secs)|nAttack speed bonus: %f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), (attackspeed > realattackspeed) ? attackspeed : realattackspeed * 100.0 - 100.0, magicamp, magicampbonus );
+				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp, magicampbonus );
 			}
 			else
 			{
-				sprintf_s( buffer, sizeof( buffer ), "%.3f attacks/s (Reloading: %.2f secs)|nAttack speed bonus: %f|nMagic amplification: %i%%|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ),  (attackspeed > realattackspeed) ? attackspeed : realattackspeed * 100.0 - 100.0, magicamp );
+				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%%|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp );
 			}
 
 			__asm
