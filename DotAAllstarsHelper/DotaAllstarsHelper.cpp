@@ -408,19 +408,20 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 		{
 			bufferaddr = buffer;
 			float realBAT = *( float* ) BAT;
-			float realattackspeed = *( float* ) attackspeed;
-			if ( realattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
-				realattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
+			float fixedattackspeed = *( float* ) attackspeed;
+			float realattackspeed = fixedattackspeed;
+			if ( fixedattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
+				fixedattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
 
-			if ( realattackspeed == 0 )
-			{
-				realattackspeed = 0.0001f;
-			}
+			/*	if ( fixedattackspeed == 0 )
+				{
+					fixedattackspeed = 0.0001f;
+				}
 
-			if ( realBAT == 0 )
-			{
-				realBAT = 0.0001f;
-			}
+				if ( realBAT == 0 )
+				{
+					realBAT = 0.0001f;
+				}*/
 
 			int magicamp = GetHeroInt( *unitaddr, 0, TRUE ) / 16;
 			int magicampbonus = 0;
@@ -433,15 +434,20 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 				}
 			}
 
+			float AttacksPerSec = 0.0f;
 
-			if ( magicampbonus > 0 )
+			float AttackReload = 0.0f;
+			if ( fixedattackspeed != 0.0f && realBAT != 0.0f )
 			{
-				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp, magicampbonus );
+				AttacksPerSec = fixedattackspeed / realBAT;
+				AttackReload = 1.0f / ( fixedattackspeed / realBAT );
 			}
+			float AttackSpeedBonus = realattackspeed * 100.0f - 100.0f;
+
+			if ( magicampbonus )
+				sprintf_s( buffer, sizeof( buffer ), "%.1f/sec (Reload: %.2f sec)|nAttack speed bonus: %.0f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", AttacksPerSec, AttackReload, AttackSpeedBonus, magicamp, magicampbonus );
 			else
-			{
-				sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)|nAttack speed bonus: %.1f|nMagic amplification: %i%%|n", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ), realattackspeed * 100.0 - 100.0, magicamp );
-			}
+				sprintf_s( buffer, sizeof( buffer ), "%.1f/sec (Reload: %.2f sec)|nAttack speed bonus: %.0f|nMagic amplification: %i%% (0%%)|n", AttacksPerSec, AttackReload, AttackSpeedBonus, magicamp );
 
 			__asm
 			{
@@ -455,11 +461,11 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 		{
 			bufferaddr = buffer;
 			float oldaddtackspeed = *( float* ) attackspeed;
-			float realattackspeed = oldaddtackspeed;
-			if ( realattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
-				realattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
+			float fixedattackspeed = oldaddtackspeed;
+			if ( fixedattackspeed > *( float* ) ( GameDll + pAttackSpeedLimit ) )
+				fixedattackspeed = *( float* ) ( GameDll + pAttackSpeedLimit );
 
-			sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)", ( realattackspeed / *( float* ) BAT ), 1.0f / ( realattackspeed / *( float* ) BAT ) );
+			sprintf_s( buffer, sizeof( buffer ), "%.3f (Reload: %.2f sec)", ( fixedattackspeed / *( float* ) BAT ), 1.0f / ( fixedattackspeed / *( float* ) BAT ) );
 
 			__asm
 			{
