@@ -5,7 +5,7 @@ pGetHeroInt GetHeroInt;
 // Получить владельца юнита
 int __stdcall GetUnitOwnerSlot( int unitaddr )
 {
-	if ( unitaddr )
+	if ( unitaddr > 0 )
 		return *( int* ) ( unitaddr + 88 );
 	return 0;
 }
@@ -15,7 +15,7 @@ int __stdcall GetUnitOwnerSlot( int unitaddr )
 // Является ли юнит героем
 BOOL __stdcall IsHero( int unitaddr )
 {
-	if ( unitaddr )
+	if ( unitaddr > 0 )
 	{
 		UINT ishero = *( UINT* ) ( unitaddr + 48 );
 		ishero = ishero >> 24;
@@ -29,7 +29,7 @@ BOOL __stdcall IsHero( int unitaddr )
 // Является ли юнит зданием
 BOOL __stdcall IsTower( int unitaddr )
 {
-	if ( unitaddr )
+	if ( unitaddr> 0 )
 	{
 		UINT istower = *( UINT* ) ( unitaddr + 0x5C );
 		return ( istower & 0x10000 ) > 0;
@@ -76,16 +76,16 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 // Проверяет враг юнит локальному игроку или нет
 BOOL __stdcall IsEnemy( int UnitAddr )
 {
-	if ( !UnitAddr )
-		return TRUE;
-
-	int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
-	if ( unitownerslot <= 15 && unitownerslot >= 0 )
+	if ( UnitAddr > 0 )
 	{
-		UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
-		UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-		AddNewLineToDotaHelperLog( "IsEnemy" );
-		return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+		int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
+		if ( unitownerslot <= 15 && unitownerslot >= 0 )
+		{
+			UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
+			UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+			AddNewLineToDotaHelperLog( "IsEnemyEnd" );
+			return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+		}
 	}
 	return TRUE;
 }

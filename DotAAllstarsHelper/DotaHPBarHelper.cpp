@@ -97,18 +97,27 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 
 	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int ) BarVtableClone )
 	{
+		AddNewLineToDotaHelperLog( "SetColorForUnitEnd1" );
+
 		return retval;
 	}
 
 
 	int unitaddr = BarStruct->unitaddr;
-	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )
+	if ( unitaddr <= 0 || !IsNotBadUnit( unitaddr ) )
+	{
+		AddNewLineToDotaHelperLog( "SetColorForUnitEnd2" );
 		return retval;
+	}
 
 	int unitslot = GetUnitOwnerSlot( unitaddr );
 
 	if ( unitslot > 15 || unitslot < 0 )
+	{
+		AddNewLineToDotaHelperLog( "SetColorForUnitEnd3" );
 		return retval;
+	}
+
 
 	for ( unsigned int i = 0; i < CustomHPBarList[ unitslot ].size( ); i++ )
 	{
@@ -127,13 +136,15 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				}
 
 				if ( !coloraddr )
+				{
+					AddNewLineToDotaHelperLog( "SetColorForUnitEnd4" );
 					return retval;
-
+				}
 				if ( CustomHPBarList[ unitslot ][ i ].color != 0 )
 				{
 					*coloraddr = CustomHPBarList[ unitslot ][ i ].color;
 				}
-
+				AddNewLineToDotaHelperLog( "SetColorForUnitEnd5" );
 				return retval;
 			}
 		}
@@ -154,7 +165,10 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 			}
 		}
 		if ( !coloraddr )
+		{
+			AddNewLineToDotaHelperLog( "SetColorForUnitEnd6" );
 			return retval;
+		}
 		if ( hpbarcolorsHero[ unitslot ] != 0 )
 		{
 			*coloraddr = hpbarcolorsHero[ unitslot ];
@@ -176,7 +190,10 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 			}
 		}
 		if ( !coloraddr )
+		{
+			AddNewLineToDotaHelperLog( "SetColorForUnitEnd7" );
 			return retval;
+		}
 		if ( hpbarcolorsTower[ unitslot ] != 0 )
 		{
 			*coloraddr = hpbarcolorsTower[ unitslot ];
@@ -197,14 +214,17 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 			}
 		}
 		if ( !coloraddr )
+		{
+			AddNewLineToDotaHelperLog( "SetColorForUnitEnd8" );
 			return retval;
+		}
 		if ( hpbarcolorsUnit[ unitslot ] != 0 )
 		{
 			*coloraddr = hpbarcolorsUnit[ unitslot ];
 		}
 	}
 
-
+	AddNewLineToDotaHelperLog( "SetColorForUnitEnd9" );
 	return retval;
 }
 

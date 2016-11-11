@@ -595,6 +595,7 @@ string ConvertMemoryToHexReverse( unsigned char * buffer, int size )
 
 LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 )
 {
+	bDllLogEnable = FALSE;
 	LONG result = NULL;
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
 	result = StormErrorHandler_ptr( a1, PrintErrorLog, a3, a4, a5 );
