@@ -84,6 +84,7 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 	{
 		UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
 		UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+		AddNewLineToDotaHelperLog( "IsEnemy" );
 		return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
 	}
 	return TRUE;

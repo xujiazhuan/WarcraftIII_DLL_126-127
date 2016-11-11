@@ -39,8 +39,11 @@ int GetLocalPlayerId( )
 	int gldata = GetGlobalPlayerData( );
 	if ( gldata > 0 )
 	{
-		return *( short * ) ( gldata + 0x28 );
+		short retval = *( short * ) ( gldata + 0x28 );
+		AddNewLineToDotaHelperLog( "GetLocalPlayerOk" );
+		return retval;
 	}
+	AddNewLineToDotaHelperLog( "GetLocalPlayerIdBad" );
 	return 0;
 }
 
