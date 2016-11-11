@@ -410,8 +410,8 @@ extern vector<FileRedirectStruct> FileRedirectList;
 typedef signed int( __stdcall * Storm_403 )( void *a1, const char * str, int line, int id );
 extern Storm_403 Storm_403_org;
 
-typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
-BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+typedef signed int( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+signed int __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 extern GameGetFile GameGetFile_org;
 extern GameGetFile GameGetFile_ptr;
 

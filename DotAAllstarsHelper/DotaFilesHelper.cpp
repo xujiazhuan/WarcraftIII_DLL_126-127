@@ -1387,7 +1387,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 }
 
 
-BOOL __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 
 	const char * filename = filename_;
@@ -1397,7 +1397,7 @@ BOOL __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, si
 	else
 		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
 
-	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
+	signed int IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
 	if ( !*InGame && !MainFuncWork )
 		return IsFileExist;
