@@ -114,7 +114,7 @@ bool HTTPRequest::get_request( const std::string& path )
 	request += "Connection: close\r\n";
 	request += "\r\n";
 
-	if ( send( Sock, request.c_str( ),(int) request.length( ), 0 ) == SOCKET_ERROR )
+	if ( send( Sock, request.c_str( ), ( int ) request.length( ), 0 ) == SOCKET_ERROR )
 	{
 		return false;
 	}

@@ -960,7 +960,7 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 	}
 
 
-	alphaflag = (int) blph.IsAlpha;
+	alphaflag = ( int ) blph.IsAlpha;
 
 
 	curpos += sizeof( BLPHeader );
@@ -1006,8 +1006,8 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 				return 0;
 			}
 			//	fprintf( stderr, "c3\n" );
-			uint8_t* tdata = new uint8_t[ (unsigned int)size ];
-			memcpy( tdata, input.buf + offset, (size_t) size );
+			uint8_t* tdata = new uint8_t[ ( unsigned int ) size ];
+			memcpy( tdata, input.buf + offset, ( size_t ) size );
 			//	fprintf( stderr, "c4\n" );
 
 
@@ -1060,7 +1060,7 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 			}
 
 			uint8_t* tdata = new uint8_t[ ( unsigned int ) size ];
-			memcpy( tdata, input.buf + offset, (size_t) size );
+			memcpy( tdata, input.buf + offset, ( size_t ) size );
 			//fprintf( stderr, "c9\n" );
 			RGBAPix *pic = blp1_convert_paletted_alpha( ( uint8_t* ) tdata, Pal, blph.sizex, blph.sizey );
 

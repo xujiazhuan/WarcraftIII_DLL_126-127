@@ -5,7 +5,7 @@
 #if !defined(__LONGLONG_H__)
 #define __LONGLONG_H__
 
-/* do we have/want to use a long long type? */
+ /* do we have/want to use a long long type? */
 #define HAVE_64BIT_LONG_LONG	/* yes */
 
 /*

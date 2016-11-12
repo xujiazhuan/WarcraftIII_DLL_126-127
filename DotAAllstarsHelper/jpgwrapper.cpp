@@ -168,9 +168,9 @@ GLOBAL( bool )ConvertToJpg( Buffer &source, Buffer &target, int width, int heigh
 		return false;
 	}
 
-	target.buf = new char[ (unsigned int )numBytes ];
+	target.buf = new char[ ( unsigned int ) numBytes ];
 	target.length = ( unsigned long ) numBytes;
-	memcpy( target.buf, storage, (size_t) numBytes );
+	memcpy( target.buf, storage, ( size_t ) numBytes );
 	delete[ ] storage;
 	return true;
 }
@@ -195,17 +195,17 @@ GLOBAL( bool )DecompressJpg( Buffer &source, Buffer &target, int &width, int &he
 	jpeg_memory_src( &cinfo, ( unsigned char* ) source.buf, source.length );
 	( void ) jpeg_read_header( &cinfo, TRUE );
 	( void ) jpeg_start_decompress( &cinfo );
-	stride = (int)cinfo.output_width * cinfo.output_components;
+	stride = ( int ) cinfo.output_width * cinfo.output_components;
 	target.buf = new char[ stride * cinfo.output_height ];
 	target.length = stride * cinfo.output_height;
 	buffer = ( *cinfo.mem->alloc_sarray )( ( j_common_ptr ) &cinfo, JPOOL_IMAGE, ( JDIMENSION ) stride, ( JDIMENSION ) 1 );
-	width = (int) cinfo.output_width;
+	width = ( int ) cinfo.output_width;
 	height = ( int ) cinfo.output_height;
 	bytespp = cinfo.output_components;
-	while ( (int) cinfo.output_scanline < height )
+	while ( ( int ) cinfo.output_scanline < height )
 	{
 		( void ) jpeg_read_scanlines( &cinfo, buffer, 1 );
-		memcpy( &target.buf[ ( height - cinfo.output_scanline ) * stride ], buffer[ 0 ], (size_t) stride );
+		memcpy( &target.buf[ ( height - cinfo.output_scanline ) * stride ], buffer[ 0 ], ( size_t ) stride );
 	}
 	for ( int i = 0; i < width * height; i++ )
 	{ // swap R and B

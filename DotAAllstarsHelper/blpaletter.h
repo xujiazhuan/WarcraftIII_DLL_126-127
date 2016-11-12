@@ -119,7 +119,7 @@ bool CanConvertJPG( const char* filename );
 bool ColorsOk( int colors, bool isJpg );
 
 unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename );
-bool TGA2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp,  const char* filename );
+bool TGA2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
 bool BMP2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
 bool JPG2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
 bool CreatePalettedBLP( Buffer &rawData, Buffer &output, int colors, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );

@@ -29,7 +29,7 @@ BOOL __stdcall IsHero( int unitaddr )
 // Является ли юнит зданием
 BOOL __stdcall IsTower( int unitaddr )
 {
-	if ( unitaddr> 0 )
+	if ( unitaddr > 0 )
 	{
 		UINT istower = *( UINT* ) ( unitaddr + 0x5C );
 		return ( istower & 0x10000 ) > 0;
@@ -74,24 +74,30 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 
 
 // Проверяет враг юнит локальному игроку или нет
-BOOL __stdcall IsEnemy( int UnitAddr )
+int __stdcall IsEnemy( int UnitAddr )
 {
-	if ( UnitAddr > 0 )
+	AddNewLineToDotaHelperLog( "IsEnemy:Start" );
+	if ( UnitAddr > 0 && IsNotBadUnit( UnitAddr ) )
 	{
 		int unitownerslot = GetUnitOwnerSlot( ( int ) UnitAddr );
-		if ( unitownerslot <= 15 && unitownerslot >= 0 )
+		if ( unitownerslot <= 15 && unitownerslot >= 0 && GetLocalPlayerId( ) != unitownerslot )
 		{
 			UINT Player1 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
 			UINT Player2 = ( ( GetPlayerByID ) ( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-			AddNewLineToDotaHelperLog( "IsEnemyEnd" );
-			return ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+			if ( Player1 == Player2 )
+			{
+				AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer" );
+				return -1;
+			}
+
+			BOOL retval = ( ( ( IsPlayerEnemy ) ( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+			AddNewLineToDotaHelperLog( "IsEnemy:Okay" );
+			return retval;
 		}
 	}
-	return TRUE;
+	AddNewLineToDotaHelperLog( "IsEnemy:BadUnit" );
+	return -1;
 }
-
-
-
 
 
 // Проверяет предмет или не предмет

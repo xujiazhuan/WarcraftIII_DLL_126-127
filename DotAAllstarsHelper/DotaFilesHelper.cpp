@@ -33,7 +33,7 @@ vector<FileRedirectStruct> FileRedirectList;
 BOOL GetFromIconMdlCache( string filename, ICONMDLCACHE * iconhelperout )
 {
 	size_t filelen = filename.length( );
-	u_int64_t hash = GetBufHash( filename.c_str(), filelen );
+	u_int64_t hash = GetBufHash( filename.c_str( ), filelen );
 	for ( ICONMDLCACHE ih : ICONMDLCACHELIST )
 	{
 		if ( ih.hashlen == filelen && ih.hash == hash )
@@ -246,7 +246,7 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 			//	MessageBox( 0, "OK5", "OK5", 0 );
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
-			tmpih.hashlen = filename.length();
+			tmpih.hashlen = filename.length( );
 			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
@@ -1172,8 +1172,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
 
-			tmpih->hashlen = filename.length();
-			tmpih->hash = GetBufHash( filename.c_str(), tmpih->hashlen );
+			tmpih->hashlen = filename.length( );
+			tmpih->hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
 
 			ICONMDLCACHELIST.push_back( *tmpih );
 

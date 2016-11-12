@@ -81,7 +81,7 @@ public:
 protected:
 	unsigned int GetLeafCount( Node* pTree );
 	void AddColor( Node** ppNode, unsigned char r, unsigned char g, unsigned char b, unsigned char a, unsigned int nColorBits, int nLevel, unsigned int* pLeafCount, Node** pReducibleNodes );
-	void* CreateNode(  int nLevel, unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes );
+	void* CreateNode( int nLevel, unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes );
 	void ReduceTree( unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes );
 	void DeleteTree( Node** ppNode );
 	void GetPaletteColors( Node* pTree, BGRAPix* prgb, unsigned int* pIndex, unsigned int* pSum );

@@ -82,7 +82,7 @@ __declspec( dllexport ) void __stdcall SetHPCustomHPBarUnit( int playerid, int t
 }
 
 
-int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct )
+int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 {
 	int retval = 0;
 	__asm mov retval, eax;
@@ -92,8 +92,9 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 		return retval;
 	}
 
-	AddNewLineToDotaHelperLog( "SetColorForUnit" );
-
+	char _bf[ 93 ];
+	sprintf_s( _bf, 93, "%s-color:%X-bar:%X", "SetColorForUnit", ( unsigned int ) coloraddr, ( unsigned int ) BarStruct );
+	AddNewLineToDotaHelperLog( _bf );
 
 	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int ) BarVtableClone )
 	{
@@ -101,6 +102,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 
 		return retval;
 	}
+
 
 
 	int unitaddr = BarStruct->unitaddr;
@@ -135,7 +137,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 					BarStruct->ScaleY = CustomHPBarList[ unitslot ][ i ].scaley;
 				}
 
-				if ( !coloraddr )
+				if ( ( int ) coloraddr <= 0 )
 				{
 					AddNewLineToDotaHelperLog( "SetColorForUnitEnd4" );
 					return retval;
@@ -164,7 +166,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				BarStruct->ScaleY = hpbarscaleHeroY[ unitslot ];
 			}
 		}
-		if ( !coloraddr )
+		if ( ( int ) coloraddr <= 0 )
 		{
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd6" );
 			return retval;
@@ -189,7 +191,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				BarStruct->ScaleY = hpbarscaleTowerY[ unitslot ];
 			}
 		}
-		if ( !coloraddr )
+		if ( ( int ) coloraddr <= 0 )
 		{
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd7" );
 			return retval;
@@ -213,7 +215,7 @@ int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct 
 				BarStruct->ScaleY = hpbarscaleUnitY[ unitslot ];
 			}
 		}
-		if ( !coloraddr )
+		if ( ( int ) coloraddr <= 0 )
 		{
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd8" );
 			return retval;

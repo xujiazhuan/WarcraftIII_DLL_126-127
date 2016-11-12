@@ -325,7 +325,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, L
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
 
-	
+
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
@@ -426,19 +426,19 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, L
 				{
 					for ( int keyCode : RegisteredKeyCodes )
 					{
-						if (  keyCode == (int)wParam )
+						if ( keyCode == ( int ) wParam )
 						{
-						
+
 							if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
 							{
-							
+
 								SendKeyEvent.push_back( 0x85 );
 								SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
 								SendKeyEvent.push_back( Msg );
 								SendKeyEvent.push_back( wParam );
 								SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
 								SendKeyEvent.clear( );
-								
+
 								LastKeyState[ wParam ] = true;
 								//*KeyboardAddrForKey = ( int ) wParam;
 								//*KeyboardAddrForKeyEvent = ( int ) Msg;
@@ -446,14 +446,14 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, L
 							}
 							else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
 							{
-							
+
 								SendKeyEvent.push_back( 0x85 );
 								SendKeyEvent.push_back( ( UINT ) GetLocalPlayerId( ) );
 								SendKeyEvent.push_back( Msg );
 								SendKeyEvent.push_back( wParam );
 								SendPacket( ( BYTE* ) &SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
 								SendKeyEvent.clear( );
-					
+
 								LastKeyState[ wParam ] = false;
 								//*KeyboardAddrForKey = ( int ) wParam;
 								//*KeyboardAddrForKeyEvent = ( int ) Msg;

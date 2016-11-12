@@ -11,7 +11,7 @@ unsigned char FixBounds( int i )
 
 unsigned char FixBounds( double i )
 {
-	if ( i > (double)0xFF )
+	if ( i > ( double )0xFF )
 		return 0xFF;
 	else if ( i < ( double ) 0x00 )
 		return 0x00;
@@ -298,10 +298,10 @@ void CQuantizer::SetColorTable( BGRAPix* prgb )
 				na += tmppal[ k ].A * nSum[ k ];
 				ns += nSum[ k ];
 			}
-			prgb[ j ].R = FixBounds( (int)( nr / ns) );
-			prgb[ j ].G = FixBounds( ( int ) (ng / ns) );
-			prgb[ j ].B = FixBounds( ( int ) (nb / ns) );
-			prgb[ j ].A = FixBounds( ( int ) (na / ns) );
+			prgb[ j ].R = FixBounds( ( int ) ( nr / ns ) );
+			prgb[ j ].G = FixBounds( ( int ) ( ng / ns ) );
+			prgb[ j ].B = FixBounds( ( int ) ( nb / ns ) );
+			prgb[ j ].A = FixBounds( ( int ) ( na / ns ) );
 		}
 	}
 	else
@@ -323,7 +323,7 @@ unsigned char CQuantizer::GetNearestIndex( BGRAPix* c, BGRAPix* pal )
 	unsigned long cur = 0;
 	for ( unsigned long i = 0, k = 0, distance = 2147483647; i < m_nLeafCount; i++ )
 	{
-		k = (unsigned long)( ( pal[ i ].B - c->B )*( pal[ i ].B - c->B ) + ( pal[ i ].G - c->G )*( pal[ i ].G - c->G ) + ( pal[ i ].R - c->R )*( pal[ i ].R - c->R ) );
+		k = ( unsigned long ) ( ( pal[ i ].B - c->B )*( pal[ i ].B - c->B ) + ( pal[ i ].G - c->G )*( pal[ i ].G - c->G ) + ( pal[ i ].R - c->R )*( pal[ i ].R - c->R ) );
 		if ( k == 0 )
 		{
 			m_lastIndex = ( unsigned char ) i;

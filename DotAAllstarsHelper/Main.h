@@ -166,7 +166,7 @@ DWORD GetDllCrc32( );
 //typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
 //extern _TriggerExecute TriggerExecute;
 BOOL __stdcall IsNotBadUnit( int unitaddr );
-BOOL __stdcall IsEnemy( int UnitAddr );
+int __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int UnitAddr );
 BOOL __stdcall IsTower( int unitaddr );
 BOOL IsClassEqual( int ClassID1, int ClassID2 );

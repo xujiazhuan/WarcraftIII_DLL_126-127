@@ -5,16 +5,16 @@ int PacketClassPtr;
 int pGAME_SendPacket;
 struct Packet
 {
-	int PacketClassPtr;	
-	BYTE* PacketData;		
+	int PacketClassPtr;
+	BYTE* PacketData;
 	DWORD _1;				//+08, zero
 	DWORD _2;				//+0C, ??
-	DWORD Size;			
+	DWORD Size;
 	DWORD _3;				//+14, 0xFFFFFFFF
 };
 
 
-typedef void *( __fastcall * GAME_SendPacket_p ) ( Packet* packet, DWORD  );
+typedef void *( __fastcall * GAME_SendPacket_p ) ( Packet* packet, DWORD );
 GAME_SendPacket_p GAME_SendPacket = NULL;
 
 
@@ -32,7 +32,7 @@ void SendPacket( BYTE* packetData, DWORD size )
 	packet.PacketData = packetData;
 	packet.Size = size;
 	packet._3 = 0xFFFFFFFF;
-	if (!GAME_SendPacket )
-	GAME_SendPacket = ( GAME_SendPacket_p ) ( pGAME_SendPacket );
+	if ( !GAME_SendPacket )
+		GAME_SendPacket = ( GAME_SendPacket_p ) ( pGAME_SendPacket );
 	GAME_SendPacket( &packet, 0 );
 }

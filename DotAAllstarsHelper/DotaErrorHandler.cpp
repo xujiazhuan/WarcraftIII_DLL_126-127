@@ -485,7 +485,7 @@ LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
-	ESP_for_DUMP =  ExceptionInfo->ContextRecord->Esp;
+	ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
 
 	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
 	FILE * f;
@@ -496,7 +496,7 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 	}
 
 
-	
+
 	fclose( f );
 
 	return OriginFilter( ExceptionInfo );
@@ -586,7 +586,7 @@ string ConvertMemoryToHexReverse( unsigned char * buffer, int size )
 {
 	stringstream ss;
 	ss << std::hex << std::setfill( '0' );
-	for ( int i = size - 1 ; i >= 0; i-- )
+	for ( int i = size - 1; i >= 0; i-- )
 	{
 		ss << std::setw( 2 ) << static_cast< unsigned >( buffer[ i ] );
 	}
@@ -607,13 +607,13 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	char lasterror[ 20 ];
 	char dllcrc32[ 20 ];
 	sprintf_s( gamever, 20, "%X", GameVersion );
-	sprintf_s( lasterror, 20, "%#010x", (UINT) GetLastError( ) );
+	sprintf_s( lasterror, 20, "%#010x", ( UINT ) GetLastError( ) );
 	sprintf_s( dllcrc32, 20, "%#010x", ( UINT ) GetDllCrc32( ) );
 	ostringstream BugReport;
 	BugReport << "[DotaHelperLog]" << std::endl;
 	char EspDump[ 16 ];
 	DWORD EspDumpBytes;
-	ReadProcessMemory( GetCurrentProcess( ), ( void * ) (ESP_for_DUMP-16), EspDump, 16, &EspDumpBytes );
+	ReadProcessMemory( GetCurrentProcess( ), ( void * ) ( ESP_for_DUMP - 16 ), EspDump, 16, &EspDumpBytes );
 
 
 	BugReport << "GameVer: 1." << gamever << std::endl;
@@ -656,12 +656,12 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << "[Platform]: " << GetPlatformName( ) << std::endl;
 	BugReport << "[Exception Info]: " << std::endl;
 	BugReport << LastExceptionError << std::endl;
-	BugReport << "[DLL_CRC32]: "<< dllcrc32 << std::endl;
+	BugReport << "[DLL_CRC32]: " << dllcrc32 << std::endl;
 	BugReport << "[ESP]: " << ConvertMemoryToHexReverse( ( unsigned char* ) &ESP_for_DUMP, 4 ) << ". [DUMP]:" << ConvertMemoryToHexReverse( ( unsigned char* ) &EspDump, 16 ) << std::endl;
 
 	BugReport << "[DLL_LOG]: " << std::endl;
 
-	string LastError1, LastError2, LastError3,LastError4;
+	string LastError1, LastError2, LastError3, LastError4;
 
 	for ( string s : DotaHelperLog )
 	{
@@ -750,7 +750,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	//PrintErrorLog( a3, "%s", "[Dota Chat Log]" );
 	BugReport << std::endl << "[DotaChatLog]" << std::endl;
 
-	
+
 	for ( string s : DotaChatLog )
 	{
 		if ( s == LogTempStr )

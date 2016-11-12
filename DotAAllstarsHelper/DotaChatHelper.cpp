@@ -78,7 +78,7 @@ __declspec( dllexport )  int __stdcall SendMessageToChat( const char * msg, BOOL
 				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
 				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
 
-				
+
 			}
 			else
 			{

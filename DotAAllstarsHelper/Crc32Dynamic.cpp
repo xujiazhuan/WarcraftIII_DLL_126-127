@@ -4,78 +4,78 @@
 
 
 //***********************************************
-CCrc32Dynamic::CCrc32Dynamic() : m_pdwCrc32Table(NULL)
+CCrc32Dynamic::CCrc32Dynamic( ) : m_pdwCrc32Table( NULL )
 {
 }
 
 //***********************************************
-CCrc32Dynamic::~CCrc32Dynamic()
+CCrc32Dynamic::~CCrc32Dynamic( )
 {
-	Free();
+	Free( );
 }
 
 //***********************************************
-void CCrc32Dynamic::Init(void)
+void CCrc32Dynamic::Init( void )
 {
 	// This is the official polynomial used by CRC32 in PKZip.
 	// Often times the polynomial shown reversed as 0x04C11DB7.
 	DWORD dwPolynomial = 0xEDB88320;
 	DWORD i, j;
 
-	Free();
-	m_pdwCrc32Table = new DWORD[256];
+	Free( );
+	m_pdwCrc32Table = new DWORD[ 256 ];
 
 	DWORD dwCrc;
-	for(i = 0; i < 256; i++)
+	for ( i = 0; i < 256; i++ )
 	{
 		dwCrc = i;
-		for(j = 8; j > 0; j--)
+		for ( j = 8; j > 0; j-- )
 		{
-			if(dwCrc & 1)
-				dwCrc = (dwCrc >> 1) ^ dwPolynomial;
+			if ( dwCrc & 1 )
+				dwCrc = ( dwCrc >> 1 ) ^ dwPolynomial;
 			else
 				dwCrc >>= 1;
 		}
-		m_pdwCrc32Table[i] = dwCrc;
+		m_pdwCrc32Table[ i ] = dwCrc;
 	}
 }
 
 //***********************************************
-void CCrc32Dynamic::Free(void)
+void CCrc32Dynamic::Free( void )
 {
 	delete m_pdwCrc32Table;
 	m_pdwCrc32Table = NULL;
 }
 
 //***********************************************
-inline void CCrc32Dynamic::CalcCrc32(const BYTE byte, DWORD &dwCrc32) const
+inline void CCrc32Dynamic::CalcCrc32( const BYTE byte, DWORD &dwCrc32 ) const
 {
-	dwCrc32 = ((dwCrc32) >> 8) ^ m_pdwCrc32Table[(byte) ^ ((dwCrc32) & 0x000000FF)];
+	dwCrc32 = ( ( dwCrc32 ) >> 8 ) ^ m_pdwCrc32Table[ ( byte ) ^ ( ( dwCrc32 ) & 0x000000FF ) ];
 }
 
 //***********************************************
-BOOL CCrc32Dynamic::GetFileSizeQW(const HANDLE hFile, QWORD &qwSize)
+BOOL CCrc32Dynamic::GetFileSizeQW( const HANDLE hFile, QWORD &qwSize )
 {
-	_ASSERTE(hFile != INVALID_HANDLE_VALUE);
+	_ASSERTE( hFile != INVALID_HANDLE_VALUE );
 
 	BOOL bSuccess = TRUE;
 
 	try
 	{
 		DWORD dwLo = 0, dwHi = 0;
-		dwLo = GetFileSize(hFile, &dwHi);
+		dwLo = GetFileSize( hFile, &dwHi );
 
-		if(dwLo == INVALID_FILE_SIZE && GetLastError() != NO_ERROR)
+		if ( dwLo == INVALID_FILE_SIZE && GetLastError( ) != NO_ERROR )
 		{
 			bSuccess = FALSE;
 			qwSize = 0;
 		}
 		else
 		{
-			qwSize = MAKEQWORD(dwHi, dwLo);
+			qwSize = MAKEQWORD( dwHi, dwLo );
 		}
 	}
-	catch(...)
+	catch ( ... )
 	{
 		bSuccess = FALSE;
 	}
@@ -84,9 +84,9 @@ BOOL CCrc32Dynamic::GetFileSizeQW(const HANDLE hFile, QWORD &qwSize)
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::StringCrc32(LPCTSTR szString, DWORD &dwCrc32) const
+DWORD CCrc32Dynamic::StringCrc32( LPCTSTR szString, DWORD &dwCrc32 ) const
 {
-	_ASSERTE(szString);
+	_ASSERTE( szString );
 
 	DWORD dwErrorCode = NO_ERROR;
 
@@ -95,16 +95,16 @@ DWORD CCrc32Dynamic::StringCrc32(LPCTSTR szString, DWORD &dwCrc32) const
 	try
 	{
 		// Is the table initialized?
-		if(m_pdwCrc32Table == NULL)
+		if ( m_pdwCrc32Table == NULL )
 			throw 0;
 
-		while(*szString != _T('\0'))
+		while ( *szString != _T( '\0' ) )
 		{
-			CalcCrc32((BYTE)*szString, dwCrc32);
+			CalcCrc32( ( BYTE ) *szString, dwCrc32 );
 			szString++;
 		}
 	}
-	catch(...)
+	catch ( ... )
 	{
 		// An unknown exception happened, or the table isn't initialized
 		dwErrorCode = ERROR_CRC;
@@ -116,13 +116,13 @@ DWORD CCrc32Dynamic::StringCrc32(LPCTSTR szString, DWORD &dwCrc32) const
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Streams(LPCTSTR szFilename, DWORD &dwCrc32) const
+DWORD CCrc32Dynamic::FileCrc32Streams( LPCTSTR szFilename, DWORD &dwCrc32 ) const
 {
 #if UNICODE || _UNICODE
 	return ERROR_NOT_SUPPORTED;
 #else
-	_ASSERTE(szFilename);
-	_ASSERTE(lstrlen(szFilename));
+	_ASSERTE( szFilename );
+	_ASSERTE( lstrlen( szFilename ) );
 
 	DWORD dwErrorCode = NO_ERROR;
 	ifstream file;
@@ -132,35 +132,35 @@ DWORD CCrc32Dynamic::FileCrc32Streams(LPCTSTR szFilename, DWORD &dwCrc32) const
 	try
 	{
 		// Is the table initialized?
-		if(m_pdwCrc32Table == NULL)
+		if ( m_pdwCrc32Table == NULL )
 			throw 0;
 
 		// Open the file
-		file.open(szFilename, ios::in | ios::binary);
-		if(!file.is_open())
-			dwErrorCode = (DWORD)file.fail();
+		file.open( szFilename, ios::in | ios::binary );
+		if ( !file.is_open( ) )
+			dwErrorCode = ( DWORD ) file.fail( );
 		else
 		{
-			char buffer[MAX_BUFFER_SIZE];
+			char buffer[ MAX_BUFFER_SIZE ];
 			int nLoop, nCount;
-			nCount = (int)file.read(buffer, sizeof(buffer)).gcount();
-			while(nCount)
+			nCount = ( int ) file.read( buffer, sizeof( buffer ) ).gcount( );
+			while ( nCount )
 			{
-				for(nLoop = 0; nLoop < nCount; nLoop++)
-					CalcCrc32((BYTE)buffer[nLoop], dwCrc32);
+				for ( nLoop = 0; nLoop < nCount; nLoop++ )
+					CalcCrc32( ( BYTE ) buffer[ nLoop ], dwCrc32 );
 				nCount = ( int ) file.read( buffer, sizeof( buffer ) ).gcount( );
 			}
 
-			file.close();
+			file.close( );
 		}
 	}
-	catch(...)
+	catch ( ... )
 	{
 		// An unknown exception happened, or the table isn't initialized
 		dwErrorCode = ERROR_CRC;
 	}
 
-	if(file.is_open()) file.close();
+	if ( file.is_open( ) ) file.close( );
 
 	dwCrc32 = ~dwCrc32;
 
@@ -169,10 +169,10 @@ DWORD CCrc32Dynamic::FileCrc32Streams(LPCTSTR szFilename, DWORD &dwCrc32) const
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Win32(LPCTSTR szFilename, DWORD &dwCrc32) const
+DWORD CCrc32Dynamic::FileCrc32Win32( LPCTSTR szFilename, DWORD &dwCrc32 ) const
 {
-	_ASSERTE(szFilename);
-	_ASSERTE(lstrlen(szFilename));
+	_ASSERTE( szFilename );
+	_ASSERTE( lstrlen( szFilename ) );
 
 	DWORD dwErrorCode = NO_ERROR;
 	HANDLE hFile = NULL;
@@ -182,39 +182,39 @@ DWORD CCrc32Dynamic::FileCrc32Win32(LPCTSTR szFilename, DWORD &dwCrc32) const
 	try
 	{
 		// Is the table initialized?
-		if(m_pdwCrc32Table == NULL)
+		if ( m_pdwCrc32Table == NULL )
 			throw 0;
 
 		// Open the file
-		hFile = CreateFile(szFilename,
-			GENERIC_READ,
-			FILE_SHARE_READ,
-			NULL,
-			OPEN_EXISTING,
-			FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
-			NULL);
-		if(hFile == INVALID_HANDLE_VALUE)
-			dwErrorCode = GetLastError();
+		hFile = CreateFile( szFilename,
+							GENERIC_READ,
+							FILE_SHARE_READ,
+							NULL,
+							OPEN_EXISTING,
+							FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
+							NULL );
+		if ( hFile == INVALID_HANDLE_VALUE )
+			dwErrorCode = GetLastError( );
 		else
 		{
-			BYTE buffer[MAX_BUFFER_SIZE];
+			BYTE buffer[ MAX_BUFFER_SIZE ];
 			DWORD dwBytesRead, dwLoop;
-			BOOL bSuccess = ReadFile(hFile, buffer, sizeof(buffer), &dwBytesRead, NULL);
-			while(bSuccess && dwBytesRead)
+			BOOL bSuccess = ReadFile( hFile, buffer, sizeof( buffer ), &dwBytesRead, NULL );
+			while ( bSuccess && dwBytesRead )
 			{
-				for(dwLoop = 0; dwLoop < dwBytesRead; dwLoop++)
-					CalcCrc32(buffer[dwLoop], dwCrc32);
-				bSuccess = ReadFile(hFile, buffer, sizeof(buffer), &dwBytesRead, NULL);
+				for ( dwLoop = 0; dwLoop < dwBytesRead; dwLoop++ )
+					CalcCrc32( buffer[ dwLoop ], dwCrc32 );
+				bSuccess = ReadFile( hFile, buffer, sizeof( buffer ), &dwBytesRead, NULL );
 			}
 		}
 	}
-	catch(...)
+	catch ( ... )
 	{
 		// An unknown exception happened, or the table isn't initialized
 		dwErrorCode = ERROR_CRC;
 	}
 
-	if(hFile != NULL) CloseHandle(hFile);
+	if ( hFile != NULL ) CloseHandle( hFile );
 
 	dwCrc32 = ~dwCrc32;
 
@@ -222,10 +222,10 @@ DWORD CCrc32Dynamic::FileCrc32Win32(LPCTSTR szFilename, DWORD &dwCrc32) const
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Filemap(LPCTSTR szFilename, DWORD &dwCrc32) const
+DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) const
 {
-	_ASSERTE(szFilename);
-	_ASSERTE(lstrlen(szFilename));
+	_ASSERTE( szFilename );
+	_ASSERTE( lstrlen( szFilename ) );
 
 	DWORD dwErrorCode = NO_ERROR;
 	HANDLE hFile = NULL, hFilemap = NULL;
@@ -235,19 +235,19 @@ DWORD CCrc32Dynamic::FileCrc32Filemap(LPCTSTR szFilename, DWORD &dwCrc32) const
 	try
 	{
 		// Is the table initialized?
-		if(m_pdwCrc32Table == NULL)
+		if ( m_pdwCrc32Table == NULL )
 			throw 0;
 
 		// Open the file
-		hFile = CreateFile(szFilename,
-			GENERIC_READ,
-			FILE_SHARE_READ,
-			NULL,
-			OPEN_EXISTING,
-			FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
-			NULL);
-		if(hFile == INVALID_HANDLE_VALUE)
-			dwErrorCode = GetLastError();
+		hFile = CreateFile( szFilename,
+							GENERIC_READ,
+							FILE_SHARE_READ,
+							NULL,
+							OPEN_EXISTING,
+							FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
+							NULL );
+		if ( hFile == INVALID_HANDLE_VALUE )
+			dwErrorCode = GetLastError( );
 		else
 		{
 			QWORD qwFileSize = 0, qwFileOffset = 0;
@@ -255,39 +255,39 @@ DWORD CCrc32Dynamic::FileCrc32Filemap(LPCTSTR szFilename, DWORD &dwCrc32) const
 			DWORD dwBaseAddress;
 
 			// Get the file size
-			if(!GetFileSizeQW(hFile, qwFileSize))
+			if ( !GetFileSizeQW( hFile, qwFileSize ) )
 				dwErrorCode = ERROR_BAD_LENGTH;
-			else if(qwFileSize != 0)	// We cannot CRC zero byte files
+			else if ( qwFileSize != 0 )	// We cannot CRC zero byte files
 			{
 				// Create the file mapping
-				hFilemap = CreateFileMapping(hFile,
-					NULL,
-					PAGE_READONLY,
-					0,
-					0,
-					NULL);
-				if(hFilemap == NULL)
-					dwErrorCode = GetLastError();
+				hFilemap = CreateFileMapping( hFile,
+											  NULL,
+											  PAGE_READONLY,
+											  0,
+											  0,
+											  NULL );
+				if ( hFilemap == NULL )
+					dwErrorCode = GetLastError( );
 				else
 				{
 					LPBYTE pByte;
 
 					// Loop while we map a section of the file and CRC it
-					while(qwFileSize > 0)
+					while ( qwFileSize > 0 )
 					{
-						if(qwFileSize < MAX_VIEW_SIZE)
-							dwViewSize = LODWORD(qwFileSize);
+						if ( qwFileSize < MAX_VIEW_SIZE )
+							dwViewSize = LODWORD( qwFileSize );
 						else
 							dwViewSize = MAX_VIEW_SIZE;
 
-						dwBaseAddress = (DWORD)MapViewOfFile(hFilemap,
-							FILE_MAP_READ,
-							HIDWORD(qwFileOffset),
-							LODWORD(qwFileOffset),
-							dwViewSize);
+						dwBaseAddress = ( DWORD ) MapViewOfFile( hFilemap,
+																 FILE_MAP_READ,
+																 HIDWORD( qwFileOffset ),
+																 LODWORD( qwFileOffset ),
+																 dwViewSize );
 
 						dwByteCount = dwViewSize;
-						pByte = (LPBYTE)dwBaseAddress;
+						pByte = ( LPBYTE ) dwBaseAddress;
 
 						if ( dwBaseAddress > 0 )
 						{
@@ -306,14 +306,14 @@ DWORD CCrc32Dynamic::FileCrc32Filemap(LPCTSTR szFilename, DWORD &dwCrc32) const
 			}
 		}
 	}
-	catch(...)
+	catch ( ... )
 	{
 		// An unknown exception happened, or the table isn't initialized
 		dwErrorCode = ERROR_CRC;
 	}
 
-	if(hFile != NULL) CloseHandle(hFile);
-	if(hFilemap != NULL) CloseHandle(hFilemap);
+	if ( hFile != NULL ) CloseHandle( hFile );
+	if ( hFilemap != NULL ) CloseHandle( hFilemap );
 
 	dwCrc32 = ~dwCrc32;
 
@@ -321,10 +321,10 @@ DWORD CCrc32Dynamic::FileCrc32Filemap(LPCTSTR szFilename, DWORD &dwCrc32) const
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Assembly(LPCTSTR szFilename, DWORD &dwCrc32) const
+DWORD CCrc32Dynamic::FileCrc32Assembly( LPCTSTR szFilename, DWORD &dwCrc32 ) const
 {
-	_ASSERTE(szFilename);
-	_ASSERTE(lstrlen(szFilename));
+	_ASSERTE( szFilename );
+	_ASSERTE( lstrlen( szFilename ) );
 
 	DWORD dwErrorCode = NO_ERROR;
 	HANDLE hFile = NULL;
@@ -334,25 +334,25 @@ DWORD CCrc32Dynamic::FileCrc32Assembly(LPCTSTR szFilename, DWORD &dwCrc32) const
 	try
 	{
 		// Is the table initialized?
-		if(m_pdwCrc32Table == NULL)
+		if ( m_pdwCrc32Table == NULL )
 			throw 0;
 
 		// Open the file
-		hFile = CreateFile(szFilename,
-			GENERIC_READ,
-			FILE_SHARE_READ,
-			NULL,
-			OPEN_EXISTING,
-			FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
-			NULL);
-		if(hFile == INVALID_HANDLE_VALUE)
-			dwErrorCode = GetLastError();
+		hFile = CreateFile( szFilename,
+							GENERIC_READ,
+							FILE_SHARE_READ,
+							NULL,
+							OPEN_EXISTING,
+							FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
+							NULL );
+		if ( hFile == INVALID_HANDLE_VALUE )
+			dwErrorCode = GetLastError( );
 		else
 		{
-			BYTE buffer[MAX_BUFFER_SIZE];
+			BYTE buffer[ MAX_BUFFER_SIZE ];
 			DWORD dwBytesRead;
-			BOOL bSuccess = ReadFile(hFile, buffer, sizeof(buffer), &dwBytesRead, NULL);
-			while(bSuccess && dwBytesRead)
+			BOOL bSuccess = ReadFile( hFile, buffer, sizeof( buffer ), &dwBytesRead, NULL );
+			while ( bSuccess && dwBytesRead )
 			{
 				// Register use:
 				//		eax - CRC32 value
@@ -368,49 +368,49 @@ DWORD CCrc32Dynamic::FileCrc32Assembly(LPCTSTR szFilename, DWORD &dwCrc32) const
 					push edi
 
 					mov eax, dwCrc32			// Load the pointer to dwCrc32
-					mov ecx, [eax]				// Dereference the pointer to load dwCrc32
+					mov ecx, [ eax ]				// Dereference the pointer to load dwCrc32
 
 					mov ebx, this				// Load the CRC32 table
-					mov edi, [ebx]CCrc32Dynamic.m_pdwCrc32Table
+					mov edi, [ ebx ]CCrc32Dynamic.m_pdwCrc32Table
 
 					lea esi, buffer				// Load buffer
 					mov ebx, dwBytesRead		// Load dwBytesRead
-					lea edx, [esi + ebx]		// Calculate the end of the buffer
+					lea edx, [ esi + ebx ]		// Calculate the end of the buffer
 
-				crc32loop:
+					crc32loop:
 					xor eax, eax				// Clear the eax register
-					mov bl, byte ptr [esi]		// Load the current source byte
-					
-					mov al, cl					// Copy crc value into eax
-					inc esi						// Advance the source pointer
+						mov bl, byte ptr[ esi ]		// Load the current source byte
 
-					xor al, bl					// Create the index into the CRC32 table
-					shr ecx, 8
+						mov al, cl					// Copy crc value into eax
+						inc esi						// Advance the source pointer
 
-					mov ebx, [edi + eax * 4]	// Get the value out of the table
-					xor ecx, ebx				// xor with the current byte
+						xor al, bl					// Create the index into the CRC32 table
+						shr ecx, 8
 
-					cmp edx, esi				// Have we reached the end of the buffer?
-					jne crc32loop
+						mov ebx, [ edi + eax * 4 ]	// Get the value out of the table
+						xor ecx, ebx				// xor with the current byte
 
-					// Restore the edi and esi registers
-					pop edi
-					pop esi
+						cmp edx, esi				// Have we reached the end of the buffer?
+						jne crc32loop
 
-					mov eax, dwCrc32			// Load the pointer to dwCrc32
-					mov [eax], ecx				// Write the result
+						// Restore the edi and esi registers
+						pop edi
+						pop esi
+
+						mov eax, dwCrc32			// Load the pointer to dwCrc32
+						mov[ eax ], ecx				// Write the result
 				}
-				bSuccess = ReadFile(hFile, buffer, sizeof(buffer), &dwBytesRead, NULL);
+				bSuccess = ReadFile( hFile, buffer, sizeof( buffer ), &dwBytesRead, NULL );
 			}
 		}
 	}
-	catch(...)
+	catch ( ... )
 	{
 		// An unknown exception happened, or the table isn't initialized
 		dwErrorCode = ERROR_CRC;
 	}
 
-	if(hFile != NULL) CloseHandle(hFile);
+	if ( hFile != NULL ) CloseHandle( hFile );
 
 	dwCrc32 = ~dwCrc32;
 
