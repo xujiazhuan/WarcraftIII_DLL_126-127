@@ -1,0 +1,5 @@
+LIBRARY
+EXPORTS
+InitDotaHelper @100
+AddNewOffset @101
+UpdateGameTimer @102

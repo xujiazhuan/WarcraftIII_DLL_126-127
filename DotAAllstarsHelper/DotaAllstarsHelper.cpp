@@ -291,6 +291,8 @@ void UninitializeHook( )
 	}
 
 
+
+
 #pragma endregion
 
 
@@ -325,6 +327,7 @@ BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 
 	return TRUE;
 }
+
 
 
 
@@ -1643,7 +1646,6 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 
-
 		MapNameOffset1 = GameDll + 0xAAE788;
 		MapNameOffset2 = 8;
 
@@ -1988,5 +1990,5 @@ BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
 
 
 #pragma region Developer
-//"Abso!(d3scene.ru)"
+//Karaulov 
 #pragma endregion
