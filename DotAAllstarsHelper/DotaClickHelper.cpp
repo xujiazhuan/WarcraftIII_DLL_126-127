@@ -322,7 +322,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc(HWND hWnd, UINT Msg, WPARAM _wParam, LP
 	WPARAM wParam = _wParam;
 	if (SkipAllMessages)
 	{
-		return WarcraftRealWNDProc_ptr(hWnd, Msg, wParam, lParam);
+		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
 
 
@@ -472,8 +472,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc(HWND hWnd, UINT Msg, WPARAM _wParam, LP
 
 					AddNewLineToDotaHelperLog(__func__);
 
-
-
+				
 					if (EnableSelectHelper)
 					{
 						int selectedunitcout = GetSelectedUnitCountBigger(GetLocalPlayerId());
@@ -488,11 +487,12 @@ LRESULT __fastcall BeforeWarcraftWNDProc(HWND hWnd, UINT Msg, WPARAM _wParam, LP
 							tmpDelayPress.NeedPressMsg = 0;
 							tmpDelayPress.TimeOut = 40;
 							DelayedPressList.push_back(tmpDelayPress);
+							return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 						}
 					}
 					AddNewLineToDotaHelperLog(__func__ + to_string(2));
 
-					if (ClickHelper)
+					if (ClickHelper )
 					{
 
 						if (IsKeyPressed(VK_LCONTROL))
@@ -535,7 +535,8 @@ LRESULT __fastcall BeforeWarcraftWNDProc(HWND hWnd, UINT Msg, WPARAM _wParam, LP
 				{
 					AddNewLineToDotaHelperLog(__func__ + to_string(3));
 
-					if (GetSelectedUnitCountBigger(GetLocalPlayerId()) == 0)
+					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+					if ( selectedunitcout == 0 || ( selectedunitcout == 1 && IsEnemy( GetSelectedUnit( GetLocalPlayerId( ) ) ) ) )
 					{
 						WarcraftRealWNDProc_ptr(hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN);
 						WarcraftRealWNDProc_ptr(hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP);

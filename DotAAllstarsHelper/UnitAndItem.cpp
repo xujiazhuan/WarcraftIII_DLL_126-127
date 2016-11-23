@@ -82,11 +82,16 @@ int __stdcall IsEnemy( int UnitAddr )
 		int unitownerslot = GetUnitOwnerSlot( ( int )UnitAddr );
 		if ( unitownerslot <= 15 && unitownerslot >= 0 && GetLocalPlayerId( ) != unitownerslot )
 		{
-			UINT Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
-			UINT Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
+			UINT Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
+			UINT Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
 			if ( Player1 == Player2 )
 			{
 				AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer" );
+				return -1;
+			}
+			if ( !Player1 || !Player2 )
+			{
+				AddNewLineToDotaHelperLog( "IsEnemy:BadPlayer" );
 				return -1;
 			}
 
