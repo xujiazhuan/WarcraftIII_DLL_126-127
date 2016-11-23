@@ -208,6 +208,7 @@ BOOL __stdcall IsNotBadItem( int itemaddr );
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 extern pGetHeroInt GetHeroInt;
 int GetSelectedUnitCountBigger( int slot );
+int GetSelectedUnit(int slot);
 #pragma endregion
 
 #pragma region DotaMPBarHelper.cpp
