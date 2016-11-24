@@ -337,10 +337,8 @@ void __declspec( naked ) f001527F0( )
 		je L093;
 		push edi;
 		call IsEnemy;
-		cmp eax, 1;
-		je L093;
-		cmp eax, -1;
-		je L093;
+		cmp eax, 0;
+		jne L093;
 		push edi;
 		call SetMPBarConfigForPlayer;
 		mov     eax, dword ptr[ edi + 0x50 ];

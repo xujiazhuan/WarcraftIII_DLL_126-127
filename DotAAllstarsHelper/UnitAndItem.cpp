@@ -74,25 +74,33 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 
 
 // Проверяет враг юнит локальному игроку или нет
-int __stdcall IsEnemy( int UnitAddr )
+BOOL __stdcall IsEnemy( int UnitAddr )
 {
 	AddNewLineToDotaHelperLog( "IsEnemy:Start" );
 	if ( UnitAddr > 0 && IsNotBadUnit( UnitAddr ) )
 	{
 		int unitownerslot = GetUnitOwnerSlot( ( int )UnitAddr );
-		if ( unitownerslot <= 15 && unitownerslot >= 0 && GetLocalPlayerId( ) != unitownerslot )
+
+		if ( GetLocalPlayerId( ) == unitownerslot )
+		{
+			AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer1" );
+			return FALSE;
+		}
+
+		if ( unitownerslot <= 15 && unitownerslot >= 0  )
 		{
 			UINT Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
 			UINT Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+
 			if ( Player1 == Player2 )
 			{
-				AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer" );
-				return -1;
+				AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer2" );
+				return FALSE;
 			}
-			if ( !Player1 || !Player2 )
+			if ( Player1 == 0 || Player2 == 0 )
 			{
 				AddNewLineToDotaHelperLog( "IsEnemy:BadPlayer" );
-				return -1;
+				return FALSE;
 			}
 
 			BOOL retval = ( ( ( IsPlayerEnemy )( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
@@ -101,7 +109,7 @@ int __stdcall IsEnemy( int UnitAddr )
 		}
 	}
 	AddNewLineToDotaHelperLog( "IsEnemy:BadUnit" );
-	return -1;
+	return FALSE;
 }
 
 
