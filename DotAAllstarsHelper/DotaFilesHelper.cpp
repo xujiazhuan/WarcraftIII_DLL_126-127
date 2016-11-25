@@ -1271,8 +1271,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							{
 								MaxObjectId = tmpNode.ObjectId;
 							}
-						//	parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
-							*( DWORD* )&ModelBytes[ offset + 88 ] = 0xFFFFFFFF;
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+							//*( DWORD* )&ModelBytes[ offset + 88 ] = 0xFFFFFFFF;
 							/*offset += tmpNode.InclusiveSize;
 
 
