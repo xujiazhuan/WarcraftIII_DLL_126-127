@@ -485,6 +485,8 @@ LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
+	MessageBox(0, "Fatal error\nDota helper handler v1.0", "Fatal error detected!", 0);
+	
 	ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
 
 	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
