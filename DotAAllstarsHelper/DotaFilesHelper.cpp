@@ -12,7 +12,7 @@ extern "C" { FILE __iob_func[ 3 ] = { *stdin,*stdout,*stderr }; }
 u_int64_t GetBufHash( const char * data, size_t data_len )
 {
 	u_int64_t hash;
-	hash = fnv_64_buf( ( void * ) data, ( size_t ) data_len, FNV1_64_INIT );
+	hash = fnv_64_buf( ( void * )data, ( size_t )data_len, FNV1_64_INIT );
 	hash = ( hash >> 56 ) ^ ( hash & MASK_56 );
 	return hash;
 }
@@ -61,7 +61,7 @@ BOOL IsMemInCache( int addr )
 {
 	for ( ICONMDLCACHE ih : ICONMDLCACHELIST )
 	{
-		if ( ( int ) ih.buf == addr )
+		if ( ( int )ih.buf == addr )
 			return TRUE;
 	}
 	return FALSE;
@@ -87,7 +87,7 @@ void FreeAllIHelpers( )
 void WINAPI SMemZero( LPVOID lpDestination, DWORD dwLength )
 {
 	DWORD dwPrevLen = dwLength;
-	LPDWORD lpdwDestination = ( LPDWORD ) lpDestination;
+	LPDWORD lpdwDestination = ( LPDWORD )lpDestination;
 	LPBYTE lpbyDestination;
 
 	dwLength >>= 2;
@@ -95,7 +95,7 @@ void WINAPI SMemZero( LPVOID lpDestination, DWORD dwLength )
 	while ( dwLength-- )
 		*lpdwDestination++ = 0;
 
-	lpbyDestination = ( LPBYTE ) lpdwDestination;
+	lpbyDestination = ( LPBYTE )lpdwDestination;
 
 	dwLength = dwPrevLen;
 	dwLength &= 3;
@@ -119,7 +119,7 @@ void WINAPI SMemFree( LPVOID lpvMemory )
 DWORD WINAPI SMemCopy( LPVOID lpDestination, LPCVOID lpSource, DWORD dwLength )
 {
 	DWORD dwPrevLen = dwLength;
-	LPDWORD lpdwDestination = ( LPDWORD ) lpDestination, lpdwSource = ( LPDWORD ) lpSource;
+	LPDWORD lpdwDestination = ( LPDWORD )lpDestination, lpdwSource = ( LPDWORD )lpSource;
 	LPBYTE lpbyDestination, lpbySource;
 
 	dwLength >>= 2;
@@ -127,8 +127,8 @@ DWORD WINAPI SMemCopy( LPVOID lpDestination, LPCVOID lpSource, DWORD dwLength )
 	while ( dwLength-- )
 		*lpdwDestination++ = *lpdwSource++;
 
-	lpbyDestination = ( LPBYTE ) lpdwDestination;
-	lpbySource = ( LPBYTE ) lpdwSource;
+	lpbyDestination = ( LPBYTE )lpdwDestination;
+	lpbySource = ( LPBYTE )lpdwSource;
 
 	dwLength = dwPrevLen;
 	dwLength &= 3;
@@ -175,28 +175,28 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
 	if ( FoundOldHelper )
 	{
-		*OutDataPointer = ( int ) tmpih.buf;
+		*OutDataPointer = ( int )tmpih.buf;
 		*OutSize = tmpih.size;
 		return;
 	}
 
-	char * originfiledata = ( char * ) ( int ) *OutDataPointer;
+	char * originfiledata = ( char * )( int )*OutDataPointer;
 	size_t sz = *OutSize;
 
 
 	int w = 0, h = 0, bpp = 0, mipmaps = 0, alphaflag = 8, compress = 1, alphaenconding = 5;
 	unsigned long rawImageSize = 0;
 	Buffer InBuffer;
-	InBuffer.buf = ( char* ) originfiledata;
+	InBuffer.buf = ( char* )originfiledata;
 	InBuffer.length = sz;
 	Buffer OutBuffer;
 	if ( IsTga )
-		rawImageSize = ( unsigned long ) TGA2Raw( InBuffer, OutBuffer, w, h, bpp, filename.c_str( ) );
+		rawImageSize = ( unsigned long )TGA2Raw( InBuffer, OutBuffer, w, h, bpp, filename.c_str( ) );
 	else
 		rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 	if ( rawImageSize > 0 )
 	{
-		BGRAPix * OutImage = ( BGRAPix* ) OutBuffer.buf;
+		BGRAPix * OutImage = ( BGRAPix* )OutBuffer.buf;
 		for ( unsigned long i = 0; i < OutBuffer.length / 4; i++ )
 		{
 			if ( /*OutImage[ i ].A == 0xFF && */( OutImage[ i ].G > 40 || OutImage[ i ].B > 40 || OutImage[ i ].R > 40 ) )
@@ -250,8 +250,8 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
-				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
-			*OutDataPointer = ( int ) tmpih.buf;
+				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
+			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 		}
 	}
@@ -274,26 +274,26 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
 	if ( FoundOldHelper )
 	{
-		*OutDataPointer = ( int ) tmpih.buf;
+		*OutDataPointer = ( int )tmpih.buf;
 		*OutSize = tmpih.size;
 		return;
 	}
 
-	char * originfiledata = ( char * ) ( int ) *OutDataPointer;
+	char * originfiledata = ( char * )( int )*OutDataPointer;
 	size_t sz = *OutSize;
 
 
 	int w = 0, h = 0, bpp = 0, mipmaps = 0, alphaflag = 0, compress = 0, alphaenconding = 0;
 	unsigned long rawImageSize = 0;
 	Buffer InBuffer;
-	InBuffer.buf = ( char* ) originfiledata;
+	InBuffer.buf = ( char* )originfiledata;
 	InBuffer.length = sz;
 	Buffer OutBuffer;
 
 	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 	if ( rawImageSize > 0 )
 	{
-		BGRAPix * OutImage = ( BGRAPix* ) OutBuffer.buf;
+		BGRAPix * OutImage = ( BGRAPix* )OutBuffer.buf;
 		BGRAPix BlackPix;
 
 		BlackPix.A = 0xFF;
@@ -369,8 +369,8 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
-				Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
-			*OutDataPointer = ( int ) tmpih.buf;
+				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
+			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 		}
 	}
@@ -457,7 +457,7 @@ vector<ModelPatchStruct> ModelPatchList;
 vector<ModelRemoveTagStruct> ModelRemoveTagList;
 vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
 vector<ModelSequenceValueStruct> ModelSequenceValueList;
-
+vector<ModelScaleStruct> ModelScaleList;
 
 __declspec( dllexport ) int __stdcall FixModelCollisionSphere( const char * mdlpath, float X, float Y, float Z, float Radius )
 {
@@ -527,6 +527,17 @@ __declspec( dllexport ) int __stdcall SetSequenceValue( const char * mdlpath, co
 	ModelSequenceValueList.push_back( tmpModelFix );
 	return 0;
 }
+
+
+__declspec( dllexport ) int __stdcall SetModelScale( const char * mdlpath, float Scale )
+{
+	ModelScaleStruct tmpModelFix;
+	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
+	tmpModelFix.Scale = Scale;
+	ModelScaleList.push_back( tmpModelFix );
+	return 0;
+}
+
 
 
 struct Mdx_Texture        //NrOfTextures = ChunkSize / 268
@@ -643,7 +654,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
-			TimesForReplace.push_back( ( int * ) &ModelBytes[ offset ] );
+			TimesForReplace.push_back( ( int * )&ModelBytes[ offset ] );
 			offset += ( tmpTrack.InterpolationType > 1 ? 40 : 16 );
 		}
 	}
@@ -655,7 +666,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
-			TimesForReplace.push_back( ( int * ) &ModelBytes[ offset ] );
+			TimesForReplace.push_back( ( int * )&ModelBytes[ offset ] );
 			offset += ( tmpTrack.InterpolationType > 1 ? 52 : 20 );
 		}
 	}
@@ -667,7 +678,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
-			TimesForReplace.push_back( ( int * ) &ModelBytes[ offset ] );
+			TimesForReplace.push_back( ( int * )&ModelBytes[ offset ] );
 			offset += ( tmpTrack.InterpolationType > 1 ? 40 : 16 );
 		}
 	}
@@ -680,7 +691,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
-			TimesForReplace.push_back( ( int * ) &ModelBytes[ offset ] );
+			TimesForReplace.push_back( ( int * )&ModelBytes[ offset ] );
 			offset += ( tmpTrack.InterpolationType > 1 ? 16 : 8 );
 		}
 	}
@@ -692,17 +703,37 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
-			TimesForReplace.push_back( ( int * ) &ModelBytes[ offset ] );
+			TimesForReplace.push_back( ( int * )&ModelBytes[ offset ] );
 			offset += ( tmpTrack.InterpolationType > 1 ? 16 : 8 );
 		}
 	}
 
 }
 
+
+BYTE HelperBytesPart1[ ] = {
+							0x42,0x4F,0x4E,0x45,0x88,0x00,0x00,0x00,0x80,0x00,
+							0x00,0x00,0x42,0x6F,0x6E,0x65,0x5F,0x52,0x6F,0x6F,
+							0x74,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00 };
+BYTE HelperBytesPart2[ ] = { 0xFF,0xFF,0xFF,0xFF,0x00,0x01,0x00,0x00,0x4B,
+							0x47,0x53,0x43,0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
+
+BYTE HelperBytesPart3[ ] = { 0xFF,0xFF,0xFF,0xFF,
+							 0xFF,0xFF,0xFF,0xFF };
+
+
 void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 	AddNewLineToDotaHelperLog( "ProcessModel" );
-	BYTE * ModelBytes = ( BYTE* ) *OutDataPointer;
+	BYTE * ModelBytes = ( BYTE* )*OutDataPointer;
 	size_t sz = *OutSize;
 
 
@@ -724,7 +755,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 						offset += 4;
 
-						size_t currenttagsize = *( size_t* ) &ModelBytes[ offset ];
+						size_t currenttagsize = *( size_t* )&ModelBytes[ offset ];
 						size_t SequencesCount = currenttagsize / sizeof( Mdx_Sequence );
 
 						size_t newoffset = offset + currenttagsize;
@@ -737,7 +768,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							if ( mdlfix.AnimationName == 0 || *mdlfix.AnimationName == '\0' || _stricmp( mdlfix.AnimationName, tmpSequence.Name ) == 0 )
 							{
 								size_t NeedPatchOffset = offset + 104 + ( mdlfix.Indx * 4 );
-								*( float* ) &ModelBytes[ NeedPatchOffset ] = mdlfix.Value;
+								*( float* )&ModelBytes[ NeedPatchOffset ] = mdlfix.Value;
 							}
 
 							offset += sizeof( Mdx_Sequence );
@@ -747,7 +778,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else
 					{
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
 					}
 
 					offset += 4;
@@ -766,7 +797,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			}
 
 
-			ModelSequenceValueList.erase( ModelSequenceValueList.begin( ) + ( int ) i );
+			ModelSequenceValueList.erase( ModelSequenceValueList.begin( ) + ( int )i );
 			i--;
 		}
 
@@ -802,7 +833,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 						offset += 4;
 
-						size_t currenttagsize = *( size_t* ) &ModelBytes[ offset ];
+						size_t currenttagsize = *( size_t* )&ModelBytes[ offset ];
 						size_t SequencesCount = currenttagsize / sizeof( Mdx_Sequence );
 
 						size_t newoffset = offset + currenttagsize;
@@ -820,8 +851,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 
 							Mdx_SequenceTime CurrentSequenceTime;
-							CurrentSequenceTime.IntervalStart = ( int* ) &ModelBytes[ offset + 80 ];
-							CurrentSequenceTime.IntervalEnd = ( int* ) &ModelBytes[ offset + 84 ];
+							CurrentSequenceTime.IntervalStart = ( int* )&ModelBytes[ offset + 80 ];
+							CurrentSequenceTime.IntervalEnd = ( int* )&ModelBytes[ offset + 84 ];
 							Sequences.push_back( CurrentSequenceTime );
 
 							offset += sizeof( Mdx_Sequence );
@@ -832,7 +863,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else if ( memcmp( &ModelBytes[ offset ], "BONE", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
@@ -846,7 +877,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else if ( memcmp( &ModelBytes[ offset ], "HELP", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
@@ -860,64 +891,64 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else if ( memcmp( &ModelBytes[ offset ], "LITE", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							size_t size_of_this_struct = *( size_t* ) &ModelBytes[ offset ];
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
-							offset += size_of_this_struct;
+							offset += size_of_this_struct - 4;
 						}
 						offset = newoffset;
 					}
 					else if ( memcmp( &ModelBytes[ offset ], "ATCH", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							size_t size_of_this_struct = *( size_t* ) &ModelBytes[ offset ];
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
-							offset += size_of_this_struct;
+							offset += size_of_this_struct - 4;
 						}
 						offset = newoffset;
 					}
 					else if ( memcmp( &ModelBytes[ offset ], "PREM", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							size_t size_of_this_struct = *( size_t* ) &ModelBytes[ offset ];
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
-							offset += size_of_this_struct;
+							offset += size_of_this_struct - 4;
 						}
 						offset = newoffset;
 					}
 					else if ( memcmp( &ModelBytes[ offset ], "PRE2", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							size_t size_of_this_struct = *( size_t* ) &ModelBytes[ offset ];
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
-							offset += size_of_this_struct;
+							offset += size_of_this_struct - 4;
 						}
 						offset = newoffset;
 					}
@@ -925,7 +956,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					{
 						Mdx_GeosetAnimation tmpGeosetAnimation;
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						while ( newoffset > offset )
 						{
@@ -939,23 +970,23 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else if ( memcmp( &ModelBytes[ offset ], "RIBB", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							size_t size_of_this_struct = *( size_t* ) &ModelBytes[ offset ];
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
-							offset += size_of_this_struct;
+							offset += size_of_this_struct - 4;
 						}
 						offset = newoffset;
 					}
 					else if ( memcmp( &ModelBytes[ offset ], "EVTS", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						Mdx_Tracks tmpTracks;
@@ -971,7 +1002,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 								offset += sizeof( Mdx_Tracks );
 								for ( int n = 0; n < tmpTracks.NrOfTracks; n++ )
 								{
-									TimesForReplace.push_back( ( int* ) &ModelBytes[ offset ] );
+									TimesForReplace.push_back( ( int* )&ModelBytes[ offset ] );
 									offset += 4;
 								}
 							}
@@ -982,7 +1013,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else if ( memcmp( &ModelBytes[ offset ], "CLID", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( size_t* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
@@ -990,7 +1021,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
-							UINT size_of_this_struct = *( UINT* ) &ModelBytes[ offset ];
+							UINT size_of_this_struct = *( UINT* )&ModelBytes[ offset ];
 							offset += 4;
 							size_of_this_struct = size_of_this_struct == 0 ? 24u : 16u;
 							offset += size_of_this_struct;
@@ -1000,7 +1031,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else
 					{
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
 					}
 
 					offset += 4;
@@ -1010,9 +1041,9 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			if ( ReplaceSequenceID != -1 )
 			{
 
-				int SeqEndTime = *Sequences[ ( unsigned int ) ReplaceSequenceID ].IntervalEnd;
-				int SeqStartTime = *Sequences[ ( unsigned int ) ReplaceSequenceID ].IntervalStart;
-				int NewEndTime = SeqStartTime + ( int ) ( ( SeqEndTime - SeqStartTime ) / mdlfix.SpeedUp );
+				int SeqEndTime = *Sequences[ ( unsigned int )ReplaceSequenceID ].IntervalEnd;
+				int SeqStartTime = *Sequences[ ( unsigned int )ReplaceSequenceID ].IntervalStart;
+				int NewEndTime = SeqStartTime + ( int )( ( SeqEndTime - SeqStartTime ) / mdlfix.SpeedUp );
 				int AddTime = NewEndTime - SeqEndTime;
 
 				for ( unsigned int n = 0; n < Sequences.size( ); n++ )
@@ -1024,7 +1055,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					}
 				}
 
-				*Sequences[ ( unsigned int ) ReplaceSequenceID ].IntervalEnd = NewEndTime;
+				*Sequences[ ( unsigned int )ReplaceSequenceID ].IntervalEnd = NewEndTime;
 
 				for ( int * dwTime : TimesForReplace )
 				{
@@ -1034,7 +1065,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					}
 					else if ( *dwTime <= SeqEndTime && *dwTime >= SeqStartTime )
 					{
-						*dwTime = ( int ) SeqStartTime + ( int ) ( ( float ) ( *dwTime - SeqStartTime ) / mdlfix.SpeedUp );
+						*dwTime = ( int )SeqStartTime + ( int )( ( float )( *dwTime - SeqStartTime ) / mdlfix.SpeedUp );
 					}
 				}
 
@@ -1054,7 +1085,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			TimesForReplace.clear( );
 			Sequences.clear( );
 
-			ModelSequenceReSpeedList.erase( ModelSequenceReSpeedList.begin( ) + ( int ) i );
+			ModelSequenceReSpeedList.erase( ModelSequenceReSpeedList.begin( ) + ( int )i );
 			i--;
 		}
 
@@ -1081,14 +1112,14 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						TagFound = TRUE;
 						TagStartOffset = offset;
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
 						TagSize = offset - TagStartOffset;
 
 					}
 					else
 					{
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
 					}
 
 					offset += 4;
@@ -1106,12 +1137,431 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			}
 
 
-			ModelRemoveTagList.erase( ModelRemoveTagList.begin( ) + ( int ) i );
+			ModelRemoveTagList.erase( ModelRemoveTagList.begin( ) + ( int )i );
 			i--;
 		}
 	}
 
 
+	for ( unsigned int i = 0; i < ModelScaleList.size( ); i++ )
+	{
+		ModelScaleStruct mdlfix = ModelScaleList[ i ];
+		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		{
+			if ( !FullPatchData.empty( ) )
+				FullPatchData.clear( );
+
+			char TagName[ 5 ];
+			memset( TagName, 0, 5 );
+			size_t offset = 0;
+
+			DWORD MaxObjectId = 0;
+		
+			std::vector<DWORD *> parents;
+
+			DWORD OffsetToInsertPivotPoint = 0;
+
+			BOOL FoundGLBS = FALSE;
+			char * strGLBS = "GLBS";
+
+			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
+			{
+				offset += 4;
+				while ( offset < sz )
+				{
+					memcpy( TagName, &ModelBytes[ offset ], 4 );
+					if ( memcmp( &ModelBytes[ offset ], strGLBS, 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						FoundGLBS = TRUE;
+
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "PIVT", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+
+						*( size_t* )&ModelBytes[ offset ] = 12 + *( size_t* )&ModelBytes[ offset ];
+
+						OffsetToInsertPivotPoint = newoffset + 4;
+
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "BONE", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+
+						while ( newoffset > offset )
+						{
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += tmpNode.InclusiveSize + 8;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "HELP", 4 ) == 0 )
+					{
+
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						while ( newoffset > offset )
+						{
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+
+							offset += tmpNode.InclusiveSize;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "LITE", 4 ) == 0 )
+					{
+
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						while ( newoffset > offset )
+						{
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
+							offset += 4;
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += size_of_this_struct - 4;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "ATCH", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						Mdx_Tracks tmpTracks;
+						while ( newoffset > offset )
+						{
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
+							offset += 4;
+
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+						//	parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+							*( DWORD* )&ModelBytes[ offset + 88 ] = 0xFFFFFFFF;
+							/*offset += tmpNode.InclusiveSize;
+
+
+							char * attchname = ( char * )&ModelBytes[ offset ];
+							offset += 260;
+
+
+							DWORD attchid = *( DWORD * )&ModelBytes[ offset ];
+
+							offset += 4;
+
+							if ( memcmp( &ModelBytes[ offset ], "KATV", 4 ) == 0 )
+							{
+							offset += 4;
+							Mdx_Track tmpTrack;
+							memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+							offset += sizeof( Mdx_Track );
+							for ( DWORD i = 0; i < tmpTrack.NrOfTracks; i++ )
+							{
+							offset += ( tmpTrack.InterpolationType > 1 ? 16 : 8 );
+							}
+							}*/
+
+							offset += size_of_this_struct - 4;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "PREM", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						while ( newoffset > offset )
+						{
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
+							offset += 4;
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += size_of_this_struct - 4;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "PRE2", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						while ( newoffset > offset )
+						{
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
+							offset += 4;
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += size_of_this_struct - 4;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "RIBB", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						while ( newoffset > offset )
+						{
+							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
+							offset += 4;
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += size_of_this_struct - 4;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "EVTS", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						Mdx_Tracks tmpTracks;
+						while ( newoffset > offset )
+						{
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += tmpNode.InclusiveSize;
+							if ( memcmp( &ModelBytes[ offset ], "KEVT", 4 ) == 0 )
+							{
+								offset += 4;
+								memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
+								offset += sizeof( Mdx_Tracks );
+								for ( DWORD i = 0; i < tmpTracks.NrOfTracks; i++ )
+								{
+									offset += 4;
+								}
+							}
+							else offset += 4;
+						}
+						offset = newoffset;
+					}
+					else if ( memcmp( &ModelBytes[ offset ], "CLID", 4 ) == 0 )
+					{
+						offset += 4;
+						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
+						offset += 4;
+						Mdx_Node tmpNode;
+						while ( newoffset > offset )
+						{
+							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+
+							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
+							{
+								MaxObjectId = tmpNode.ObjectId;
+							}
+							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
+
+							offset += tmpNode.InclusiveSize;
+							UINT size_of_this_struct = *( UINT* )&ModelBytes[ offset ];
+							offset += 4;
+							size_of_this_struct = size_of_this_struct == 0 ? 24 : 16;
+							offset += size_of_this_struct;
+						}
+						offset = newoffset;
+					}
+					else
+					{
+						offset += 4;
+						offset += *( int* )&ModelBytes[ offset ];
+					}
+
+					offset += 4;
+				}
+			}
+
+
+			MaxObjectId++;
+
+			for ( DWORD * parOffsets : parents )
+			{
+				DWORD curparent = *parOffsets;
+				if ( curparent == 0xFFFFFFFF )
+				{
+					*parOffsets = MaxObjectId;
+				}
+			}
+
+			FullPatchData.insert( FullPatchData.end( ), ( BYTE* )( ModelBytes ), ( BYTE* )( ModelBytes + sz ) );
+
+			if ( OffsetToInsertPivotPoint != 0 )
+			{
+				char ZeroPos[ 12 ];
+				memset( ZeroPos, 0, sizeof( ZeroPos ) );
+				FullPatchData.insert( FullPatchData.begin( ) + OffsetToInsertPivotPoint, ZeroPos, ZeroPos + 12 );
+			}
+
+			FullPatchData.insert( FullPatchData.end( ), ( BYTE* )( HelperBytesPart1 ), ( BYTE* )( HelperBytesPart1 + sizeof( HelperBytesPart1 ) ) );
+			BYTE * patchbytes = ( BYTE * )&MaxObjectId;
+
+			FullPatchData.push_back( patchbytes[ 0 ] );
+			FullPatchData.push_back( patchbytes[ 1 ] );
+			FullPatchData.push_back( patchbytes[ 2 ] );
+			FullPatchData.push_back( patchbytes[ 3 ] );
+
+			FullPatchData.insert( FullPatchData.end( ), ( BYTE* )( HelperBytesPart2 ), ( BYTE* )( HelperBytesPart2 + sizeof( HelperBytesPart2 ) ) );
+
+
+			float scaleall = mdlfix.Scale;
+
+			patchbytes = ( BYTE * )&scaleall;
+
+
+			FullPatchData.push_back( patchbytes[ 0 ] );
+			FullPatchData.push_back( patchbytes[ 1 ] );
+			FullPatchData.push_back( patchbytes[ 2 ] );
+			FullPatchData.push_back( patchbytes[ 3 ] );
+
+			FullPatchData.push_back( patchbytes[ 0 ] );
+			FullPatchData.push_back( patchbytes[ 1 ] );
+			FullPatchData.push_back( patchbytes[ 2 ] );
+			FullPatchData.push_back( patchbytes[ 3 ] );
+
+			FullPatchData.push_back( patchbytes[ 0 ] );
+			FullPatchData.push_back( patchbytes[ 1 ] );
+			FullPatchData.push_back( patchbytes[ 2 ] );
+			FullPatchData.push_back( patchbytes[ 3 ] );
+
+			FullPatchData.insert( FullPatchData.end( ), ( BYTE* )( HelperBytesPart3 ), ( BYTE* )( HelperBytesPart3 + sizeof( HelperBytesPart3 ) ) );
+
+			if ( !FoundGLBS )
+			{
+				FullPatchData.push_back( strGLBS[ 0 ] );
+				FullPatchData.push_back( strGLBS[ 1 ] );
+				FullPatchData.push_back( strGLBS[ 2 ] );
+				FullPatchData.push_back( strGLBS[ 3 ] );
+				DWORD szGLBS = 4;
+				patchbytes = ( BYTE * )&szGLBS;
+				FullPatchData.push_back( patchbytes[ 0 ] );
+				FullPatchData.push_back( patchbytes[ 1 ] );
+				FullPatchData.push_back( patchbytes[ 2 ] );
+				FullPatchData.push_back( patchbytes[ 3 ] );
+				szGLBS = 0;
+				patchbytes = ( BYTE * )&szGLBS;
+				FullPatchData.push_back( patchbytes[ 0 ] );
+				FullPatchData.push_back( patchbytes[ 1 ] );
+				FullPatchData.push_back( patchbytes[ 2 ] );
+				FullPatchData.push_back( patchbytes[ 3 ] );
+			}
+
+
+			if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+			{
+				FILE *f;
+				fopen_s( &f, ".\\Test1234.mdx", "wb" );
+				fwrite( &FullPatchData[ 0 ], FullPatchData.size( ), 1, f );
+				fclose( f );
+				MessageBox( 0, "Ok dump", "DUMP", 0 );
+			}
+	
+
+			ICONMDLCACHE * tmpih = new ICONMDLCACHE( );
+			BOOL FoundOldHelper = GetFromIconMdlCache( filename, tmpih );
+
+
+			if ( FoundOldHelper )
+			{
+				Buffer ResultBuffer;
+				ResultBuffer.buf = new char[ FullPatchData.size( ) ];
+				ResultBuffer.length = FullPatchData.size( );
+
+				memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+
+				delete[ ] tmpih->buf;
+				tmpih->buf = ResultBuffer.buf;
+				tmpih->size = ResultBuffer.length;
+				*OutDataPointer = ( int )tmpih->buf;
+				*OutSize = tmpih->size;
+			}
+			else
+			{
+				Buffer ResultBuffer;
+				ResultBuffer.buf = new char[  FullPatchData.size( ) ];
+				ResultBuffer.length = FullPatchData.size( );
+
+				memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+
+				tmpih->buf = ResultBuffer.buf;
+				tmpih->size = ResultBuffer.length;
+				tmpih->hashlen = filename.length( );
+				tmpih->hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
+
+				ICONMDLCACHELIST.push_back( *tmpih );
+
+
+				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
+
+				*OutDataPointer = ( int )tmpih->buf;
+				*OutSize = tmpih->size;
+
+				ModelBytes = ( BYTE * )tmpih->buf;
+				sz = tmpih->size;
+			}
+
+
+			ModelScaleList.erase( ModelScaleList.begin( ) + ( int )i );
+			i--;
+		}
+	}
 
 
 	if ( !FullPatchData.empty( ) )
@@ -1126,11 +1576,11 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			if ( GameGetFile_ptr( mdlfix.patchPath, &PatchFileData, &PatchFileSize, unknown ) )
 			{
-				FullPatchData.insert( FullPatchData.end( ), ( char* ) ( PatchFileData ), ( char* ) ( PatchFileData + PatchFileSize ) );
+				FullPatchData.insert( FullPatchData.end( ), ( char* )( PatchFileData ), ( char* )( PatchFileData + PatchFileSize ) );
 
 			}
 
-			ModelPatchList.erase( ModelPatchList.begin( ) + ( int ) i );
+			ModelPatchList.erase( ModelPatchList.begin( ) + ( int )i );
 			i--;
 		}
 	}
@@ -1157,7 +1607,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			delete[ ] tmpih->buf;
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
-			*OutDataPointer = ( int ) tmpih->buf;
+			*OutDataPointer = ( int )tmpih->buf;
 			*OutSize = tmpih->size;
 		}
 		else
@@ -1178,13 +1628,13 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			ICONMDLCACHELIST.push_back( *tmpih );
 
 
-			Storm_403_org( ( void* ) *OutDataPointer, "delete", -1, 0 );
+			Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 
 
-			*OutDataPointer = ( int ) tmpih->buf;
+			*OutDataPointer = ( int )tmpih->buf;
 			*OutSize = tmpih->size;
 
-			ModelBytes = ( BYTE * ) tmpih->buf;
+			ModelBytes = ( BYTE * )tmpih->buf;
 			sz = tmpih->size;
 
 		}
@@ -1216,33 +1666,33 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					if ( memcmp( &ModelBytes[ offset ], "CLID", 4 ) == 0 )
 					{
 						offset += 4;
-						size_t newoffset = offset + *( int* ) &ModelBytes[ offset ];
+						size_t newoffset = offset + *( int* )&ModelBytes[ offset ];
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
-						int shapetype = *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
+						int shapetype = *( int* )&ModelBytes[ offset ];
 
 						if ( shapetype == 2 )
 						{
 							offset += 4;
-							*( float* ) &ModelBytes[ offset ] = mdlfix.X;
+							*( float* )&ModelBytes[ offset ] = mdlfix.X;
 							offset += 4;
-							*( float* ) &ModelBytes[ offset ] = mdlfix.Y;
+							*( float* )&ModelBytes[ offset ] = mdlfix.Y;
 							offset += 4;
-							*( float* ) &ModelBytes[ offset ] = mdlfix.Z;
+							*( float* )&ModelBytes[ offset ] = mdlfix.Z;
 							offset += 4;
-							*( float* ) &ModelBytes[ offset ] = mdlfix.Radius;
+							*( float* )&ModelBytes[ offset ] = mdlfix.Radius;
 						}
 						offset = newoffset + 4;
 					}
 					else
 					{
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
 					}
 					offset += 4;
 				}
 			}
-			ModelCollisionFixList.erase( ModelCollisionFixList.begin( ) + ( int ) i );
+			ModelCollisionFixList.erase( ModelCollisionFixList.begin( ) + ( int )i );
 			i--;
 		}
 
@@ -1267,7 +1717,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 						//char TextNameBuf[ 0x100 ];
 						offset += 4;
-						int TagSize = *( int* ) &ModelBytes[ offset ];
+						int TagSize = *( int* )&ModelBytes[ offset ];
 						size_t newoffset = offset + TagSize;
 						int TexturesCount = TagSize / ( int ) sizeof( Mdx_Texture );
 						offset += 4;
@@ -1300,13 +1750,13 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					else
 					{
 						offset += 4;
-						offset += *( int* ) &ModelBytes[ offset ];
+						offset += *( int* )&ModelBytes[ offset ];
 					}
 					offset += 4;
 				}
 			}
 
-			ModelTextureFixList.erase( ModelTextureFixList.begin( ) + ( int ) i );
+			ModelTextureFixList.erase( ModelTextureFixList.begin( ) + ( int )i );
 			i--;
 		}
 
@@ -1458,7 +1908,7 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 						IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath, OutDataPointer, OutSize, unknown );
 						if ( IsFileExist )
 						{
-							char * DataPointer = ( char * ) *OutDataPointer;
+							char * DataPointer = ( char * )*OutDataPointer;
 							size_t DataSize = *OutSize;
 
 							Buffer ResultBuffer;
@@ -1475,7 +1925,7 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 
 							ICONMDLCACHELIST.push_back( *tmpih );
 
-							*OutDataPointer = ( int ) tmpih->buf;
+							*OutDataPointer = ( int )tmpih->buf;
 							*OutSize = tmpih->size;
 
 							ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
@@ -1485,7 +1935,7 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 					else
 					{
 
-						*OutDataPointer = ( int ) tmpih->buf;
+						*OutDataPointer = ( int )tmpih->buf;
 						*OutSize = tmpih->size;
 
 						ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );

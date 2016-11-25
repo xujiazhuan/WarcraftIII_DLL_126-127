@@ -385,6 +385,13 @@ struct ModelSequenceReSpeedStruct
 };
 
 
+struct ModelScaleStruct
+{
+	char FilePath[ 512 ];
+	float Scale;
+};
+
+
 
 struct ModelSequenceValueStruct
 {
@@ -401,6 +408,7 @@ extern vector<ModelPatchStruct> ModelPatchList;
 extern vector<ModelRemoveTagStruct> ModelRemoveTagList;
 extern vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
 extern vector<ModelSequenceValueStruct> ModelSequenceValueList;
+extern vector<ModelScaleStruct> ModelScaleList;
 
 struct FileRedirectStruct
 {
