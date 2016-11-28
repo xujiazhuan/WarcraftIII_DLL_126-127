@@ -182,9 +182,9 @@ int GetLocalPlayerId( );
 int GetPlayerByNumber( int number );
 
 // Проверить являются ли игроки врагами
-typedef int( __cdecl * IsPlayerEnemy )( UINT Player1, UINT Player2 );
+typedef int( __cdecl * IsPlayerEnemy )( unsigned int Player1, unsigned int Player2 );
 // Получить игрока по ID
-typedef UINT( __cdecl * GetPlayerByID )( int PlayerId );
+typedef unsigned int( __cdecl * GetPlayerByID )( int PlayerId );
 typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
 extern p_GetPlayerName GetPlayerName;
 __declspec( dllexport ) int __stdcall MutePlayer( const char * str );
@@ -323,12 +323,12 @@ extern BOOL ClickHelper;
 extern BOOL KeyboardHaveTriggerEvent;
 
 
-typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam );
+typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam );
 extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
 extern WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 
 extern HANDLE hPressKeyWithDelay;
-LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam );
+LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam );
 extern BOOL PressKeyWithDelayEND;
 DWORD WINAPI PressKeyWithDelay( LPVOID );
 

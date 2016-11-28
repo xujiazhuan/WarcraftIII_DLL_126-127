@@ -1298,7 +1298,7 @@ __declspec( dllexport ) int __stdcall FreeExecutableMemory( void * addr )
 void __stdcall RestoreAllOffsets( )
 {
 	AddNewLineToDotaHelperLog( __func__ );
-	for ( UINT i = 0; i < offsetslist.size( ); i++ )
+	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
 	{
 		offsetdata temp = offsetslist[ i ];
 		DWORD oldprotect, oldprotect2;
@@ -1887,7 +1887,7 @@ __declspec( dllexport ) int __stdcall SetGameDllAddr( HMODULE GameDLL )
 }
 
 #pragma region Main
-BOOL __stdcall DllMain( HINSTANCE Module, UINT reason, LPVOID )
+BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 {
 	GetCurrentModule = Module;
 	if ( reason == DLL_PROCESS_ATTACH )

@@ -17,7 +17,7 @@ BOOL __stdcall IsHero( int unitaddr )
 {
 	if ( unitaddr > 0 )
 	{
-		UINT ishero = *( UINT* )( unitaddr + 48 );
+		unsigned int ishero = *( unsigned int* )( unitaddr + 48 );
 		ishero = ishero >> 24;
 		ishero = ishero - 64;
 		return ishero < 0x19;
@@ -31,7 +31,7 @@ BOOL __stdcall IsTower( int unitaddr )
 {
 	if ( unitaddr > 0 )
 	{
-		UINT istower = *( UINT* )( unitaddr + 0x5C );
+		unsigned int istower = *( unsigned int* )( unitaddr + 0x5C );
 		return ( istower & 0x10000 ) > 0;
 	}
 	return FALSE;
@@ -89,8 +89,8 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 
 		if ( unitownerslot <= 15 && unitownerslot >= 0  )
 		{
-			UINT Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
-			UINT Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+			unsigned int Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
+			unsigned int Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
 
 			if ( Player1 == Player2 )
 			{

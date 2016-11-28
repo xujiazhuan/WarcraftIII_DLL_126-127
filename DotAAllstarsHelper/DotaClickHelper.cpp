@@ -39,7 +39,7 @@ void PressKeyboard( int VK )
 	BOOL PressedKey = FALSE;
 	INPUT Input = { 0 };
 	Input.type = INPUT_KEYBOARD;
-	Input.ki.wScan = ( WORD )MapVirtualKey( ( UINT )VK, 0 );
+	Input.ki.wScan = ( WORD )MapVirtualKey( ( unsigned int )VK, 0 );
 	Input.ki.wVk = ( WORD )VK;
 	if ( IsKeyPressed( VK ) )
 	{
@@ -285,8 +285,8 @@ void PressMouseAtSelectedHero( )
 
 struct mMessage
 {
-	UINT Msg;
-	UINT wParam;
+	unsigned int Msg;
+	unsigned int wParam;
 };
 
 vector<mMessage> SkipMessagesList;
@@ -294,10 +294,10 @@ vector<mMessage> SkipMessagesList;
 
 WPARAM LastShift = 0;
 
-LPARAM MakeLParamVK( UINT VK, BOOL up, BOOL Extended = FALSE )
+LPARAM MakeLParamVK( unsigned int VK, BOOL up, BOOL Extended = FALSE )
 {
-	if ( up ) return ( LPARAM )( 0xC0000001 | ( ( UINT )Extended << 24 ) | ( LPARAM )( MapVirtualKey( VK, 0 ) << 16 ) );
-	else return ( LPARAM )( 0x00000001 | ( ( UINT )Extended << 24 ) | ( LPARAM )( MapVirtualKey( VK, 0 ) << 16 ) );
+	if ( up ) return ( LPARAM )( 0xC0000001 | ( ( unsigned int )Extended << 24 ) | ( LPARAM )( MapVirtualKey( VK, 0 ) << 16 ) );
+	else return ( LPARAM )( 0x00000001 | ( ( unsigned int )Extended << 24 ) | ( LPARAM )( MapVirtualKey( VK, 0 ) << 16 ) );
 }
 
 
@@ -321,7 +321,7 @@ bool LastKeyState[ 256 ];
 vector<unsigned int> SendKeyEvent;
 
 
-LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, LPARAM lParam )
+LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam )
 {
 	WPARAM wParam = _wParam;
 	if ( SkipAllMessages )
@@ -435,7 +435,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, L
 							{
 
 								SendKeyEvent.push_back( 0x85 );
-								SendKeyEvent.push_back( ( UINT )GetLocalPlayerId( ) );
+								SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
 								SendKeyEvent.push_back( Msg );
 								SendKeyEvent.push_back( wParam );
 								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
@@ -450,7 +450,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, UINT Msg, WPARAM _wParam, L
 							{
 
 								SendKeyEvent.push_back( 0x85 );
-								SendKeyEvent.push_back( ( UINT )GetLocalPlayerId( ) );
+								SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
 								SendKeyEvent.push_back( Msg );
 								SendKeyEvent.push_back( wParam );
 								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );

@@ -609,8 +609,8 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	char lasterror[ 20 ];
 	char dllcrc32[ 20 ];
 	sprintf_s( gamever, 20, "%X", GameVersion );
-	sprintf_s( lasterror, 20, "%#010x", ( UINT ) GetLastError( ) );
-	sprintf_s( dllcrc32, 20, "%#010x", ( UINT ) GetDllCrc32( ) );
+	sprintf_s( lasterror, 20, "%#010x", ( unsigned int ) GetLastError( ) );
+	sprintf_s( dllcrc32, 20, "%#010x", ( unsigned int ) GetDllCrc32( ) );
 	ostringstream BugReport;
 	BugReport << "[DotaHelperLog]" << std::endl;
 	char EspDump[ 16 ];

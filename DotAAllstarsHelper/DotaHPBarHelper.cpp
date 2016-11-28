@@ -16,68 +16,102 @@ float hpbarscaleTowerY[ 20 ];
 
 vector<CustomHPBar> CustomHPBarList[ 20 ];
 
-__declspec( dllexport ) void __stdcall SetHPBarColorForPlayer( int playerid, unsigned int herocolor,
-															   unsigned int unitcolor, unsigned int towercolor )
+__declspec( dllexport ) void __stdcall SetHPBarColorForPlayer( unsigned int playerflag, unsigned int herocolor,
+	unsigned int unitcolor, unsigned int towercolor )
 {
-	if ( playerid >= 0 && playerid < 20 )
+
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
 	{
-		hpbarcolorsHero[ playerid ] = herocolor;
-		hpbarcolorsUnit[ playerid ] = unitcolor;
-		hpbarcolorsTower[ playerid ] = towercolor;
-	}
-}
-
-
-__declspec( dllexport ) void __stdcall SetHPBarXScaleForPlayer( int playerid, float heroscale,
-																float unitscale, float towerscale )
-{
-	if ( playerid >= 0 && playerid < 20 )
-	{
-		hpbarscaleHeroX[ playerid ] = heroscale;
-		hpbarscaleUnitX[ playerid ] = unitscale;
-		hpbarscaleTowerX[ playerid ] = towerscale;
-	}
-}
-
-__declspec( dllexport ) void __stdcall SetHPBarYScaleForPlayer( int playerid, float heroscale,
-																float unitscale, float towerscale )
-{
-	if ( playerid >= 0 && playerid < 20 )
-	{
-		hpbarscaleHeroY[ playerid ] = heroscale;
-		hpbarscaleUnitY[ playerid ] = unitscale;
-		hpbarscaleTowerY[ playerid ] = towerscale;
-	}
-}
-
-
-__declspec( dllexport ) void __stdcall SetHPCustomHPBarUnit( int playerid, int tid, unsigned int color, float xscale, float yscale )
-{
-	if ( playerid >= 0 && playerid < 20 )
-	{
-		bool needadd = true;
-		for ( unsigned int i = 0; i < CustomHPBarList[ playerid ].size( ); i++ )
+		if ( playerflag & currentflag )
 		{
-			if ( CustomHPBarList[ playerid ][ i ].unittypeid == tid )
-			{
-				needadd = false;
-				CustomHPBarList[ playerid ][ i ].color = color;
-				CustomHPBarList[ playerid ][ i ].scalex = xscale;
-				CustomHPBarList[ playerid ][ i ].scaley = yscale;
+			hpbarcolorsHero[ playerid ] = herocolor;
+			hpbarcolorsUnit[ playerid ] = unitcolor;
+			hpbarcolorsTower[ playerid ] = towercolor;
+		}
 
-				break;
+		currentflag = currentflag * 2;
+		playerid++;
+	}
+
+}
+
+
+__declspec( dllexport ) void __stdcall SetHPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
+	float unitscale, float towerscale )
+{
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
+	{
+		if ( playerflag & currentflag )
+		{
+			hpbarscaleHeroX[ playerid ] = heroscale;
+			hpbarscaleUnitX[ playerid ] = unitscale;
+			hpbarscaleTowerX[ playerid ] = towerscale;
+		}
+
+		currentflag = currentflag * 2;
+		playerid++;
+	}
+}
+
+__declspec( dllexport ) void __stdcall SetHPBarYScaleForPlayer( unsigned int playerflag, float heroscale,
+	float unitscale, float towerscale )
+{
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
+	{
+		if ( playerflag & currentflag )
+		{
+			hpbarscaleHeroY[ playerid ] = heroscale;
+			hpbarscaleUnitY[ playerid ] = unitscale;
+			hpbarscaleTowerY[ playerid ] = towerscale;
+		}
+
+		currentflag = currentflag * 2;
+		playerid++;
+	}
+}
+
+
+__declspec( dllexport ) void __stdcall SetHPCustomHPBarUnit( unsigned int playerflag, int tid, unsigned int color, float xscale, float yscale )
+{
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
+	{
+		if ( playerflag & currentflag )
+		{
+			bool needadd = true;
+			for ( unsigned int i = 0; i < CustomHPBarList[ playerid ].size( ); i++ )
+			{
+				if ( CustomHPBarList[ playerid ][ i ].unittypeid == tid )
+				{
+					needadd = false;
+					CustomHPBarList[ playerid ][ i ].color = color;
+					CustomHPBarList[ playerid ][ i ].scalex = xscale;
+					CustomHPBarList[ playerid ][ i ].scaley = yscale;
+
+					break;
+				}
+			}
+
+			if ( needadd )
+			{
+				CustomHPBar tmpcbar;
+				tmpcbar.unittypeid = tid;
+				tmpcbar.color = color;
+				tmpcbar.scalex = xscale;
+				tmpcbar.scaley = yscale;
+				CustomHPBarList[ playerid ].push_back( tmpcbar );
 			}
 		}
 
-		if ( needadd )
-		{
-			CustomHPBar tmpcbar;
-			tmpcbar.unittypeid = tid;
-			tmpcbar.color = color;
-			tmpcbar.scalex = xscale;
-			tmpcbar.scaley = yscale;
-			CustomHPBarList[ playerid ].push_back( tmpcbar );
-		}
+		currentflag = currentflag * 2;
+		playerid++;
 	}
 }
 
@@ -93,10 +127,10 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	}
 
 	char _bf[ 93 ];
-	sprintf_s( _bf, 93, "%s-color:%X-bar:%X", "SetColorForUnit", ( unsigned int ) coloraddr, ( unsigned int ) BarStruct );
+	sprintf_s( _bf, 93, "%s-color:%X-bar:%X", "SetColorForUnit", ( unsigned int )coloraddr, ( unsigned int )BarStruct );
 	AddNewLineToDotaHelperLog( _bf );
 
-	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int ) BarVtableClone )
+	if ( BarStruct->_BarClass != _BarVTable && BarStruct->_BarClass != ( int )BarVtableClone )
 	{
 		AddNewLineToDotaHelperLog( "SetColorForUnitEnd1" );
 
@@ -137,7 +171,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 					BarStruct->ScaleY = CustomHPBarList[ unitslot ][ i ].scaley;
 				}
 
-				if ( ( int ) coloraddr <= 0 )
+				if ( ( int )coloraddr <= 0 )
 				{
 					AddNewLineToDotaHelperLog( "SetColorForUnitEnd4" );
 					return retval;
@@ -166,7 +200,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 				BarStruct->ScaleY = hpbarscaleHeroY[ unitslot ];
 			}
 		}
-		if ( ( int ) coloraddr <= 0 )
+		if ( ( int )coloraddr <= 0 )
 		{
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd6" );
 			return retval;
@@ -191,7 +225,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 				BarStruct->ScaleY = hpbarscaleTowerY[ unitslot ];
 			}
 		}
-		if ( ( int ) coloraddr <= 0 )
+		if ( ( int )coloraddr <= 0 )
 		{
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd7" );
 			return retval;
@@ -215,7 +249,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 				BarStruct->ScaleY = hpbarscaleUnitY[ unitslot ];
 			}
 		}
-		if ( ( int ) coloraddr <= 0 )
+		if ( ( int )coloraddr <= 0 )
 		{
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd8" );
 			return retval;

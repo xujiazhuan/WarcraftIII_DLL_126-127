@@ -58,38 +58,62 @@ float mpbaroffsetTowerY[ 20 ];
 
 
 
-__declspec( dllexport ) void __stdcall SetMPBarXScaleForPlayer( int playerid, float heroscale,
-																float unitscale, float towerscale )
+__declspec( dllexport ) void __stdcall SetMPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
+	float unitscale, float towerscale )
 {
-	if ( playerid >= 0 && playerid < 20 )
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
 	{
-		mpbarscaleHeroX[ playerid ] = heroscale;
-		mpbarscaleUnitX[ playerid ] = unitscale;
-		mpbarscaleTowerX[ playerid ] = towerscale;
+		if ( playerflag & currentflag )
+		{
+			mpbarscaleHeroX[ playerid ] = heroscale;
+			mpbarscaleUnitX[ playerid ] = unitscale;
+			mpbarscaleTowerX[ playerid ] = towerscale;
+		}
+
+		currentflag = currentflag * 2;
+		playerid++;
 	}
 }
 
-__declspec( dllexport ) void __stdcall SetMPBarYScaleForPlayer( int playerid, float heroscale,
-																float unitscale, float towerscale )
+__declspec( dllexport ) void __stdcall SetMPBarYScaleForPlayer( unsigned int playerflag, float heroscale,
+	float unitscale, float towerscale )
 {
-	if ( playerid >= 0 && playerid < 20 )
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
 	{
-		mpbarscaleHeroY[ playerid ] = heroscale;
-		mpbarscaleUnitY[ playerid ] = unitscale;
-		mpbarscaleTowerY[ playerid ] = towerscale;
+		if ( playerflag & currentflag )
+		{
+			mpbarscaleHeroY[ playerid ] = heroscale;
+			mpbarscaleUnitY[ playerid ] = unitscale;
+			mpbarscaleTowerY[ playerid ] = towerscale;
+		}
+
+		currentflag = currentflag * 2;
+		playerid++;
 	}
 }
 
 
 
-__declspec( dllexport ) void __stdcall SetMPBarYOffsetForPlayer( int playerid, float herooffset,
-																 float unitoffset, float toweroffset )
+__declspec( dllexport ) void __stdcall SetMPBarYOffsetForPlayer( unsigned int playerflag, float herooffset,
+	float unitoffset, float toweroffset )
 {
-	if ( playerid >= 0 && playerid < 20 )
+	int playerid = 0;
+	int currentflag = 1;
+	while ( playerid <= 16 )
 	{
-		mpbaroffsetHeroY[ playerid ] = herooffset;
-		mpbaroffsetUnitY[ playerid ] = unitoffset;
-		mpbaroffsetTowerY[ playerid ] = toweroffset;
+		if ( playerflag & currentflag )
+		{
+			mpbaroffsetHeroY[ playerid ] = herooffset;
+			mpbaroffsetUnitY[ playerid ] = unitoffset;
+			mpbaroffsetTowerY[ playerid ] = toweroffset;
+		}
+
+		currentflag = currentflag * 2;
+		playerid++;
 	}
 }
 
@@ -302,7 +326,7 @@ void __declspec( naked ) f00152710( )
 		xor     eax, eax;
 		jmp L004;
 		lea     ebx, dword ptr[ ebx ];
-		L004:
+	L004:
 		mov     dl, byte ptr[ eax + ecx ];
 		mov     byte ptr[ eax + BarVtableClone ], dl;
 		inc     eax;
@@ -356,7 +380,7 @@ void __declspec( naked ) f001527F0( )
 		call    f00152710;
 		mov ebx, dword ptr[ eax + 0xC ];
 		mov     a3000B0, 1;
-		L017:
+	L017:
 		push    0;
 		lea     eax, dword ptr[ esp + 0x10 ];
 		push    eax;
@@ -390,7 +414,7 @@ void __declspec( naked ) f001527F0( )
 			cmp		eax, ecx; // FIX CRASH
 		je OkayBar;
 		jmp L091;
-		OkayBar:
+	OkayBar:
 		//no
 		mov     eax, dword ptr[ eax + 0x74 ];
 		push    ebp;
@@ -418,12 +442,12 @@ void __declspec( naked ) f001527F0( )
 		//no
 		test    eax, eax;
 		jnz L062;
-		WithoutScaleFactor:
+	WithoutScaleFactor:
 		fld1;
 		jmp L063;
-		L062:
+	L062:
 		fld     dword ptr[ eax + 0x54 ];
-		L063:
+	L063:
 		fstp    dword ptr[ esp + 0x10 ];
 		push    0;
 		fld     dword ptr[ esp + 0x14 ];
@@ -455,10 +479,10 @@ void __declspec( naked ) f001527F0( )
 		call    eax;
 		//no
 		pop     ebp;
-		L091:
+	L091:
 		pop     esi;
 		pop     ebx;
-		L093:
+	L093:
 
 
 
@@ -509,7 +533,7 @@ void Hook( )
 			unsigned char* p = reinterpret_cast< unsigned char* >( Storm_401_org_malloc );
 			*p = 0xe8;
 			p += 5;
-			int X = ( int ) ReallocateMemoryForMPBar - ( int ) p;
+			int X = ( int )ReallocateMemoryForMPBar - ( int )p;
 			p -= 5;
 			*reinterpret_cast< int* >( p + 1 ) = X;
 		}
@@ -517,7 +541,7 @@ void Hook( )
 			unsigned char* p = reinterpret_cast< unsigned char* >( HPMP_DRAW );
 			*p = 0xe8;
 			p += 5;
-			int X = ( int ) RedrawMPBar - ( int ) p;
+			int X = ( int )RedrawMPBar - ( int )p;
 			p -= 5;
 			*reinterpret_cast< int* >( p + 1 ) = X;
 		}
@@ -555,20 +579,20 @@ void Unhook( )
 
 void ManaBarSwitch( int GameDLL, BOOL b )
 {
-	*( int* ) &a3000AC = 1;
+	*( int* )&a3000AC = 1;
 
 	if ( GameVersion == 0x26a )
 	{
-		*( int* ) &sub_6F27AE90 = ( int ) GameDLL + 0x27AE90;  // 6F27B9B0 
-		*( int* ) &sub_6F334180 = ( int ) GameDLL + 0x334180;  // 0x6f334CC0
-		*( int* ) &sub_6F6061B0 = ( int ) GameDLL + 0x6061B0;  // 0x6f606950
-		*( int* ) &sub_6F605CC0 = ( int ) GameDLL + 0x605CC0;  // 0x6f606460
-		*( int* ) &sub_6F359CC0 = ( int ) GameDLL + 0x359CC0;  // 0x6f35A800
-		*( int* ) &sub_6F32C880 = ( int ) GameDLL + 0x32C880;  // 0x32D3C0
-		*( int* ) &sub_6F2C74B0 = ( int ) GameDLL + 0x2C74B0;    // 0x6f2C7FD0??
+		*( int* )&sub_6F27AE90 = ( int )GameDLL + 0x27AE90;  // 6F27B9B0 
+		*( int* )&sub_6F334180 = ( int )GameDLL + 0x334180;  // 0x6f334CC0
+		*( int* )&sub_6F6061B0 = ( int )GameDLL + 0x6061B0;  // 0x6f606950
+		*( int* )&sub_6F605CC0 = ( int )GameDLL + 0x605CC0;  // 0x6f606460
+		*( int* )&sub_6F359CC0 = ( int )GameDLL + 0x359CC0;  // 0x6f35A800
+		*( int* )&sub_6F32C880 = ( int )GameDLL + 0x32C880;  // 0x32D3C0
+		*( int* )&sub_6F2C74B0 = ( int )GameDLL + 0x2C74B0;    // 0x6f2C7FD0??
 
-		*( int* ) &Storm_401_org_malloc = ( int ) GameDLL + 0x379AE3;  // 0x6f37A623
-		*( int* ) &HPMP_DRAW = ( int ) GameDLL + 0x379EE8;  // 0x6F37AA28
+		*( int* )&Storm_401_org_malloc = ( int )GameDLL + 0x379AE3;  // 0x6f37A623
+		*( int* )&HPMP_DRAW = ( int )GameDLL + 0x379EE8;  // 0x6F37AA28
 
 		if ( b )
 			Hook( );
@@ -589,16 +613,16 @@ void ManaBarSwitch( int GameDLL, BOOL b )
 	}
 	else if ( GameVersion == 0x27a )
 	{
-		*( int* ) &sub_6F27AE90 = ( int ) GameDLL + 0x669B40; // 669B40
-		*( int* ) &sub_6F334180 = ( int ) GameDLL + 0x358CF0; // 358CF0
-		*( int* ) &sub_6F6061B0 = ( int ) GameDLL + 0x0BD830; // 0BD830
-		*( int* ) &sub_6F605CC0 = ( int ) GameDLL + 0x0BD630; // 0BD630
-		*( int* ) &sub_6F359CC0 = ( int ) GameDLL + 0x383F60; // 383F60
-		*( int* ) &sub_6F32C880 = ( int ) GameDLL + 0x327020; // 327020
-		*( int* ) &sub_6F2C74B0 = ( int ) GameDLL + 0x6374A0; // 6374A0
+		*( int* )&sub_6F27AE90 = ( int )GameDLL + 0x669B40; // 669B40
+		*( int* )&sub_6F334180 = ( int )GameDLL + 0x358CF0; // 358CF0
+		*( int* )&sub_6F6061B0 = ( int )GameDLL + 0x0BD830; // 0BD830
+		*( int* )&sub_6F605CC0 = ( int )GameDLL + 0x0BD630; // 0BD630
+		*( int* )&sub_6F359CC0 = ( int )GameDLL + 0x383F60; // 383F60
+		*( int* )&sub_6F32C880 = ( int )GameDLL + 0x327020; // 327020
+		*( int* )&sub_6F2C74B0 = ( int )GameDLL + 0x6374A0; // 6374A0
 
-		*( int* ) &Storm_401_org_malloc = ( int ) GameDLL + 0x374F14; // 374F14
-		*( int* ) &HPMP_DRAW = ( int ) GameDLL + 0x3784CA;
+		*( int* )&Storm_401_org_malloc = ( int )GameDLL + 0x374F14; // 374F14
+		*( int* )&HPMP_DRAW = ( int )GameDLL + 0x3784CA;
 
 		if ( b )
 			Hook( );
@@ -624,7 +648,7 @@ __declspec( dllexport ) BOOL __stdcall SetManabarEnabled( BOOL enabled )
 {
 	if ( ManabarInitialized )
 	{
-		*( int* ) &a3000AC = enabled;
+		*( int* )&a3000AC = enabled;
 	}
 	return ManabarInitialized;
 }

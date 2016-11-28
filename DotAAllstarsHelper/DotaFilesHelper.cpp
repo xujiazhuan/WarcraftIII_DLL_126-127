@@ -544,7 +544,7 @@ struct Mdx_Texture        //NrOfTextures = ChunkSize / 268
 {
 	int ReplaceableId;
 	CHAR FileName[ 260 ];
-	UINT Flags;                       //#1 - WrapWidth
+	unsigned int Flags;                       //#1 - WrapWidth
 									   //#2 - WrapHeight
 };
 
@@ -562,10 +562,10 @@ struct Mdx_Sequence      //NrOfSequences = ChunkSize / 132
 	int IntervalStart;
 	int IntervalEnd;
 	FLOAT MoveSpeed;
-	UINT Flags;                       //0 - Looping
+	unsigned int Flags;                       //0 - Looping
 									   //1 - NonLooping
 	FLOAT Rarity;
-	UINT SyncPoint;
+	unsigned int SyncPoint;
 
 	FLOAT BoundsRadius;
 	Mdx_FLOAT3 MinimumExtent;
@@ -589,24 +589,24 @@ struct Mdx_Track
 										 //1 - Linear
 										 //2 - Hermite
 										 //3 - Bezier
-	UINT GlobalSequenceId;
+	unsigned int GlobalSequenceId;
 };
 
 struct Mdx_Tracks
 {
 	int NrOfTracks;
-	UINT GlobalSequenceId;
+	unsigned int GlobalSequenceId;
 
 };
 struct Mdx_Node
 {
-	UINT InclusiveSize;
+	unsigned int InclusiveSize;
 
 	CHAR Name[ 80 ];
 
-	UINT ObjectId;
-	UINT ParentId;
-	UINT Flags;                         //0        - Helper
+	unsigned int ObjectId;
+	unsigned int ParentId;
+	unsigned int Flags;                         //0        - Helper
 										 //#1       - DontInheritTranslation
 										 //#2       - DontInheritRotation
 										 //#4       - DontInheritScaling
@@ -632,14 +632,14 @@ struct Mdx_Node
 
 struct Mdx_GeosetAnimation
 {
-	UINT InclusiveSize;
+	unsigned int InclusiveSize;
 
 	FLOAT Alpha;
-	UINT Flags;                       //#1 - DropShadow
+	unsigned int Flags;                       //#1 - DropShadow
 									   //#2 - Color
 	Mdx_FLOAT3 Color;
 
-	UINT GeosetId;
+	unsigned int GeosetId;
 
 };
 
@@ -1021,7 +1021,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
-							UINT size_of_this_struct = *( UINT* )&ModelBytes[ offset ];
+							unsigned int size_of_this_struct = *( unsigned int* )&ModelBytes[ offset ];
 							offset += 4;
 							size_of_this_struct = size_of_this_struct == 0 ? 24u : 16u;
 							offset += size_of_this_struct;
@@ -1412,7 +1412,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							parents.push_back( ( DWORD* )&ModelBytes[ offset + 88 ] );
 
 							offset += tmpNode.InclusiveSize;
-							UINT size_of_this_struct = *( UINT* )&ModelBytes[ offset ];
+							unsigned int size_of_this_struct = *( unsigned int* )&ModelBytes[ offset ];
 							offset += 4;
 							size_of_this_struct = size_of_this_struct == 0 ? 24 : 16;
 							offset += size_of_this_struct;
