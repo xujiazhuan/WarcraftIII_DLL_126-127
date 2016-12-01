@@ -245,7 +245,7 @@ void AddNewLineToJassLog( string s )
 	JassLogList.push_back( s );
 }
 
-__declspec( dllexport )  int __stdcall JassLog( const char * s )
+ int __stdcall JassLog( const char * s )
 {
 	AddNewLineToJassLog( s );
 	return 0;
@@ -253,7 +253,7 @@ __declspec( dllexport )  int __stdcall JassLog( const char * s )
 
 
 BOOL bDllLogEnable = TRUE;
-__declspec( dllexport )  int __stdcall DllLogEnable( BOOL enable )
+ int __stdcall DllLogEnable( BOOL enable )
 {
 	bDllLogEnable = enable;
 	return 0;
@@ -962,7 +962,7 @@ void EnableErrorHandler( )
 
 }
 
-__declspec( dllexport )  int __stdcall StartExtraErrorHandler( int )
+ int __stdcall StartExtraErrorHandler( int )
 {
 
 

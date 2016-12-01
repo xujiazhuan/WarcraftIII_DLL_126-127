@@ -89,7 +89,7 @@ int  Warcraft3WindowProcOffset = 0;
 BOOL MainFuncWork = FALSE;
 
 
-__declspec( dllexport ) int __stdcall SetMainFuncWork( BOOL state )
+int __stdcall SetMainFuncWork( BOOL state )
 {
 	MainFuncWork = state;
 	return 0;
@@ -159,7 +159,7 @@ void BuildFilePath( char * fname )
 
 
 
-__declspec( dllexport ) const char * __stdcall GetCurrentMapPath( int )
+const char * __stdcall GetCurrentMapPath( int )
 {
 	BuildFilePath( NULL );
 	return CurrentMapPath;
@@ -1267,7 +1267,7 @@ struct offsetdata
 	int offdata;
 };
 std::vector<offsetdata> offsetslist;
-__declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
+int __stdcall AddNewOffset( int address, int data )
 {
 	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
 	{
@@ -1289,7 +1289,7 @@ __declspec( dllexport ) int __stdcall AddNewOffset( int address, int data )
 
 vector<LPVOID> FreeExecutableMemoryList;
 
-__declspec( dllexport ) int __stdcall FreeExecutableMemory( void * addr )
+int __stdcall FreeExecutableMemory( void * addr )
 {
 	FreeExecutableMemoryList.push_back( addr );
 	return 0;
@@ -1379,7 +1379,6 @@ void __stdcall DisableAllHooks( )
 	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
-	KeyboardHaveTriggerEvent = FALSE;
 	bDllLogEnable = TRUE;
 	EnableSelectHelper = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
@@ -1460,7 +1459,7 @@ DWORD GetDllCrc32( )
 }
 
 
-__declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
+unsigned int __stdcall InitDotaHelper( int gameversion )
 {
 	AddNewLineToDotaHelperLog( __func__ );
 	if ( hRefreshTimer )
@@ -1643,13 +1642,11 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( pHPBARHELPER ), ( BYTE* ) HookHPBarColorHelper126a, 6 );
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr9 ), ( BYTE* ) ( GameDll + 0x364bf1 ), 5 );
 
-
+		SimpleButtonClickEvent = ( c_SimpleButtonClickEvent )( GameDll + 0x603440 );
 
 
 		MapNameOffset1 = GameDll + 0xAAE788;
 		MapNameOffset2 = 8;
-
-
 
 		GetWindowXoffset = ( float * ) ( GameDll + 0xADE91C );
 		GetWindowYoffset = ( float * ) ( GameDll + 0xADE918 );
@@ -1821,7 +1818,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* ) ( JumpBackAddr9 ), ( BYTE* ) ( GameDll + 0x3bd5b9 ), 5 );
 
 
-
+		SimpleButtonClickEvent = ( c_SimpleButtonClickEvent )( GameDll + 0x0BB560 );
 
 
 		MapNameOffset1 = GameDll + 0xBEE150;
@@ -1834,7 +1831,7 @@ __declspec( dllexport ) unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		SetGameAreaFOVoffset = 0xD31D0;
 
-
+		 
 		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
@@ -1865,7 +1862,7 @@ Storm_403 Storm_403_org = NULL;
 const char * GameDllName = "Game.dll";
 const char * StormDllName = "Storm.dll";
 
-__declspec( dllexport ) int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char * _StormDllName )
+int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char * _StormDllName )
 {
 	GameDllModule = GetModuleHandle( _GameDllName );
 	GameDll = ( int ) GameDllModule;
@@ -1879,12 +1876,14 @@ __declspec( dllexport ) int __stdcall SetCustomGameDLLandStormDLL( const char * 
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall SetGameDllAddr( HMODULE GameDLL )
+int __stdcall SetGameDllAddr( HMODULE GameDLL )
 {
 	GameDllModule = GameDLL;
 	GameDll = ( int ) GameDllModule;
 	return 0;
 }
+
+BOOL TerminateStarted = FALSE;
 
 #pragma region Main
 BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
@@ -1905,7 +1904,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
-
+		TerminateStarted = TRUE;
 		// Cleanup
 		if ( hRefreshTimer )
 		{

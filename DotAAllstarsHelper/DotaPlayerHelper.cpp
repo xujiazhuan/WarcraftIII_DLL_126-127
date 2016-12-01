@@ -80,7 +80,7 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 }
 
 
-__declspec( dllexport ) int __stdcall MutePlayer( const char * str )
+int __stdcall MutePlayer( const char * str )
 {
 	if ( !str || *str == 0 )
 		return 1;
@@ -95,7 +95,7 @@ __declspec( dllexport ) int __stdcall MutePlayer( const char * str )
 	return 1;
 }
 
-__declspec( dllexport ) int __stdcall UnMutePlayer( const char * str )
+int __stdcall UnMutePlayer( const char * str )
 {
 	if ( !str || *str == 0 )
 		return 1;

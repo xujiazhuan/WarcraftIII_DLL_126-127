@@ -305,16 +305,125 @@ DWORD LastPressedKeysTime[ 256 ];
 
 
 vector<int> RegisteredKeyCodes;
-BOOL KeyboardHaveTriggerEvent = FALSE;
-__declspec( dllexport ) int __stdcall TriggerRegisterPlayerKeyboardEvent( int KeyCode )
+vector<int> BlockedKeyCodes;
+
+struct KeyActionStruct
 {
-	if ( !KeyboardHaveTriggerEvent )
+	int VK;
+	int btnID;
+	int altbtnID;
+};
+vector<KeyActionStruct> KeyActionList;
+
+
+int __stdcall TriggerRegisterPlayerKeyboardEvent( int KeyCode )
+{
+	if ( !KeyCode )
+	{
 		RegisteredKeyCodes.clear( );
-	KeyboardHaveTriggerEvent = TRUE;
+		return 0;
+	}
+
+
 	RegisteredKeyCodes.push_back( KeyCode );
+	return 0;
+}
+
+int __stdcall BlockKeyAction( int KeyCode )
+{
+	if ( !KeyCode )
+	{
+		RegisteredKeyCodes.clear( );
+		return 0;
+	}
+	BlockedKeyCodes.push_back( KeyCode );
 
 	return 0;
 }
+
+int GetAltBtnID( int btnID )
+{
+	switch ( btnID )
+	{
+	case 2:
+		return 0;
+	case 5:
+		return 3;
+	case 8:
+		return 6;
+	case 11:
+		return 9;
+	}
+
+	return -1;
+}
+
+int __stdcall AddKeyButtonAction( int KeyCode, int btnID )
+{
+	if ( !KeyCode )
+	{
+		KeyActionList.clear( );
+		return 0;
+	}
+
+	KeyActionStruct tmpstr;
+	tmpstr.VK = KeyCode;
+	tmpstr.btnID = btnID;
+	tmpstr.altbtnID = ( GetAltBtnID( btnID ) );
+	KeyActionList.push_back( tmpstr );
+
+	return 0;
+}
+
+
+
+
+BOOL IsNULLButtonFound( int pButton )
+{
+	if ( pButton > 0 && *( int* )( pButton ) > 0 )
+	{
+		if ( *( int* )( pButton + 0x190 ) != 0 && *( int* )( *( int* )( pButton + 0x190 ) + 4 ) == 0 )
+			return TRUE;
+	}
+	return FALSE;
+}
+
+#pragma region ClickEvent: leaked from iccup :)
+// | 0 | 3 | 6 | 9  |
+// | 1 | 4 | 7 | 10 | 
+// | 2 | 5 | 8 | 11 |
+
+#define flagsOffset 0x138
+#define sizeOfCommandButtonObj 0x1c0
+
+int GetSkillPanelButton( int idx )
+{
+	AddNewLineToDotaHelperLog( __func__ );
+	int pGamePlayerPanel = *( int* )( *( int* )( pW3XGlobalClass )+0x3c8 );
+	int topLeftCommandButton = **( int** )( *( int* )( pGamePlayerPanel + 0x154 ) + 0x8 );
+	return  topLeftCommandButton + sizeOfCommandButtonObj * idx;
+}
+
+
+c_SimpleButtonClickEvent SimpleButtonClickEvent;
+
+void PressSkillPanelButton( int idx, BOOL RightClick )
+{
+	AddNewLineToDotaHelperLog( __func__ );
+	int button = GetSkillPanelButton( idx );
+	if ( button > 0 && *( int* )button > 0 )
+	{
+		UINT oldflag = *( UINT * )( button + flagsOffset );
+		if ( !( oldflag & 2 ) )
+			*( UINT * )( button + flagsOffset ) = oldflag | 2;
+		SimpleButtonClickEvent( button, 0, RightClick ? 4 : 1 );
+		*( UINT * )( button + flagsOffset ) = oldflag;
+	}
+}
+
+
+#pragma endregion
+
 
 
 bool LastKeyState[ 256 ];
@@ -323,8 +432,9 @@ vector<unsigned int> SendKeyEvent;
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam )
 {
+	BOOL NeedSkipThisKey = FALSE;
 	WPARAM wParam = _wParam;
-	if ( SkipAllMessages )
+	if ( SkipAllMessages || TerminateStarted )
 	{
 		return  DefWindowProc( hWnd, Msg, wParam, lParam );// WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
@@ -422,10 +532,58 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 		if ( *( int* )ChatFound == 0 )
 		{
 
-			if ( KeyboardHaveTriggerEvent )
+			if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP )
 			{
-				if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP )
+
+
+				for ( KeyActionStruct keyAction : KeyActionList )
 				{
+					if ( keyAction.VK == ( int )wParam )
+					{
+						if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
+						{
+							int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+							if ( selectedunit && GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) > 0 )
+							{
+								if ( GetUnitOwnerSlot( selectedunit ) != 15 )
+								{
+									if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
+									{
+										if ( keyAction.altbtnID >= 0 )
+										{
+											PressSkillPanelButton( keyAction.altbtnID, FALSE );
+											NeedSkipThisKey = TRUE;
+										}
+									}
+									else
+									{
+										PressSkillPanelButton( keyAction.btnID, FALSE );
+										NeedSkipThisKey = TRUE;
+									}
+								}
+							}
+							LastKeyState[ wParam ] = true;
+						}
+						else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
+						{
+							LastKeyState[ wParam ] = false;
+						}
+					}
+
+				}
+
+				if ( !NeedSkipThisKey )
+				{
+					for ( int keyCode : BlockedKeyCodes )
+					{
+						if ( keyCode == ( int )wParam )
+						{
+							return DefWindowProcA( hWnd, Msg, wParam, lParam );
+						}
+					}
+
+
+
 					for ( int keyCode : RegisteredKeyCodes )
 					{
 						if ( keyCode == ( int )wParam )
@@ -463,7 +621,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 							}
 							return DefWindowProcA( hWnd, Msg, wParam, lParam );
 						}
+
 					}
+
 				}
 			}
 
@@ -481,7 +641,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 					{
 						if ( EnableSelectHelper )
 						{
-						
+
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 
@@ -491,6 +651,10 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 							tmpDelayPress.NeedPressMsg = 0;
 							tmpDelayPress.TimeOut = 120;
 							DelayedPressList.push_back( tmpDelayPress );
+
+							if ( NeedSkipThisKey )
+								return DefWindowProcA( hWnd, Msg, wParam, lParam );
+
 							return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 						}
 					}
@@ -498,7 +662,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 					{
 						if ( ClickHelper )
 						{
-							
+
 							if ( IsKeyPressed( VK_LCONTROL ) )
 							{
 								//JustClickMouse( );
@@ -530,7 +694,8 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 
 				}
 			}
-
+			if ( NeedSkipThisKey )
+				return DefWindowProcA( hWnd, Msg, wParam, lParam );
 
 			if ( Msg == WM_LBUTTONDOWN )
 			{
@@ -547,7 +712,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
 					if ( selectedunitcout == 0 || ( selectedunitcout == 1 && IsEnemy( GetSelectedUnit( GetLocalPlayerId( ) ) ) != FALSE ) )
 					{
-						
+
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
@@ -573,20 +738,20 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 
 
 
-__declspec( dllexport ) int __stdcall ToggleBlockKeyAndMouseEmulation( BOOL enable )
+int __stdcall ToggleBlockKeyAndMouseEmulation( BOOL enable )
 {
 	BlockKeyAndMouseEmulation = enable;
 	return 0;
 }
 
 
-__declspec( dllexport ) int __stdcall ToggleForcedSubSelection( BOOL enable )
+int __stdcall ToggleForcedSubSelection( BOOL enable )
 {
 	EnableSelectHelper = enable;
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall ToggleClickHelper( BOOL enable )
+int __stdcall ToggleClickHelper( BOOL enable )
 {
 	ClickHelper = enable;
 	return 0;
@@ -742,5 +907,10 @@ void IssueFixerDisable( )
 	MH_DisableHook( sub_6F339F00org );
 	MH_DisableHook( sub_6F339F80org );
 	MH_DisableHook( sub_6F33A010org );
+
+	RegisteredKeyCodes.clear( );
+	BlockedKeyCodes.clear( );
+	KeyActionList.clear( );
+
 	SkipAllMessages = FALSE;
 }

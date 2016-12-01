@@ -38,7 +38,7 @@ using namespace std;
 #pragma endregion
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
 
-
+extern BOOL TerminateStarted;
 
 struct CustomHPBar
 {
@@ -187,8 +187,8 @@ typedef int( __cdecl * IsPlayerEnemy )( unsigned int Player1, unsigned int Playe
 typedef unsigned int( __cdecl * GetPlayerByID )( int PlayerId );
 typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
 extern p_GetPlayerName GetPlayerName;
-__declspec( dllexport ) int __stdcall MutePlayer( const char * str );
-__declspec( dllexport ) int __stdcall UnMutePlayer( const char * str );
+int __stdcall MutePlayer( const char * str );
+int __stdcall UnMutePlayer( const char * str );
 typedef void( __fastcall * pOnChatMessage )( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
 extern vector<char *> mutedplayers;
@@ -320,7 +320,6 @@ extern int GameFrameAtMouseStructOffset;
 extern BOOL BlockKeyAndMouseEmulation;
 extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
-extern BOOL KeyboardHaveTriggerEvent;
 
 
 typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam );
@@ -345,6 +344,11 @@ extern int sub_6F339F80Offset;
 extern int sub_6F33A010Offset;
 void IssueFixerInit( );
 void IssueFixerDisable( );
+
+
+typedef int( __fastcall * c_SimpleButtonClickEvent )( int pButton, int unused, int ClickEventType );
+extern c_SimpleButtonClickEvent SimpleButtonClickEvent;
+
 #pragma endregion
 
 
@@ -432,8 +436,8 @@ void FreeAllIHelpers( );
 
 #pragma region DotaFovFix.cpp
 
-__declspec( dllexport ) int __stdcall SetWidescreenFixState( BOOL widefixenable );
-__declspec( dllexport ) int __stdcall SetCustomFovFix( float _CustomFovFix );
+int __stdcall SetWidescreenFixState( BOOL widefixenable );
+int __stdcall SetCustomFovFix( float _CustomFovFix );
 void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
 typedef int( __fastcall * SetGameAreaFOV )( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
 extern SetGameAreaFOV SetGameAreaFOV_org;

@@ -155,7 +155,7 @@ DWORD WINAPI SENDSAVEFILEREQUEST( LPVOID )
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall SendGetRequest( char * addr, char * request )
+int __stdcall SendGetRequest( char * addr, char * request )
 {
 	DownProgress = 0;
 	_addr = addr; _request = request;
@@ -164,7 +164,7 @@ __declspec( dllexport ) int __stdcall SendGetRequest( char * addr, char * reques
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall SaveNewDotaVersionFromUrl( char * addr, char * filepath )
+int __stdcall SaveNewDotaVersionFromUrl( char * addr, char * filepath )
 {
 	DownProgress = 0;
 	_addr = addr; _filepath = filepath;
@@ -173,17 +173,17 @@ __declspec( dllexport ) int __stdcall SaveNewDotaVersionFromUrl( char * addr, ch
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall GetDownloadStatus( int )
+int __stdcall GetDownloadStatus( int )
 {
 	return DownStatus;
 }
 
-__declspec( dllexport ) int __stdcall GetDownloadProgress( int )
+int __stdcall GetDownloadProgress( int )
 {
 	return DownProgress;
 }
 
-__declspec( dllexport ) const char * __stdcall GetLatestDownloadedString( int )
+const char * __stdcall GetLatestDownloadedString( int )
 {
 	return LatestDownloadedString.c_str( );
 }

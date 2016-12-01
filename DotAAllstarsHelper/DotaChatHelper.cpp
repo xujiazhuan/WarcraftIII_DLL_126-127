@@ -41,7 +41,7 @@ LPARAM lpShiftScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( 
 LPARAM lpShiftScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
 
 
-__declspec( dllexport )  int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
+ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 {
 	BYTE tmpbuf[ 256 ];
 	BYTE tmpbuf2[ 256 ];

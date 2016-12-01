@@ -58,7 +58,7 @@ float mpbaroffsetTowerY[ 20 ];
 
 
 
-__declspec( dllexport ) void __stdcall SetMPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
+void __stdcall SetMPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
 	float unitscale, float towerscale )
 {
 	int playerid = 0;
@@ -77,7 +77,7 @@ __declspec( dllexport ) void __stdcall SetMPBarXScaleForPlayer( unsigned int pla
 	}
 }
 
-__declspec( dllexport ) void __stdcall SetMPBarYScaleForPlayer( unsigned int playerflag, float heroscale,
+void __stdcall SetMPBarYScaleForPlayer( unsigned int playerflag, float heroscale,
 	float unitscale, float towerscale )
 {
 	int playerid = 0;
@@ -98,7 +98,7 @@ __declspec( dllexport ) void __stdcall SetMPBarYScaleForPlayer( unsigned int pla
 
 
 
-__declspec( dllexport ) void __stdcall SetMPBarYOffsetForPlayer( unsigned int playerflag, float herooffset,
+void __stdcall SetMPBarYOffsetForPlayer( unsigned int playerflag, float herooffset,
 	float unitoffset, float toweroffset )
 {
 	int playerid = 0;
@@ -644,7 +644,7 @@ void ManaBarSwitch( int GameDLL, BOOL b )
 }
 
 
-__declspec( dllexport ) BOOL __stdcall SetManabarEnabled( BOOL enabled )
+BOOL __stdcall SetManabarEnabled( BOOL enabled )
 {
 	if ( ManabarInitialized )
 	{

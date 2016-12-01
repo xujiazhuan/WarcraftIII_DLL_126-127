@@ -260,7 +260,7 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 
 
 
-__declspec( dllexport ) int __stdcall ApplyTerrainFilterDirectly( char * filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
+int __stdcall ApplyTerrainFilterDirectly( char * filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
 {
 	ApplyTerrainFilter( filename, OutDataPointer, OutSize, IsTga );
 	return 0;
@@ -459,7 +459,7 @@ vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
 vector<ModelSequenceValueStruct> ModelSequenceValueList;
 vector<ModelScaleStruct> ModelScaleList;
 
-__declspec( dllexport ) int __stdcall FixModelCollisionSphere( const char * mdlpath, float X, float Y, float Z, float Radius )
+int __stdcall FixModelCollisionSphere( const char * mdlpath, float X, float Y, float Z, float Radius )
 {
 	ModelCollisionFixStruct tmpModelFix;
 	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
@@ -472,7 +472,7 @@ __declspec( dllexport ) int __stdcall FixModelCollisionSphere( const char * mdlp
 }
 
 
-__declspec( dllexport ) int __stdcall FixModelTexturePath( const char * mdlpath, int textureid, const char * texturenew )
+int __stdcall FixModelTexturePath( const char * mdlpath, int textureid, const char * texturenew )
 {
 	ModelTextureFixStruct tmpModelFix;
 	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
@@ -484,7 +484,7 @@ __declspec( dllexport ) int __stdcall FixModelTexturePath( const char * mdlpath,
 
 
 
-__declspec( dllexport ) int __stdcall PatchModel( const char * mdlpath, const char * pathPatch )
+int __stdcall PatchModel( const char * mdlpath, const char * pathPatch )
 {
 	ModelPatchStruct tmpModelFix;
 	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
@@ -493,7 +493,7 @@ __declspec( dllexport ) int __stdcall PatchModel( const char * mdlpath, const ch
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall RemoveTagFromModel( const char * mdlpath, const char * tagname )
+int __stdcall RemoveTagFromModel( const char * mdlpath, const char * tagname )
 {
 	ModelRemoveTagStruct tmpModelFix;
 	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
@@ -502,7 +502,7 @@ __declspec( dllexport ) int __stdcall RemoveTagFromModel( const char * mdlpath, 
 	return 0;
 }
 
-__declspec( dllexport ) int __stdcall ChangeAnimationSpeed( const char * mdlpath, const char * SeqenceName, float Speed )
+int __stdcall ChangeAnimationSpeed( const char * mdlpath, const char * SeqenceName, float Speed )
 {
 	ModelSequenceReSpeedStruct tmpModelFix;
 	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
@@ -514,7 +514,7 @@ __declspec( dllexport ) int __stdcall ChangeAnimationSpeed( const char * mdlpath
 
 
 
-__declspec( dllexport ) int __stdcall SetSequenceValue( const char * mdlpath, const char * SeqenceName, int Indx, float Value )
+int __stdcall SetSequenceValue( const char * mdlpath, const char * SeqenceName, int Indx, float Value )
 {
 	if ( Indx < 0 || Indx > 6 )
 		return -1;
@@ -529,7 +529,7 @@ __declspec( dllexport ) int __stdcall SetSequenceValue( const char * mdlpath, co
 }
 
 
-__declspec( dllexport ) int __stdcall SetModelScale( const char * mdlpath, float Scale )
+int __stdcall SetModelScale( const char * mdlpath, float Scale )
 {
 	ModelScaleStruct tmpModelFix;
 	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
@@ -1156,7 +1156,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			size_t offset = 0;
 
 			DWORD MaxObjectId = 0;
-		
+
 			std::vector<DWORD *> parents;
 
 			DWORD OffsetToInsertPivotPoint = 0;
@@ -1512,7 +1512,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				fclose( f );
 				MessageBox( 0, "Ok dump", "DUMP", 0 );
 			}
-	
+
 
 			ICONMDLCACHE * tmpih = new ICONMDLCACHE( );
 			BOOL FoundOldHelper = GetFromIconMdlCache( filename, tmpih );
@@ -1535,7 +1535,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			else
 			{
 				Buffer ResultBuffer;
-				ResultBuffer.buf = new char[  FullPatchData.size( ) ];
+				ResultBuffer.buf = new char[ FullPatchData.size( ) ];
 				ResultBuffer.length = FullPatchData.size( );
 
 				memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
@@ -1766,7 +1766,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 }
 
 
-__declspec( dllexport ) int __stdcall RedirectFile( const char * RealFilePath, const char * NewFilePath )
+int __stdcall RedirectFile( const char * RealFilePath, const char * NewFilePath )
 {
 	FileRedirectStruct tmpModelFix;
 	sprintf_s( tmpModelFix.NewFilePath, 512, "%s", NewFilePath );
@@ -1839,6 +1839,10 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 
 signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
+	if ( TerminateStarted )
+	{
+		return GameGetFile_ptr( filename_, OutDataPointer, OutSize, unknown );
+	}
 
 	const char * filename = filename_;
 

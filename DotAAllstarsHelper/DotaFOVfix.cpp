@@ -56,14 +56,14 @@ int __fastcall SetGameAreaFOV_new( Matrix1 * a1, int _unused, float a3, float a4
 BOOL EnableFixFOV = FALSE;
 
 
-__declspec( dllexport ) int __stdcall SetWidescreenFixState( BOOL widefixenable )
+int __stdcall SetWidescreenFixState( BOOL widefixenable )
 {
 	EnableFixFOV = widefixenable;
 	return 0;
 }
 
 
-__declspec( dllexport ) int __stdcall SetCustomFovFix( float _CustomFovFix )
+int __stdcall SetCustomFovFix( float _CustomFovFix )
 {
 	CustomFovFix = _CustomFovFix;
 	return 0;
