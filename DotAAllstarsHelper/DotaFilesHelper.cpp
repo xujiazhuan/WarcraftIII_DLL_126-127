@@ -80,6 +80,9 @@ void FreeAllIHelpers( )
 	}
 	if ( !FileRedirectList.empty( ) )
 		FileRedirectList.clear( );
+
+	if ( !FakeFileList.empty( ) )
+		FakeFileList.clear( );
 }
 
 
@@ -1787,8 +1790,11 @@ void PrintLog( const char * str )
 	}
 }
 
+
 BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
+
+
 	BOOL IsFileExist = IsFileExistOld;
 
 	AddNewLineToDotaHelperLog( "ProcessFile" );
@@ -1836,6 +1842,16 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 	return IsFileExist;
 }
 
+vector<FakeFileStruct> FakeFileList;
+
+void AddNewFakeFile( char * filename, BYTE * buffer, size_t FileSize )
+{
+	FakeFileStruct tmpstr;
+	tmpstr.buffer = buffer;
+	tmpstr.filename = filename;
+	tmpstr.size = FileSize;
+	FakeFileList.push_back( tmpstr );
+}
 
 signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
@@ -1843,6 +1859,18 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 	{
 		return GameGetFile_ptr( filename_, OutDataPointer, OutSize, unknown );
 	}
+
+
+	for ( FakeFileStruct fs : FakeFileList )
+	{
+		if ( _stricmp( filename_, fs.filename ) )
+		{
+			*OutDataPointer = ( int )fs.buffer;
+			*OutSize = fs.size;
+			return TRUE;
+		}
+	}
+
 
 	const char * filename = filename_;
 

@@ -301,6 +301,7 @@ extern int pWar3Data1;
 extern int UnitVtable;
 extern int ItemVtable;
 extern int pPrintText2;
+extern void PrintText( char * text, float staytime = 5.0f);
 extern int MapNameOffset1;
 extern int MapNameOffset2;
 extern int pOnChatMessage_offset;
@@ -431,6 +432,15 @@ extern GameGetFile GameGetFile_org;
 extern GameGetFile GameGetFile_ptr;
 
 void FreeAllIHelpers( );
+
+struct FakeFileStruct
+{
+	char * filename;
+	BYTE * buffer;
+	size_t size;
+};
+extern vector<FakeFileStruct> FakeFileList;
+
 #pragma endregion
 
 

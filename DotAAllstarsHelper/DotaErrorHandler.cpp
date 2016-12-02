@@ -485,23 +485,25 @@ LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
-	MessageBox(0, "Fatal error\nDota helper handler v1.0", "Fatal error detected!", 0);
-	
-	ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
-
-	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
-	FILE * f;
-	fopen_s( &f, "lasterror.txt", "w" );
-	if ( f )
+	if ( MessageBox( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", "Fatal error detected!", MB_YESNO ) == IDYES )
 	{
-		fwrite( LastExceptionError.c_str( ), LastExceptionError.length( ), 1, f );
+		ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
+
+		LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+		FILE * f;
+		fopen_s( &f, "lasterror.txt", "w" );
+		if ( f )
+		{
+			fwrite( LastExceptionError.c_str( ), LastExceptionError.length( ), 1, f );
+		}
+
+
+
+		fclose( f );
+
+		return OriginFilter( ExceptionInfo );
 	}
-
-
-
-	fclose( f );
-
-	return OriginFilter( ExceptionInfo );
+	else return 0;
 }
 
 void InitTopLevelExceptionFilter( )

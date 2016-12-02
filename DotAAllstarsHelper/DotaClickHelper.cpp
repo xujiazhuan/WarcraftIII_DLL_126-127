@@ -388,7 +388,6 @@ BOOL IsNULLButtonFound( int pButton )
 	return FALSE;
 }
 
-#pragma region ClickEvent: leaked from iccup :)
 // | 0 | 3 | 6 | 9  |
 // | 1 | 4 | 7 | 10 | 
 // | 2 | 5 | 8 | 11 |
@@ -400,8 +399,17 @@ int GetSkillPanelButton( int idx )
 {
 	AddNewLineToDotaHelperLog( __func__ );
 	int pGamePlayerPanel = *( int* )( *( int* )( pW3XGlobalClass )+0x3c8 );
-	int topLeftCommandButton = **( int** )( *( int* )( pGamePlayerPanel + 0x154 ) + 0x8 );
-	return  topLeftCommandButton + sizeOfCommandButtonObj * idx;
+	if ( pGamePlayerPanel > 0 )
+	{
+		int topLeftCommandButton = *( int* )( pGamePlayerPanel + 0x154 );
+		if ( topLeftCommandButton > 0 )
+		{
+			topLeftCommandButton = **( int** )( topLeftCommandButton + 0x8 );
+			if ( topLeftCommandButton > 0 )
+				return topLeftCommandButton + sizeOfCommandButtonObj * idx;
+		}
+	}
+	return 0;
 }
 
 
@@ -422,11 +430,6 @@ void PressSkillPanelButton( int idx, BOOL RightClick )
 }
 
 
-#pragma endregion
-
-
-
-bool LastKeyState[ 256 ];
 vector<unsigned int> SendKeyEvent;
 
 
@@ -436,11 +439,12 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 	WPARAM wParam = _wParam;
 	if ( SkipAllMessages || TerminateStarted )
 	{
-		return  DefWindowProc( hWnd, Msg, wParam, lParam );// WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+		return DefWindowProc( hWnd, Msg, wParam, lParam );// WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+
 
 	if ( *( BOOL* )IsWindowActive )
 	{
@@ -540,7 +544,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 				{
 					if ( keyAction.VK == ( int )wParam )
 					{
-						if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
+						if ( Msg == WM_KEYDOWN )
 						{
 							int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
 							if ( selectedunit && GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) > 0 )
@@ -551,23 +555,21 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 									{
 										if ( keyAction.altbtnID >= 0 )
 										{
-											PressSkillPanelButton( keyAction.altbtnID, FALSE );
+											if ( !( lParam & 0x40000000 ) )
+												PressSkillPanelButton( keyAction.altbtnID, FALSE );
 											NeedSkipThisKey = TRUE;
 										}
 									}
 									else
 									{
-										PressSkillPanelButton( keyAction.btnID, FALSE );
+										if ( !( lParam & 0x40000000 ) )
+											PressSkillPanelButton( keyAction.btnID, FALSE );
 										NeedSkipThisKey = TRUE;
 									}
 								}
 							}
-							LastKeyState[ wParam ] = true;
 						}
-						else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
-						{
-							LastKeyState[ wParam ] = false;
-						}
+
 					}
 
 				}
@@ -589,7 +591,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 						if ( keyCode == ( int )wParam )
 						{
 
-							if ( Msg == WM_KEYDOWN && !LastKeyState[ wParam ] )
+							if ( Msg == WM_KEYDOWN && !( lParam & 0x40000000 ) )
 							{
 
 								SendKeyEvent.push_back( 0x85 );
@@ -598,13 +600,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 								SendKeyEvent.push_back( wParam );
 								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
 								SendKeyEvent.clear( );
-
-								LastKeyState[ wParam ] = true;
 								//*KeyboardAddrForKey = ( int ) wParam;
 								//*KeyboardAddrForKeyEvent = ( int ) Msg;
 							//	TriggerExecute( KeyboardTriggerHandle );
 							}
-							else if ( Msg == WM_KEYUP && LastKeyState[ wParam ] )
+							else if ( Msg == WM_KEYUP )
 							{
 
 								SendKeyEvent.push_back( 0x85 );
@@ -613,8 +613,6 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 								SendKeyEvent.push_back( wParam );
 								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
 								SendKeyEvent.clear( );
-
-								LastKeyState[ wParam ] = false;
 								//*KeyboardAddrForKey = ( int ) wParam;
 								//*KeyboardAddrForKeyEvent = ( int ) Msg;
 								//TriggerExecute( KeyboardTriggerHandle );
@@ -853,8 +851,7 @@ int sub_6F33A010Offset = 0;
 void IssueFixerInit( )
 {
 	AddNewLineToDotaHelperLog( __func__ );
-	memset( LastKeyState, 0, sizeof( LastKeyState ) );
-	memset( LastPressedKeysTime, 0, sizeof( LastPressedKeysTime ) );
+
 
 	IssueWithoutTargetOrderorg = ( IssueWithoutTargetOrder )( GameDll + IssueWithoutTargetOrderOffset );
 	MH_CreateHook( IssueWithoutTargetOrderorg, &IssueWithoutTargetOrdermy, reinterpret_cast< void** >( &IssueWithoutTargetOrderptr ) );
@@ -898,7 +895,9 @@ void IssueFixerInit( )
 void IssueFixerDisable( )
 {
 	AddNewLineToDotaHelperLog( __func__ );
-	memset( LastKeyState, 0, sizeof( LastKeyState ) );
+
+	memset( LastPressedKeysTime, 0, sizeof( LastPressedKeysTime ) );
+
 	MH_DisableHook( IssueWithoutTargetOrderorg );
 	MH_DisableHook( IssueTargetOrPointOrder2org );
 	MH_DisableHook( sub_6F339D50org );

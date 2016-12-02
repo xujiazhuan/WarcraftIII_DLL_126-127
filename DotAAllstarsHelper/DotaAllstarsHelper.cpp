@@ -89,6 +89,21 @@ int  Warcraft3WindowProcOffset = 0;
 BOOL MainFuncWork = FALSE;
 
 
+void PrintText( char * text,float staytime  )
+{
+	__asm
+	{
+		push 18;
+		push staytime;
+		push text;
+		mov ecx, pW3XGlobalClass;
+		mov ecx, [ ecx ];
+		mov edx, pPrintText2;
+		call edx;
+	}
+}
+
+
 int __stdcall SetMainFuncWork( BOOL state )
 {
 	MainFuncWork = state;
