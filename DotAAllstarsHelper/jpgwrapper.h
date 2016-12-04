@@ -1,14 +1,7 @@
 #ifndef JpgWrapper
 #define JpgWrapper
-#pragma warning(disable:4668)
-#pragma warning(disable:4820)
-#pragma warning(disable:4710)
-#pragma warning(disable:4100)
-#pragma warning(disable:4514)
 
-#include <cstdio>
-#include <cstring>
-#include <csetjmp>
+#include "Main.h"
 
 #pragma comment(lib,"legacy_stdio_definitions.lib")
 #pragma comment(lib,"turbojpeg-static.lib")

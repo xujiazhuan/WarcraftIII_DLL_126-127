@@ -1,21 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.25928.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DotAAllstarsHelper688b", "DotAAllstarsHelper\DotAAllstarsHelper.vcxproj", "{4B94B582-A36C-43FF-AB86-D01CF1299739}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WarcraftMemHackHelper", "WarcraftMemHackHelper\WarcraftMemHackHelper.vcxproj", "{A291E0B5-2482-4C9A-AE19-160E26F73B1C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotaAllstarsExErrorHandler", "DotaAllstarsExErrorHandler\DotaAllstarsExErrorHandler.csproj", "{23537ED9-B29F-4BCF-91E6-6EDEFAC9C004}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Release|Win32 = Release|Win32
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4B94B582-A36C-43FF-AB86-D01CF1299739}.Release|Win32.ActiveCfg = Release|Win32
-		{4B94B582-A36C-43FF-AB86-D01CF1299739}.Release|Win32.Build.0 = Release|Win32
-		{A291E0B5-2482-4C9A-AE19-160E26F73B1C}.Release|Win32.ActiveCfg = Release|Win32
-		{A291E0B5-2482-4C9A-AE19-160E26F73B1C}.Release|Win32.Build.0 = Release|Win32
+		{4B94B582-A36C-43FF-AB86-D01CF1299739}.Release|x86.ActiveCfg = Release|Win32
+		{4B94B582-A36C-43FF-AB86-D01CF1299739}.Release|x86.Build.0 = Release|Win32
+		{A291E0B5-2482-4C9A-AE19-160E26F73B1C}.Release|x86.ActiveCfg = Release|Win32
+		{A291E0B5-2482-4C9A-AE19-160E26F73B1C}.Release|x86.Build.0 = Release|Win32
+		{23537ED9-B29F-4BCF-91E6-6EDEFAC9C004}.Release|x86.ActiveCfg = Release|x86
+		{23537ED9-B29F-4BCF-91E6-6EDEFAC9C004}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

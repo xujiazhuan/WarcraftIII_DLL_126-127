@@ -1262,7 +1262,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						size_t newoffset = offset + *( size_t* )&ModelBytes[ offset ];
 						offset += 4;
 						Mdx_Node tmpNode;
-						Mdx_Tracks tmpTracks;
+						//Mdx_Tracks tmpTracks;
 						while ( newoffset > offset )
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
@@ -1389,7 +1389,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 								offset += 4;
 								memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
 								offset += sizeof( Mdx_Tracks );
-								for ( DWORD i = 0; i < tmpTracks.NrOfTracks; i++ )
+								for ( int i = 0; i < tmpTracks.NrOfTracks; i++ )
 								{
 									offset += 4;
 								}

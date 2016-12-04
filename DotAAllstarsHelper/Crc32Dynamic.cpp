@@ -98,7 +98,7 @@ DWORD CCrc32Dynamic::StringCrc32( LPCTSTR szString, DWORD &dwCrc32 ) const
 		if ( m_pdwCrc32Table == NULL )
 			throw 0;
 
-		while ( *szString != _T( '\0' ) )
+		while ( *szString != '\0' )
 		{
 			CalcCrc32( ( BYTE ) *szString, dwCrc32 );
 			szString++;

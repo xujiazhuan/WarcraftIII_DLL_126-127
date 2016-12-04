@@ -1,12 +1,4 @@
 ﻿#pragma once
-#pragma warning(disable:4668)
-#pragma warning(disable:4820)
-#pragma warning(disable:4710)
-#pragma warning(disable:4100)
-#pragma warning(disable:4514)
-#pragma warning(disable:4091)
-
-
 
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
@@ -17,24 +9,24 @@
 //#define PSAPI_VERSION 1
 
 #pragma region Includes
-// Все WINAPI и прочие функции
+#include <cstdio>
+#include <cstring>
+#include <csetjmp>
+
 #include <Windows.h>
-#include <Windowsx.h>
-#include <intrin.h>
+#include <string>
 #include <vector>
-#include <tchar.h>
 #include <fstream> 
 #include <iostream>
 #include <sstream>
-//#include <Psapi.h>
-// Перехват функций
+#include <algorithm>
 #include <MinHook.h>
-#include <string>
+
 using namespace std;
 #pragma comment(lib, "libMinHook.x86.lib")
 #include <winsock2.h>
 #pragma comment (lib, "Ws2_32.lib")
-//#pragma comment(lib, "Psapi.lib")
+#include "buffer.h"
 #pragma endregion
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
 
@@ -47,8 +39,6 @@ struct CustomHPBar
 	float scalex;
 	float scaley;
 };
-
-
 
 struct Matrix1//Matrix 4x4
 {
@@ -173,6 +163,8 @@ BOOL __stdcall IsHero( int UnitAddr );
 BOOL __stdcall IsTower( int unitaddr );
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
+
+string ToLower( string s );
 
 extern BOOL MainFuncWork;
 
@@ -301,7 +293,7 @@ extern int pWar3Data1;
 extern int UnitVtable;
 extern int ItemVtable;
 extern int pPrintText2;
-extern void PrintText( char * text, float staytime = 5.0f);
+extern void PrintText( const char * text, float staytime = 10.0f);
 extern int MapNameOffset1;
 extern int MapNameOffset2;
 extern int pOnChatMessage_offset;

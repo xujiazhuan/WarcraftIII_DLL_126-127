@@ -1,10 +1,5 @@
 #ifndef BUFFER_H
 #define BUFFER_H
-#pragma warning(disable:4668)
-#pragma warning(disable:4820)
-#pragma warning(disable:4710)
-#pragma warning(disable:4100)
-#pragma warning(disable:4514)
 
 typedef struct Buffer
 {

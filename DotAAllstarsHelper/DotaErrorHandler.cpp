@@ -17,10 +17,10 @@ public:
 	{
 		switch ( opcode )
 		{
-			case 0: return "read";
-			case 1: return "write";
-			case 8: return "user-mode data execution prevention (DEP) violation";
-			default: return "unknown";
+		case 0: return "read";
+		case 1: return "write";
+		case 8: return "user-mode data execution prevention (DEP) violation";
+		default: return "unknown";
 		}
 	}
 
@@ -28,27 +28,27 @@ public:
 	{
 		switch ( code )
 		{
-			case EXCEPTION_ACCESS_VIOLATION:         return "EXCEPTION_ACCESS_VIOLATION";
-			case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:    return "EXCEPTION_ARRAY_BOUNDS_EXCEEDED";
-			case EXCEPTION_BREAKPOINT:               return "EXCEPTION_BREAKPOINT";
-			case EXCEPTION_DATATYPE_MISALIGNMENT:    return "EXCEPTION_DATATYPE_MISALIGNMENT";
-			case EXCEPTION_FLT_DENORMAL_OPERAND:     return "EXCEPTION_FLT_DENORMAL_OPERAND";
-			case EXCEPTION_FLT_DIVIDE_BY_ZERO:       return "EXCEPTION_FLT_DIVIDE_BY_ZERO";
-			case EXCEPTION_FLT_INEXACT_RESULT:       return "EXCEPTION_FLT_INEXACT_RESULT";
-			case EXCEPTION_FLT_INVALID_OPERATION:    return "EXCEPTION_FLT_INVALID_OPERATION";
-			case EXCEPTION_FLT_OVERFLOW:             return "EXCEPTION_FLT_OVERFLOW";
-			case EXCEPTION_FLT_STACK_CHECK:          return "EXCEPTION_FLT_STACK_CHECK";
-			case EXCEPTION_FLT_UNDERFLOW:            return "EXCEPTION_FLT_UNDERFLOW";
-			case EXCEPTION_ILLEGAL_INSTRUCTION:      return "EXCEPTION_ILLEGAL_INSTRUCTION";
-			case EXCEPTION_IN_PAGE_ERROR:            return "EXCEPTION_IN_PAGE_ERROR";
-			case EXCEPTION_INT_DIVIDE_BY_ZERO:       return "EXCEPTION_INT_DIVIDE_BY_ZERO";
-			case EXCEPTION_INT_OVERFLOW:             return "EXCEPTION_INT_OVERFLOW";
-			case EXCEPTION_INVALID_DISPOSITION:      return "EXCEPTION_INVALID_DISPOSITION";
-			case EXCEPTION_NONCONTINUABLE_EXCEPTION: return "EXCEPTION_NONCONTINUABLE_EXCEPTION";
-			case EXCEPTION_PRIV_INSTRUCTION:         return "EXCEPTION_PRIV_INSTRUCTION";
-			case EXCEPTION_SINGLE_STEP:              return "EXCEPTION_SINGLE_STEP";
-			case EXCEPTION_STACK_OVERFLOW:           return "EXCEPTION_STACK_OVERFLOW";
-			default: return "UNKNOWN EXCEPTION";
+		case EXCEPTION_ACCESS_VIOLATION:         return "EXCEPTION_ACCESS_VIOLATION";
+		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:    return "EXCEPTION_ARRAY_BOUNDS_EXCEEDED";
+		case EXCEPTION_BREAKPOINT:               return "EXCEPTION_BREAKPOINT";
+		case EXCEPTION_DATATYPE_MISALIGNMENT:    return "EXCEPTION_DATATYPE_MISALIGNMENT";
+		case EXCEPTION_FLT_DENORMAL_OPERAND:     return "EXCEPTION_FLT_DENORMAL_OPERAND";
+		case EXCEPTION_FLT_DIVIDE_BY_ZERO:       return "EXCEPTION_FLT_DIVIDE_BY_ZERO";
+		case EXCEPTION_FLT_INEXACT_RESULT:       return "EXCEPTION_FLT_INEXACT_RESULT";
+		case EXCEPTION_FLT_INVALID_OPERATION:    return "EXCEPTION_FLT_INVALID_OPERATION";
+		case EXCEPTION_FLT_OVERFLOW:             return "EXCEPTION_FLT_OVERFLOW";
+		case EXCEPTION_FLT_STACK_CHECK:          return "EXCEPTION_FLT_STACK_CHECK";
+		case EXCEPTION_FLT_UNDERFLOW:            return "EXCEPTION_FLT_UNDERFLOW";
+		case EXCEPTION_ILLEGAL_INSTRUCTION:      return "EXCEPTION_ILLEGAL_INSTRUCTION";
+		case EXCEPTION_IN_PAGE_ERROR:            return "EXCEPTION_IN_PAGE_ERROR";
+		case EXCEPTION_INT_DIVIDE_BY_ZERO:       return "EXCEPTION_INT_DIVIDE_BY_ZERO";
+		case EXCEPTION_INT_OVERFLOW:             return "EXCEPTION_INT_OVERFLOW";
+		case EXCEPTION_INVALID_DISPOSITION:      return "EXCEPTION_INVALID_DISPOSITION";
+		case EXCEPTION_NONCONTINUABLE_EXCEPTION: return "EXCEPTION_NONCONTINUABLE_EXCEPTION";
+		case EXCEPTION_PRIV_INSTRUCTION:         return "EXCEPTION_PRIV_INSTRUCTION";
+		case EXCEPTION_SINGLE_STEP:              return "EXCEPTION_SINGLE_STEP";
+		case EXCEPTION_STACK_OVERFLOW:           return "EXCEPTION_STACK_OVERFLOW";
+		default: return "UNKNOWN EXCEPTION";
 		}
 	}
 
@@ -90,9 +90,9 @@ std::string ReadRegistryKeyString( const char *registryKey, const char *registry
 	if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, registryKey, 0, KEY_QUERY_VALUE, &hKey ) != ERROR_SUCCESS )
 		return 0;
 
-	char str[ 256 ] = { };
+	char str[ 256 ] = {};
 	DWORD dwLen = 255;
-	LONG ret = RegQueryValueExA( hKey, registryValue, NULL, NULL, ( LPBYTE ) str, &dwLen );
+	LONG ret = RegQueryValueExA( hKey, registryValue, NULL, NULL, ( LPBYTE )str, &dwLen );
 	RegCloseKey( hKey );
 
 	if ( ret == ERROR_SUCCESS )
@@ -131,12 +131,44 @@ vector<string> Blizzard6Log;
 vector<string> JassLogList;
 vector<int> CNetEvents;
 
+namespace LogType
+{
+	enum LogType : UINT
+	{
+		DotaChatLog,
+		DotaHelperLog,
+		JassNativesFuncLog,
+		JassLogList
+	};
+}
 
+HWND ExternErrorHandler = FindWindow(0,"Dota Allstars Extern Error Handler");
+DWORD ExternErrorHandlerLastCheck = 0;
+void ExternalLog( string s, LogType::LogType logtype )
+{
+	if ( ExternErrorHandler > 0 && IsWindow(ExternErrorHandler))
+	{
+		COPYDATASTRUCT cds;
+		cds.dwData = logtype;
+		cds.cbData = s.length( );
+		cds.lpData = ( PVOID )s.c_str( );
+		if ( S_OK != SendMessage( ExternErrorHandler, WM_COPYDATA, ( WPARAM )ExternErrorHandler, ( LPARAM )( LPVOID )&cds ) )
+		{
+			ExternErrorHandler = NULL;
+		}
+	}
+	else if ( ExternErrorHandlerLastCheck + 1000 < GetTickCount( ) )
+	{
+		ExternErrorHandlerLastCheck = GetTickCount( );
+		ExternErrorHandler = FindWindow( 0, "Dota Allstars Extern Error Handler" );
+	}
+}
 
 void AddNewLineToDotaChatLog( string s )
 {
 	if ( bDllLogEnable )
 	{
+		ExternalLog( s, LogType::LogType::DotaChatLog );
 		if ( DotaChatLog.size( ) > 11 )
 		{
 			DotaChatLog.erase( DotaChatLog.begin( ) );
@@ -149,6 +181,7 @@ void AddNewLineToDotaHelperLog( string s )
 {
 	if ( bDllLogEnable )
 	{
+		ExternalLog( s, LogType::LogType::DotaHelperLog );
 		if ( DotaHelperLog.size( ) > 20 )
 		{
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
@@ -161,9 +194,27 @@ void AddNewLineToJassNativesLog( string s )
 {
 	if ( JassNativesFuncLog.size( ) > 40 )
 	{
+		ExternalLog( s, LogType::LogType::JassNativesFuncLog );
 		JassNativesFuncLog.erase( JassNativesFuncLog.begin( ) );
 	}
 	JassNativesFuncLog.push_back( s );
+}
+
+
+void AddNewLineToJassLog( string s )
+{
+	if ( JassLogList.size( ) > 35 )
+	{
+		ExternalLog( s, LogType::LogType::JassLogList );
+		JassLogList.erase( JassLogList.begin( ) );
+	}
+	JassLogList.push_back( s );
+}
+
+int __stdcall JassLog( const char * s )
+{
+	AddNewLineToJassLog( s );
+	return 0;
 }
 
 
@@ -236,24 +287,9 @@ void AddNewLineToBlizzard6Log( string s )
 	Blizzard6Log.push_back( s );
 }
 
-void AddNewLineToJassLog( string s )
-{
-	if ( JassLogList.size( ) > 35 )
-	{
-		JassLogList.erase( JassLogList.begin( ) );
-	}
-	JassLogList.push_back( s );
-}
-
- int __stdcall JassLog( const char * s )
-{
-	AddNewLineToJassLog( s );
-	return 0;
-}
-
 
 BOOL bDllLogEnable = TRUE;
- int __stdcall DllLogEnable( BOOL enable )
+int __stdcall DllLogEnable( BOOL enable )
 {
 	bDllLogEnable = enable;
 	return 0;
@@ -311,104 +347,104 @@ const char * GetNetEventStrByID( int EventID )
 {
 	switch ( EventID )
 	{
-		case 1:
-			return "CNetEventConnect";
-		case 2:
-			return "CNetEventDisconnect";
-		case 3:
-			return "CNetEventGameListStart";
-		case 4:
-			return "CNetEventGameListStop";
-		case 5:
-			return "CNetEventGameListError";
-		case 6:
-			return "CNetEventGameListAdd";
-		case 7:
-			return "CNetEventGameListUpdate";
-		case 8:
-			return "CNetEventGameListDelete";
-		case 9:
-			return "CNetEventTeamGameListStart";
-		case 10:
-			return "CNetEventTeamGameListStop";
-		case 11:
-			return "CNetEventTeamGameListAdd";
-		case 12:
-			return "CNetEventTeamGameListUpdate";
-		case 13:
-			return "CNetEventTeamGameListDelete";
-		case 14:
-			return "CNetEventAnonGameFind";
-		case 15:
-			return "CNetEventAnonGameJoin";
-		case 16:
-			return "CNetEventGameCreate";
-		case 17:
-			return "CNetEventGameAd";
-		case 18:
-			return "CNetEventTeamGameAd";
-		case 19:
-			return "CNetEventTeamInfo";
-		case 20:
-			return "CNetEventGameFind";
-		case 21:
-			return "CNetEventGameJoin";
-		case 22:
-			return "CNetEventPlayerJoin";
-		case 23:
-			return "CNetEventPlayerLeave";
-		case 24:
-			return "CNetEventPlayerReady";
-		case 25:
-			return "CNetEventGameSetup";
-		case 26:
-			return "CNetEventGameClose";
-		case 27:
-			return "CNetEventGameStart";
-		case 28:
-			return "CNetEventGameReady";
-		case 29:
-			return "CNetEventPlayerUpdate";
-		case 36:
-			return "CNetEventGameSuspend";
-		case 37:
-			return "CNetEventPlayerResume";
-		case 38:
-			return "CNetEventRouterHandoffSearching";
-		case 39:
-			return "CNetEventRouterHandoffSyncing";
-		case 40:
-			return "CNetEventRouterHandoffDone";
-		case 41:
-			return "CNetEventRouterUnresponsive";
-		case 42:
-			return "CNetEventRouterResponsive";
-		case 43:
-			return "CNetEventDistFileStart";
-		case 44:
-			return "CNetEventDistFileProgress";
-		case 45:
-			return "CNetEventDistFileComplete";
-		case 46:
-			return "CNetEventOfficialPlayers";
-		case 33:
-			return "CNetEventSetTurnsLatency";
-		case 47:
-			return "CNetEventTrigger";
-		case 34:
-			return "CNETEVENT_ID_TURNSSYNC";
-		case 35:
-			return "EVENT_ID_TURNSSYNCMISMATCH";
-		case 48:
-			return "CNetEventTrustedDesync";
-		case 49:
-			return "CNetEventTrustedResult";
-		case 31:
-			return "CNetGameEvents";
-		case 32:
-			return "CNet::EVENT_MESSAGE";
-		default:
-			break;
+	case 1:
+		return "CNetEventConnect";
+	case 2:
+		return "CNetEventDisconnect";
+	case 3:
+		return "CNetEventGameListStart";
+	case 4:
+		return "CNetEventGameListStop";
+	case 5:
+		return "CNetEventGameListError";
+	case 6:
+		return "CNetEventGameListAdd";
+	case 7:
+		return "CNetEventGameListUpdate";
+	case 8:
+		return "CNetEventGameListDelete";
+	case 9:
+		return "CNetEventTeamGameListStart";
+	case 10:
+		return "CNetEventTeamGameListStop";
+	case 11:
+		return "CNetEventTeamGameListAdd";
+	case 12:
+		return "CNetEventTeamGameListUpdate";
+	case 13:
+		return "CNetEventTeamGameListDelete";
+	case 14:
+		return "CNetEventAnonGameFind";
+	case 15:
+		return "CNetEventAnonGameJoin";
+	case 16:
+		return "CNetEventGameCreate";
+	case 17:
+		return "CNetEventGameAd";
+	case 18:
+		return "CNetEventTeamGameAd";
+	case 19:
+		return "CNetEventTeamInfo";
+	case 20:
+		return "CNetEventGameFind";
+	case 21:
+		return "CNetEventGameJoin";
+	case 22:
+		return "CNetEventPlayerJoin";
+	case 23:
+		return "CNetEventPlayerLeave";
+	case 24:
+		return "CNetEventPlayerReady";
+	case 25:
+		return "CNetEventGameSetup";
+	case 26:
+		return "CNetEventGameClose";
+	case 27:
+		return "CNetEventGameStart";
+	case 28:
+		return "CNetEventGameReady";
+	case 29:
+		return "CNetEventPlayerUpdate";
+	case 36:
+		return "CNetEventGameSuspend";
+	case 37:
+		return "CNetEventPlayerResume";
+	case 38:
+		return "CNetEventRouterHandoffSearching";
+	case 39:
+		return "CNetEventRouterHandoffSyncing";
+	case 40:
+		return "CNetEventRouterHandoffDone";
+	case 41:
+		return "CNetEventRouterUnresponsive";
+	case 42:
+		return "CNetEventRouterResponsive";
+	case 43:
+		return "CNetEventDistFileStart";
+	case 44:
+		return "CNetEventDistFileProgress";
+	case 45:
+		return "CNetEventDistFileComplete";
+	case 46:
+		return "CNetEventOfficialPlayers";
+	case 33:
+		return "CNetEventSetTurnsLatency";
+	case 47:
+		return "CNetEventTrigger";
+	case 34:
+		return "CNETEVENT_ID_TURNSSYNC";
+	case 35:
+		return "EVENT_ID_TURNSSYNCMISMATCH";
+	case 48:
+		return "CNetEventTrustedDesync";
+	case 49:
+		return "CNetEventTrustedResult";
+	case 31:
+		return "CNetGameEvents";
+	case 32:
+		return "CNet::EVENT_MESSAGE";
+	default:
+		break;
 	}
 	return "Unknown CNETEvent";
 }
@@ -418,10 +454,13 @@ ProcessNetEvents ProcessNetEvents_ptr;
 
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
-	AddNewLineToDotaHelperLog( __func__ );
-	int EventID = *( BYTE* ) ( Event + 20 );
-	ProcessNetEvents_ptr( data, unused, Event );
-	AddNewCNetEventLog( EventID, data, Event, *( BYTE* ) ( Event + 12 ) );
+	//AddNewLineToDotaHelperLog( __func__ );
+	if ( Event > 0 )
+	{
+		int EventID = *( BYTE* )( Event + 20 );
+		ProcessNetEvents_ptr( data, unused, Event );
+		AddNewCNetEventLog( EventID, data, Event, *( BYTE* )( Event + 12 ) );
+	}
 }
 
 
@@ -434,7 +473,7 @@ std::string GetLastErrorAsString( )
 
 	LPSTR messageBuffer = NULL;
 	size_t size = FormatMessageA( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-								  NULL, errorMessageID, MAKELANGID( LANG_ENGLISH, SUBLANG_ENGLISH_US ), ( LPSTR ) &messageBuffer, 0, NULL );
+		NULL, errorMessageID, MAKELANGID( LANG_ENGLISH, SUBLANG_ENGLISH_US ), ( LPSTR )&messageBuffer, 0, NULL );
 
 	if ( size > 2 && messageBuffer != NULL )
 	{
@@ -472,7 +511,7 @@ string url_encode( const string &value )
 
 		// Any other characters are percent-encoded
 		escaped << uppercase;
-		escaped << '%' << setw( 2 ) << int( ( unsigned char ) c );
+		escaped << '%' << setw( 2 ) << int( ( unsigned char )c );
 		escaped << nouppercase;
 	}
 
@@ -526,12 +565,12 @@ DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
 	HANDLE  hProcess;
 	DWORD   i, cdwProcesses, dwProcessId = 0;
 
-	lpdwProcessIds = ( LPDWORD ) HeapAlloc( GetProcessHeap( ), 0, MAX_PROCESSES * sizeof( DWORD ) );
+	lpdwProcessIds = ( LPDWORD )HeapAlloc( GetProcessHeap( ), 0, MAX_PROCESSES * sizeof( DWORD ) );
 	if ( lpdwProcessIds != NULL )
 	{
 		if ( EnumProcesses( lpdwProcessIds, MAX_PROCESSES * sizeof( DWORD ), &cdwProcesses ) )
 		{
-			lpszBaseName = ( LPTSTR ) HeapAlloc( GetProcessHeap( ), 0, MAX_PATH * sizeof( TCHAR ) );
+			lpszBaseName = ( LPTSTR )HeapAlloc( GetProcessHeap( ), 0, MAX_PATH * sizeof( TCHAR ) );
 			if ( lpszBaseName != NULL )
 			{
 				cdwProcesses /= sizeof( DWORD );
@@ -552,10 +591,10 @@ DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
 						CloseHandle( hProcess );
 					}
 				}
-				HeapFree( GetProcessHeap( ), 0, ( LPVOID ) lpszBaseName );
+				HeapFree( GetProcessHeap( ), 0, ( LPVOID )lpszBaseName );
 			}
 		}
-		HeapFree( GetProcessHeap( ), 0, ( LPVOID ) lpdwProcessIds );
+		HeapFree( GetProcessHeap( ), 0, ( LPVOID )lpdwProcessIds );
 	}
 	return dwProcessId;
 }
@@ -611,18 +650,18 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	char lasterror[ 20 ];
 	char dllcrc32[ 20 ];
 	sprintf_s( gamever, 20, "%X", GameVersion );
-	sprintf_s( lasterror, 20, "%#010x", ( unsigned int ) GetLastError( ) );
-	sprintf_s( dllcrc32, 20, "%#010x", ( unsigned int ) GetDllCrc32( ) );
+	sprintf_s( lasterror, 20, "%#010x", ( unsigned int )GetLastError( ) );
+	sprintf_s( dllcrc32, 20, "%#010x", ( unsigned int )GetDllCrc32( ) );
 	ostringstream BugReport;
 	BugReport << "[DotaHelperLog]" << std::endl;
 	char EspDump[ 16 ];
 	DWORD EspDumpBytes;
-	ReadProcessMemory( GetCurrentProcess( ), ( void * ) ( ESP_for_DUMP - 16 ), EspDump, 16, &EspDumpBytes );
+	ReadProcessMemory( GetCurrentProcess( ), ( void * )( ESP_for_DUMP - 16 ), EspDump, 16, &EspDumpBytes );
 
 
 	BugReport << "GameVer: 1." << gamever << std::endl;
-	BugReport << ( const char * ) ( *InGame ? "InGame" : "NotInGame" ) << std::endl;
-	BugReport << ( const char * ) ( *( BOOL* ) IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
+	BugReport << ( const char * )( *InGame ? "InGame" : "NotInGame" ) << std::endl;
+	BugReport << ( const char * )( *( BOOL* )IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
 
 
 	if ( *InGame )
@@ -661,7 +700,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << "[Exception Info]: " << std::endl;
 	BugReport << LastExceptionError << std::endl;
 	BugReport << "[DLL_CRC32]: " << dllcrc32 << std::endl;
-	BugReport << "[ESP]: " << ConvertMemoryToHexReverse( ( unsigned char* ) &ESP_for_DUMP, 4 ) << ". [DUMP]:" << ConvertMemoryToHexReverse( ( unsigned char* ) &EspDump, 16 ) << std::endl;
+	BugReport << "[ESP]: " << ConvertMemoryToHexReverse( ( unsigned char* )&ESP_for_DUMP, 4 ) << ". [DUMP]:" << ConvertMemoryToHexReverse( ( unsigned char* )&EspDump, 16 ) << std::endl;
 
 	BugReport << "[DLL_LOG]: " << std::endl;
 
@@ -844,7 +883,11 @@ int __fastcall BlizzardDebug1_my( const char * str )
 {
 	int retval = 0;
 	__asm mov retval, eax;
-	AddNewLineToBlizzard1Log( str );
+	if ( str && *str )
+	{
+		AddNewLineToBlizzard1Log( str );
+		PrintText( str );
+	}
 	return retval;
 }
 
@@ -855,7 +898,7 @@ int __cdecl BlizzardDebug2_my( const char * src, int lineid, const char * classn
 {
 	int retval = 0;
 	__asm mov retval, eax;
-	if ( src && classname )
+	if ( src && classname && *src && *classname )
 	{
 		char tmpdebug[ 256 ];
 		sprintf_s( tmpdebug, 256, "Sorce:%s\nLine:%i\nClass:%s", src, lineid, classname );
@@ -962,9 +1005,15 @@ void EnableErrorHandler( )
 	}
 
 
+	//if ( BlizzardDebug1_org )
+	//{
+	//	MH_CreateHook( BlizzardDebug1_org, &BlizzardDebug1_my, reinterpret_cast< void** >( &BlizzardDebug1_ptr ) );
+	//	MH_EnableHook( BlizzardDebug1_org );
+	//}
+
 }
 
- int __stdcall StartExtraErrorHandler( int )
+int __stdcall StartExtraErrorHandler( int )
 {
 
 

@@ -1,20 +1,15 @@
 #pragma once
 #ifndef BLPaletter
 #define BLPaletter
-#pragma warning(disable:4668)
-#pragma warning(disable:4820)
-#pragma warning(disable:4710)
-#pragma warning(disable:4100)
-#pragma warning(disable:4514)
 
 #include <cmath>
 #include <algorithm>
 
 #include "quantizer.h"
-#include "buffer.h"
 
 #define XMD_H
 #include "jpgwrapper.h"
+
 
 
 
@@ -39,6 +34,7 @@ enum PictureType
 	jpg,
 	blp
 };
+#include <pshpack1.h>
 
 struct BLPHeader
 {
@@ -73,16 +69,13 @@ struct TGAHeader
 };
 
 
-#include <pshpack2.h>
-
-/*struct BITMAPFILEHEADER
+struct tBGRAPixel
 {
-	unsigned short bfType;
-	unsigned long bfSize;
-	unsigned short bfReserved1;
-	unsigned short bfReserved2;
-	unsigned long bfOffBits;
-};*/
+	uint8_t b;
+	uint8_t g;
+	uint8_t r;
+	uint8_t a;
+};
 
 
 struct RGBAPix
@@ -109,14 +102,6 @@ typedef struct PPix PPix;
 #include <poppack.h>
 
 typedef RGBAPix palette[ 256 ];
-string ToLower( string s );
-bool FileToBuffer( Buffer &buf, const char* filename );
-bool BufferToFile( Buffer &buf, const char* filename );
-
-bool CanConvertTGA( const char* filename );
-bool CanConvertBMP( const char* filename );
-bool CanConvertJPG( const char* filename );
-bool ColorsOk( int colors, bool isJpg );
 
 unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename );
 bool TGA2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
@@ -128,8 +113,5 @@ bool CreateJpgBLP( Buffer &rawData, Buffer &output, int quality, char const *fil
 void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH, int bytespp, Buffer &target );
 bool ApplyOverlay( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int maskBpp );
 bool ApplyBorder( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int borderBpp );
-bool UpdateIcon( Buffer &icon, IconType kind, bool enabled, int bpp );
-bool CreateIcon( Buffer &input, int width, int height, int bpp, Buffer &icon, IconType kind, bool enabled );
-bool CreateInfocardIcon( Buffer &input, int width, int height, int bpp, Buffer &icon, InfocardIconType kind );
 
 #endif

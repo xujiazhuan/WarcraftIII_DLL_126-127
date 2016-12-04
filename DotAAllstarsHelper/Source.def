@@ -43,4 +43,4 @@ JassLog @139
 FreeExecutableMemory @140
 DllLogEnable @141
 SetGameDllAddr @142
-
+Wc3MessageBox

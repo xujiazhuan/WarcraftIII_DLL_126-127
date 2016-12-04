@@ -11,6 +11,13 @@ bool FileExist( const char * name )
 	return f.good( );
 }
 
+string ToLower( string s )
+{
+	std::transform( s.begin( ), s.end( ), s.begin( ), tolower );
+	return s;
+}
+
+
 //DWORD GameDLLsz = 0;
 //DWORD StormDLLsz = 0;
 
@@ -82,26 +89,62 @@ int GameFrameAtMouseStructOffset = 0;
 int SetGameAreaFOVoffset = 0;
 int GameGetFileOffset = 0;
 
-int  Warcraft3WindowProcOffset = 0;
+int Warcraft3WindowProcOffset = 0;
+int Wc3MessageBoxOffset = 0;
 
 #pragma endregion
 
 BOOL MainFuncWork = FALSE;
 
 
-void PrintText( char * text,float staytime  )
+void PrintText( const char * text,float staytime  )
+{
+	if ( *InGame )
+	{
+		__asm
+		{
+			push - 1;
+			push staytime;
+			push text;
+			mov ecx, pW3XGlobalClass;
+			mov ecx, [ ecx ];
+			mov eax, pPrintText2;
+			call eax;
+		}
+	}
+}
+
+
+void __declspec(naked) __fastcall Game_Wc3MessageBox( int type, const char * text,  int unk1, UINT buttons, int unk2, int unk3, int unk4 )
 {
 	__asm
 	{
-		push 18;
-		push staytime;
-		push text;
-		mov ecx, pW3XGlobalClass;
-		mov ecx, [ ecx ];
-		mov edx, pPrintText2;
-		call edx;
+		//fldz; 
+		mov eax, Wc3MessageBoxOffset;
+		jmp eax;
 	}
 }
+
+// Warning = 0
+// Error = 1
+// Question = 2
+void __stdcall Wc3MessageBox( const char * message, int type )
+{
+	Game_Wc3MessageBox( type, message, 0, 0, 0, 0, 0 );
+}
+
+/*
+struct FrameDefStatus
+{
+	int FDefVtable;
+	int zeroint;
+	int this_add_8;
+	int this_add_8_negative;
+	int this_one;
+};
+typedef void( __fastcall * pLoadFrameDefList )( const char * filepath, int env );
+pLoadFrameDefList LoadFrameDefList;*/
+
 
 
 int __stdcall SetMainFuncWork( BOOL state )
@@ -1677,9 +1720,22 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		Warcraft3Window = *( HWND* ) ( GameDll + 0xAD147C );
 		Warcraft3WindowProcOffset = GameDll + 0x6C6AA0;
 
+		Wc3MessageBoxOffset = GameDll + 0x55CEB0;
+
+		//LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
+
 		ManaBarSwitch( GameDll, TRUE );
 
 		InitHook( );
+
+	/*	FrameDefStatus fStatus;
+		fStatus.FDefVtable = GameDll + 0x875E98;
+		fStatus.this_one = 1;
+		fStatus.zeroint = 0;
+		fStatus.this_add_8 = ( int )&fStatus + 8;
+		fStatus.this_add_8_negative = ~( fStatus.this_add_8 );
+
+		LoadFrameDefList( "CustomFrameDef.txt", 0( int )&fStatus  );*/
 
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
@@ -1855,9 +1911,22 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		Warcraft3Window = *( HWND* ) ( GameDll + 0xBDAB88 );
 		Warcraft3WindowProcOffset = GameDll + 0x153710;
 
+		Wc3MessageBoxOffset = GameDll + 0x29E8F0;
+
+		//LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );
+
 		ManaBarSwitch( GameDll, TRUE );
 
 		InitHook( );
+
+	/*	FrameDefStatus fStatus;
+		fStatus.FDefVtable = GameDll + 0x875E98;
+		fStatus.this_one = 1;
+		fStatus.zeroint = 0;
+		fStatus.this_add_8 = ( int )&fStatus + 8;
+		fStatus.this_add_8_negative = ~( fStatus.this_add_8 );
+
+		LoadFrameDefList( "CustomFrameDef.txt",( int )&fStatus );*/
 
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
@@ -1865,8 +1934,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		return crc32;
 	}
 
-
-
+	
 	AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
 
 	return 0;

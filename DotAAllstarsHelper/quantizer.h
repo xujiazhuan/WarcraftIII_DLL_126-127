@@ -1,21 +1,7 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstdio>
-#include <cstdlib>
-#include <string>
-using namespace std;
 
 #ifndef Quantizer
 #define Quantizer
-
-
-#pragma warning(disable:4668)
-#pragma warning(disable:4820)
-#pragma warning(disable:4710)
-#pragma warning(disable:4100)
-#pragma warning(disable:4514)
-#pragma warning(disable:4201)
+#include "Main.h"
 
 unsigned char FixBounds( int i );
 unsigned char FixBounds( double i );

@@ -35,15 +35,12 @@ int GetPlayerByNumber( int number )
 // Получить ID игрока
 int GetLocalPlayerId( )
 {
-	AddNewLineToDotaHelperLog( "GetLocalPlayerId" );
 	int gldata = GetGlobalPlayerData( );
 	if ( gldata > 0 )
 	{
 		short retval = *( short * ) ( gldata + 0x28 );
-		AddNewLineToDotaHelperLog( "GetLocalPlayerOk" );
 		return retval;
 	}
-	AddNewLineToDotaHelperLog( "GetLocalPlayerIdBad" );
 	return 0;
 }
 
