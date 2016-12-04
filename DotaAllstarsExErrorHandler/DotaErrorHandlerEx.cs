@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -78,7 +79,7 @@ namespace DotaAllstarsExErrorHandler
                                 switch ((LogType)mystr.dwData)
                                 {
                                     case LogType.DotaChatLog:
-                                        if (lDotaChatLog.Count > 75)
+                                        if (lDotaChatLog.Count > 1000)
                                         {
                                             lDotaChatLog.RemoveAt(0);
                                         }
@@ -88,7 +89,7 @@ namespace DotaAllstarsExErrorHandler
                                         bDotaChatLog = true;
                                         break;
                                     case LogType.DotaHelperLog:
-                                        if (lDotaHelperLog.Count > 75)
+                                        if (lDotaHelperLog.Count > 1000)
                                         {
                                             lDotaHelperLog.RemoveAt(0);
                                         }
@@ -98,7 +99,7 @@ namespace DotaAllstarsExErrorHandler
                                         bDotaHelperLog = true;
                                         break;
                                     case LogType.JassLogList:
-                                        if (lJassLogList.Count > 75)
+                                        if (lJassLogList.Count > 1000)
                                         {
                                             lJassLogList.RemoveAt(0);
                                         }
@@ -108,7 +109,7 @@ namespace DotaAllstarsExErrorHandler
                                         bJassLogList = true;
                                         break;
                                     case LogType.JassNativesFuncLog:
-                                        if (lJassNativesFuncLog.Count > 75)
+                                        if (lJassNativesFuncLog.Count > 1000)
                                         {
                                             lJassNativesFuncLog.RemoveAt(0);
                                         }
@@ -192,7 +193,15 @@ namespace DotaAllstarsExErrorHandler
 
         private void SaveButton_Click(object sender, EventArgs e)
         {
-            
+            File.Open(SaveFileName.Text, FileMode.Create).Close();
+            File.AppendAllText(SaveFileName.Text, "DotaChatLog:\n");
+            File.AppendAllLines(SaveFileName.Text, DotaChatLog.Items.Cast<String>().ToList());
+            File.AppendAllText(SaveFileName.Text, "DotaHelperLog:\n");
+            File.AppendAllLines(SaveFileName.Text, DotaHelperLog.Items.Cast<String>().ToList());
+            File.AppendAllText(SaveFileName.Text, "JassNativesFuncLog:\n");
+            File.AppendAllLines(SaveFileName.Text, JassNativesFuncLog.Items.Cast<String>().ToList());
+            File.AppendAllText(SaveFileName.Text, "JassLogList:\n");
+            File.AppendAllLines(SaveFileName.Text, JassLogList.Items.Cast<String>().ToList());
 
         }
         private void Form1_Load(object sender, EventArgs e)
