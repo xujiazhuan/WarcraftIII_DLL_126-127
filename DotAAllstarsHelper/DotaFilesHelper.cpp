@@ -1,4 +1,4 @@
-
+#include <experimental/filesystem>
 #include "Main.h"
 extern "C" { FILE __iob_func[ 3 ] = { *stdin,*stdout,*stderr }; }
 #pragma comment(lib,"legacy_stdio_definitions.lib")
@@ -1791,50 +1791,49 @@ void PrintLog( const char * str )
 }
 
 
-BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
+BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
 
 
 	BOOL IsFileExist = IsFileExistOld;
 
 	AddNewLineToDotaHelperLog( "ProcessFile" );
-	if ( filename.length( ) > 4 )
+	int filenamelen = strlen( filename );
+	if ( filenamelen > 4 && filenamelen <= 1024 )
 	{
-		string FilePathLower = ToLower( filename );
-		string FilePathOrigin( filename );
-		size_t PathLen = FilePathLower.length( );
-		AddNewLineToDotaHelperLog( "ProcessFileStart" );
-		if ( PathLen > 4 )
-		{
-			if ( strcmp( FilePathLower.c_str( ) + ( PathLen - 4 ), ".tga" ) == 0 )
-			{
+		string FileExtension = ToLower( fs::path( filename ).extension( ).string( ) );
 
-			}
-			else if ( strcmp( FilePathLower.c_str( ) + ( PathLen - 4 ), ".blp" ) == 0 )
+		AddNewLineToDotaHelperLog( "ProcessFileStart..." );
+
+		if ( FileExtension == ".tga" )
+		{
+
+		}
+		else if ( FileExtension == ".blp" )
+		{
+			if ( !IsFileExist )
 			{
-				if ( !IsFileExist )
-				{
-					IsFileExist = FixDisabledIconPath( filename, OutDataPointer, OutSize, unknown );
-				}
-				else
-				{
-					/*	if ( strstr( FilePathLower.c_str( ), "terrainart" ) == FilePathLower.c_str( ) ||
-							 strstr( FilePathLower.c_str( ), "replaceabletextures\\cliff" ) == FilePathLower.c_str( ) )
-							ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
-				}
+				IsFileExist = FixDisabledIconPath( filename, OutDataPointer, OutSize, unknown );
 			}
-			else if ( strcmp( FilePathLower.c_str( ) + ( PathLen - 4 ), ".mdx" ) == 0 )
+			else
 			{
-				if ( IsFileExist )
-				{
-					ProcessMdx( filename, OutDataPointer, OutSize, unknown );
-				}
-				else
-				{
-					//return GameGetFile_ptr( "Objects\\InvalidObject\\InvalidObject.mdx", OutDataPointer, OutSize, unknown );
-				}
+				/*	if ( strstr( FilePathLower.c_str( ), "terrainart" ) == FilePathLower.c_str( ) ||
+						 strstr( FilePathLower.c_str( ), "replaceabletextures\\cliff" ) == FilePathLower.c_str( ) )
+						ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
 			}
 		}
+		else if ( FileExtension == ".mdx" )
+		{
+			if ( IsFileExist )
+			{
+				ProcessMdx( filename, OutDataPointer, OutSize, unknown );
+			}
+			else
+			{
+				//return GameGetFile_ptr( "Objects\\InvalidObject\\InvalidObject.mdx", OutDataPointer, OutSize, unknown );
+			}
+		}
+
 	}
 	else
 		AddNewLineToDotaHelperLog( "BADFILENAMEFOUND" );
@@ -1863,7 +1862,7 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 
 	for ( FakeFileStruct fs : FakeFileList )
 	{
-		if ( _stricmp( filename_, fs.filename ) )
+		if ( _stricmp( filename_, fs.filename ) == 0 )
 		{
 			*OutDataPointer = ( int )fs.buffer;
 			*OutSize = fs.size;
@@ -1875,15 +1874,26 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 	const char * filename = filename_;
 
 	if ( filename && *filename != '\0' )
-		AddNewLineToDotaHelperLog( "FileHelper:" + string( filename_ ) );
+		AddNewLineToDotaHelperLog( ( "FileHelper:" + string( filename_ ) ) );
 	else
 		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
 
 	signed int IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
-	if ( !*InGame && !MainFuncWork )
-		return IsFileExist;
 
+
+	if ( !*InGame && !MainFuncWork )
+	{
+		AddNewLineToDotaHelperLog( "Game not found or main not set" );
+		return IsFileExist;
+	}
+
+	if ( filename == NULL || *filename == '\0' )
+	{
+
+		AddNewLineToDotaHelperLog( "Bad file name" );
+		return IsFileExist;
+	}
 
 	if ( !IsFileExist )
 	{
@@ -1894,10 +1904,8 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 		AddNewLineToDotaHelperLog( "FileFound" );
 	}
 
-	if ( filename && *filename != '\0' )
-	{
-		IsFileExist = ProcessFile( filename, OutDataPointer, OutSize, unknown, IsFileExist );
-	}
+	IsFileExist = ProcessFile( filename, OutDataPointer, OutSize, unknown, IsFileExist );
+
 
 	AddNewLineToDotaHelperLog( "ProcessFileENDING" );
 
@@ -1909,81 +1917,65 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 	{
 		AddNewLineToDotaHelperLog( "FileFound" );
 	}
-	/*if ( IsFileExist == 1 && filename && *filename != '\0' )
-	{
-		if ( strstr( filename, "TerrainArt" ) || strstr( filename, "Cliff" ) )
-			ApplyTerrainFilter( filename, OutDataPointer, OutSize );
-		if ( strstr( ToLower( filename ).c_str( ), "units" ) )
-		{
-			//	MessageBox( 0, filename, filename, 0 );
-				//ApplyUnitFilter( filename, OutDataPointer, OutSize );
-		}
-	}
-	else if ( IsFileExist != 1 && filename && *filename != '\0' )
-	{
-		IsFileExist = FixDisabledIconPath( filename, OutDataPointer, OutSize, unknown );
-	}*/
 
 	if ( !IsFileExist )
 	{
-		if ( filename && *filename != '\0' )
+		for ( FileRedirectStruct DotaRedirectHelp : FileRedirectList )
 		{
-			for ( FileRedirectStruct DotaRedirectHelp : FileRedirectList )
+			if ( _stricmp( filename, DotaRedirectHelp.NewFilePath ) == 0 )
 			{
-				if ( _stricmp( filename, DotaRedirectHelp.NewFilePath ) == 0 )
+				ICONMDLCACHE * tmpih = new ICONMDLCACHE( );
+				BOOL FoundOldHelper = GetFromIconMdlCache( DotaRedirectHelp.NewFilePath, tmpih );
+
+				if ( !FoundOldHelper )
 				{
-					ICONMDLCACHE * tmpih = new ICONMDLCACHE( );
-					BOOL FoundOldHelper = GetFromIconMdlCache( DotaRedirectHelp.NewFilePath, tmpih );
-
-					if ( !FoundOldHelper )
+					IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath, OutDataPointer, OutSize, unknown );
+					if ( IsFileExist )
 					{
-						IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath, OutDataPointer, OutSize, unknown );
-						if ( IsFileExist )
-						{
-							char * DataPointer = ( char * )*OutDataPointer;
-							size_t DataSize = *OutSize;
+						char * DataPointer = ( char * )*OutDataPointer;
+						size_t DataSize = *OutSize;
 
-							Buffer ResultBuffer;
-							ResultBuffer.buf = new char[ DataSize ];
-							ResultBuffer.length = DataSize;
+						Buffer ResultBuffer;
+						ResultBuffer.buf = new char[ DataSize ];
+						ResultBuffer.length = DataSize;
 
-							memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
+						memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
 
-							tmpih->buf = ResultBuffer.buf;
-							tmpih->size = ResultBuffer.length;
+						tmpih->buf = ResultBuffer.buf;
+						tmpih->size = ResultBuffer.length;
 
-							tmpih->hashlen = strlen( DotaRedirectHelp.NewFilePath );
-							tmpih->hash = GetBufHash( DotaRedirectHelp.NewFilePath, tmpih->hashlen );
+						tmpih->hashlen = strlen( DotaRedirectHelp.NewFilePath );
+						tmpih->hash = GetBufHash( DotaRedirectHelp.NewFilePath, tmpih->hashlen );
 
-							ICONMDLCACHELIST.push_back( *tmpih );
-
-							*OutDataPointer = ( int )tmpih->buf;
-							*OutSize = tmpih->size;
-
-							ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
-							return IsFileExist;
-						}
-					}
-					else
-					{
+						ICONMDLCACHELIST.push_back( *tmpih );
 
 						*OutDataPointer = ( int )tmpih->buf;
 						*OutSize = tmpih->size;
 
 						ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
-						return TRUE;
+						return IsFileExist;
 					}
-
-					delete[ ] tmpih;
 				}
-			}
+				else
+				{
 
+					*OutDataPointer = ( int )tmpih->buf;
+					*OutSize = tmpih->size;
+
+					ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+					return TRUE;
+				}
+
+				delete[ ] tmpih;
+			}
 		}
+
+
 	}
 
 	if ( !IsFileExist )
 	{
-
+		AddNewLineToDotaHelperLog( "Not found" );
 		/*if ( filename && *filename != '\0' )
 		{
 			MessageBox( 0, filename, "File not found", 0 );

@@ -22,6 +22,10 @@
 #include <algorithm>
 #include <MinHook.h>
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
+
 using namespace std;
 #pragma comment(lib, "libMinHook.x86.lib")
 #include <winsock2.h>

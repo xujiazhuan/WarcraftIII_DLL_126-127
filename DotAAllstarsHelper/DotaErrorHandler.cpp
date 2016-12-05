@@ -1,7 +1,7 @@
 #include "Main.h"
 #include <iomanip>
 #include <eh.h>
-
+#include "VEHtoSEH.h"
 #define PSAPI_VERSION 1
 
 
@@ -524,7 +524,7 @@ LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
-	if ( MessageBox( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", "Fatal error detected!", MB_YESNO ) == IDYES )
+	if ( MessageBox( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", IsVEHex ? "Fatal error detected![SEH]" : "Fatal error detected![VEH]" , MB_YESNO ) == IDYES )
 	{
 		ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
 
@@ -976,9 +976,9 @@ int __cdecl BlizzardDebug6_my( const char * format, ... )
 
 void EnableErrorHandler( )
 {
+	EnableSEHoverVEH( );
 
 	InitTopLevelExceptionFilter( );
-
 
 	if ( StormErrorHandler_org )
 	{
@@ -1054,9 +1054,9 @@ int __stdcall StartExtraErrorHandler( int )
 	}
 	return 0;
 }
-
 void DisableErrorHandler( )
 {
+
 	if ( !DotaChatLog.empty( ) )
 		DotaChatLog.clear( );
 
