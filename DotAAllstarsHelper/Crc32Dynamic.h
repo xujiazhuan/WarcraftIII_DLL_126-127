@@ -10,11 +10,11 @@ public:
 	void Init( void );
 	void Free( void );
 
-	DWORD StringCrc32( LPCTSTR szString, DWORD &dwCrc32 ) const;
-	DWORD FileCrc32Streams( LPCTSTR szFilename, DWORD &dwCrc32 ) const;
-	DWORD FileCrc32Win32( LPCTSTR szFilename, DWORD &dwCrc32 ) const;
-	DWORD FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) const;
-	DWORD FileCrc32Assembly( LPCTSTR szFilename, DWORD &dwCrc32 ) const;
+	DWORD StringCrc32( char * szString, DWORD &dwCrc32 ) const;
+	DWORD FileCrc32Streams( char * szFilename, DWORD &dwCrc32 ) const;
+	DWORD FileCrc32Win32( char * szFilename, DWORD &dwCrc32 ) const;
+	DWORD FileCrc32Filemap( char * szFilename, DWORD &dwCrc32 ) const;
+	DWORD FileCrc32Assembly( char * szFilename, DWORD &dwCrc32 ) const;
 
 protected:
 	static BOOL GetFileSizeQW( const HANDLE hFile, QWORD &qwSize );

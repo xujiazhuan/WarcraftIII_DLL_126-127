@@ -1,4 +1,8 @@
 ﻿#pragma once
+//#define DOTA_HELPER_LOG
+
+
+
 
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
@@ -8,11 +12,13 @@
 #define WIN32_LEAN_AND_MEAN
 //#define PSAPI_VERSION 1
 
+
+
 #pragma region Includes
 #include <cstdio>
 #include <cstring>
 #include <csetjmp>
-
+#include <ctime>
 #include <Windows.h>
 #include <string>
 #include <vector>
@@ -21,6 +27,10 @@
 #include <sstream>
 #include <algorithm>
 #include <MinHook.h>
+#include <thread>
+#include <chrono>
+
+
 
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
@@ -35,6 +45,7 @@ using namespace std;
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
 
 extern BOOL TerminateStarted;
+extern BOOL IsVEHex;
 
 struct CustomHPBar
 {
@@ -156,7 +167,7 @@ struct BarStruct
 	int _unk68;
 	int _unk69;
 };
-
+int GetGlobalClassAddr( );
 bool FileExist( const char * name );
 DWORD GetDllCrc32( );
 //typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
@@ -171,6 +182,9 @@ int GetTypeId( int unit_item_abil_etc_addr );
 string ToLower( string s );
 
 extern BOOL MainFuncWork;
+
+char *  GetWar3Preferense( int ID );
+extern char MyFpsString[ 512 ];
 
 #pragma region DotaPlayerHelper.cpp
 
@@ -237,10 +251,14 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 #pragma endregion
 
 #pragma region ErrorHandler.cpp
-void AddNewLineToDotaChatLog( string s );
+#ifdef DOTA_HELPER_LOG
+AddNewLineToDotaChatLog( string s );
+#endif
 void EnableErrorHandler( );
 void DisableErrorHandler( );
+#ifdef DOTA_HELPER_LOG
 void AddNewLineToDotaHelperLog( string s );
+#endif
 extern void ResetTopLevelExceptionFilter( );
 extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 extern BOOL bDllLogEnable;
@@ -317,7 +335,7 @@ extern int GameFrameAtMouseStructOffset;
 extern BOOL BlockKeyAndMouseEmulation;
 extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
-
+extern BOOL LOCK_MOUSE_IN_WINDOW;
 
 typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam );
 extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
@@ -353,42 +371,42 @@ extern c_SimpleButtonClickEvent SimpleButtonClickEvent;
 
 struct ModelCollisionFixStruct
 {
-	char FilePath[ 512 ];
+	string FilePath;
 	float X, Y, Z, Radius;
 };
 
 struct ModelTextureFixStruct
 {
-	char FilePath[ 512 ];
+	string FilePath;
 	int TextureID;
-	char NewTexturePath[ 260 ];
+	string NewTexturePath;
 };
 
 
 struct ModelPatchStruct
 {
-	char FilePath[ 512 ];
-	char patchPath[ 512 ];
+	string FilePath;
+	string patchPath;
 };
 
 
 struct ModelRemoveTagStruct
 {
-	char FilePath[ 512 ];
-	char TagName[ 5 ];
+	string FilePath;
+	string TagName;
 };
 
 struct ModelSequenceReSpeedStruct
 {
-	char FilePath[ 512 ];
-	char AnimationName[ 100 ];
+	string FilePath;
+	string AnimationName;
 	float SpeedUp;
 };
 
 
 struct ModelScaleStruct
 {
-	char FilePath[ 512 ];
+	string FilePath;
 	float Scale;
 };
 
@@ -396,8 +414,8 @@ struct ModelScaleStruct
 
 struct ModelSequenceValueStruct
 {
-	char FilePath[ 512 ];
-	char AnimationName[ 100 ];
+	string FilePath;
+	string AnimationName;
 	int Indx;
 	float Value;
 };
@@ -413,8 +431,8 @@ extern vector<ModelScaleStruct> ModelScaleList;
 
 struct FileRedirectStruct
 {
-	char NewFilePath[ 512 ];
-	char RealFilePath[ 512 ];
+	string NewFilePath;
+	string RealFilePath;
 };
 
 extern vector<FileRedirectStruct> FileRedirectList;
@@ -422,8 +440,8 @@ extern vector<FileRedirectStruct> FileRedirectList;
 typedef signed int( __stdcall * Storm_403 )( void *a1, const char * str, int line, int id );
 extern Storm_403 Storm_403_org;
 
-typedef signed int( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
-signed int __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
+BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 extern GameGetFile GameGetFile_org;
 extern GameGetFile GameGetFile_ptr;
 
@@ -469,4 +487,16 @@ extern int PacketClassPtr;
 extern int pGAME_SendPacket;
 void SendPacket( BYTE* packetData, DWORD size );
 
+#pragma endregion
+
+
+#pragma region DotaAutoFPSlimit.cpp
+extern BOOL FPS_LIMIT_ENABLED;
+extern HANDLE Warcraft3_Process;
+extern unsigned int CPU_cores;
+void InitThreadCpuUsage( );
+double GetWar3CpuUsage( );
+void UpdateFPS( );
+typedef int( __cdecl * p_SetMaxFps )( int maxfps );
+extern p_SetMaxFps _SetMaxFps;
 #pragma endregion

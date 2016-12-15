@@ -6,9 +6,10 @@
 
 int GetChatOffset( )
 {
-	if ( *( int* ) pW3XGlobalClass > 0 )
+	int pclass = GetGlobalClassAddr( );
+	if ( pclass > 0 )
 	{
-		return *( int* ) ( ( *( int* ) pW3XGlobalClass ) + 0x3FC );
+		return *( int* )( pclass + 0x3FC );
 	}
 
 	return 0;
@@ -22,26 +23,26 @@ char * GetChatString( )
 	int pChatOffset = GetChatOffset( );
 	if ( pChatOffset > 0 )
 	{
-		pChatOffset = *( int* ) ( pChatOffset + 0x1E0 );
+		pChatOffset = *( int* )( pChatOffset + 0x1E0 );
 		if ( pChatOffset > 0 )
 		{
-			pChatOffset = *( int* ) ( pChatOffset + 0x1E4 );
-			return ( char * ) pChatOffset;
+			pChatOffset = *( int* )( pChatOffset + 0x1E4 );
+			return ( char * )pChatOffset;
 		}
 	}
 	return 0;
 }
 
-LPARAM lpReturnScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_RETURN, 0 ) << 16 ) );
-LPARAM lpReturnScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_RETURN, 0 ) << 16 ) );
+LPARAM lpReturnScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_RETURN, 0 ) << 16 ) );
+LPARAM lpReturnScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_RETURN, 0 ) << 16 ) );
 
 
 
-LPARAM lpShiftScanKeyUP = ( LPARAM ) ( 0xC0000001 | ( LPARAM ) ( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
-LPARAM lpShiftScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
+LPARAM lpShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
+LPARAM lpShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
 
 
- int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
+int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 {
 	BYTE tmpbuf[ 256 ];
 	BYTE tmpbuf2[ 256 ];
@@ -52,14 +53,14 @@ LPARAM lpShiftScanKeyDOWN = ( LPARAM ) ( 0x00000001 | ( LPARAM ) ( MapVirtualKey
 	char * pChatString = GetChatString( );
 	if ( msg && pChatString && Warcraft3Window )
 	{
-		if ( *( int* ) ChatFound > 0 && !toAll )
+		if ( *( int* )ChatFound > 0 && !toAll )
 		{
 			sprintf_s( pChatString, 150, "%s", msg );
 
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
 		}
-		else if ( *( int* ) ChatFound > 0 && toAll )
+		else if ( *( int* )ChatFound > 0 && toAll )
 		{
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
 			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );

@@ -9,8 +9,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4B94B582-A36C-43FF-AB86-D01CF1299739}</ProjectGuid>
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
-    <WindowsTargetPlatformVersion>
-    </WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
     <ProjectName>DotAAllstarsHelper688b</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -19,7 +18,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -34,6 +33,8 @@
     <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <IgnoreImportLibrary>
+    </IgnoreImportLibrary>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -49,28 +50,47 @@
       <FavorSizeOrSpeed>
       </FavorSizeOrSpeed>
       <EnablePREfast>false</EnablePREfast>
-      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExceptionHandling>Async</ExceptionHandling>
       <OmitFramePointers>
       </OmitFramePointers>
       <EnableFiberSafeOptimizations>
       </EnableFiberSafeOptimizations>
-      <WholeProgramOptimization>true</WholeProgramOptimization>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <BufferSecurityCheck>
       </BufferSecurityCheck>
-      <StructMemberAlignment>Default</StructMemberAlignment>
+      <StructMemberAlignment>
+      </StructMemberAlignment>
+      <SmallerTypeCheck>
+      </SmallerTypeCheck>
+      <BasicRuntimeChecks>
+      </BasicRuntimeChecks>
+      <ControlFlowGuard>
+      </ControlFlowGuard>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableParallelCodeGeneration>
+      </EnableParallelCodeGeneration>
+      <FloatingPointModel>
+      </FloatingPointModel>
+      <PreprocessorDefinitions>DEBUG;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>
+      </EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalDependencies>ntdll32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>NotSet</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <LinkStatus>
+      </LinkStatus>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <SetChecksum>true</SetChecksum>
+      <CLRSupportLastError>
+      </CLRSupportLastError>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -78,6 +98,7 @@
     <ClCompile Include="Crc32Dynamic.cpp">
       <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
     </ClCompile>
+    <ClCompile Include="DotaAutoFPSlimit.cpp" />
     <ClCompile Include="DotaChatHelper.cpp" />
     <ClCompile Include="DotaClickHelper.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
@@ -95,7 +116,6 @@
     <ClCompile Include="SendGamePacket.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
     <ClCompile Include="DotaViewAllySkill.cpp" />
-    <ClCompile Include="VEHtoSEH.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def" />
@@ -112,7 +132,6 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="quantizer.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="VEHtoSEH.h" />
     <ClInclude Include="ViewAllySkill.h" />
   </ItemGroup>
   <ItemGroup>

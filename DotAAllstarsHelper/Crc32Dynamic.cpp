@@ -84,7 +84,7 @@ BOOL CCrc32Dynamic::GetFileSizeQW( const HANDLE hFile, QWORD &qwSize )
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::StringCrc32( LPCTSTR szString, DWORD &dwCrc32 ) const
+DWORD CCrc32Dynamic::StringCrc32( char * szString, DWORD &dwCrc32 ) const
 {
 	_ASSERTE( szString );
 
@@ -100,7 +100,7 @@ DWORD CCrc32Dynamic::StringCrc32( LPCTSTR szString, DWORD &dwCrc32 ) const
 
 		while ( *szString != '\0' )
 		{
-			CalcCrc32( ( BYTE ) *szString, dwCrc32 );
+			CalcCrc32( ( BYTE )*szString, dwCrc32 );
 			szString++;
 		}
 	}
@@ -116,7 +116,7 @@ DWORD CCrc32Dynamic::StringCrc32( LPCTSTR szString, DWORD &dwCrc32 ) const
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Streams( LPCTSTR szFilename, DWORD &dwCrc32 ) const
+DWORD CCrc32Dynamic::FileCrc32Streams( char * szFilename, DWORD &dwCrc32 ) const
 {
 #if UNICODE || _UNICODE
 	return ERROR_NOT_SUPPORTED;
@@ -138,17 +138,17 @@ DWORD CCrc32Dynamic::FileCrc32Streams( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 		// Open the file
 		file.open( szFilename, ios::in | ios::binary );
 		if ( !file.is_open( ) )
-			dwErrorCode = ( DWORD ) file.fail( );
+			dwErrorCode = ( DWORD )file.fail( );
 		else
 		{
 			char buffer[ MAX_BUFFER_SIZE ];
 			int nLoop, nCount;
-			nCount = ( int ) file.read( buffer, sizeof( buffer ) ).gcount( );
+			nCount = ( int )file.read( buffer, sizeof( buffer ) ).gcount( );
 			while ( nCount )
 			{
 				for ( nLoop = 0; nLoop < nCount; nLoop++ )
-					CalcCrc32( ( BYTE ) buffer[ nLoop ], dwCrc32 );
-				nCount = ( int ) file.read( buffer, sizeof( buffer ) ).gcount( );
+					CalcCrc32( ( BYTE )buffer[ nLoop ], dwCrc32 );
+				nCount = ( int )file.read( buffer, sizeof( buffer ) ).gcount( );
 			}
 
 			file.close( );
@@ -169,7 +169,7 @@ DWORD CCrc32Dynamic::FileCrc32Streams( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Win32( LPCTSTR szFilename, DWORD &dwCrc32 ) const
+DWORD CCrc32Dynamic::FileCrc32Win32( char * szFilename, DWORD &dwCrc32 ) const
 {
 	_ASSERTE( szFilename );
 	_ASSERTE( lstrlen( szFilename ) );
@@ -186,13 +186,13 @@ DWORD CCrc32Dynamic::FileCrc32Win32( LPCTSTR szFilename, DWORD &dwCrc32 ) const
 			throw 0;
 
 		// Open the file
-		hFile = CreateFile( szFilename,
-							GENERIC_READ,
-							FILE_SHARE_READ,
-							NULL,
-							OPEN_EXISTING,
-							FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
-							NULL );
+		hFile = CreateFileA( szFilename,
+			GENERIC_READ,
+			FILE_SHARE_READ,
+			NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
+			NULL );
 		if ( hFile == INVALID_HANDLE_VALUE )
 			dwErrorCode = GetLastError( );
 		else
@@ -222,7 +222,7 @@ DWORD CCrc32Dynamic::FileCrc32Win32( LPCTSTR szFilename, DWORD &dwCrc32 ) const
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) const
+DWORD CCrc32Dynamic::FileCrc32Filemap( char * szFilename, DWORD &dwCrc32 ) const
 {
 	_ASSERTE( szFilename );
 	_ASSERTE( lstrlen( szFilename ) );
@@ -239,13 +239,13 @@ DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 			throw 0;
 
 		// Open the file
-		hFile = CreateFile( szFilename,
-							GENERIC_READ,
-							FILE_SHARE_READ,
-							NULL,
-							OPEN_EXISTING,
-							FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
-							NULL );
+		hFile = CreateFileA( szFilename,
+			GENERIC_READ,
+			FILE_SHARE_READ,
+			NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
+			NULL );
 		if ( hFile == INVALID_HANDLE_VALUE )
 			dwErrorCode = GetLastError( );
 		else
@@ -261,11 +261,11 @@ DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 			{
 				// Create the file mapping
 				hFilemap = CreateFileMapping( hFile,
-											  NULL,
-											  PAGE_READONLY,
-											  0,
-											  0,
-											  NULL );
+					NULL,
+					PAGE_READONLY,
+					0,
+					0,
+					NULL );
 				if ( hFilemap == NULL )
 					dwErrorCode = GetLastError( );
 				else
@@ -280,14 +280,14 @@ DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 						else
 							dwViewSize = MAX_VIEW_SIZE;
 
-						dwBaseAddress = ( DWORD ) MapViewOfFile( hFilemap,
-																 FILE_MAP_READ,
-																 HIDWORD( qwFileOffset ),
-																 LODWORD( qwFileOffset ),
-																 dwViewSize );
+						dwBaseAddress = ( DWORD )MapViewOfFile( hFilemap,
+							FILE_MAP_READ,
+							HIDWORD( qwFileOffset ),
+							LODWORD( qwFileOffset ),
+							dwViewSize );
 
 						dwByteCount = dwViewSize;
-						pByte = ( LPBYTE ) dwBaseAddress;
+						pByte = ( LPBYTE )dwBaseAddress;
 
 						if ( dwBaseAddress > 0 )
 						{
@@ -297,7 +297,7 @@ DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 								pByte++;
 							}
 
-							UnmapViewOfFile( ( LPVOID ) dwBaseAddress );
+							UnmapViewOfFile( ( LPVOID )dwBaseAddress );
 						}
 						qwFileOffset += dwViewSize;
 						qwFileSize -= dwViewSize;
@@ -321,7 +321,7 @@ DWORD CCrc32Dynamic::FileCrc32Filemap( LPCTSTR szFilename, DWORD &dwCrc32 ) cons
 }
 
 //***********************************************
-DWORD CCrc32Dynamic::FileCrc32Assembly( LPCTSTR szFilename, DWORD &dwCrc32 ) const
+DWORD CCrc32Dynamic::FileCrc32Assembly( char * szFilename, DWORD &dwCrc32 ) const
 {
 	_ASSERTE( szFilename );
 	_ASSERTE( lstrlen( szFilename ) );
@@ -338,13 +338,13 @@ DWORD CCrc32Dynamic::FileCrc32Assembly( LPCTSTR szFilename, DWORD &dwCrc32 ) con
 			throw 0;
 
 		// Open the file
-		hFile = CreateFile( szFilename,
-							GENERIC_READ,
-							FILE_SHARE_READ,
-							NULL,
-							OPEN_EXISTING,
-							FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
-							NULL );
+		hFile = CreateFileA( szFilename,
+			GENERIC_READ,
+			FILE_SHARE_READ,
+			NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_SYSTEM | FILE_FLAG_SEQUENTIAL_SCAN,
+			NULL );
 		if ( hFile == INVALID_HANDLE_VALUE )
 			dwErrorCode = GetLastError( );
 		else

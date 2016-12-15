@@ -1,9 +1,10 @@
 #include "Main.h"
 #include <iomanip>
 #include <eh.h>
-#include "VEHtoSEH.h"
+
 #define PSAPI_VERSION 1
 
+BOOL IsVEHex = FALSE;
 
 #include <Psapi.h>
 #pragma comment(lib,"Psapi.lib")
@@ -118,9 +119,12 @@ std::string GetOSDisplayString( )
 	return productName + " " + bitness + " " + servicePack;
 }
 
-vector<string> DotaChatLog;
+
 vector<string> DotaHelperLog;
 vector<string> JassNativesFuncLog;
+vector<string> JassLogList;
+vector<string> DotaChatLog;
+
 vector<string> Blizzard1Log;
 vector<string> Blizzard2Log;
 vector<string> Blizzard3Log;
@@ -128,7 +132,7 @@ vector<string> Blizzard4Log;
 vector<string> Blizzard4Log_2;
 vector<string> Blizzard5Log;
 vector<string> Blizzard6Log;
-vector<string> JassLogList;
+
 vector<int> CNetEvents;
 
 namespace LogType
@@ -142,11 +146,11 @@ namespace LogType
 	};
 }
 
-HWND ExternErrorHandler = FindWindow(0,"Dota Allstars Extern Error Handler");
+HWND ExternErrorHandler = FindWindowA( 0, "Dota Allstars Extern Error Handler" );
 DWORD ExternErrorHandlerLastCheck = 0;
 void ExternalLog( string s, LogType::LogType logtype )
 {
-	if ( ExternErrorHandler > 0 && IsWindow(ExternErrorHandler))
+	if ( ExternErrorHandler > 0 && IsWindow( ExternErrorHandler ) )
 	{
 		COPYDATASTRUCT cds;
 		cds.dwData = logtype;
@@ -160,10 +164,20 @@ void ExternalLog( string s, LogType::LogType logtype )
 	else if ( ExternErrorHandlerLastCheck + 1000 < GetTickCount( ) )
 	{
 		ExternErrorHandlerLastCheck = GetTickCount( );
-		ExternErrorHandler = FindWindow( 0, "Dota Allstars Extern Error Handler" );
+		ExternErrorHandler = FindWindowA( 0, "Dota Allstars Extern Error Handler" );
 	}
 }
 
+int __stdcall JassLog( const char * s )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassLog( s );
+#endif
+	return 0;
+}
+
+
+#ifdef DOTA_HELPER_LOG
 void AddNewLineToDotaChatLog( string s )
 {
 	if ( bDllLogEnable )
@@ -211,11 +225,6 @@ void AddNewLineToJassLog( string s )
 	JassLogList.push_back( s );
 }
 
-int __stdcall JassLog( const char * s )
-{
-	AddNewLineToJassLog( s );
-	return 0;
-}
 
 
 void AddNewLineToBlizzard1Log( string s )
@@ -286,7 +295,7 @@ void AddNewLineToBlizzard6Log( string s )
 	}
 	Blizzard6Log.push_back( s );
 }
-
+#endif
 
 BOOL bDllLogEnable = TRUE;
 int __stdcall DllLogEnable( BOOL enable )
@@ -307,11 +316,13 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 
 	if ( EventID == 35 && EventByte2 >= 0xB )
 	{
-		if ( MessageBox( Warcraft3Window, "Warning desync detected. Start force crash for detect problem?", "DESYNC, CRASH, YES OR NO?", MB_YESNO | MB_ICONWARNING ) == IDYES )
+		if ( MessageBoxA( Warcraft3Window, "Warning desync detected. Start force crash for detect problem?", "DESYNC, CRASH, YES OR NO?", MB_YESNO | MB_ICONWARNING ) == IDYES )
 		{
+#ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "WarningDesyncDetected.StartForceCrashForDetectProblem" );
+#endif
 			//ShowWindow( Warcraft3Window, SW_HIDE );
-			//MessageBox( Warcraft3Window, "Warning desync detected. Start force crash for detect problem", "Desync detected!", 0 );
+			//MessageBoxA( Warcraft3Window, "Warning desync detected. Start force crash for detect problem", "Desync detected!", 0 );
 			throw logic_error( "Warning desync detected. Start force crash for detect problem" );
 		}
 	}
@@ -325,7 +336,9 @@ int __fastcall LookupNative_my( LPSTR funcname )
 	int retval = LookupNative_ptr( funcname );
 	if ( funcname && *funcname != '\0' )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToJassNativesLog( funcname );
+#endif
 	}
 	return retval;
 }
@@ -338,7 +351,9 @@ signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
 	signed int retval = LookupJassFunc_ptr( a1, unused, funcname );
 	if ( funcname &&  *funcname != '\0' )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToJassNativesLog( funcname );
+#endif
 	}
 	return retval;
 }
@@ -454,7 +469,9 @@ ProcessNetEvents ProcessNetEvents_ptr;
 
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
+#ifdef DOTA_HELPER_LOG
 	//AddNewLineToDotaHelperLog( __func__ );
+#endif
 	if ( Event > 0 )
 	{
 		int EventID = *( BYTE* )( Event + 20 );
@@ -522,46 +539,164 @@ string LastExceptionError;
 DWORD ESP_for_DUMP = 0;
 LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter = NULL;
 
+int __stdcall TraceEsp_Print( int )
+{
+	int esp_val = 0;
+	__asm mov esp_val, esp;
+	ostringstream escaped;
+	escaped << std::hex << esp_val;
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( "Test: Esp=0x" + escaped.str( ) );
+#endif
+
+	return esp_val;
+}
+
+void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
+{
+	if ( !IsVEHex )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaChatLog( "Test: Found SEH Exception!" );
+#endif
+	}
+
+	FILE * f;
+	fopen_s( &f, "lasterror.txt", "w" );
+	fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
+	fprintf_s( f, "Game.dll:%X\n", GameDll );
+	fprintf_s( f, "Storm.dll:%X\n", StormDll );
+	fprintf_s( f, "ExceptionInfo:%X\n", ( int )ExceptionInfo );
+	fprintf_s( f, "ExceptionInfo->ContextRecord:%X\n", ( int )ExceptionInfo->ContextRecord );
+	fprintf_s( f, "ExceptionInfo->ExceptionRecord:%X\n", ( int )ExceptionInfo->ExceptionRecord );
+
+	/*
+	DotaHelperLog;
+	JassNativesFuncLog;
+	JassLogList;
+	DotaChatLog;
+	*/
+
+
+	ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
+
+	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+
+	fprintf_s( f, "%s", LastExceptionError.c_str( ) );
+
+	fprintf_s( f, "\n%s\n", "End dump." );
+
+	fclose( f );
+}
+
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
-	if ( MessageBox( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", IsVEHex ? "Fatal error detected![SEH]" : "Fatal error detected![VEH]" , MB_YESNO ) == IDYES )
+	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", IsVEHex ? "Fatal error detected![SEH]" : "Fatal error detected![VEH]", MB_YESNO ) == IDYES )
 	{
-		ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
-
-		LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
-		FILE * f;
-		fopen_s( &f, "lasterror.txt", "w" );
-		if ( f )
-		{
-			fwrite( LastExceptionError.c_str( ), LastExceptionError.length( ), 1, f );
-		}
-
-
-
-		fclose( f );
+		DumpExceptionInfoToFile( ExceptionInfo );
 
 		return OriginFilter( ExceptionInfo );
 	}
 	else return 0;
 }
 
+
+LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( IsVEHex )
+	{
+		return 0;
+	}
+
+
+
+
+	if ( !ExceptionInfo )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaChatLog( "Test: error1" );
+#endif
+		ExceptionInfo = new	_EXCEPTION_POINTERS( );
+	}
+	if ( !ExceptionInfo->ContextRecord )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaChatLog( "Test: error2" );
+#endif
+		ExceptionInfo->ContextRecord = new CONTEXT( );
+	}
+
+	if ( !ExceptionInfo->ExceptionRecord )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaChatLog( "Test: error3" );
+#endif
+		ExceptionInfo->ExceptionRecord = new EXCEPTION_RECORD( );
+	}
+
+	DumpExceptionInfoToFile( ExceptionInfo );
+
+	PEXCEPTION_RECORD ex = ExceptionInfo->ExceptionRecord;
+
+	DWORD exceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
+
+	if ( ( exceptionCode & ERROR_SEVERITY_ERROR ) != ERROR_SEVERITY_ERROR ) {
+		return ExceptionContinueSearch;
+	}
+
+
+	if ( exceptionCode & APPLICATION_ERROR_MASK ) {
+		return ExceptionContinueSearch;
+	}
+
+
+	char continueablecode[ 200 ];
+	if ( ( ex->ExceptionFlags & EXCEPTION_NONCONTINUABLE ) == 0 )
+	{
+		sprintf_s( continueablecode, 200, "%s:%X:%s", "Test: [VEH]ExceptionContinueExecution", ex->ExceptionCode, to_string( ex->ExceptionFlags & EXCEPTION_NONCONTINUABLE ).c_str( ) );
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaChatLog( continueablecode );
+#endif
+		return EXCEPTION_CONTINUE_EXECUTION;
+	}
+
+
+
+	IsVEHex = TRUE;
+
+
+	sprintf_s( continueablecode, 200, "%s:%X:%s", "Test: [VEH]TopLevelExceptionFilter", ex->ExceptionCode, to_string( ex->ExceptionFlags & EXCEPTION_NONCONTINUABLE ).c_str( ) );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( continueablecode );
+#endif
+	TopLevelExceptionFilter( ExceptionInfo );
+
+	return 0;
+}
+
+
 void InitTopLevelExceptionFilter( )
 {
-	SetUnhandledExceptionFilter( TopLevelExceptionFilter );
+	SetUnhandledExceptionFilter( 0 );
+	//SetUnhandledExceptionFilter( TopLevelExceptionFilter );
+	//AddVectoredExceptionHandler( 0, DotaVectoredToSehHandler );
 }
 
 void ResetTopLevelExceptionFilter( )
 {
-	SetUnhandledExceptionFilter( OriginFilter );
+	//SetUnhandledExceptionFilter( OriginFilter );
 }
 
 #define MAX_PROCESSES 1024 
 
 
-DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
+DWORD FindProcess( char * lpcszFileName )
 {
 	LPDWORD lpdwProcessIds;
-	LPTSTR  lpszBaseName;
+	char *  lpszBaseName;
 	HANDLE  hProcess;
 	DWORD   i, cdwProcesses, dwProcessId = 0;
 
@@ -570,7 +705,7 @@ DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
 	{
 		if ( EnumProcesses( lpdwProcessIds, MAX_PROCESSES * sizeof( DWORD ), &cdwProcesses ) )
 		{
-			lpszBaseName = ( LPTSTR )HeapAlloc( GetProcessHeap( ), 0, MAX_PATH * sizeof( TCHAR ) );
+			lpszBaseName = ( char * )HeapAlloc( GetProcessHeap( ), 0, MAX_PATH * sizeof( TCHAR ) );
 			if ( lpszBaseName != NULL )
 			{
 				cdwProcesses /= sizeof( DWORD );
@@ -579,9 +714,9 @@ DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
 					hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, lpdwProcessIds[ i ] );
 					if ( hProcess != NULL )
 					{
-						if ( GetModuleBaseName( hProcess, NULL, lpszBaseName, MAX_PATH ) > 0 )
+						if ( GetModuleBaseNameA( hProcess, NULL, lpszBaseName, MAX_PATH ) > 0 )
 						{
-							if ( !lstrcmpi( lpszBaseName, lpcszFileName ) )
+							if ( !lstrcmpiA( lpszBaseName, lpcszFileName ) )
 							{
 								dwProcessId = lpdwProcessIds[ i ];
 								CloseHandle( hProcess );
@@ -601,15 +736,15 @@ DWORD FindProcess( __in_z LPCTSTR lpcszFileName )
 
 std::string GetPlatformName( )
 {
-	if ( GetModuleHandle( "iccwc3.icc" ) )
+	if ( GetModuleHandleA( "iccwc3.icc" ) )
 		return "[iCCup]";
-	if ( GetModuleHandle( "InputHook.dll" ) && GetModuleHandle( "Overlay.dll" ) )
+	if ( GetModuleHandleA( "InputHook.dll" ) && GetModuleHandleA( "Overlay.dll" ) )
 		return "[Garena Plus]";
 	if ( FindProcess( "rgc.exe" ) )
 		return "[RGC]";
-	if ( GetModuleHandle( "mroc.dll" ) || FindProcess( "myroc.exe" ) )
+	if ( GetModuleHandleA( "mroc.dll" ) || FindProcess( "myroc.exe" ) )
 		return "[RGC]";
-	if ( !GetModuleHandle( "w3lh.dll" ) )
+	if ( !GetModuleHandleA( "w3lh.dll" ) )
 		return "[Unknown Or Battle.net]";
 
 	return "[Unknown PVPGN server]";
@@ -638,30 +773,49 @@ string ConvertMemoryToHexReverse( unsigned char * buffer, int size )
 
 LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 )
 {
+	string LogTempStr;
+	ostringstream BugReport;
+	int FuncCount = 0;
+	char gamever[ 20 ]{ 0 };
+	char lasterror[ 20 ]{ 0 };
+	char dllcrc32[ 20 ]{ 0 };
+	char EspDump[ 16 ]{ 0 };
+	DWORD EspDumpBytes = 0;
+
 	bDllLogEnable = FALSE;
 	LONG result = NULL;
-	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
-	result = StormErrorHandler_ptr( a1, PrintErrorLog, a3, a4, a5 );
-	PrintErrorLog( a3, "%s", "[Dota Allstars DLL log]" );
-	string LogTempStr;
-	int FuncCount = 0;
 
-	char gamever[ 20 ];
-	char lasterror[ 20 ];
-	char dllcrc32[ 20 ];
+	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
+
 	sprintf_s( gamever, 20, "%X", GameVersion );
-	sprintf_s( lasterror, 20, "%#010x", ( unsigned int )GetLastError( ) );
-	sprintf_s( dllcrc32, 20, "%#010x", ( unsigned int )GetDllCrc32( ) );
-	ostringstream BugReport;
+
+	BugReport << "GameVer: 1." << gamever << std::endl;
+
+
+
+
+	sprintf_s( lasterror, 20, "%X", ( unsigned int )GetLastError( ) );
+
+	BugReport << ( const char * )( *InGame ? "InGame" : "NotInGame" ) << std::endl;
+
+
+	sprintf_s( dllcrc32, 20, "%X", ( unsigned int )GetDllCrc32( ) );
+
+	BugReport << "[DLL_CRC32]: " << dllcrc32 << std::endl;
+
 	BugReport << "[DotaHelperLog]" << std::endl;
-	char EspDump[ 16 ];
-	DWORD EspDumpBytes;
+
+
+
 	ReadProcessMemory( GetCurrentProcess( ), ( void * )( ESP_for_DUMP - 16 ), EspDump, 16, &EspDumpBytes );
 
 
-	BugReport << "GameVer: 1." << gamever << std::endl;
-	BugReport << ( const char * )( *InGame ? "InGame" : "NotInGame" ) << std::endl;
+
+
 	BugReport << ( const char * )( *( BOOL* )IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
+
+
+	PrintErrorLog( a3, "\n%s\n", "Process ingame..." );
 
 
 	if ( *InGame )
@@ -690,6 +844,10 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 		BugReport << "[EndPlayerList]:" << std::endl;
 	}
 
+	PrintErrorLog( a3, "%s\n", "Process ingame...[OK]" );
+	PrintErrorLog( a3, "%s\n", "Process other data..." );
+
+
 
 	BugReport << "[SystemTime]: " << a5->wYear << "." << a5->wMonth << "." << a5->wDay << " " << a5->wHour << ":" << a5->wMinute << ":" << a5->wSecond << std::endl;
 	BugReport << "[OS]: " << GetOSDisplayString( ) << std::endl;
@@ -699,10 +857,10 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << "[Platform]: " << GetPlatformName( ) << std::endl;
 	BugReport << "[Exception Info]: " << std::endl;
 	BugReport << LastExceptionError << std::endl;
-	BugReport << "[DLL_CRC32]: " << dllcrc32 << std::endl;
 	BugReport << "[ESP]: " << ConvertMemoryToHexReverse( ( unsigned char* )&ESP_for_DUMP, 4 ) << ". [DUMP]:" << ConvertMemoryToHexReverse( ( unsigned char* )&EspDump, 16 ) << std::endl;
 
 	BugReport << "[DLL_LOG]: " << std::endl;
+	PrintErrorLog( a3, "%s\n", "Process other data...[OK]" );
 
 	string LastError1, LastError2, LastError3, LastError4;
 
@@ -869,6 +1027,8 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler END]" );
 
+	result = StormErrorHandler_ptr( a1, PrintErrorLog, a3, a4, a5 );
+
 	return result;
 }
 
@@ -885,8 +1045,11 @@ int __fastcall BlizzardDebug1_my( const char * str )
 	__asm mov retval, eax;
 	if ( str && *str )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToBlizzard1Log( str );
+#endif
 		PrintText( str );
+
 	}
 	return retval;
 }
@@ -900,9 +1063,11 @@ int __cdecl BlizzardDebug2_my( const char * src, int lineid, const char * classn
 	__asm mov retval, eax;
 	if ( src && classname && *src && *classname )
 	{
+#ifdef DOTA_HELPER_LOG
 		char tmpdebug[ 256 ];
 		sprintf_s( tmpdebug, 256, "Sorce:%s\nLine:%i\nClass:%s", src, lineid, classname );
 		AddNewLineToBlizzard2Log( tmpdebug );
+#endif
 	}
 	return retval;
 }
@@ -919,7 +1084,9 @@ int __cdecl BlizzardDebug3_my( const char * format, ... )
 	va_start( argptr, format );
 	vsprintf_s( dest, 256, format, argptr );
 	va_end( argptr );
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToBlizzard3Log( dest );
+#endif
 	return retval;
 }
 
@@ -934,10 +1101,12 @@ int __cdecl BlizzardDebug4_my( BOOL type1, const char * format, ... )
 	va_start( argptr, format );
 	vsprintf_s( dest, 256, format, argptr );
 	va_end( argptr );
+#ifdef DOTA_HELPER_LOG
 	if ( type1 )
 		AddNewLineToBlizzard4Log( dest );
 	else
 		AddNewLineToBlizzard4Log_2( dest );
+#endif
 	return retval;
 }
 
@@ -953,7 +1122,9 @@ int __cdecl BlizzardDebug5_my( const char * format, ... )
 	va_start( argptr, format );
 	vsprintf_s( dest, 256, format, argptr );
 	va_end( argptr );
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToBlizzard5Log( dest );
+#endif
 	return retval;
 }
 
@@ -969,14 +1140,16 @@ int __cdecl BlizzardDebug6_my( const char * format, ... )
 	va_start( argptr, format );
 	vsprintf_s( dest, 256, format, argptr );
 	va_end( argptr );
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToBlizzard6Log( dest );
+#endif
 	return retval;
 }
 
 
 void EnableErrorHandler( )
 {
-	EnableSEHoverVEH( );
+	//	EnableSEHoverVEH( );
 
 	InitTopLevelExceptionFilter( );
 

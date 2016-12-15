@@ -9,7 +9,7 @@ int GetPlayerByIDOffset = 0;
 
 int GetGlobalPlayerData( )
 {
-	return  *( int * ) ( GlobalPlayerOffset + GameDll );
+	return  *( int * )( GlobalPlayerOffset + GameDll );
 }
 
 int GetPlayerByNumber( int number )
@@ -18,11 +18,11 @@ int GetPlayerByNumber( int number )
 	int result = 0;
 	if ( arg1 > NULL )
 	{
-		result = ( int ) arg1 + ( number * 4 ) + 0x58;
+		result = ( int )arg1 + ( number * 4 ) + 0x58;
 
 		if ( result )
 		{
-			result = *( int* ) result;
+			result = *( int* )result;
 		}
 		else
 		{
@@ -38,7 +38,7 @@ int GetLocalPlayerId( )
 	int gldata = GetGlobalPlayerData( );
 	if ( gldata > 0 )
 	{
-		short retval = *( short * ) ( gldata + 0x28 );
+		short retval = *( short * )( gldata + 0x28 );
 		return retval;
 	}
 	return 0;
@@ -57,12 +57,16 @@ pOnChatMessage pOnChatMessage_org = NULL;
 pOnChatMessage pOnChatMessage_ptr;
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "pOnChatMessage_my" );
+#endif
 	char * playername = GetPlayerName( PlayerID, 1 );
 
 	if ( playername && *playername != '\0' )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaChatLog( string( playername ) + ":" + string( message ) );
+#endif
 
 		for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
 		{
@@ -102,7 +106,7 @@ int __stdcall UnMutePlayer( const char * str )
 		{
 			free( mutedplayers[ i ] );
 			mutedplayers[ i ] = NULL;
-			mutedplayers.erase( mutedplayers.begin( ) + ( int ) i );
+			mutedplayers.erase( mutedplayers.begin( ) + ( int )i );
 			return 1;
 		}
 	}

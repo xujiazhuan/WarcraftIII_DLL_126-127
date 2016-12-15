@@ -60,7 +60,7 @@ bool HTTPRequest::loop_recieve( )
 			break;
 		}
 
-		Response.append( recvBuf, ( unsigned int ) nret );
+		Response.append( recvBuf, ( unsigned int )nret );
 	}
 
 	return true;
@@ -87,9 +87,9 @@ bool HTTPRequest::resolve_and_connect( )
 
 	for ( size_t i = 0; i < pResult->ai_addrlen; i++ )
 	{
-		servAddr.sin_addr.S_un.S_addr = ( ULONG ) ( ( sockaddr_in* ) &pResult->ai_addr[ i ] )->sin_addr.S_un.S_addr;
+		servAddr.sin_addr.S_un.S_addr = ( ULONG )( ( sockaddr_in* )&pResult->ai_addr[ i ] )->sin_addr.S_un.S_addr;
 
-		if ( connect( Sock, ( sockaddr* ) &servAddr, sizeof( servAddr ) ) != SOCKET_ERROR )
+		if ( connect( Sock, ( sockaddr* )&servAddr, sizeof( servAddr ) ) != SOCKET_ERROR )
 		{
 			ret = true;
 			break;
@@ -114,7 +114,7 @@ bool HTTPRequest::get_request( const std::string& path )
 	request += "Connection: close\r\n";
 	request += "\r\n";
 
-	if ( send( Sock, request.c_str( ), ( int ) request.length( ), 0 ) == SOCKET_ERROR )
+	if ( send( Sock, request.c_str( ), ( int )request.length( ), 0 ) == SOCKET_ERROR )
 	{
 		return false;
 	}
@@ -142,7 +142,7 @@ bool HTTPRequest::post_request( const std::string& path, const std::string& dat 
 	request += dat;
 	request += "\r\n";
 
-	if ( send( Sock, request.c_str( ), ( int ) request.length( ), 0 ) == SOCKET_ERROR )
+	if ( send( Sock, request.c_str( ), ( int )request.length( ), 0 ) == SOCKET_ERROR )
 	{
 		return false;
 	}

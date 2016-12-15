@@ -33,6 +33,6 @@ void SendPacket( BYTE* packetData, DWORD size )
 	packet.Size = size;
 	packet._3 = 0xFFFFFFFF;
 	if ( !GAME_SendPacket )
-		GAME_SendPacket = ( GAME_SendPacket_p ) ( pGAME_SendPacket );
+		GAME_SendPacket = ( GAME_SendPacket_p )( pGAME_SendPacket );
 	GAME_SendPacket( &packet, 0 );
 }

@@ -24,21 +24,21 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 
 	if ( addr1 )
 	{
-		GETOID = *( int * ) ( addr1 + 444 );
+		GETOID = *( int * )( addr1 + 444 );
 		if ( GETOID <= 0 )
 			OID = 852290;
 		else
-			OID = *( int * ) ( GETOID + 8 );
+			OID = *( int * )( GETOID + 8 );
 		// Сначала вызвать оригинальную функцию
-		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
+		if ( ( ( IsNeedDrawUnitOrigin )( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
-			( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+			( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 		}
 		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( IsEnemy( ( int ) UnitAddr ) == FALSE )
+		else if ( IsEnemy( ( int )UnitAddr ) == FALSE )
 		{
-			if ( IsHero( ( int ) UnitAddr ) )
-				( ( DrawSkillPanel ) ( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+			if ( IsHero( ( int )UnitAddr ) )
+				( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 		}
 		result = 1;
 	}
@@ -57,21 +57,21 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 
 	if ( addr1 )
 	{
-		GETOID = *( int * ) ( addr1 + 444 );
+		GETOID = *( int * )( addr1 + 444 );
 		if ( GETOID <= 0 )
 			OID = 852290;
 		else
-			OID = *( int * ) ( GETOID + 8 );
+			OID = *( int * )( GETOID + 8 );
 		// Сначала вызвать оригинальную функцию
-		if ( ( ( IsNeedDrawUnitOrigin ) ( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
+		if ( ( ( IsNeedDrawUnitOrigin )( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
-			( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
+			( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 		}
 		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( IsEnemy( ( int ) UnitAddr ) == FALSE )
+		else if ( IsEnemy( ( int )UnitAddr ) == FALSE )
 		{
-			if ( IsHero( ( int ) UnitAddr ) )
-				( ( DrawSkillPanelOverlay ) ( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
+			if ( IsHero( ( int )UnitAddr ) )
+				( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 		}
 		result = 1;
 	}
@@ -92,7 +92,7 @@ int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thi
 
 	if ( IsEnemy( UnitAddr ) == FALSE )
 	{
-		if ( IsHero( ( int ) UnitAddr ) )
+		if ( IsHero( ( int )UnitAddr ) )
 			return 1;
 	}
 	//}

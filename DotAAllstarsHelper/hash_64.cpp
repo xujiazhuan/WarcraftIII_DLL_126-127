@@ -112,7 +112,7 @@ const Fnv64_t fnv1_64_init = { 0x84222325UL, 0xcbf29ce4UL };
 Fnv64_t
 fnv_64_buf( void *buf, size_t len, Fnv64_t hval )
 {
-	unsigned char *bp = ( unsigned char * ) buf;	/* start of buffer */
+	unsigned char *bp = ( unsigned char * )buf;	/* start of buffer */
 	unsigned char *be = bp + len;		/* beyond end of buffer */
 
 #if defined(HAVE_64BIT_LONG_LONG)
@@ -132,7 +132,7 @@ fnv_64_buf( void *buf, size_t len, Fnv64_t hval )
 #endif /* NO_FNV_GCC_OPTIMIZATION */
 
 		/* xor the bottom with the current octet */
-		hval ^= ( Fnv64_t ) *bp++;
+		hval ^= ( Fnv64_t )*bp++;
 	}
 
 #else /* HAVE_64BIT_LONG_LONG */
@@ -189,7 +189,7 @@ fnv_64_buf( void *buf, size_t len, Fnv64_t hval )
 		 */
 
 		 /* xor the bottom with the current octet */
-		val[ 0 ] ^= ( unsigned long ) *bp++;
+		val[ 0 ] ^= ( unsigned long )*bp++;
 	}
 
 	/*
@@ -224,7 +224,7 @@ fnv_64_buf( void *buf, size_t len, Fnv64_t hval )
 Fnv64_t
 fnv_64_str( char *str, Fnv64_t hval )
 {
-	unsigned char *s = ( unsigned char * ) str;	/* unsigned string */
+	unsigned char *s = ( unsigned char * )str;	/* unsigned string */
 
 #if defined(HAVE_64BIT_LONG_LONG)
 
@@ -243,7 +243,7 @@ fnv_64_str( char *str, Fnv64_t hval )
 #endif /* NO_FNV_GCC_OPTIMIZATION */
 
 		/* xor the bottom with the current octet */
-		hval ^= ( Fnv64_t ) *s++;
+		hval ^= ( Fnv64_t )*s++;
 	}
 
 #else /* !HAVE_64BIT_LONG_LONG */
@@ -300,7 +300,7 @@ fnv_64_str( char *str, Fnv64_t hval )
 		 */
 
 		 /* xor the bottom with the current octet */
-		val[ 0 ] ^= ( unsigned long ) ( *s++ );
+		val[ 0 ] ^= ( unsigned long )( *s++ );
 	}
 
 	/*

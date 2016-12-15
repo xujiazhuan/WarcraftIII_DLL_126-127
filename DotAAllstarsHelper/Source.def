@@ -43,4 +43,8 @@ JassLog @139
 FreeExecutableMemory @140
 DllLogEnable @141
 SetGameDllAddr @142
-Wc3MessageBox
+Wc3MessageBox @143
+EnableAutoFPSlimit @144
+LockMouseInWindow @145
+SetMaxFps @146
+TraceEsp_Print @147

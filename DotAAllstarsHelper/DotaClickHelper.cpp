@@ -112,12 +112,12 @@ DWORD LastKeyPressedKey = 0;
 
 BOOL IsCursorSelectTarget( )
 {
-	int pOffset1 = *( int* )( pW3XGlobalClass );
+	int pOffset1 = GetGlobalClassAddr( );
 	if ( pOffset1 > 0 && *( int* )( pOffset1 + 0x1BC ) == 1 )
 	{
 		/*char tmp[ 100 ];
 		sprintf_s( tmp, 100, "%X", pOffset1 );
-		MessageBox( 0, tmp, tmp, 0 );*/
+		MessageBoxA( 0, tmp, tmp, 0 );*/
 		return TRUE;
 	}
 	return FALSE;
@@ -312,6 +312,7 @@ struct KeyActionStruct
 	int VK;
 	int btnID;
 	int altbtnID;
+	BOOL IsSkill;
 };
 vector<KeyActionStruct> KeyActionList;
 
@@ -358,7 +359,7 @@ int GetAltBtnID( int btnID )
 	return -1;
 }
 
-int __stdcall AddKeyButtonAction( int KeyCode, int btnID )
+int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 {
 	if ( !KeyCode )
 	{
@@ -370,6 +371,7 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID )
 	tmpstr.VK = KeyCode;
 	tmpstr.btnID = btnID;
 	tmpstr.altbtnID = ( GetAltBtnID( btnID ) );
+	tmpstr.IsSkill = IsSkill;
 	KeyActionList.push_back( tmpstr );
 
 	return 0;
@@ -397,16 +399,55 @@ BOOL IsNULLButtonFound( int pButton )
 
 int GetSkillPanelButton( int idx )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ );
-	int pGamePlayerPanel = *( int* )( *( int* )( pW3XGlobalClass )+0x3c8 );
-	if ( pGamePlayerPanel > 0 )
+#endif
+	int pclass = GetGlobalClassAddr( );
+	if ( pclass > 0 )
 	{
-		int topLeftCommandButton = *( int* )( pGamePlayerPanel + 0x154 );
-		if ( topLeftCommandButton > 0 )
+		int pGamePlayerPanelSkills = *( int* )( pclass + 0x3c8 );
+		if ( pGamePlayerPanelSkills > 0 )
 		{
-			topLeftCommandButton = **( int** )( topLeftCommandButton + 0x8 );
+			int topLeftCommandButton = *( int* )( pGamePlayerPanelSkills + 0x154 );
 			if ( topLeftCommandButton > 0 )
-				return topLeftCommandButton + sizeOfCommandButtonObj * idx;
+			{
+				topLeftCommandButton = **( int** )( topLeftCommandButton + 0x8 );
+				if ( topLeftCommandButton > 0 )
+					return topLeftCommandButton + sizeOfCommandButtonObj * idx;
+			}
+		}
+	}
+	return 0;
+}
+
+// | 0 | 1
+// | 2 | 3
+// | 4 | 5
+
+int GetItemPanelButton( int idx )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );// by Karaulov
+#endif
+	int pclass = GetGlobalClassAddr( );
+	if ( pclass > 0 )
+	{
+		int pGamePlayerPanelItems = *( int* )( pclass + 0x3c4 );
+		if ( pGamePlayerPanelItems > 0 )
+		{
+			int topLeftCommandButton = *( int* )( pGamePlayerPanelItems + 0x148 );
+			if ( topLeftCommandButton > 0 )
+			{
+				topLeftCommandButton = *( int* )( topLeftCommandButton + 0x130 );
+				if ( topLeftCommandButton > 0 )
+				{
+					topLeftCommandButton = *( int* )( topLeftCommandButton + 0x4 );
+					if ( topLeftCommandButton > 0 )
+					{
+						return topLeftCommandButton + sizeOfCommandButtonObj * idx;
+					}
+				}
+			}
 		}
 	}
 	return 0;
@@ -417,7 +458,9 @@ c_SimpleButtonClickEvent SimpleButtonClickEvent;
 
 void PressSkillPanelButton( int idx, BOOL RightClick )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ );
+#endif
 	int button = GetSkillPanelButton( idx );
 	if ( button > 0 && *( int* )button > 0 )
 	{
@@ -429,9 +472,42 @@ void PressSkillPanelButton( int idx, BOOL RightClick )
 	}
 }
 
+void PressItemPanelButton( int idx, BOOL RightClick )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
+	int button = GetItemPanelButton( idx );
+	if ( button > 0 && *( int* )button > 0 )
+	{
+		UINT oldflag = *( UINT * )( button + flagsOffset );
+		if ( !( oldflag & 2 ) )
+			*( UINT * )( button + flagsOffset ) = oldflag | 2;
+		SimpleButtonClickEvent( button, 0, RightClick ? 4 : 1 );
+		*( UINT * )( button + flagsOffset ) = oldflag;
+	}
+}
+
+BOOL IsMouseOverWindow( RECT pwi, POINT cursorPos )
+{
+	return PtInRect( &pwi, cursorPos );
+}
 
 vector<unsigned int> SendKeyEvent;
 
+auto t_start = std::chrono::high_resolution_clock::now( );
+
+BOOL LOCK_MOUSE_IN_WINDOW = FALSE;
+
+int __stdcall LockMouseInWindow( BOOL enable )
+{
+	LOCK_MOUSE_IN_WINDOW = enable;
+
+	if ( !LOCK_MOUSE_IN_WINDOW )
+		ClipCursor( 0 );
+
+	return enable;
+}
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam )
 {
@@ -446,8 +522,38 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
 
+
+
+
 	if ( *( BOOL* )IsWindowActive )
 	{
+		if ( LOCK_MOUSE_IN_WINDOW )
+		{
+			POINT p;
+			tagWINDOWINFO pwi;
+			if ( Warcraft3Window && GetCursorPos( &p ) && GetWindowInfo( Warcraft3Window, &pwi ) && IsMouseOverWindow( pwi.rcClient, p ) )
+			{
+				ClipCursor( &pwi.rcClient );
+			}
+			else
+			{
+				ClipCursor( 0 );
+			}
+		}
+
+		auto t_end = std::chrono::high_resolution_clock::now( );
+		if ( std::chrono::duration<float, std::milli>( t_end - t_start ).count( ) > 250.0 )
+		{
+			t_start = t_end;
+			if ( FPS_LIMIT_ENABLED )
+			{
+				UpdateFPS( );
+			}
+		}
+
+
+
+
 		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
 		{
 			ShiftPressed = ( unsigned char )( Msg == WM_KEYDOWN ? 0x1u : 0x0u );
@@ -556,14 +662,24 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 										if ( keyAction.altbtnID >= 0 )
 										{
 											if ( !( lParam & 0x40000000 ) )
-												PressSkillPanelButton( keyAction.altbtnID, FALSE );
+											{
+												if ( keyAction.IsSkill )
+													PressSkillPanelButton( keyAction.altbtnID, FALSE );
+												else
+													PressItemPanelButton( keyAction.altbtnID, FALSE );
+											}
 											NeedSkipThisKey = TRUE;
 										}
 									}
 									else
 									{
 										if ( !( lParam & 0x40000000 ) )
-											PressSkillPanelButton( keyAction.btnID, FALSE );
+										{
+											if ( keyAction.IsSkill )
+												PressSkillPanelButton( keyAction.altbtnID, FALSE );
+											else
+												PressItemPanelButton( keyAction.altbtnID, FALSE );
+										}
 										NeedSkipThisKey = TRUE;
 									}
 								}
@@ -630,7 +746,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 				if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
 				{
 
+#ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ );
+#endif
 
 
 
@@ -687,7 +805,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 						}
 					}
 
+#ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+#endif
 
 
 				}
@@ -705,7 +825,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 			{
 				if ( EnableSelectHelper )
 				{
+#ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
+#endif
 
 					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
 					if ( selectedunitcout == 0 || ( selectedunitcout == 1 && IsEnemy( GetSelectedUnit( GetLocalPlayerId( ) ) ) != FALSE ) )
@@ -713,7 +835,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+#ifdef DOTA_HELPER_LOG
 						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
+#endif
 					}
 				}
 			}
@@ -722,6 +846,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _w
 	}
 	else
 	{
+		if ( LOCK_MOUSE_IN_WINDOW )
+			ClipCursor( 0 );
+
 		if ( BlockKeyAndMouseEmulation )
 		{
 			if ( Msg == WM_RBUTTONDOWN || Msg == WM_KEYDOWN || Msg == WM_KEYUP )
@@ -850,7 +977,9 @@ int sub_6F33A010Offset = 0;
 
 void IssueFixerInit( )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ );
+#endif
 
 
 	IssueWithoutTargetOrderorg = ( IssueWithoutTargetOrder )( GameDll + IssueWithoutTargetOrderOffset );
@@ -888,13 +1017,17 @@ void IssueFixerInit( )
 	MH_EnableHook( sub_6F339F80org );
 	MH_EnableHook( sub_6F33A010org );
 
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+#endif
 }
 
 
 void IssueFixerDisable( )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ );
+#endif
 
 	memset( LastPressedKeysTime, 0, sizeof( LastPressedKeysTime ) );
 

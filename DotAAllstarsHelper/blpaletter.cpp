@@ -617,7 +617,7 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 	unsigned long textureSize = 0;
 	if ( input.buf == NULL || input.length == NULL || input.length < sizeof( BLPHeader ) )
 		return 0;
-	
+
 
 	memcpy( &blph, input.buf, sizeof( BLPHeader ) );
 
@@ -662,7 +662,7 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 
 			if ( input.length < curpos + blph.sizex * blph.sizey * 2 )
 				return 0;
-			
+
 
 			uint8_t* tdata = new uint8_t[ ( unsigned int )size ];
 			memcpy( tdata, input.buf + offset, ( size_t )size );

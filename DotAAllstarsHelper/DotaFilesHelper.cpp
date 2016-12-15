@@ -1,3 +1,4 @@
+
 #include <experimental/filesystem>
 #include "Main.h"
 extern "C" { FILE __iob_func[ 3 ] = { *stdin,*stdout,*stderr }; }
@@ -26,7 +27,6 @@ struct ICONMDLCACHE
 };
 
 vector<ICONMDLCACHE> ICONMDLCACHELIST;
-
 vector<FileRedirectStruct> FileRedirectList;
 
 
@@ -45,11 +45,11 @@ BOOL GetFromIconMdlCache( string filename, ICONMDLCACHE * iconhelperout )
 	return FALSE;
 }
 
-BOOL IsFileRedirected( char * filename )
+BOOL IsFileRedirected( string filename )
 {
 	for ( FileRedirectStruct DotaRedirectHelp : FileRedirectList )
 	{
-		if ( _stricmp( filename, DotaRedirectHelp.NewFilePath ) == 0 )
+		if (filename == DotaRedirectHelp.NewFilePath )
 		{
 			return TRUE;
 		}
@@ -173,7 +173,9 @@ int idddd = 0;
 
 void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "ApplyTerrainFilter" );
+#endif
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
 	if ( FoundOldHelper )
@@ -246,7 +248,7 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 
 		if ( ResultBuffer.buf != NULL )
 		{
-			//	MessageBox( 0, "OK5", "OK5", 0 );
+			//	MessageBoxA( 0, "OK5", "OK5", 0 );
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
 			tmpih.hashlen = filename.length( );
@@ -272,7 +274,9 @@ int __stdcall ApplyTerrainFilterDirectly( char * filename, int * OutDataPointer,
 
 void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "ApplyIconFilter" );
+#endif
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
 	if ( FoundOldHelper )
@@ -383,7 +387,9 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 	string filename = _filename;
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "FixDisabledIconPath" );
+#endif
 
 	BOOL CreateDarkIcon = FALSE;
 	BOOL result = FALSE;
@@ -446,7 +452,7 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 	{
 		ApplyIconFilter( _filename, OutDataPointer, OutSize );
 	}
-	//else MessageBox( 0, filename, "Bad file path:", 0 );
+	//else MessageBoxA( 0, filename, "Bad file path:", 0 );
 
 	return result;
 }
@@ -465,7 +471,7 @@ vector<ModelScaleStruct> ModelScaleList;
 int __stdcall FixModelCollisionSphere( const char * mdlpath, float X, float Y, float Z, float Radius )
 {
 	ModelCollisionFixStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
+	tmpModelFix.FilePath = mdlpath;
 	tmpModelFix.X = X;
 	tmpModelFix.Y = Y;
 	tmpModelFix.Z = Z;
@@ -478,9 +484,9 @@ int __stdcall FixModelCollisionSphere( const char * mdlpath, float X, float Y, f
 int __stdcall FixModelTexturePath( const char * mdlpath, int textureid, const char * texturenew )
 {
 	ModelTextureFixStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
+	tmpModelFix.FilePath = mdlpath;
 	tmpModelFix.TextureID = textureid;
-	sprintf_s( tmpModelFix.NewTexturePath, 260, "%s", texturenew );
+	tmpModelFix.NewTexturePath = texturenew;
 	ModelTextureFixList.push_back( tmpModelFix );
 	return 0;
 }
@@ -490,8 +496,8 @@ int __stdcall FixModelTexturePath( const char * mdlpath, int textureid, const ch
 int __stdcall PatchModel( const char * mdlpath, const char * pathPatch )
 {
 	ModelPatchStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
-	sprintf_s( tmpModelFix.patchPath, 512, "%s", pathPatch );
+	tmpModelFix.FilePath = mdlpath;
+	tmpModelFix.patchPath = pathPatch;
 	ModelPatchList.push_back( tmpModelFix );
 	return 0;
 }
@@ -499,8 +505,8 @@ int __stdcall PatchModel( const char * mdlpath, const char * pathPatch )
 int __stdcall RemoveTagFromModel( const char * mdlpath, const char * tagname )
 {
 	ModelRemoveTagStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
-	sprintf_s( tmpModelFix.TagName, 5, "%s", tagname );
+	tmpModelFix.FilePath = mdlpath;
+	 tmpModelFix.TagName = tagname;
 	ModelRemoveTagList.push_back( tmpModelFix );
 	return 0;
 }
@@ -508,8 +514,8 @@ int __stdcall RemoveTagFromModel( const char * mdlpath, const char * tagname )
 int __stdcall ChangeAnimationSpeed( const char * mdlpath, const char * SeqenceName, float Speed )
 {
 	ModelSequenceReSpeedStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
-	sprintf_s( tmpModelFix.AnimationName, 100, "%s", SeqenceName );
+	tmpModelFix.FilePath = mdlpath ;
+	tmpModelFix.AnimationName =SeqenceName ;
 	tmpModelFix.SpeedUp = Speed;
 	ModelSequenceReSpeedList.push_back( tmpModelFix );
 	return 0;
@@ -523,8 +529,8 @@ int __stdcall SetSequenceValue( const char * mdlpath, const char * SeqenceName, 
 		return -1;
 
 	ModelSequenceValueStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
-	sprintf_s( tmpModelFix.AnimationName, 100, "%s", SeqenceName );
+	 tmpModelFix.FilePath= mdlpath ;
+	 tmpModelFix.AnimationName = SeqenceName;
 	tmpModelFix.Indx = Indx;
 	tmpModelFix.Value = Value;
 	ModelSequenceValueList.push_back( tmpModelFix );
@@ -535,7 +541,7 @@ int __stdcall SetSequenceValue( const char * mdlpath, const char * SeqenceName, 
 int __stdcall SetModelScale( const char * mdlpath, float Scale )
 {
 	ModelScaleStruct tmpModelFix;
-	sprintf_s( tmpModelFix.FilePath, 512, "%s", mdlpath );
+	tmpModelFix.FilePath = mdlpath;
 	tmpModelFix.Scale = Scale;
 	ModelScaleList.push_back( tmpModelFix );
 	return 0;
@@ -735,7 +741,9 @@ BYTE HelperBytesPart3[ ] = { 0xFF,0xFF,0xFF,0xFF,
 
 void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "ProcessModel" );
+#endif
 	BYTE * ModelBytes = ( BYTE* )*OutDataPointer;
 	size_t sz = *OutSize;
 
@@ -744,7 +752,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	for ( unsigned int i = 0; i < ModelSequenceValueList.size( ); i++ )
 	{
 		ModelSequenceValueStruct mdlfix = ModelSequenceValueList[ i ];
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if ( filename ==  mdlfix.FilePath )
 		{
 			size_t offset = 0;
 			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
@@ -768,7 +776,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							SequencesCount--;
 							memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
 
-							if ( mdlfix.AnimationName == 0 || *mdlfix.AnimationName == '\0' || _stricmp( mdlfix.AnimationName, tmpSequence.Name ) == 0 )
+							if ( mdlfix.AnimationName.length() == 0 || mdlfix.AnimationName == tmpSequence.Name )
 							{
 								size_t NeedPatchOffset = offset + 104 + ( mdlfix.Indx * 4 );
 								*( float* )&ModelBytes[ NeedPatchOffset ] = mdlfix.Value;
@@ -796,7 +804,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				fopen_s( &f, ".\\Test1234.mdx", "wb" );
 				fwrite( ModelBytes, sz, 1, f );
 				fclose( f );
-				MessageBox( 0, "Ok dump", "DUMP", 0 );
+				MessageBoxA( 0, "Ok dump", "DUMP", 0 );
 			}
 
 
@@ -809,7 +817,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	for ( unsigned int i = 0; i < ModelSequenceReSpeedList.size( ); i++ )
 	{
 		ModelSequenceReSpeedStruct mdlfix = ModelSequenceReSpeedList[ i ];
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if ( filename == mdlfix.FilePath )
 		{
 
 			int SequenceID = 0;
@@ -847,7 +855,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
 
 
-							if ( _stricmp( mdlfix.AnimationName, tmpSequence.Name ) == 0 )
+							if (  mdlfix.AnimationName == tmpSequence.Name )
 							{
 								ReplaceSequenceID = SequenceID;
 							}
@@ -1079,7 +1087,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 					fopen_s( &f, ".\\Test1234.mdx", "wb" );
 					fwrite( ModelBytes, sz, 1, f );
 					fclose( f );
-					MessageBox( 0, "Ok dump", "DUMP", 0 );
+					MessageBoxA( 0, "Ok dump", "DUMP", 0 );
 				}
 
 			}
@@ -1098,7 +1106,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	for ( unsigned int i = 0; i < ModelRemoveTagList.size( ); i++ )
 	{
 		ModelRemoveTagStruct mdlfix = ModelRemoveTagList[ i ];
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if (  filename == mdlfix.FilePath )
 		{
 			BOOL TagFound = FALSE;
 			size_t TagStartOffset = 0;
@@ -1109,7 +1117,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				offset += 4;
 				while ( offset < sz )
 				{
-					if ( memcmp( &ModelBytes[ offset ], mdlfix.TagName, 4 ) == 0 )
+					if ( memcmp( &ModelBytes[ offset ], mdlfix.TagName.c_str( ), 4 ) == 0 )
 					{
 
 						TagFound = TRUE;
@@ -1149,7 +1157,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	for ( unsigned int i = 0; i < ModelScaleList.size( ); i++ )
 	{
 		ModelScaleStruct mdlfix = ModelScaleList[ i ];
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if ( filename == mdlfix.FilePath )
 		{
 			if ( !FullPatchData.empty( ) )
 				FullPatchData.clear( );
@@ -1513,7 +1521,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				fopen_s( &f, ".\\Test1234.mdx", "wb" );
 				fwrite( &FullPatchData[ 0 ], FullPatchData.size( ), 1, f );
 				fclose( f );
-				MessageBox( 0, "Ok dump", "DUMP", 0 );
+				MessageBoxA( 0, "Ok dump", "DUMP", 0 );
 			}
 
 
@@ -1572,15 +1580,14 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	for ( unsigned int i = 0; i < ModelPatchList.size( ); i++ )
 	{
 		ModelPatchStruct mdlfix = ModelPatchList[ i ];
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if ( filename == mdlfix.FilePath )
 		{
 			int PatchFileData;
 			size_t PatchFileSize;
 
-			if ( GameGetFile_ptr( mdlfix.patchPath, &PatchFileData, &PatchFileSize, unknown ) )
+			if ( GameGetFile_ptr( mdlfix.patchPath.c_str( ), &PatchFileData, &PatchFileSize, unknown ) )
 			{
 				FullPatchData.insert( FullPatchData.end( ), ( char* )( PatchFileData ), ( char* )( PatchFileData + PatchFileSize ) );
-
 			}
 
 			ModelPatchList.erase( ModelPatchList.begin( ) + ( int )i );
@@ -1658,7 +1665,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	for ( unsigned int i = 0; i < ModelCollisionFixList.size( ); i++ )
 	{
 		ModelCollisionFixStruct mdlfix = ModelCollisionFixList[ i ];
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if (  filename == mdlfix.FilePath )
 		{
 			size_t offset = 0;
 			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
@@ -1706,7 +1713,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 	{
 		ModelTextureFixStruct mdlfix = ModelTextureFixList[ i ];
 		int TextureID = 0;
-		if ( _stricmp( filename.c_str( ), mdlfix.FilePath ) == 0 )
+		if (filename == mdlfix.FilePath )
 		{
 			size_t offset = 0;
 			if ( memcmp( &ModelBytes[ offset ], "MDLX", 4 ) == 0 )
@@ -1734,14 +1741,14 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 							if ( mdlfix.TextureID == TextureID )
 							{
-								if ( strlen( mdlfix.NewTexturePath ) > 3 )
+								if ( mdlfix.NewTexturePath.length( ) > 3 )
 								{
 									tmpTexture.ReplaceableId = 0;
-									sprintf_s( tmpTexture.FileName, 260, "%s", mdlfix.NewTexturePath );
+									sprintf_s( tmpTexture.FileName, 260, "%s", mdlfix.NewTexturePath.c_str( ) );
 								}
 								else
 								{
-									tmpTexture.ReplaceableId = atoi( mdlfix.NewTexturePath );
+									tmpTexture.ReplaceableId = atoi( mdlfix.NewTexturePath.c_str( ) );
 									memset( tmpTexture.FileName, 0, 260 );
 								}
 								memcpy( &ModelBytes[ offset ], &tmpTexture, sizeof( Mdx_Texture ) );
@@ -1772,8 +1779,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 int __stdcall RedirectFile( const char * RealFilePath, const char * NewFilePath )
 {
 	FileRedirectStruct tmpModelFix;
-	sprintf_s( tmpModelFix.NewFilePath, 512, "%s", NewFilePath );
-	sprintf_s( tmpModelFix.RealFilePath, 512, "%s", RealFilePath );
+	tmpModelFix.NewFilePath = NewFilePath;
+	tmpModelFix.RealFilePath = RealFilePath;
 	FileRedirectList.push_back( tmpModelFix );
 	return 0;
 }
@@ -1791,25 +1798,29 @@ void PrintLog( const char * str )
 }
 
 
-BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
+BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
 
 
 	BOOL IsFileExist = IsFileExistOld;
 
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "ProcessFile" );
-	int filenamelen = strlen( filename );
-	if ( filenamelen > 4 && filenamelen <= 1024 )
+#endif
+	int filenamelen = filename.length( );
+	if ( filenamelen > 4 )
 	{
 		string FileExtension = ToLower( fs::path( filename ).extension( ).string( ) );
 
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "ProcessFileStart..." );
+#endif
 
-		if ( FileExtension == ".tga" )
+		if ( FileExtension == string(".tga") )
 		{
 
 		}
-		else if ( FileExtension == ".blp" )
+		else if ( FileExtension == string( ".blp") )
 		{
 			if ( !IsFileExist )
 			{
@@ -1822,7 +1833,7 @@ BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize,
 						ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
 			}
 		}
-		else if ( FileExtension == ".mdx" )
+		else if ( FileExtension == string( ".mdx") )
 		{
 			if ( IsFileExist )
 			{
@@ -1835,8 +1846,7 @@ BOOL ProcessFile( const char * filename, int * OutDataPointer, size_t * OutSize,
 		}
 
 	}
-	else
-		AddNewLineToDotaHelperLog( "BADFILENAMEFOUND" );
+
 
 	return IsFileExist;
 }
@@ -1852,17 +1862,34 @@ void AddNewFakeFile( char * filename, BYTE * buffer, size_t FileSize )
 	FakeFileList.push_back( tmpstr );
 }
 
-signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPointer, size_t * OutSize, BOOL unknown )
+BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, unsigned int * OutSize, BOOL unknown )
 {
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( string( "Start File Helper..[" ) + to_string( unknown ) + "]" );
+#endif
+
 	if ( TerminateStarted )
 	{
-		return GameGetFile_ptr( filename_, OutDataPointer, OutSize, unknown );
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "TerminateStarted" );
+#endif
+
+		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 	}
 
+	if ( !OutDataPointer || !OutSize )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "Bad Pointers" );
+#endif
+		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
+	}
 
 	for ( FakeFileStruct fs : FakeFileList )
 	{
-		if ( _stricmp( filename_, fs.filename ) == 0 )
+		if ( _stricmp( filename, fs.filename ) == 0 )
 		{
 			*OutDataPointer = ( int )fs.buffer;
 			*OutSize = fs.size;
@@ -1870,66 +1897,81 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 		}
 	}
 
-
-	const char * filename = filename_;
-
+#ifdef DOTA_HELPER_LOG
 	if ( filename && *filename != '\0' )
-		AddNewLineToDotaHelperLog( ( "FileHelper:" + string( filename_ ) ) );
+		AddNewLineToDotaHelperLog( string( "FileHelper:" ) + string( filename ) );
 	else
 		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
+#endif
 
-	signed int IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
+	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
 
 
 	if ( !*InGame && !MainFuncWork )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "Game not found or main not set" );
+#endif
+
 		return IsFileExist;
 	}
 
 	if ( filename == NULL || *filename == '\0' )
 	{
 
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "Bad file name" );
+#endif
+
 		return IsFileExist;
 	}
 
 	if ( !IsFileExist )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "NoFileFound" );
+#endif
 	}
 	else
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "FileFound" );
+#endif
 	}
 
 	IsFileExist = ProcessFile( filename, OutDataPointer, OutSize, unknown, IsFileExist );
 
 
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "ProcessFileENDING" );
+#endif
 
 	if ( !IsFileExist )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "NoFileFound" );
+#endif
 	}
 	else
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "FileFound" );
+#endif
 	}
 
 	if ( !IsFileExist )
 	{
 		for ( FileRedirectStruct DotaRedirectHelp : FileRedirectList )
 		{
-			if ( _stricmp( filename, DotaRedirectHelp.NewFilePath ) == 0 )
+			if ( filename == DotaRedirectHelp.NewFilePath )
 			{
 				ICONMDLCACHE * tmpih = new ICONMDLCACHE( );
 				BOOL FoundOldHelper = GetFromIconMdlCache( DotaRedirectHelp.NewFilePath, tmpih );
 
 				if ( !FoundOldHelper )
 				{
-					IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath, OutDataPointer, OutSize, unknown );
+					IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath.c_str(), OutDataPointer, OutSize, unknown );
 					if ( IsFileExist )
 					{
 						char * DataPointer = ( char * )*OutDataPointer;
@@ -1944,15 +1986,16 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 						tmpih->buf = ResultBuffer.buf;
 						tmpih->size = ResultBuffer.length;
 
-						tmpih->hashlen = strlen( DotaRedirectHelp.NewFilePath );
-						tmpih->hash = GetBufHash( DotaRedirectHelp.NewFilePath, tmpih->hashlen );
+						tmpih->hashlen = DotaRedirectHelp.NewFilePath.length( );
+						tmpih->hash = GetBufHash( DotaRedirectHelp.NewFilePath.c_str( ), tmpih->hashlen );
 
 						ICONMDLCACHELIST.push_back( *tmpih );
 
 						*OutDataPointer = ( int )tmpih->buf;
 						*OutSize = tmpih->size;
 
-						ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+						IsFileExist = ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+
 						return IsFileExist;
 					}
 				}
@@ -1962,7 +2005,8 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 					*OutDataPointer = ( int )tmpih->buf;
 					*OutSize = tmpih->size;
 
-					ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+					IsFileExist = ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+
 					return TRUE;
 				}
 
@@ -1975,14 +2019,18 @@ signed int __fastcall GameGetFile_my( const char * filename_, int * OutDataPoint
 
 	if ( !IsFileExist )
 	{
+#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "Not found" );
+#endif
 		/*if ( filename && *filename != '\0' )
 		{
-			MessageBox( 0, filename, "File not found", 0 );
+			MessageBoxA( 0, filename, "File not found", 0 );
 		}*/
 	}
 
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "ProcessFileEND" );
+#endif
 
 	return IsFileExist;
 }

@@ -55,7 +55,50 @@ float mpbaroffsetUnitY[ 20 ];
 float mpbarscaleTowerX[ 20 ];
 float mpbarscaleTowerY[ 20 ];
 float mpbaroffsetTowerY[ 20 ];
+#ifdef DOTA_HELPER_LOG
 
+void __stdcall MPBARLOG1( )
+{
+	AddNewLineToDotaHelperLog( "RedrawMPBar" );
+}
+
+
+void __stdcall MPBARLOG2( )
+{
+	AddNewLineToDotaHelperLog( "f001527F0" );
+}
+
+
+void __stdcall MPBARLOG3( )
+{
+	AddNewLineToDotaHelperLog( "f00152710" );
+}
+
+void __stdcall MPBARLOG4( )
+{
+	AddNewLineToDotaHelperLog( "f152980" );
+}
+
+
+void __stdcall MPBARLOG5( )
+{
+	AddNewLineToDotaHelperLog( "f152950" );
+}
+
+
+void __stdcall MPBARLOG6( )
+{
+	AddNewLineToDotaHelperLog( "ReallocateMemoryForMPBar" );
+}
+
+
+void __stdcall MPBARLOG7( )
+{
+	AddNewLineToDotaHelperLog( "FillMemoryForMPBar" );
+}
+
+
+#endif
 
 
 void __stdcall SetMPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
@@ -124,14 +167,26 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	int retval = 0;
 	__asm mov retval, eax;
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer" );
+#endif
+
+
 	if ( unitaddr <= 0 || !IsNotBadUnit( unitaddr ) )
 		return retval;
 
-	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer" );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer[ok]" );
+#endif
 
 	int unitslot = GetUnitOwnerSlot( unitaddr );
 	if ( unitslot > 15 || unitslot < 0 )
 		return retval;
+
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer[ok2]" );
+#endif
 
 	aMPBarSizeX = aMPBarSizeX_default;
 	aMPBarSizeY = aMPBarSizeY_default;
@@ -211,6 +266,10 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer[end]" );
+#endif
+
 	return retval;
 }
 
@@ -220,6 +279,14 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 
 void __declspec( naked ) FillMemoryForMPBar( )
 {
+#ifdef DOTA_HELPER_LOG
+	__asm
+	{
+		pushad;
+		call MPBARLOG7;
+		popad;
+	}
+#endif
 	__asm
 	{
 		push    ebx;
@@ -268,6 +335,14 @@ void __declspec( naked ) FillMemoryForMPBar( )
 
 void __declspec( naked ) ReallocateMemoryForMPBar( )
 {
+#ifdef DOTA_HELPER_LOG
+	__asm
+	{
+		pushad;
+		call MPBARLOG6;
+		popad;
+	}
+#endif
 	__asm {
 		pop     a16F08C;
 		pop     eax;
@@ -289,6 +364,14 @@ void __declspec( naked ) ReallocateMemoryForMPBar( )
 
 void __declspec( naked ) f152950( )
 {
+#ifdef DOTA_HELPER_LOG
+	__asm
+	{
+		pushad;
+		call MPBARLOG5;
+		popad;
+	}
+#endif
 	__asm {
 
 		mov     eax, a16F090;
@@ -310,6 +393,14 @@ void __declspec( naked ) f152950( )
 }
 void __declspec( naked ) f152980( )
 {
+#ifdef DOTA_HELPER_LOG
+	__asm
+	{
+		pushad;
+		call MPBARLOG4;
+		popad;
+	}
+#endif
 	__asm {
 		mov     eax, a16F090;
 		mov     eax, dword ptr[ eax + 0x68 ];
@@ -319,6 +410,14 @@ void __declspec( naked ) f152980( )
 
 void __declspec( naked ) f00152710( )
 {
+#ifdef DOTA_HELPER_LOG
+	__asm
+	{
+		pushad;
+		call MPBARLOG3;
+		popad;
+	}
+#endif
 	__asm {
 		push eax;
 		push ebx;
@@ -349,6 +448,14 @@ void __declspec( naked ) f00152710( )
 
 void __declspec( naked ) f001527F0( )
 {
+#ifdef DOTA_HELPER_LOG
+	__asm
+	{
+		pushad;
+		call MPBARLOG2;
+		popad;
+	}
+#endif
 	__asm {
 		sub     esp, 0x10;
 		push    edi;
@@ -364,7 +471,9 @@ void __declspec( naked ) f001527F0( )
 		cmp eax, 0;
 		jne L093;
 		push edi;
+		pushad;
 		call SetMPBarConfigForPlayer;
+		popad;
 		mov     eax, dword ptr[ edi + 0x50 ];
 		test    eax, eax;
 		je L093;
@@ -410,8 +519,8 @@ void __declspec( naked ) f001527F0( )
 		mov     eax, dword ptr[ esi ];
 		cmp		eax, _BarVTable; // FIX CRASH
 		je OkayBar;
-		lea		ecx, BarVtableClone
-			cmp		eax, ecx; // FIX CRASH
+		lea		ecx, BarVtableClone;
+		cmp		eax, ecx; // FIX CRASH
 		je OkayBar;
 		jmp L091;
 	OkayBar:
@@ -494,6 +603,11 @@ void __declspec( naked ) f001527F0( )
 void __declspec( naked ) RedrawMPBar( )
 {
 	__asm {
+#ifdef DOTA_HELPER_LOG
+		pushad;
+		call MPBARLOG1;
+		popad;
+#endif
 		pushad;
 		mov     a16F004, ecx;
 		call    f001527F0;

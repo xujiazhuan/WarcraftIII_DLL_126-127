@@ -14,27 +14,27 @@ typedef memory_destination_mgr* mem_dest_ptr;
 
 METHODDEF( void ) init_destination( j_compress_ptr cinfo )
 {
-	mem_dest_ptr dest = ( mem_dest_ptr ) cinfo->dest;
+	mem_dest_ptr dest = ( mem_dest_ptr )cinfo->dest;
 	dest->pub.next_output_byte = dest->buffer; /* set destination buffer */
-	dest->pub.free_in_buffer = ( size_t ) dest->bufsize; /* input buffer size */
+	dest->pub.free_in_buffer = ( size_t )dest->bufsize; /* input buffer size */
 	dest->datasize = 0; /* reset output size */
 	dest->errcount = 0; /* reset error count */
 }
 
 METHODDEF( boolean ) empty_output_buffer( j_compress_ptr cinfo )
 {
-	mem_dest_ptr dest = ( mem_dest_ptr ) cinfo->dest;
+	mem_dest_ptr dest = ( mem_dest_ptr )cinfo->dest;
 	dest->pub.next_output_byte = dest->buffer;
-	dest->pub.free_in_buffer = ( size_t ) dest->bufsize;
+	dest->pub.free_in_buffer = ( size_t )dest->bufsize;
 	++dest->errcount; /* need to increase error count */
 	return TRUE;
 }
 
 METHODDEF( void ) term_destination( j_compress_ptr cinfo )
 {
-	mem_dest_ptr dest = ( mem_dest_ptr ) cinfo->dest;
+	mem_dest_ptr dest = ( mem_dest_ptr )cinfo->dest;
 	dest->datasize = dest->bufsize - dest->pub.free_in_buffer;
-	if ( dest->outsize ) *dest->outsize += ( int ) dest->datasize;
+	if ( dest->outsize ) *dest->outsize += ( int )dest->datasize;
 }
 
 GLOBAL( void ) jpeg_memory_dest( j_compress_ptr cinfo, JOCTET* buffer, int bufsize, int* outsize )
@@ -42,9 +42,9 @@ GLOBAL( void ) jpeg_memory_dest( j_compress_ptr cinfo, JOCTET* buffer, int bufsi
 	mem_dest_ptr dest;
 	if ( cinfo->dest == 0 )
 	{
-		cinfo->dest = ( struct jpeg_destination_mgr* )( *cinfo->mem->alloc_small )( ( j_common_ptr ) cinfo, JPOOL_PERMANENT, sizeof( memory_destination_mgr ) );
+		cinfo->dest = ( struct jpeg_destination_mgr* )( *cinfo->mem->alloc_small )( ( j_common_ptr )cinfo, JPOOL_PERMANENT, sizeof( memory_destination_mgr ) );
 	}
-	dest = ( mem_dest_ptr ) cinfo->dest;
+	dest = ( mem_dest_ptr )cinfo->dest;
 	dest->bufsize = bufsize;
 	dest->buffer = buffer;
 	dest->outsize = outsize;
@@ -64,7 +64,7 @@ METHODDEF( boolean ) fill_input_buffer( j_decompress_ptr dinfo )
 
 METHODDEF( void ) skip_input_data( j_decompress_ptr dinfo, long num_bytes )
 {
-	if ( ( size_t ) num_bytes > dinfo->src->bytes_in_buffer )
+	if ( ( size_t )num_bytes > dinfo->src->bytes_in_buffer )
 	{
 		dinfo->src->next_input_byte = 0; // no buffer byte
 		dinfo->src->bytes_in_buffer = 0; // no input left
@@ -85,7 +85,7 @@ GLOBAL( void ) jpeg_memory_src( j_decompress_ptr dinfo, unsigned char* buffer, s
 	struct jpeg_source_mgr* src;
 	if ( dinfo->src == 0 )
 	{
-		dinfo->src = ( struct jpeg_source_mgr * )( *dinfo->mem->alloc_small )( ( j_common_ptr ) dinfo, JPOOL_PERMANENT, sizeof( struct jpeg_source_mgr ) );
+		dinfo->src = ( struct jpeg_source_mgr * )( *dinfo->mem->alloc_small )( ( j_common_ptr )dinfo, JPOOL_PERMANENT, sizeof( struct jpeg_source_mgr ) );
 	}
 	src = dinfo->src;
 	src->next_input_byte = buffer;
@@ -107,7 +107,7 @@ typedef returnctrl_error_mgr* return_error_ptr;
 
 METHODDEF( void ) return_error_exit( j_common_ptr cinfo )
 {
-	return_error_ptr myerr = ( return_error_ptr ) cinfo->err;
+	return_error_ptr myerr = ( return_error_ptr )cinfo->err;
 	( *cinfo->err->output_message )( cinfo ); /* display error msg */
 	longjmp( myerr->setjmp_buffer, 1 ); /* return control to the setjmp point */
 }
@@ -117,7 +117,7 @@ GLOBAL( bool )ConvertToJpg( Buffer &source, Buffer &target, int width, int heigh
 {
 	int numBytes = 0; //size of jpeg after compression
 	int dummySize = ( ( width * height * 4 ) * 2 ) + 10000; // max possible size
-	char *storage = new char[ ( unsigned int ) dummySize ]; //storage buffer
+	char *storage = new char[ ( unsigned int )dummySize ]; //storage buffer
 	struct jpeg_compress_struct cinfo;
 	returnctrl_error_mgr jerr;
 	JSAMPROW row_pointer[ 1 ];
@@ -131,10 +131,10 @@ GLOBAL( bool )ConvertToJpg( Buffer &source, Buffer &target, int width, int heigh
 	}
 
 	jpeg_create_compress( &cinfo );
-	JOCTET *jpgbuff = ( JOCTET* ) storage;
+	JOCTET *jpgbuff = ( JOCTET* )storage;
 	jpeg_memory_dest( &cinfo, jpgbuff, dummySize, &numBytes );
-	cinfo.image_width = ( JDIMENSION ) width;
-	cinfo.image_height = ( JDIMENSION ) height;
+	cinfo.image_width = ( JDIMENSION )width;
+	cinfo.image_height = ( JDIMENSION )height;
 	cinfo.input_components = bytespp;
 	cinfo.in_color_space = JCS_UNKNOWN;
 	jpeg_set_defaults( &cinfo );
@@ -146,16 +146,16 @@ GLOBAL( bool )ConvertToJpg( Buffer &source, Buffer &target, int width, int heigh
 	{
 		while ( cinfo.next_scanline < cinfo.image_height )
 		{
-			row_pointer[ 0 ] = ( JSAMPLE* ) &source.buf[ ( cinfo.image_height - cinfo.next_scanline - 1 ) * stride ];
-			( void ) jpeg_write_scanlines( &cinfo, row_pointer, 1 );
+			row_pointer[ 0 ] = ( JSAMPLE* )&source.buf[ ( cinfo.image_height - cinfo.next_scanline - 1 ) * stride ];
+			( void )jpeg_write_scanlines( &cinfo, row_pointer, 1 );
 		}
 	}
 	else
 	{
 		while ( cinfo.next_scanline < cinfo.image_height )
 		{
-			row_pointer[ 0 ] = ( JSAMPLE* ) &source.buf[ cinfo.next_scanline * stride ];
-			( void ) jpeg_write_scanlines( &cinfo, row_pointer, 1 );
+			row_pointer[ 0 ] = ( JSAMPLE* )&source.buf[ cinfo.next_scanline * stride ];
+			( void )jpeg_write_scanlines( &cinfo, row_pointer, 1 );
 		}
 	}
 	jpeg_finish_compress( &cinfo );
@@ -168,9 +168,9 @@ GLOBAL( bool )ConvertToJpg( Buffer &source, Buffer &target, int width, int heigh
 		return false;
 	}
 
-	target.buf = new char[ ( unsigned int ) numBytes ];
-	target.length = ( unsigned long ) numBytes;
-	memcpy( target.buf, storage, ( size_t ) numBytes );
+	target.buf = new char[ ( unsigned int )numBytes ];
+	target.length = ( unsigned long )numBytes;
+	memcpy( target.buf, storage, ( size_t )numBytes );
 	delete[ ] storage;
 	return true;
 }
@@ -192,20 +192,20 @@ GLOBAL( bool )DecompressJpg( Buffer &source, Buffer &target, int &width, int &he
 	}
 
 	jpeg_create_decompress( &cinfo );
-	jpeg_memory_src( &cinfo, ( unsigned char* ) source.buf, source.length );
-	( void ) jpeg_read_header( &cinfo, TRUE );
-	( void ) jpeg_start_decompress( &cinfo );
-	stride = ( int ) cinfo.output_width * cinfo.output_components;
+	jpeg_memory_src( &cinfo, ( unsigned char* )source.buf, source.length );
+	( void )jpeg_read_header( &cinfo, TRUE );
+	( void )jpeg_start_decompress( &cinfo );
+	stride = ( int )cinfo.output_width * cinfo.output_components;
 	target.buf = new char[ stride * cinfo.output_height ];
 	target.length = stride * cinfo.output_height;
-	buffer = ( *cinfo.mem->alloc_sarray )( ( j_common_ptr ) &cinfo, JPOOL_IMAGE, ( JDIMENSION ) stride, ( JDIMENSION ) 1 );
-	width = ( int ) cinfo.output_width;
-	height = ( int ) cinfo.output_height;
+	buffer = ( *cinfo.mem->alloc_sarray )( ( j_common_ptr )&cinfo, JPOOL_IMAGE, ( JDIMENSION )stride, ( JDIMENSION )1 );
+	width = ( int )cinfo.output_width;
+	height = ( int )cinfo.output_height;
 	bytespp = cinfo.output_components;
-	while ( ( int ) cinfo.output_scanline < height )
+	while ( ( int )cinfo.output_scanline < height )
 	{
-		( void ) jpeg_read_scanlines( &cinfo, buffer, 1 );
-		memcpy( &target.buf[ ( height - cinfo.output_scanline ) * stride ], buffer[ 0 ], ( size_t ) stride );
+		( void )jpeg_read_scanlines( &cinfo, buffer, 1 );
+		memcpy( &target.buf[ ( height - cinfo.output_scanline ) * stride ], buffer[ 0 ], ( size_t )stride );
 	}
 	for ( int i = 0; i < width * height; i++ )
 	{ // swap R and B
@@ -214,7 +214,7 @@ GLOBAL( bool )DecompressJpg( Buffer &source, Buffer &target, int &width, int &he
 		target.buf[ i * bytespp ] = temp;
 	}
 
-	( void ) jpeg_finish_decompress( &cinfo );
+	( void )jpeg_finish_decompress( &cinfo );
 	jpeg_destroy_decompress( &cinfo );
 	return true;
 }

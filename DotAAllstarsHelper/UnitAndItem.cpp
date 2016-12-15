@@ -76,39 +76,51 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 // Проверяет враг юнит локальному игроку или нет
 BOOL __stdcall IsEnemy( int UnitAddr )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "IsEnemy:Start" );
+#endif
 	if ( UnitAddr > 0 && IsNotBadUnit( UnitAddr ) )
 	{
 		int unitownerslot = GetUnitOwnerSlot( ( int )UnitAddr );
 
 		if ( GetLocalPlayerId( ) == unitownerslot )
 		{
+#ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer1" );
+#endif
 			return FALSE;
 		}
 
-		if ( unitownerslot <= 15 && unitownerslot >= 0  )
+		if ( unitownerslot <= 15 && unitownerslot >= 0 )
 		{
 			unsigned int Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
 			unsigned int Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
 
 			if ( Player1 == Player2 )
 			{
+#ifdef DOTA_HELPER_LOG
 				AddNewLineToDotaHelperLog( "IsEnemy:SamePlayer2" );
+#endif
 				return FALSE;
 			}
 			if ( Player1 == 0 || Player2 == 0 )
 			{
+#ifdef DOTA_HELPER_LOG
 				AddNewLineToDotaHelperLog( "IsEnemy:BadPlayer" );
+#endif
 				return FALSE;
 			}
 
 			BOOL retval = ( ( ( IsPlayerEnemy )( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+#ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "IsEnemy:Okay" );
+#endif
 			return retval;
 		}
 	}
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "IsEnemy:BadUnit" );
+#endif
 	return FALSE;
 }
 
@@ -141,7 +153,9 @@ BOOL __stdcall IsNotBadItem( int itemaddr )
 
 int GetSelectedUnitCountBigger( int slot )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "GetSelectedUnitCountBigger" );
+#endif
 	int plr = GetPlayerByNumber( slot );
 	if ( plr > 0 )
 	{
@@ -164,7 +178,9 @@ int GetSelectedUnitCountBigger( int slot )
 
 int GetSelectedUnit( int slot )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "GetSelectedUnit" );
+#endif
 	int plr = GetPlayerByNumber( slot );
 	if ( plr > 0 )
 	{

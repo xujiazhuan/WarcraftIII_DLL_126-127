@@ -9,7 +9,9 @@ string LatestDownloadedString;
 
 string SendHttpPostRequest( const char * host, const char * path, const char * data )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "SendHttpPostRequest" );
+#endif
 	HTTPRequest req( host, 80 );
 	if ( req.GetErrorCode( ) == 0 )
 	{
@@ -21,7 +23,9 @@ string SendHttpPostRequest( const char * host, const char * path, const char * d
 
 string SendHttpGetRequest( const char * host, const char * path )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "SendHttpGetRequest" );
+#endif
 	HTTPRequest req( host, 80 );
 	if ( req.GetErrorCode( ) == 0 )
 	{
@@ -34,7 +38,9 @@ string SendHttpGetRequest( const char * host, const char * path )
 
 void DownloadNewMapToFile( char* szUrl, char * filepath )
 {
+#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "DownloadNewMapToFile" );
+#endif
 	DownStatus = 0;
 	HINTERNET hOpen = NULL;
 	HINTERNET hFile = NULL;
@@ -50,14 +56,14 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 		return;
 	}
 
-	hOpen = InternetOpen( "Microsoft Internet Explorer", NULL, NULL, NULL, 0 );
+	hOpen = InternetOpenA( "Microsoft Internet Explorer", NULL, NULL, NULL, 0 );
 	if ( !hOpen )
 	{
 		DownStatus = -1;
 		return;
 	}
 	DownProgress = 10;
-	hFile = InternetOpenUrl( hOpen, szUrl, NULL, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE, 0 );
+	hFile = InternetOpenUrlA( hOpen, szUrl, NULL, 0, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE, 0 );
 
 	if ( !hFile )
 	{

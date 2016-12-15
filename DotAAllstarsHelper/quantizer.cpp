@@ -6,16 +6,16 @@ unsigned char FixBounds( int i )
 		return 0xFF;
 	else if ( i < 0x00 )
 		return 0x00;
-	return ( unsigned char ) i;
+	return ( unsigned char )i;
 }
 
 unsigned char FixBounds( double i )
 {
 	if ( i > ( double )0xFF )
 		return 0xFF;
-	else if ( i < ( double ) 0x00 )
+	else if ( i < ( double )0x00 )
 		return 0x00;
-	return ( unsigned char ) i;
+	return ( unsigned char )i;
 }
 
 CQuantizer::CQuantizer( unsigned int nMaxColors, unsigned int nColorBits )
@@ -25,7 +25,7 @@ CQuantizer::CQuantizer( unsigned int nMaxColors, unsigned int nColorBits )
 	m_nLeafCount = 0;
 	m_lastIndex = 0;
 	m_needsAlpha = false;
-	for ( int i = 0; i <= ( int ) m_nColorBits; i++ )
+	for ( int i = 0; i <= ( int )m_nColorBits; i++ )
 		m_pReducibleNodes[ i ] = 0;
 	m_nMaxColors = m_nOutputMaxColors = nMaxColors;
 	if ( m_nMaxColors < 16 )m_nMaxColors = 16;
@@ -41,7 +41,7 @@ bool CQuantizer::ProcessImage( unsigned char* image, unsigned long size, unsigne
 {
 	for ( unsigned long i = 0; i < size; i++ )
 	{
-		BGRAPix *pix = ( BGRAPix* ) ( image + i * bytespp );
+		BGRAPix *pix = ( BGRAPix* )( image + i * bytespp );
 		AddColor( &m_pTree, pix->R, pix->G, pix->B, 0, m_nColorBits, 0, &m_nLeafCount, m_pReducibleNodes );
 		if ( pix->A != alpha )
 			m_needsAlpha = true;
@@ -64,7 +64,7 @@ void CQuantizer::FloydSteinbergDither( unsigned char* image, long width, long he
 			{
 				int i = width * ( height - y - 1 ) + x;
 				int j = ( width * y + x ) * bytespp;
-				unsigned char k = GetNearestIndexFast( ( BGRAPix* ) ( image + j ), pal );
+				unsigned char k = GetNearestIndexFast( ( BGRAPix* )( image + j ), pal );
 				int diff[ 3 ];
 				target[ i ] = k;
 				diff[ 0 ] = image[ j ] - pal[ k ].B;
@@ -94,7 +94,7 @@ void CQuantizer::FloydSteinbergDither( unsigned char* image, long width, long he
 			{
 				int i = width * ( height - y - 1 ) + x;
 				int j = ( width * y + x ) * bytespp;
-				unsigned char k = GetNearestIndexFast( ( BGRAPix* ) ( image + j ), pal );
+				unsigned char k = GetNearestIndexFast( ( BGRAPix* )( image + j ), pal );
 				int diff[ 3 ];
 				target[ i ] = k;
 				diff[ 0 ] = image[ j ] - pal[ k ].B;
@@ -122,11 +122,11 @@ void CQuantizer::FloydSteinbergDither( unsigned char* image, long width, long he
 }
 
 void CQuantizer::AddColor( Node** ppNode, unsigned char r, unsigned char g, unsigned char b, unsigned char a,
-						   unsigned int nColorBits, int nLevel, unsigned int*	pLeafCount, Node** pReducibleNodes )
+	unsigned int nColorBits, int nLevel, unsigned int*	pLeafCount, Node** pReducibleNodes )
 {
 	static unsigned char mask[ 8 ] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 	if ( !( *ppNode ) )
-		*ppNode = ( Node* ) CreateNode( nLevel, nColorBits, pLeafCount, pReducibleNodes );
+		*ppNode = ( Node* )CreateNode( nLevel, nColorBits, pLeafCount, pReducibleNodes );
 	if ( ( *ppNode )->bIsLeaf )
 	{
 		( *ppNode )->nPixelCount++;
@@ -145,9 +145,9 @@ void CQuantizer::AddColor( Node** ppNode, unsigned char r, unsigned char g, unsi
 
 void* CQuantizer::CreateNode( int nLevel, unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes )
 {
-	Node* pNode = ( Node* ) calloc( 1, sizeof( Node ) );
+	Node* pNode = ( Node* )calloc( 1, sizeof( Node ) );
 	if ( !pNode ) return 0;
-	pNode->bIsLeaf = ( ( unsigned int ) nLevel == nColorBits ) ? true : false;
+	pNode->bIsLeaf = ( ( unsigned int )nLevel == nColorBits ) ? true : false;
 	pNode->nIndex = 0;
 	if ( pNode->bIsLeaf ) ( *pLeafCount )++;
 	else
@@ -160,7 +160,7 @@ void* CQuantizer::CreateNode( int nLevel, unsigned int nColorBits, unsigned int*
 
 void CQuantizer::ReduceTree( unsigned int nColorBits, unsigned int* pLeafCount, Node** pReducibleNodes )
 {
-	int i = ( int ) nColorBits - 1;
+	int i = ( int )nColorBits - 1;
 	for ( ; ( i > 0 ) && ( !pReducibleNodes[ i ] ); i-- );
 	if ( !pReducibleNodes[ i ] ) return;
 	Node* pNode = pReducibleNodes[ i ];
@@ -211,10 +211,10 @@ void CQuantizer::GetPaletteColors( Node* pTree, BGRAPix* prgb, unsigned int* pIn
 	{
 		if ( pTree->bIsLeaf )
 		{
-			prgb[ *pIndex ].R = ( unsigned char ) ( ( pTree->nRedSum ) / ( pTree->nPixelCount ) );
-			prgb[ *pIndex ].G = ( unsigned char ) ( ( pTree->nGreenSum ) / ( pTree->nPixelCount ) );
-			prgb[ *pIndex ].B = ( unsigned char ) ( ( pTree->nBlueSum ) / ( pTree->nPixelCount ) );
-			prgb[ *pIndex ].A = ( unsigned char ) ( ( pTree->nAlphaSum ) / ( pTree->nPixelCount ) );
+			prgb[ *pIndex ].R = ( unsigned char )( ( pTree->nRedSum ) / ( pTree->nPixelCount ) );
+			prgb[ *pIndex ].G = ( unsigned char )( ( pTree->nGreenSum ) / ( pTree->nPixelCount ) );
+			prgb[ *pIndex ].B = ( unsigned char )( ( pTree->nBlueSum ) / ( pTree->nPixelCount ) );
+			prgb[ *pIndex ].A = ( unsigned char )( ( pTree->nAlphaSum ) / ( pTree->nPixelCount ) );
 			pTree->nIndex = *pIndex;
 			if ( pSum )
 				pSum[ *pIndex ] = pTree->nPixelCount;
@@ -257,12 +257,12 @@ unsigned char CQuantizer::GetNextBestLeaf( Node** pTree, unsigned int nLevel, BG
 {
 	if ( ( *pTree )->bIsLeaf )
 	{
-		return FixBounds( ( int ) ( *pTree )->nIndex );
+		return FixBounds( ( int )( *pTree )->nIndex );
 	}
 	else
 	{
 		static unsigned char mask[ 8 ] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-		int	shift = 7 - ( int ) nLevel;
+		int	shift = 7 - ( int )nLevel;
 		int	nIndex = ( ( ( c->R & mask[ nLevel ] ) >> shift ) << 2 ) | ( ( ( c->G & mask[ nLevel ] ) >> shift ) << 1 ) | ( ( c->B & mask[ nLevel ] ) >> shift );
 		if ( ( *pTree )->pChild[ nIndex ] )
 			return GetNextBestLeaf( &( ( *pTree )->pChild[ nIndex ] ), nLevel + 1, c, pal );
@@ -298,10 +298,10 @@ void CQuantizer::SetColorTable( BGRAPix* prgb )
 				na += tmppal[ k ].A * nSum[ k ];
 				ns += nSum[ k ];
 			}
-			prgb[ j ].R = FixBounds( ( int ) ( nr / ns ) );
-			prgb[ j ].G = FixBounds( ( int ) ( ng / ns ) );
-			prgb[ j ].B = FixBounds( ( int ) ( nb / ns ) );
-			prgb[ j ].A = FixBounds( ( int ) ( na / ns ) );
+			prgb[ j ].R = FixBounds( ( int )( nr / ns ) );
+			prgb[ j ].G = FixBounds( ( int )( ng / ns ) );
+			prgb[ j ].B = FixBounds( ( int )( nb / ns ) );
+			prgb[ j ].A = FixBounds( ( int )( na / ns ) );
 		}
 	}
 	else
@@ -323,11 +323,11 @@ unsigned char CQuantizer::GetNearestIndex( BGRAPix* c, BGRAPix* pal )
 	unsigned long cur = 0;
 	for ( unsigned long i = 0, k = 0, distance = 2147483647; i < m_nLeafCount; i++ )
 	{
-		k = ( unsigned long ) ( ( pal[ i ].B - c->B )*( pal[ i ].B - c->B ) + ( pal[ i ].G - c->G )*( pal[ i ].G - c->G ) + ( pal[ i ].R - c->R )*( pal[ i ].R - c->R ) );
+		k = ( unsigned long )( ( pal[ i ].B - c->B )*( pal[ i ].B - c->B ) + ( pal[ i ].G - c->G )*( pal[ i ].G - c->G ) + ( pal[ i ].R - c->R )*( pal[ i ].R - c->R ) );
 		if ( k == 0 )
 		{
-			m_lastIndex = ( unsigned char ) i;
-			return ( unsigned char ) i;
+			m_lastIndex = ( unsigned char )i;
+			return ( unsigned char )i;
 		}
 		if ( k < distance )
 		{
@@ -335,7 +335,7 @@ unsigned char CQuantizer::GetNearestIndex( BGRAPix* c, BGRAPix* pal )
 			cur = i;
 		}
 	}
-	m_lastIndex = ( unsigned char ) cur;
+	m_lastIndex = ( unsigned char )cur;
 	return m_lastIndex;
 }
 
@@ -346,7 +346,7 @@ unsigned char CQuantizer::GetNearestIndexFast( BGRAPix* c, BGRAPix* pal )
 	if ( !c || !pal ) return 0;
 	if ( ColorsAreEqual( c, &pal[ m_lastIndex ] ) )
 		return m_lastIndex;
-	m_lastIndex = ( unsigned char ) GetNextBestLeaf( &m_pTree, 0, c, pal );
+	m_lastIndex = ( unsigned char )GetNextBestLeaf( &m_pTree, 0, c, pal );
 	return m_lastIndex;
 }
 
