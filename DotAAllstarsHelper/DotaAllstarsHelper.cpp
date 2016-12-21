@@ -431,7 +431,7 @@ BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 		source[ i ] = 0x90;
 
 	VirtualProtect( source, length, oldProtection, &oldProtection );
-
+	FlushInstructionCache( GetCurrentProcess( ), source, length );
 	return TRUE;
 }
 
@@ -1325,6 +1325,7 @@ void __stdcall RestoreAllOffsets( )
 		{
 			*( int* )temp.offaddr = temp.offdata;
 			VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
+			FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
 		}
 	}
 	offsetslist.clear( );
@@ -1487,6 +1488,7 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 	}
 
 	VirtualProtect( addr, size, OldProtect1, &OldProtect2 );
+	FlushInstructionCache( GetCurrentProcess( ), addr, size );
 }
 
 
@@ -1496,6 +1498,7 @@ void PatchOffsetValue4( void * addr, UINT value )
 	VirtualProtect( addr, 4, PAGE_EXECUTE_READWRITE, &OldProtect1 );
 	*( UINT* )addr = value;
 	VirtualProtect( addr, 4, OldProtect1, &OldProtect2 );
+	FlushInstructionCache( GetCurrentProcess( ), addr, 4 );
 }
 void PatchOffsetValue1( void * addr, BYTE value )
 {
@@ -1503,6 +1506,7 @@ void PatchOffsetValue1( void * addr, BYTE value )
 	VirtualProtect( addr, 1, PAGE_EXECUTE_READWRITE, &OldProtect1 );
 	*( BYTE* )addr = value;
 	VirtualProtect( addr, 1, OldProtect1, &OldProtect2 );
+	FlushInstructionCache( GetCurrentProcess( ), addr, 1 );
 }
 
 DWORD GetDllCrc32( )

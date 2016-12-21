@@ -609,7 +609,8 @@ void Hook( )
 
 		VirtualProtect( Storm_401_org_malloc, 5, old1, &old3 );
 		VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
-
+		FlushInstructionCache( GetCurrentProcess( ), HPMP_DRAW, 5 );
+		FlushInstructionCache( GetCurrentProcess( ), Storm_401_org_malloc, 5 );
 	}
 
 }
@@ -633,6 +634,8 @@ void Unhook( )
 			VirtualProtect( HPMP_DRAW, 5, old2, &old3 );
 		}
 
+		FlushInstructionCache( GetCurrentProcess( ), HPMP_DRAW, 5 );
+		FlushInstructionCache( GetCurrentProcess( ), Storm_401_org_malloc, 5 );
 	}
 
 }
