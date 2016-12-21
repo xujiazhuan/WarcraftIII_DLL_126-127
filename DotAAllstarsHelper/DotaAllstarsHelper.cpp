@@ -1754,6 +1754,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		PatchOffsetValue4( ( void* )PatchFPSDraw, ( UINT )( void* )( MyFpsString ) );
 
 
+		GameChatSetState = ( pGameChatSetState )( GameDll + 0x341460 );
+
 		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x383640 );
 		_SetMaxFps( 200 );
 		//LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
@@ -1967,8 +1969,10 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		PatchOffsetValue4( ( void* )PatchMemMB2, 0x90521CC4 );
 		PatchOffsetValue4( ( void* )PatchFPSDraw, ( UINT )( void* )( MyFpsString ) );
 
-		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x35C680 );
 
+		GameChatSetState = ( pGameChatSetState )( GameDll + 0x392060 );
+
+		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x35C680 );
 		_SetMaxFps( 200 );
 
 		//LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );

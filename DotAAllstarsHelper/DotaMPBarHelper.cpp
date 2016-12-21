@@ -279,14 +279,6 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 
 void __declspec( naked ) FillMemoryForMPBar( )
 {
-#ifdef DOTA_HELPER_LOG
-	__asm
-	{
-		pushad;
-		call MPBARLOG7;
-		popad;
-	}
-#endif
 	__asm
 	{
 		push    ebx;
@@ -329,20 +321,12 @@ void __declspec( naked ) FillMemoryForMPBar( )
 		mov     ecx, esi;
 		pop     ebx;
 		jmp     eax;
-	}
+}
 
 }
 
 void __declspec( naked ) ReallocateMemoryForMPBar( )
 {
-#ifdef DOTA_HELPER_LOG
-	__asm
-	{
-		pushad;
-		call MPBARLOG6;
-		popad;
-	}
-#endif
 	__asm {
 		pop     a16F08C;
 		pop     eax;
@@ -364,14 +348,6 @@ void __declspec( naked ) ReallocateMemoryForMPBar( )
 
 void __declspec( naked ) f152950( )
 {
-#ifdef DOTA_HELPER_LOG
-	__asm
-	{
-		pushad;
-		call MPBARLOG5;
-		popad;
-	}
-#endif
 	__asm {
 
 		mov     eax, a16F090;
@@ -393,14 +369,6 @@ void __declspec( naked ) f152950( )
 }
 void __declspec( naked ) f152980( )
 {
-#ifdef DOTA_HELPER_LOG
-	__asm
-	{
-		pushad;
-		call MPBARLOG4;
-		popad;
-	}
-#endif
 	__asm {
 		mov     eax, a16F090;
 		mov     eax, dword ptr[ eax + 0x68 ];
@@ -410,14 +378,6 @@ void __declspec( naked ) f152980( )
 
 void __declspec( naked ) f00152710( )
 {
-#ifdef DOTA_HELPER_LOG
-	__asm
-	{
-		pushad;
-		call MPBARLOG3;
-		popad;
-	}
-#endif
 	__asm {
 		push eax;
 		push ebx;
@@ -448,14 +408,6 @@ void __declspec( naked ) f00152710( )
 
 void __declspec( naked ) f001527F0( )
 {
-#ifdef DOTA_HELPER_LOG
-	__asm
-	{
-		pushad;
-		call MPBARLOG2;
-		popad;
-	}
-#endif
 	__asm {
 		sub     esp, 0x10;
 		push    edi;
@@ -468,12 +420,12 @@ void __declspec( naked ) f001527F0( )
 		je L093;
 		push edi;
 		call IsEnemy;
-		cmp eax, 0;
-		jne L093;
+		cmp eax, 1;
+		je L093;
+		cmp eax, -1;
+		je L093;
 		push edi;
-		pushad;
 		call SetMPBarConfigForPlayer;
-		popad;
 		mov     eax, dword ptr[ edi + 0x50 ];
 		test    eax, eax;
 		je L093;
@@ -519,8 +471,8 @@ void __declspec( naked ) f001527F0( )
 		mov     eax, dword ptr[ esi ];
 		cmp		eax, _BarVTable; // FIX CRASH
 		je OkayBar;
-		lea		ecx, BarVtableClone;
-		cmp		eax, ecx; // FIX CRASH
+		lea		ecx, BarVtableClone
+			cmp		eax, ecx; // FIX CRASH
 		je OkayBar;
 		jmp L091;
 	OkayBar:
@@ -540,7 +492,7 @@ void __declspec( naked ) f001527F0( )
 		mov     ecx, edi;
 		//no
 		call    sub_6F334180;   // ds:[0016FF68]=6F334C00 (Game.6F334C00)
-		//no
+								//no
 		mov     ecx, dword ptr[ edi + 0x30 ];
 		mov     eax, 0;
 		cmp		SkipScaleFactor, 1;
@@ -603,11 +555,6 @@ void __declspec( naked ) f001527F0( )
 void __declspec( naked ) RedrawMPBar( )
 {
 	__asm {
-#ifdef DOTA_HELPER_LOG
-		pushad;
-		call MPBARLOG1;
-		popad;
-#endif
 		pushad;
 		mov     a16F004, ecx;
 		call    f001527F0;

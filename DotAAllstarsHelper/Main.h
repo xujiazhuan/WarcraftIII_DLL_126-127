@@ -501,3 +501,11 @@ void UpdateFPS( );
 typedef int( __cdecl * p_SetMaxFps )( int maxfps );
 extern p_SetMaxFps _SetMaxFps;
 #pragma endregion
+
+
+#pragma region DotaChatHelper.cpp
+
+typedef int( __fastcall * pGameChatSetState )( int chat,int unused, BOOL IsOpened );
+extern pGameChatSetState GameChatSetState;
+
+#pragma endregion

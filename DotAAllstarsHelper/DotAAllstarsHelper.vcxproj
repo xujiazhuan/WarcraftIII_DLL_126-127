@@ -55,7 +55,7 @@
       </OmitFramePointers>
       <EnableFiberSafeOptimizations>
       </EnableFiberSafeOptimizations>
-      <Optimization>Full</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <BufferSecurityCheck>
       </BufferSecurityCheck>
       <StructMemberAlignment>

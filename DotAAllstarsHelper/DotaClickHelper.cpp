@@ -358,6 +358,10 @@ int GetAltBtnID( int btnID )
 		return 6;
 	case 11:
 		return 9;
+	case 4:
+		return 1;
+	case 7:
+		return 4;
 	}
 
 	return -1;
@@ -565,6 +569,22 @@ int __stdcall ShopHelper( BOOL enable )
 	return enable;
 }
 
+BOOL IsGameFrameActive( )
+{
+	int pGlAddr = GetGlobalClassAddr( );
+	if ( pGlAddr > 0 )
+	{
+		pGlAddr = *( int* )( pGlAddr + 0x3D0 );
+		if ( pGlAddr > 0 )
+		{
+			pGlAddr = *( int* )( pGlAddr + 0x164 );
+			return pGlAddr;
+		}
+	}
+	return FALSE;
+}
+
+
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
 	unsigned int Msg = _Msg;
@@ -577,9 +597,6 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-
-
-
 
 
 	if ( *( BOOL* )IsWindowActive )
@@ -696,7 +713,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			return DefWindowProc( hWnd, Msg, wParam, lParam );
 		}
 
-		if ( *( int* )ChatFound == 0 )
+		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ))
 		{
 			//	char keystateprint[ 200 ];
 			if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP || Msg == WM_RBUTTONDOWN )
