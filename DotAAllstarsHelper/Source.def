@@ -1,50 +1,56 @@
 LIBRARY
 EXPORTS
-InitDotaHelper @100
-AddNewOffset @101
-MutePlayer @102
-UnMutePlayer @103
-SendGetRequest @104
-SaveNewDotaVersionFromUrl @105
-GetDownloadStatus @106
-GetLatestDownloadedString @107
-GetDownloadProgress @108
-GetCurrentMapPath @109
-SetHPBarColorForPlayer @110
-SetHPBarXScaleForPlayer @111
-SetHPBarYScaleForPlayer @112
-SetMPBarXScaleForPlayer @113
-SetMPBarYScaleForPlayer @114
-SetMPBarYOffsetForPlayer @115
-SetWidescreenFixState @116
-SetCustomFovFix @117
-SetManabarEnabled @118
-ToggleForcedSubSelection @119
-ToggleBlockKeyAndMouseEmulation @120
-SetHPCustomHPBarUnit @121
-ToggleClickHelper @122
-StartExtraErrorHandler @123
-SendMessageToChat @124
-FixModelCollisionSphere @125
-FixModelTexturePath @126
-ChangeAnimationSpeed @127
-SetSequenceValue @128
-PatchModel @129
-RemoveTagFromModel @130
-SetModelScale @131
-RedirectFile @132
-ApplyTerrainFilterDirectly @133
-SetMainFuncWork @134
-TriggerRegisterPlayerKeyboardEvent @135
-BlockKeyAction @136
-AddKeyButtonAction @137
-SetCustomGameDLLandStormDLL @138
-JassLog @139
-FreeExecutableMemory @140
-DllLogEnable @141
-SetGameDllAddr @142
-Wc3MessageBox @143
-EnableAutoFPSlimit @144
-LockMouseInWindow @145
-SetMaxFps @146
-TraceEsp_Print @147
+InitDotaHelper
+AddNewOffset
+MutePlayer
+UnMutePlayer
+SendGetRequest
+SaveNewDotaVersionFromUrl
+GetDownloadStatus
+GetLatestDownloadedString
+GetDownloadProgress
+GetCurrentMapPath
+SetHPBarColorForPlayer
+SetHPBarXScaleForPlayer
+SetHPBarYScaleForPlayer
+SetMPBarXScaleForPlayer
+SetMPBarYScaleForPlayer
+SetMPBarYOffsetForPlayer
+SetWidescreenFixState
+SetCustomFovFix
+SetManabarEnabled
+ToggleForcedSubSelection
+ToggleBlockKeyAndMouseEmulation
+SetHPCustomHPBarUnit
+ToggleClickHelper
+StartExtraErrorHandler
+SendMessageToChat
+FixModelCollisionSphere
+FixModelTexturePath
+ChangeAnimationSpeed
+SetSequenceValue
+PatchModel
+RemoveTagFromModel
+SetModelScale
+RedirectFile
+ApplyTerrainFilterDirectly
+SetMainFuncWork
+TriggerRegisterPlayerKeyboardEvent
+BlockKeyAction
+AddKeyButtonAction
+SetCustomGameDLLandStormDLL
+JassLog
+FreeExecutableMemory
+DllLogEnable
+SetGameDllAddr
+Wc3MessageBox
+EnableAutoFPSlimit
+LockMouseInWindow
+SetMaxFps
+TraceEsp_Print
+GetItemPanelButton
+GetSkillPanelButton
+DrawRegenAllways
+TeleportHelper
+TeleportWhiteListKey
+ShopHelper

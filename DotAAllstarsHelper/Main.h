@@ -209,7 +209,7 @@ extern pOnChatMessage pOnChatMessage_ptr;
 #pragma endregion
 
 #pragma region UnitAndItem.cpp
-
+int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int abilbasecode = 0 );
 int __stdcall GetUnitOwnerSlot( int unitaddr );
 BOOL __stdcall IsHero( int unitaddr );
 BOOL __stdcall IsTower( int unitaddr );
@@ -331,12 +331,13 @@ extern int GameFrameAtMouseStructOffset;
 
 
 #pragma region DotaClickHelper.cpp
-
+extern vector<int> WhiteListForTeleport;
+extern BOOL ShopHelperEnabled;
 extern BOOL BlockKeyAndMouseEmulation;
 extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
 extern BOOL LOCK_MOUSE_IN_WINDOW;
-
+extern BOOL BlockKeyboardAndMouseWhenTeleport;
 typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam );
 extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
 extern WarcraftRealWNDProc WarcraftRealWNDProc_ptr;

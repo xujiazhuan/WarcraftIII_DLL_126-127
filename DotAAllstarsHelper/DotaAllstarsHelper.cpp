@@ -653,126 +653,6 @@ void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook127a( )
 
 
 
-int ReadObjectAddrFromGlobalMat( unsigned int a1, unsigned int a2 )
-{
-	BOOL found1;
-	int result;
-	int AddrType1;
-	int v5;
-
-	if ( !( a1 >> 31 ) )
-	{
-		if ( a1 < *( unsigned int * )( *( int* )pGameClass1 + 28 ) )
-		{
-			found1 = *( int * )( *( int * )( *( int* )pGameClass1 + 12 ) + 8 * a1 ) == -2;
-			if ( !found1 )
-				return 0;
-			if ( a1 >> 31 )
-			{
-				AddrType1 = *( int * )( *( int * )( *( int* )pGameClass1 + 44 ) + 8 * a1 + 4 );
-				result = *( unsigned int * )( AddrType1 + 24 ) != a2 ? 0 : AddrType1;
-			}
-			else
-			{
-				v5 = *( int * )( *( int * )( *( int* )pGameClass1 + 12 ) + 8 * a1 + 4 );
-				result = *( unsigned int * )( v5 + 24 ) != a2 ? 0 : v5;
-			}
-			return result;
-		}
-		return 0;
-	}
-	if ( ( a1 & 0x7FFFFFFF ) >= *( unsigned int * )( *( int* )pGameClass1 + 60 ) )
-		return 0;
-	found1 = *( int * )( *( int * )( *( int* )pGameClass1 + 44 ) + 8 * a1 ) == -2;
-	if ( !found1 )
-		return 0;
-	if ( a1 >> 31 )
-	{
-		AddrType1 = *( int * )( *( int * )( *( int* )pGameClass1 + 44 ) + 8 * a1 + 4 );
-		result = *( unsigned int * )( AddrType1 + 24 ) != a2 ? 0 : AddrType1;
-	}
-	else
-	{
-		v5 = *( int * )( *( int * )( *( int* )pGameClass1 + 12 ) + 8 * a1 + 4 );
-		result = *( unsigned int * )( v5 + 24 ) != a2 ? 0 : v5;
-	}
-	return result;
-}
-
-
-int GetObjectDataAddr( int addr )
-{
-	int mataddr;
-	int result; // eax@3
-
-	mataddr = ReadObjectAddrFromGlobalMat( *( unsigned int * )addr, *( unsigned int * )( addr + 4 ) );
-
-	if ( !mataddr || *( int * )( mataddr + 32 ) )
-		result = 0;
-	else
-		result = *( int * )( mataddr + 84 );
-	return result;
-}
-
-
-vector<int> ReturnAbils;
-
-int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int abilbasecode = 0 )
-{
-	if ( ReturnAbils.size( ) != 0 )
-		ReturnAbils.clear( );
-	*count = 0;
-	if ( unitaddr > 0 )
-	{
-#ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ );
-#endif
-		int pAddr1 = unitaddr + 0x1DC;
-		int pAddr2 = unitaddr + 0x1E0;
-
-		if ( ( int )( *( unsigned int * )( pAddr1 ) & *( unsigned int * )( pAddr2 ) ) != -1 )
-		{
-			int pData = GetObjectDataAddr( pAddr1 );
-
-			while ( pData > 0 )
-			{
-				int pData2 = *( int* )( pData + 0x54 );
-				if ( pData2 > 0 )
-				{
-					if ( abilcode != 0 && *( int* )( pData2 + 0x34 ) == abilcode )
-					{
-						if ( abilbasecode != 0 && *( int* )( pData2 + 0x30 ) == abilbasecode )
-						{
-							ReturnAbils.push_back( pData );
-						}
-						else if ( abilbasecode == 0 )
-						{
-							ReturnAbils.push_back( pData );
-						}
-					}
-					else if ( abilcode == 0 )
-					{
-						if ( abilbasecode != 0 && *( int* )( pData2 + 0x30 ) == abilbasecode )
-						{
-							ReturnAbils.push_back( pData );
-						}
-						else if ( abilbasecode == 0 )
-						{
-							ReturnAbils.push_back( pData );
-						}
-					}
-				}
-				pData = GetObjectDataAddr( pData + 0x24 );
-			}
-
-			*count = ReturnAbils.size( );
-		}
-	}
-
-	return &ReturnAbils[ 0 ];
-}
-
-
 float __stdcall GetMagicProtectionForHero( int AmovAddr )
 {
 	int addr = *( int* )( AmovAddr + 0x30 );
@@ -1010,10 +890,28 @@ float GetUnitMPregen( int unitaddr )
 }
 
 
+BOOL NeedDrawRegen = FALSE;
+
+
+int __stdcall DrawRegenAllways( BOOL enabled )
+{
+	NeedDrawRegen = enabled;
+	return enabled;
+}
+
+
 int __stdcall SaveStringForHP_MP( int unitaddr )
 {
-	if ( *( BOOL* )IsWindowActive &&  IsKeyPressed( VK_LMENU ) )
+	if ( *( BOOL* )IsWindowActive && (NeedDrawRegen || IsKeyPressed( VK_LMENU ) ) )
 	{
+
+		if ( NeedDrawRegen && IsKeyPressed( VK_LMENU ) )
+		{
+			sprintf_s( unitstr1, 128, "%%u / %%u" );
+			sprintf_s( unitstr2, 128, "%%u / %%u" );
+			return unitaddr;
+		}
+
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__ );
 #endif
@@ -1022,28 +920,26 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 			float unitreghp = GetUnitHPregen( unitaddr );
 			float unitregmp = GetUnitMPregen( unitaddr );
 
-			if ( unitreghp == 0.0f )
+			if ( unitreghp < 0.0f )
 			{
-				sprintf_s( unitstr1, 128, "%%u|r |cFF00FF00+0.00|r" );
+				sprintf_s( unitstr1, 128, "%%u |cFF00FF00-%.1f|r", unitreghp );
 			}
 			else if ( unitreghp < 9999.0f )
 			{
-				sprintf_s( unitstr1, 128, "%%u|r |cFF00FF00+%.1f|r", unitreghp );
+				sprintf_s( unitstr1, 128, "%%u |cFF00FF00+%.1f|r", unitreghp );
 			}
 			else
 			{
 				sprintf_s( unitstr1, 128, "%%u |cFF00FF00+BIG|r" );
 			}
 
-
-
-			if ( unitregmp == 0.0f )
+			if ( unitregmp < 0.0f )
 			{
-				sprintf_s( unitstr2, 128, "%%u|r |cFF00FFFF+0.00|r" );
+				sprintf_s( unitstr2, 128, "%%u |cFF00FFFF-%.1f|r", unitregmp );
 			}
 			else if ( unitregmp < 9999.0f )
 			{
-				sprintf_s( unitstr2, 128, "%%u|r |cFF00FFFF+%.1f|r", unitregmp );
+				sprintf_s( unitstr2, 128, "%%u |cFF00FFFF+%.1f|r", unitregmp );
 			}
 			else
 			{
@@ -1333,7 +1229,7 @@ void __declspec( naked ) HookSetCD_1000s_126a( )
 		mov cd_addr, eax;
 	}
 
-	*( float* )( cd_addr + 4 ) = 1000.0;
+	*( float* )( cd_addr + 4 ) = 100.0;
 
 	__asm
 	{
@@ -1355,7 +1251,7 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 	{
 		mov cd_addr, eax;
 	}
-	*( float* )( cd_addr + 4 ) = 1000.0;
+	*( float* )( cd_addr + 4 ) = 100.0;
 
 	__asm
 	{
@@ -1518,8 +1414,15 @@ void __stdcall DisableAllHooks( )
 	EnableSelectHelper = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
 	ClickHelper = FALSE;
+	LOCK_MOUSE_IN_WINDOW = FALSE;
+	BlockKeyboardAndMouseWhenTeleport = FALSE;
+	if (!WhiteListForTeleport.empty() )
+		WhiteListForTeleport.clear();
+	ShopHelperEnabled = FALSE;
+
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
+	NeedDrawRegen = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
@@ -1658,6 +1561,12 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	EnableSelectHelper = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
 	ClickHelper = FALSE;
+	LOCK_MOUSE_IN_WINDOW = FALSE;
+	BlockKeyboardAndMouseWhenTeleport = FALSE;
+	if ( !WhiteListForTeleport.empty( ) )
+		WhiteListForTeleport.clear( );
+	ShopHelperEnabled = FALSE;
+
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	SetCustomFovFix( 1.0f );

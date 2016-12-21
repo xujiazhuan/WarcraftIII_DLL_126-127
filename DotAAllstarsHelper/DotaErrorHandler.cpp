@@ -680,7 +680,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 
 void InitTopLevelExceptionFilter( )
 {
-	SetUnhandledExceptionFilter( 0 );
+	//SetUnhandledExceptionFilter( 0 );
 	//SetUnhandledExceptionFilter( TopLevelExceptionFilter );
 	//AddVectoredExceptionHandler( 0, DotaVectoredToSehHandler );
 }
