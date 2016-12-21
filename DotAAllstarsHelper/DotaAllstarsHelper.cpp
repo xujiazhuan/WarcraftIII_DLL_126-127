@@ -1491,6 +1491,10 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 	FlushInstructionCache( GetCurrentProcess( ), addr, size );
 }
 
+int __stdcall _FlushInstructionCache( int addr, unsigned int size )
+{
+	return FlushInstructionCache( GetCurrentProcess( ), (void*)addr, size );
+}
 
 void PatchOffsetValue4( void * addr, UINT value )
 {

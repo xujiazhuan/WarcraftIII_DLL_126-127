@@ -54,3 +54,4 @@ DrawRegenAllways
 TeleportHelper
 TeleportWhiteListKey
 ShopHelper
+_FlushInstructionCache
