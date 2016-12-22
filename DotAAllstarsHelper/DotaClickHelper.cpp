@@ -123,6 +123,16 @@ BOOL IsCursorSelectTarget( )
 	return FALSE;
 }
 
+int GetCursorOrder( )
+{
+	int pOffset1 = GetGlobalClassAddr( );
+	if ( pOffset1 > 0 && (pOffset1 = *( int* )( pOffset1 + 0x1B4 )) > 0 )
+	{
+		return *( int* )( pOffset1 + 0x10 );
+	}
+	return 0;
+}
+
 float HeroPortX = 0.318f;
 float HeroPortY = 0.888f;
 
@@ -252,7 +262,10 @@ void JustClickMouse( )
 void PressMouseAtSelectedHero( )
 {
 
-	if ( IsCursorSelectTarget( ) )
+	if ( IsCursorSelectTarget( ) && 
+		GetCursorOrder( ) != 0xD000F &&
+		GetCursorOrder( ) != 0xD0012 &&
+		GetCursorOrder( ) != 0xD0016 )
 	{
 
 		BOOL ButtonDown = FALSE;
