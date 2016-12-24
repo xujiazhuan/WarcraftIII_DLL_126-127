@@ -178,7 +178,11 @@ BOOL __stdcall IsHero( int UnitAddr );
 BOOL __stdcall IsTower( int unitaddr );
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
-
+int __stdcall Wc3MessageBox( const char * message, int type );
+typedef void( __fastcall * pGame_Wc3MessageBox ) ( int type, const char * text, BOOL IsUsedCallBack, int callbackaddr, int unk2, int unk3, int unk4 );
+extern pGame_Wc3MessageBox Game_Wc3MessageBox;
+typedef void( __fastcall * pLoadFrameDefList )( const char * filepath, int env );
+extern pLoadFrameDefList LoadFrameDefList;
 string ToLower( string s );
 
 extern BOOL MainFuncWork;
@@ -445,6 +449,10 @@ typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPo
 BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 extern GameGetFile GameGetFile_org;
 extern GameGetFile GameGetFile_ptr;
+int __stdcall Storm_279_my( const char * filename, int arg1, int arg2, size_t arg3, int arg4 );
+typedef int( __stdcall * Storm_279 )( const char * filename, int, int, size_t, int );
+extern Storm_279 Storm_279_org;
+extern Storm_279 Storm_279_ptr;
 
 void FreeAllIHelpers( );
 
@@ -507,5 +515,12 @@ extern p_SetMaxFps _SetMaxFps;
 
 typedef int( __fastcall * pGameChatSetState )( int chat,int unused, BOOL IsOpened );
 extern pGameChatSetState GameChatSetState;
+
+#pragma endregion
+
+
+#pragma region DotaConfigEditor.cpp
+int __stdcall ShowConfigWindow( const char * );
+extern BOOL NeedOpenConfigWindow;
 
 #pragma endregion

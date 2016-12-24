@@ -612,6 +612,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
 
+//	if ( Msg == WM_KEYDOWN )
+//	{
+//		ShowConfigWindow( ".\\config.dota" );
+//	}
+
 	if ( *( BOOL* )IsWindowActive )
 	{
 		if ( LOCK_MOUSE_IN_WINDOW )

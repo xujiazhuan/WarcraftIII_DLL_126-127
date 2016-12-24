@@ -101,6 +101,7 @@
     <ClCompile Include="DotaAutoFPSlimit.cpp" />
     <ClCompile Include="DotaChatHelper.cpp" />
     <ClCompile Include="DotaClickHelper.cpp" />
+    <ClCompile Include="DotaConfigEditor.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
     <ClCompile Include="DotaFilesHelper.cpp" />
     <ClCompile Include="DotaWebHelper.cpp" />

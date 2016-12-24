@@ -472,12 +472,12 @@ void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 #ifdef DOTA_HELPER_LOG
 	//AddNewLineToDotaHelperLog( __func__ );
 #endif
-	if ( Event > 0 )
-	{
-		int EventID = *( BYTE* )( Event + 20 );
+	/*if ( Event > 0 )
+	{*/
+		//int EventID = *( BYTE* )( Event + 20 );
 		ProcessNetEvents_ptr( data, unused, Event );
-		AddNewCNetEventLog( EventID, data, Event, *( BYTE* )( Event + 12 ) );
-	}
+		//AddNewCNetEventLog( EventID, data, Event, *( BYTE* )( Event + 12 ) );
+	//}
 }
 
 

@@ -1,6 +1,7 @@
 ﻿#include "Main.h"
 #include "ViewAllySkill.h"
 
+#include <TlHelp32.h>
 
 #include <stdint.h>
 #include "Crc32Dynamic.h"
@@ -90,7 +91,7 @@ int SetGameAreaFOVoffset = 0;
 int GameGetFileOffset = 0;
 
 int Warcraft3WindowProcOffset = 0;
-int Wc3MessageBoxOffset = 0;
+
 int pPreferencesOffset = 0;
 #pragma endregion
 
@@ -119,15 +120,9 @@ void PrintText( const char * text, float staytime )
 }
 
 
-void __declspec( naked ) __fastcall Game_Wc3MessageBox( int type, const char * text, int unk1, UINT buttons, int unk2, int unk3, int unk4 )
-{
-	__asm
-	{
-		//fldz; 
-		mov eax, Wc3MessageBoxOffset;
-		jmp eax;
-	}
-}
+
+pGame_Wc3MessageBox Game_Wc3MessageBox;
+
 
 
 // Warning = 0
@@ -135,7 +130,7 @@ void __declspec( naked ) __fastcall Game_Wc3MessageBox( int type, const char * t
 // Question = 2
 int __stdcall Wc3MessageBox( const char * message, int type )
 {
-	Game_Wc3MessageBox( type, message, 0, 0, 0, 0, 0 );
+	Game_Wc3MessageBox( type, message,0, 0, 0, 0, 0 );
 	return TRUE;
 }
 
@@ -147,22 +142,25 @@ char *  GetWar3Preferense( int ID )
 {
 	int pPrefAddr = *( int* )pPreferencesOffset + 40;
 	char * result = 0;
-	int pPrefVal = *( int * )( pPrefAddr + 36 );
-	if ( pPrefVal != -1 )
+	if (pPrefAddr > 0)
 	{
-		result = *( char ** )( *( int * )( pPrefAddr + 28 ) + 12 * ( ID & pPrefVal ) + 8 );
-		if ( !result )
+		int pPrefVal = *( int * )( pPrefAddr + 36 );
+		if ( pPrefVal != -1 )
 		{
-
-		}
-		else
-		{
-			while ( *( int * )result != ID )
+			result = *( char ** )( *( int * )( pPrefAddr + 28 ) + 12 * ( ID & pPrefVal ) + 8 );
+			if ( !result )
 			{
-				result = *( char ** )&result[ *( int * )( *( int * )( ID + 28 ) + 12 * ( *( int * )( pPrefAddr + 36 ) & ID ) ) + 4 ];
-				if ( ( signed int )result <= 0 )
+
+			}
+			else
+			{
+				while ( *( int * )result != ID )
 				{
-					break;
+					result = *( char ** )&result[ *( int * )( *( int * )( ID + 28 ) + 12 * ( *( int * )( pPrefAddr + 36 ) & ID ) ) + 4 ];
+					if ( ( signed int )result <= 0 )
+					{
+						break;
+					}
 				}
 			}
 		}
@@ -170,17 +168,8 @@ char *  GetWar3Preferense( int ID )
 	return result > 0 ? result : 0;
 }
 
-/*
-struct FrameDefStatus
-{
-	int FDefVtable;
-	int zeroint;
-	int this_add_8;
-	int this_add_8_negative;
-	int this_one;
-};
-typedef void( __fastcall * pLoadFrameDefList )( const char * filepath, int env );
-pLoadFrameDefList LoadFrameDefList;*/
+
+pLoadFrameDefList LoadFrameDefList;
 
 
 
@@ -336,6 +325,9 @@ void InitHook( )
 	MH_CreateHook( GameGetFile_org, &GameGetFile_my, reinterpret_cast< void** >( &GameGetFile_ptr ) );
 	MH_EnableHook( GameGetFile_org );
 
+	MH_CreateHook( Storm_279_org, &Storm_279_my, reinterpret_cast< void** >( &Storm_279_ptr ) );
+	MH_EnableHook( Storm_279_org );
+
 
 	pOnChatMessage_org = ( pOnChatMessage )( GameDll + pOnChatMessage_offset );
 	MH_CreateHook( pOnChatMessage_org, &pOnChatMessage_my, reinterpret_cast< void** >( &pOnChatMessage_ptr ) );
@@ -393,6 +385,13 @@ void UninitializeHook( )
 	{
 		MH_DisableHook( GameGetFile_org );
 		GameGetFile_org = 0;
+	}
+
+
+	if ( Storm_279_org )
+	{
+		MH_DisableHook( Storm_279_org );
+		Storm_279_org = 0;
 	}
 
 
@@ -1387,7 +1386,7 @@ void __stdcall DisableAllHooks( )
 	AddNewLineToDotaHelperLog( __func__ );
 #endif
 	// Вернуть стандартное ограничение FPS
-	_SetMaxFps( 200 );
+	//_SetMaxFps( 200 );
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f" );
 	ClipCursor( 0 );
 	// Выгрузить перехватчики функций
@@ -1638,6 +1637,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		sub_6F33A010Offset = 0x33A010;
 
 		GameGetFileOffset = 0x4C1550;
+		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
+		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
+		Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
 
@@ -1741,7 +1743,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		Warcraft3Window = *( HWND* )( GameDll + 0xAD147C );
 		Warcraft3WindowProcOffset = GameDll + 0x6C6AA0;
 
-		Wc3MessageBoxOffset = GameDll + 0x55CEB0;
+		Game_Wc3MessageBox = ( pGame_Wc3MessageBox )( GameDll + 0x55CEB0 );
 
 		pPreferencesOffset = GameDll + 0xAAE314;
 
@@ -1766,21 +1768,12 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x383640 );
 		_SetMaxFps( 200 );
-		//LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
-
+		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
 		ManaBarSwitch( GameDll, TRUE );
 
 		InitHook( );
 
-		/*	FrameDefStatus fStatus;
-			fStatus.FDefVtable = GameDll + 0x875E98;
-			fStatus.this_one = 1;
-			fStatus.zeroint = 0;
-			fStatus.this_add_8 = ( int )&fStatus + 8;
-			fStatus.this_add_8_negative = ~( fStatus.this_add_8 );
-
-			LoadFrameDefList( "CustomFrameDef.txt", 0( int )&fStatus  );*/
-
+	
 			/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
@@ -1847,6 +1840,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 		GameGetFileOffset = 0x048C10;
+		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
+		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
+		Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
@@ -1957,7 +1953,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		Warcraft3Window = *( HWND* )( GameDll + 0xBDAB88 );
 		Warcraft3WindowProcOffset = GameDll + 0x153710;
 
-		Wc3MessageBoxOffset = GameDll + 0x29E8F0;
+		Game_Wc3MessageBox = ( pGame_Wc3MessageBox )( GameDll + 0x29E8F0 );
 
 		pPreferencesOffset = GameDll + 0xBB8080;
 
@@ -1983,7 +1979,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x35C680 );
 		_SetMaxFps( 200 );
 
-		//LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );
+		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );
 
 		ManaBarSwitch( GameDll, TRUE );
 
@@ -2029,6 +2025,7 @@ int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char
 
 	Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 	Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
+	Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 	return 0;
 }
@@ -2041,6 +2038,59 @@ int __stdcall SetGameDllAddr( HMODULE GameDLL )
 }
 
 BOOL TerminateStarted = FALSE;
+
+
+
+LPVOID TlsValue;
+DWORD TlsIndex;
+DWORD _W3XTlsIndex;
+
+DWORD GetIndex( )
+{
+	return *( DWORD* )( 0xAB7BF4 + GameDll );
+}
+
+DWORD GetW3TlsForIndex( DWORD index )
+{
+	DWORD pid = GetCurrentProcessId( );
+	THREADENTRY32 te32;
+	HANDLE hSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, pid );
+	te32.dwSize = sizeof( THREADENTRY32 );
+
+	if ( Thread32First( hSnap, &te32 ) )
+	{
+		do
+		{
+			if ( te32.th32OwnerProcessID == pid )
+			{
+				HANDLE hThread = OpenThread( THREAD_ALL_ACCESS, FALSE, te32.th32ThreadID );
+				CONTEXT ctx = { CONTEXT_SEGMENTS };
+				LDT_ENTRY ldt;
+				GetThreadContext( hThread, &ctx );
+				GetThreadSelectorEntry( hThread, ctx.SegFs, &ldt );
+				DWORD dwThreadBase = ldt.BaseLow | ( ldt.HighWord.Bytes.BaseMid <<
+					16 ) | ( ldt.HighWord.Bytes.BaseHi << 24 );
+				CloseHandle( hThread );
+				if ( dwThreadBase == NULL )
+					continue;
+				DWORD* dwTLS = *( DWORD** )( dwThreadBase + 0xE10 + 4 * index );
+				if ( dwTLS == NULL )
+					continue;
+				return ( DWORD )dwTLS;
+			}
+		} while ( Thread32Next( hSnap, &te32 ) );
+	}
+
+	return NULL;
+}
+
+void SetTlsForMe( )
+{
+	TlsIndex = GetIndex( );
+	LPVOID tls = ( LPVOID )GetW3TlsForIndex( TlsIndex );
+	TlsSetValue( TlsIndex, tls );
+}
+
 
 #pragma region Main
 BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
@@ -2059,11 +2109,9 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
+		Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 		Warcraft3_Process = GetCurrentProcess( );
-
-
-		//InitDotaHelper( 0x26a );
 
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
