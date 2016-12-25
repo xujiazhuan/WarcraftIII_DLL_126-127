@@ -561,40 +561,50 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 #endif
 	}
 
-	FILE * f;
-	fopen_s( &f, "lasterror.txt", "w" );
-	fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
-	fprintf_s( f, "Game.dll:%X\n", GameDll );
-	fprintf_s( f, "Storm.dll:%X\n", StormDll );
-	fprintf_s( f, "ExceptionInfo:%X\n", ( int )ExceptionInfo );
-	fprintf_s( f, "ExceptionInfo->ContextRecord:%X\n", ( int )ExceptionInfo->ContextRecord );
-	fprintf_s( f, "ExceptionInfo->ExceptionRecord:%X\n", ( int )ExceptionInfo->ExceptionRecord );
+	try
+	{
+		FILE * f;
+		fopen_s( &f, "lasterror.txt", "w" );
+		fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
+		fprintf_s( f, "Game.dll:%X\n", GameDll );
+		fprintf_s( f, "Storm.dll:%X\n", StormDll );
+		fprintf_s( f, "ExceptionInfo:%X\n", ( int )ExceptionInfo );
+		fprintf_s( f, "ExceptionInfo->ContextRecord:%X\n", ( int )ExceptionInfo->ContextRecord );
+		fprintf_s( f, "ExceptionInfo->ExceptionRecord:%X\n", ( int )ExceptionInfo->ExceptionRecord );
 
-	/*
-	DotaHelperLog;
-	JassNativesFuncLog;
-	JassLogList;
-	DotaChatLog;
-	*/
+		/*
+		DotaHelperLog;
+		JassNativesFuncLog;
+		JassLogList;
+		DotaChatLog;
+		*/
 
 
-	ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
+		ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
 
-	LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+		LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
 
-	fprintf_s( f, "%s", LastExceptionError.c_str( ) );
+		fprintf_s( f, "%s", LastExceptionError.c_str( ) );
 
-	fprintf_s( f, "\n%s\n", "End dump." );
+		fprintf_s( f, "\n%s\n", "End dump." );
 
-	fclose( f );
+		fclose( f );
+	}
+	catch(...)
+	{
+		LastExceptionError = "Error in dumping...";
+	}
 }
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
-	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", IsVEHex ? "Fatal error detected![SEH]" : "Fatal error detected![VEH]", MB_YESNO ) == IDYES )
+	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?",  "Fatal error detected![SEH]" , MB_YESNO ) == IDYES )
 	{
 		DumpExceptionInfoToFile( ExceptionInfo );
-
+		int retval = ( int )OriginFilter( ExceptionInfo );
+		char tmp[ 100 ];
+		sprintf_s( tmp, 100, "%X", retval );
+		MessageBoxA( 0, tmp, tmp, 0 );
 		return OriginFilter( ExceptionInfo );
 	}
 	else return 0;
@@ -681,7 +691,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 void InitTopLevelExceptionFilter( )
 {
 	//SetUnhandledExceptionFilter( 0 );
-	//SetUnhandledExceptionFilter( TopLevelExceptionFilter );
+	SetUnhandledExceptionFilter( TopLevelExceptionFilter );
 	//AddVectoredExceptionHandler( 0, DotaVectoredToSehHandler );
 }
 

@@ -123,14 +123,37 @@ BOOL IsCursorSelectTarget( )
 	return FALSE;
 }
 
+int GetCursorSkillID( )
+{
+	int pOffset1 = GetGlobalClassAddr( );
+	if ( pOffset1 > 0 && ( pOffset1 = *( int* )( pOffset1 + 0x1B4 ) ) > 0 )
+	{
+		return *( int* )( pOffset1 + 0xC );
+	}
+	return 0;
+}
+
 int GetCursorOrder( )
 {
 	int pOffset1 = GetGlobalClassAddr( );
-	if ( pOffset1 > 0 && (pOffset1 = *( int* )( pOffset1 + 0x1B4 )) > 0 )
+	if ( pOffset1 > 0 && ( pOffset1 = *( int* )( pOffset1 + 0x1B4 ) ) > 0 )
 	{
 		return *( int* )( pOffset1 + 0x10 );
 	}
 	return 0;
+}
+
+vector<int> doubleclickSkillIDs;
+
+int __stdcall AddDoubleClickSkillID( int skillID )
+{
+	if ( skillID == 0 && !doubleclickSkillIDs.empty( ))
+	{
+		doubleclickSkillIDs.clear( );
+	}
+	doubleclickSkillIDs.push_back( skillID );
+
+	return skillID;
 }
 
 float HeroPortX = 0.318f;
@@ -262,36 +285,37 @@ void JustClickMouse( )
 void PressMouseAtSelectedHero( )
 {
 
-	if ( IsCursorSelectTarget( ) && 
+	if ( IsCursorSelectTarget( ) &&
 		GetCursorOrder( ) != 0xD000F &&
 		GetCursorOrder( ) != 0xD0012 &&
 		GetCursorOrder( ) != 0xD0016 )
 	{
+		if ( doubleclickSkillIDs.empty( ) || std::find( doubleclickSkillIDs.begin( ), doubleclickSkillIDs.end( ), GetCursorSkillID( ) ) != doubleclickSkillIDs.end( ) ) {
+			BOOL ButtonDown = FALSE;
+			if ( IsKeyPressed( VK_LBUTTON ) )
+			{
+				ButtonDown = TRUE;
+				SendMessage( Warcraft3Window, WM_LBUTTONUP, 0, oldlParam );
+			}
 
-		BOOL ButtonDown = FALSE;
-		if ( IsKeyPressed( VK_LBUTTON ) )
-		{
-			ButtonDown = TRUE;
-			SendMessage( Warcraft3Window, WM_LBUTTONUP, 0, oldlParam );
+			int x = ( int )( *GetWindowXoffset * HeroPortX );
+			int y = ( int )( *GetWindowYoffset * HeroPortY );
+
+			POINT cursorhwnd;
+			GetCursorPos( &cursorhwnd );
+			ScreenToClient( Warcraft3Window, &cursorhwnd );
+			POINT cursor;
+			GetCursorPos( &cursor );
+
+			x = x - cursorhwnd.x;
+			y = y - cursorhwnd.y;
+
+			cursor.x = cursor.x + x;
+			cursor.y = cursor.y + y;
+			//( toXX, toYY );
+
+			MouseClick( cursor.x, cursor.y );
 		}
-
-		int x = ( int )( *GetWindowXoffset * HeroPortX );
-		int y = ( int )( *GetWindowYoffset * HeroPortY );
-
-		POINT cursorhwnd;
-		GetCursorPos( &cursorhwnd );
-		ScreenToClient( Warcraft3Window, &cursorhwnd );
-		POINT cursor;
-		GetCursorPos( &cursor );
-
-		x = x - cursorhwnd.x;
-		y = y - cursorhwnd.y;
-
-		cursor.x = cursor.x + x;
-		cursor.y = cursor.y + y;
-		//( toXX, toYY );
-
-		MouseClick( cursor.x, cursor.y );
 	}
 }
 
@@ -338,7 +362,8 @@ int __stdcall TriggerRegisterPlayerKeyboardEvent( int KeyCode )
 {
 	if ( !KeyCode )
 	{
-		RegisteredKeyCodes.clear( );
+		if ( !RegisteredKeyCodes.empty( ) )
+			RegisteredKeyCodes.clear( );
 		return 0;
 	}
 
@@ -351,7 +376,8 @@ int __stdcall BlockKeyAction( int KeyCode )
 {
 	if ( !KeyCode )
 	{
-		RegisteredKeyCodes.clear( );
+		if ( !BlockedKeyCodes.empty( ) )
+			BlockedKeyCodes.clear( );
 		return 0;
 	}
 	BlockedKeyCodes.push_back( KeyCode );
@@ -384,7 +410,8 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 {
 	if ( !KeyCode )
 	{
-		KeyActionList.clear( );
+		if ( !KeyActionList.empty( ) )
+			KeyActionList.clear( );
 		return 0;
 	}
 
@@ -612,10 +639,10 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
 
-//	if ( Msg == WM_KEYDOWN )
-//	{
-//		ShowConfigWindow( ".\\config.dota" );
-//	}
+	//	if ( Msg == WM_KEYDOWN )
+	//	{
+	//		ShowConfigWindow( ".\\config.dota" );
+	//	}
 
 	if ( *( BOOL* )IsWindowActive )
 	{
@@ -731,7 +758,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			return DefWindowProc( hWnd, Msg, wParam, lParam );
 		}
 
-		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ))
+		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 		{
 			//	char keystateprint[ 200 ];
 			if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP || Msg == WM_RBUTTONDOWN )
@@ -1044,22 +1071,22 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 										if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
 										{
 											return DefWindowProc( hWnd, Msg, wParam, lParam );
+										}
 									}
 								}
-							}
 
 								LastPressedKeysTime[ wParam ] = GetTickCount( );
+							}
 						}
-				}
-			}
+					}
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
 
-		}
-	}
+				}
+			}
 
 			if ( NeedSkipThisKey )
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
@@ -1094,7 +1121,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 					}
 				}
 			}
-}
+		}
 
 	}
 	else
@@ -1293,9 +1320,12 @@ void IssueFixerDisable( )
 	MH_DisableHook( sub_6F339F80org );
 	MH_DisableHook( sub_6F33A010org );
 
-	RegisteredKeyCodes.clear( );
-	BlockedKeyCodes.clear( );
-	KeyActionList.clear( );
+	if ( !RegisteredKeyCodes.empty( ) )
+		RegisteredKeyCodes.clear( );
+	if ( !BlockedKeyCodes.empty( ) )
+		BlockedKeyCodes.clear( );
+	if ( !KeyActionList.empty( ) )
+		KeyActionList.clear( );
 
 	SkipAllMessages = FALSE;
 }

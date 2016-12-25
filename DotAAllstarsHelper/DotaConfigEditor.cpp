@@ -1,5 +1,6 @@
 #include "Main.h"
 // only for test ( http://i.imgur.com/40qQr8X.jpg )
+
 BOOL NeedOpenConfigWindow = FALSE;
 
 void Do_Nothing( )
@@ -386,6 +387,35 @@ void WriteAllConfig( )
 
 }
 
+typedef void( __fastcall * pLoadNewFrameDef )( const char * filename, int var1, int var2, int cstatus );
+pLoadNewFrameDef LoadNewFrameDef_org;
+
+
+void LoadNewFrameDef( const char * filename )
+{
+	int cstatus = GameDll + 0xA8C804;
+	int var2 = GameDll + 0xACD264;
+	int var1 = GameDll + 0xACD214;
+	LoadNewFrameDef_org = ( pLoadNewFrameDef )( GameDll + 0x5D8DE0 );
+	LoadNewFrameDef_org( filename, var1, var2, cstatus );
+}
+
+typedef void( __fastcall * pShowFrame )( int pGlobalGameClass, int unused, int FrameAddr, BOOL unk );
+pShowFrame ShowFrame_org;
+typedef int( __fastcall * pGetFrameAddr ) ( const char * FrameName, int pGlobalGameClass, int unk1, int unk2, int unk3 );
+pGetFrameAddr GetFrameAddr;
+
+
+void ShowFrame( const char * FrameName )
+{
+	ShowFrame_org = ( pShowFrame )( GameDll + 0x2FB7E0 );
+	GetFrameAddr = ( pGetFrameAddr )( GameDll + 0x5C9560 );
+	int pGlobalGameClass = GetGlobalClassAddr( );
+	int FrameAddr = GetFrameAddr( FrameName, pGlobalGameClass, 0, 0, 0 );
+	ShowFrame_org( pGlobalGameClass, 0, FrameAddr, 1 );
+}
+
+
 
 
 void __fastcall SimpleCallbackFunction( int, int, int )
@@ -394,7 +424,7 @@ void __fastcall SimpleCallbackFunction( int, int, int )
 	{
 		NeedOpenConfigWindow = FALSE;
 		WriteAllConfig( );
-		LoadFrameDefList( "UI\\FrameDef\\FrameDef.toc", 0 );
+		//LoadFrameDefList( "FrameDef2.toc", 0 );
 	}
 }
 struct FrameDefStatus
@@ -408,6 +438,8 @@ struct FrameDefStatus
 FrameDefStatus fStatus;
 
 
+
+
 int __stdcall ShowConfigWindow( const char * filename)
 {
 	sprintf_s( ConfigPath, MAX_PATH, "%s", filename );
@@ -415,7 +447,7 @@ int __stdcall ShowConfigWindow( const char * filename)
 
 	if ( !NeedOpenConfigWindow )
 	{
-		NeedOpenConfigWindow = TRUE;
+		//NeedOpenConfigWindow = TRUE;
 
 		Global.CallBackFuncAddr = ( int )SimpleCallbackFunction;
 		Global._NothingFunc = ( int )Do_Nothing;
@@ -428,8 +460,10 @@ int __stdcall ShowConfigWindow( const char * filename)
 		fStatus.this_add_8 = ( int )&fStatus + 8;
 		fStatus.this_add_8_negative = ~( fStatus.this_add_8 );*/
 
-		LoadFrameDefList( "UI\\FrameDef\\FrameDef.toc", 0 );
-		Game_Wc3MessageBox( 2, "Dota Helper Config Editor [BETA]", 0, ( int )&MyCallBackTest, 0, 4, 1 );
+		//LoadNewFrameDef( "FrameDef2.toc" );
+	//	MessageBoxA( 0, "Loaded", "Reloaded", 0 );
+	//	ShowFrame( "Multiboard" );
+	//	Game_Wc3MessageBox( 2, "Dota Helper Config Editor [BETA]", 0, ( int )&MyCallBackTest, 0, 4, 1 );
 		ReadAllConfig( );
 	}
 

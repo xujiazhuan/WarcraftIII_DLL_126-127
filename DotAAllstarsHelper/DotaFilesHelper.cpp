@@ -1092,9 +1092,10 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			}
 
-
-			TimesForReplace.clear( );
-			Sequences.clear( );
+			if ( !TimesForReplace.empty( ) )
+				TimesForReplace.clear( );
+			if ( !Sequences.empty( ) )
+				Sequences.clear( );
 
 			ModelSequenceReSpeedList.erase( ModelSequenceReSpeedList.begin( ) + ( int )i );
 			i--;

@@ -335,6 +335,7 @@ extern int GameFrameAtMouseStructOffset;
 
 
 #pragma region DotaClickHelper.cpp
+extern vector<int> doubleclickSkillIDs;
 extern vector<int> WhiteListForTeleport;
 extern BOOL ShopHelperEnabled;
 extern BOOL BlockKeyAndMouseEmulation;

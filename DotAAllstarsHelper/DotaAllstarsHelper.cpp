@@ -1327,6 +1327,7 @@ void __stdcall RestoreAllOffsets( )
 			FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
 		}
 	}
+	if (!offsetslist.empty( ) )
 	offsetslist.clear( );
 }
 
@@ -1418,6 +1419,9 @@ void __stdcall DisableAllHooks( )
 	BlockKeyboardAndMouseWhenTeleport = FALSE;
 	if (!WhiteListForTeleport.empty() )
 		WhiteListForTeleport.clear();
+	if ( !doubleclickSkillIDs.empty( ) )
+		doubleclickSkillIDs.clear( );
+
 	ShopHelperEnabled = FALSE;
 
 	SetWidescreenFixState( FALSE );
@@ -1435,6 +1439,8 @@ unsigned long __stdcall RefreshTimer( void * )
 {
 	while ( TRUE && !RefreshTimerEND )
 	{
+		if ( TerminateStarted )
+			return 0;
 		// Ждать установки InGame адреса
 		if ( InGame != 0 )
 		{
@@ -1444,6 +1450,9 @@ unsigned long __stdcall RefreshTimer( void * )
 			// Ждать входа в игру
 			while ( !( *InGame ) )
 			{
+				if ( TerminateStarted )
+					return 0;
+
 				Sleep( 200 );
 
 				if ( RefreshTimerEND )
@@ -1456,6 +1465,8 @@ unsigned long __stdcall RefreshTimer( void * )
 			// Ждать пока игра не закончится
 			while ( *InGame )
 			{
+				if ( TerminateStarted )
+					return 0;
 				Sleep( 200 );
 
 				if ( RefreshTimerEND )
@@ -1471,6 +1482,7 @@ unsigned long __stdcall RefreshTimer( void * )
 #endif
 
 		}
+
 		Sleep( 200 );
 	}
 	hRefreshTimer = 0;
@@ -1572,6 +1584,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	BlockKeyboardAndMouseWhenTeleport = FALSE;
 	if ( !WhiteListForTeleport.empty( ) )
 		WhiteListForTeleport.clear( );
+	if ( !doubleclickSkillIDs.empty( ) )
+		doubleclickSkillIDs.clear( );
 	ShopHelperEnabled = FALSE;
 
 	SetWidescreenFixState( FALSE );
