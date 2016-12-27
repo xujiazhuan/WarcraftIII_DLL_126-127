@@ -2040,18 +2040,18 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 	return IsFileExist;
 }
-Storm_279 Storm_279_org;
-Storm_279 Storm_279_ptr;
-int __stdcall Storm_279_my( const char * filename, int arg1, int arg2, size_t arg3, int arg4 )
-{
-
-	if ( NeedOpenConfigWindow )
-	{
-		if ( ToLower( "UI\\FrameDef\\Glue\\DialogWar3.fdf" ) == ToLower( filename ) )
-		{
-			return Storm_279_ptr( "DotaConfigEditor.fdf", arg1, arg2, arg3, arg4 );
-		}
-	}
-
-	return Storm_279_ptr( filename, arg1, arg2, arg3, arg4 );
-}
+//Storm_279 Storm_279_org;
+//Storm_279 Storm_279_ptr;
+//int __stdcall Storm_279_my( const char * filename, int arg1, int arg2, size_t arg3, int arg4 )
+//{
+//
+//	if ( NeedOpenConfigWindow )
+//	{
+//		if ( ToLower( "UI\\FrameDef\\Glue\\DialogWar3.fdf" ) == ToLower( filename ) )
+//		{
+//			return Storm_279_ptr( "DotaConfigEditor.fdf", arg1, arg2, arg3, arg4 );
+//		}
+//	}
+//
+//	return Storm_279_ptr( filename, arg1, arg2, arg3, arg4 );
+//}

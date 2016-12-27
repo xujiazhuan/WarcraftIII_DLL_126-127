@@ -57,3 +57,5 @@ ShopHelper
 _FlushInstructionCache
 ShowConfigWindow
 AddDoubleClickSkillID
+CreateGlyphButton
+SetGlyphButtonEnabled

@@ -618,7 +618,7 @@ BOOL IsGameFrameActive( )
 		if ( pGlAddr > 0 )
 		{
 			pGlAddr = *( int* )( pGlAddr + 0x164 );
-			return pGlAddr;
+			return pGlAddr > 0;
 		}
 	}
 	return FALSE;
@@ -646,6 +646,17 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 	if ( *( BOOL* )IsWindowActive )
 	{
+		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
+		{
+			*( int* )pCurrentFrameFocusedAddr = 0;
+		}
+
+		if ( Msg == WM_LBUTTONUP )
+		{
+			ProcessClickAtCustomFrames( );
+		}
+
+
 		if ( LOCK_MOUSE_IN_WINDOW )
 		{
 			POINT p;

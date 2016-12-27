@@ -93,6 +93,7 @@ int GameGetFileOffset = 0;
 int Warcraft3WindowProcOffset = 0;
 
 int pPreferencesOffset = 0;
+int pCurrentFrameFocusedAddr = 0;
 #pragma endregion
 
 BOOL MainFuncWork = FALSE;
@@ -118,6 +119,9 @@ void PrintText( const char * text, float staytime )
 		}
 	}
 }
+
+
+pConvertStrToJassStr str2jstr;
 
 
 
@@ -189,6 +193,7 @@ HMODULE GetCurrentModule;
 
 
 //_TriggerExecute TriggerExecute;
+pExecuteFunc ExecuteFunc;
 
 char CurrentMapPath[ MAX_PATH ];
 char NewMapPath[ MAX_PATH ];
@@ -325,8 +330,8 @@ void InitHook( )
 	MH_CreateHook( GameGetFile_org, &GameGetFile_my, reinterpret_cast< void** >( &GameGetFile_ptr ) );
 	MH_EnableHook( GameGetFile_org );
 
-	MH_CreateHook( Storm_279_org, &Storm_279_my, reinterpret_cast< void** >( &Storm_279_ptr ) );
-	MH_EnableHook( Storm_279_org );
+	//MH_CreateHook( Storm_279_org, &Storm_279_my, reinterpret_cast< void** >( &Storm_279_ptr ) );
+	//MH_EnableHook( Storm_279_org );
 
 
 	pOnChatMessage_org = ( pOnChatMessage )( GameDll + pOnChatMessage_offset );
@@ -388,11 +393,11 @@ void UninitializeHook( )
 	}
 
 
-	if ( Storm_279_org )
-	{
-		MH_DisableHook( Storm_279_org );
-		Storm_279_org = 0;
-	}
+	//if ( Storm_279_org )
+	//{
+	//	MH_DisableHook( Storm_279_org );
+	//	Storm_279_org = 0;
+	//}
 
 
 
@@ -1427,6 +1432,7 @@ void __stdcall DisableAllHooks( )
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	NeedDrawRegen = FALSE;
+	GlyphButtonCreated = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
@@ -1590,6 +1596,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
+	NeedDrawRegen = FALSE;
+	GlyphButtonCreated = FALSE;
 	SetCustomFovFix( 1.0f );
 
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );
@@ -1628,6 +1636,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsWindowActive = GameDll + 0xA9E7A4;
 		ChatFound = GameDll + 0xAD15F0;
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
+		ExecuteFunc = (pExecuteFunc)(GameDll + 0x3D3F30);
 		StormErrorHandlerOffset = StormDll + 0x28F0;
 		JassNativeLookupOffset = GameDll + 0x44EA00;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
@@ -1653,7 +1662,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x4C1550;
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-		Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+		//Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
 
@@ -1785,6 +1794,25 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
 		ManaBarSwitch( GameDll, TRUE );
 
+		DefaultCStatus = GameDll + 0xA8C804;
+		LoadFramesVar1 = GameDll + 0xACD214;
+		LoadFramesVar2 = GameDll + 0xACD264;
+		LoadNewFrameDef_org = ( pLoadNewFrameDef )( GameDll + 0x5D8DE0 );
+		CreateNewFrame = ( pCreateNewFrame )( GameDll + 0x5C9560 );
+		ShowThisFrame = ( pShowThisFrame )( GameDll + 0x368B90 );
+		DestructThisFrame = ( pDestructThisFrame )( GameDll + 0x606910 );
+		SetFramePos = ( pSetFramePos )( GameDll + 0x6061B0 );
+
+		ShowFrameAlternative = ( pShowFrameAlternative )( GameDll + 0x606770 );
+		GetFrameItemAddress = (pGetFrameItemAddress) (GameDll + 0x5FA970);
+		str2jstr = ( pConvertStrToJassStr )( GameDll + 0x11300 );
+
+		UpdateFrameFlags = ( pUpdateFrameFlags )( GameDll + 0x602370 );
+		pCurrentFrameFocusedAddr = GameDll + 0xACE67C ;
+
+
+
+
 		InitHook( );
 
 	
@@ -1829,6 +1857,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsWindowActive = GameDll + 0xB673EC;
 		ChatFound = GameDll + 0xBDAA14;
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
+		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x1E0650 );
 		StormErrorHandlerOffset = StormDll + 0x8230;
 		JassNativeLookupOffset = GameDll + 0x7E2FE0;
 		JassFuncLookupOffset = GameDll + 0x7EFBB0;
@@ -1856,8 +1885,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x048C10;
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-		Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
-
+		/*Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+*/
 		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
 
@@ -1997,16 +2026,24 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		ManaBarSwitch( GameDll, TRUE );
 
+		DefaultCStatus = GameDll + 0xB662CC;
+		LoadFramesVar1 = GameDll + 0xBB9CAC;
+		LoadFramesVar2 = GameDll + 0xBB9CFC;
+		LoadNewFrameDef_org = ( pLoadNewFrameDef )( GameDll + 0x066590 );
+		CreateNewFrame = ( pCreateNewFrame )( GameDll + 0x0909C0 );
+		ShowThisFrame = ( pShowThisFrame )( GameDll + 0x3A5630 );
+		DestructThisFrame = ( pDestructThisFrame )( GameDll + 0x0A1870 );
+		SetFramePos = ( pSetFramePos )( GameDll + 0x0BD830 );
+		ShowFrameAlternative = ( pShowFrameAlternative )( GameDll + 0x0BD8A0 );
+		GetFrameItemAddress = ( pGetFrameItemAddress )( GameDll + 0x09EF40 );
+		str2jstr = ( pConvertStrToJassStr )( GameDll + 0x51310 );
+
+		UpdateFrameFlags = ( pUpdateFrameFlags )( GameDll + 0x0BEFD0 );
+		pCurrentFrameFocusedAddr = ( GameDll + 0xBB9D98 );
+
+
+
 		InitHook( );
-
-		/*	FrameDefStatus fStatus;
-			fStatus.FDefVtable = GameDll + 0x875E98;
-			fStatus.this_one = 1;
-			fStatus.zeroint = 0;
-			fStatus.this_add_8 = ( int )&fStatus + 8;
-			fStatus.this_add_8_negative = ~( fStatus.this_add_8 );
-
-			LoadFrameDefList( "CustomFrameDef.txt",( int )&fStatus );*/
 
 			/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
@@ -2039,7 +2076,7 @@ int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char
 
 	Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 	Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-	Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+	//Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 	return 0;
 }
@@ -2123,8 +2160,8 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-		Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
-
+	/*	Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+*/
 		Warcraft3_Process = GetCurrentProcess( );
 
 	}

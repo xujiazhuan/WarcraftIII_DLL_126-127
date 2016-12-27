@@ -172,6 +172,32 @@ bool FileExist( const char * name );
 DWORD GetDllCrc32( );
 //typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
 //extern _TriggerExecute TriggerExecute;
+// Total Size: 32 bytes
+struct RCString
+{
+	int	VTable;
+	int	refCount;
+	int	Field_0008;
+	int	Field_000C;
+	int	Field_0010;
+	int	Field_0014;
+	int	Field_0018;
+	LPSTR	String;
+};
+
+// Total Size: 16 bytes
+struct JassString
+{
+	int		VTable;
+	int		Field_0004;
+	RCString*	Value;
+	int		Field_000C;
+};
+typedef void( __cdecl * pExecuteFunc )( JassString * funcname );
+extern pExecuteFunc ExecuteFunc;
+typedef void( __thiscall * pConvertStrToJassStr )( JassString * jStr, const char * cStr );
+extern pConvertStrToJassStr str2jstr;
+
 BOOL __stdcall IsNotBadUnit( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int UnitAddr );
@@ -450,10 +476,10 @@ typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPo
 BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 extern GameGetFile GameGetFile_org;
 extern GameGetFile GameGetFile_ptr;
-int __stdcall Storm_279_my( const char * filename, int arg1, int arg2, size_t arg3, int arg4 );
-typedef int( __stdcall * Storm_279 )( const char * filename, int, int, size_t, int );
-extern Storm_279 Storm_279_org;
-extern Storm_279 Storm_279_ptr;
+//int __stdcall Storm_279_my( const char * filename, int arg1, int arg2, size_t arg3, int arg4 );
+//typedef int( __stdcall * Storm_279 )( const char * filename, int, int, size_t, int );
+//extern Storm_279 Storm_279_org;
+//extern Storm_279 Storm_279_ptr;
 
 void FreeAllIHelpers( );
 
@@ -520,8 +546,32 @@ extern pGameChatSetState GameChatSetState;
 #pragma endregion
 
 
-#pragma region DotaConfigEditor.cpp
+#pragma region DotaCustomFrames.cpp
+extern int pCurrentFrameFocusedAddr;
+extern int DefaultCStatus;
+extern int LoadFramesVar1;
+extern int LoadFramesVar2;
+
+typedef void( __fastcall * pLoadNewFrameDef )( const char * filename, int var1, int var2, int cstatus );
+extern pLoadNewFrameDef LoadNewFrameDef_org;
+typedef int( __fastcall * pCreateNewFrame ) ( const char * FrameName, int pGlobalGameClass, int unk1, int unk2, int unk3 );
+extern pCreateNewFrame CreateNewFrame;
+typedef void( __thiscall * pSetFramePos )( int FrameAddr180, int rowid, float left, float bottom, BOOL unk );
+extern pSetFramePos SetFramePos;
+//sub_6F606770
+typedef void *( __thiscall * pShowFrameAlternative )( int FrameAddr180, int unk1_0, int pGlobalGameClass180, int unk1_1, float x, float y, BOOL unk );
+extern pShowFrameAlternative ShowFrameAlternative;
+typedef void *( __thiscall * pShowThisFrame )( int FrameAddr );
+extern pShowThisFrame ShowThisFrame;
+typedef void *( __thiscall * pDestructThisFrame )( int FrameAddr, BOOL unk );
+extern pDestructThisFrame DestructThisFrame;//Without clean memory
+typedef int( __fastcall * pGetFrameItemAddress )( const char * name, int id );
+extern pGetFrameItemAddress GetFrameItemAddress;
+typedef int( __thiscall * pUpdateFrameFlags )( int FrameAddr, char unk );
+extern pUpdateFrameFlags UpdateFrameFlags;
 int __stdcall ShowConfigWindow( const char * );
 extern BOOL NeedOpenConfigWindow;
+void ProcessClickAtCustomFrames( );
 
+extern BOOL GlyphButtonCreated;
 #pragma endregion

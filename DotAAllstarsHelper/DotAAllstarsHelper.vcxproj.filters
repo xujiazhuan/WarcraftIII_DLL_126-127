@@ -75,7 +75,7 @@
     <ClCompile Include="DotaAutoFPSlimit.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaConfigEditor.cpp">
+    <ClCompile Include="DotaCustomFrames.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
