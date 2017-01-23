@@ -50,12 +50,12 @@
       <FavorSizeOrSpeed>
       </FavorSizeOrSpeed>
       <EnablePREfast>false</EnablePREfast>
-      <ExceptionHandling>Async</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <OmitFramePointers>
       </OmitFramePointers>
       <EnableFiberSafeOptimizations>
       </EnableFiberSafeOptimizations>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <BufferSecurityCheck>
       </BufferSecurityCheck>
       <StructMemberAlignment>

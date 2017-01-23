@@ -71,10 +71,7 @@ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 
 				GameChatSetState( GetChatOffset( ), 0, 0 );
 
-				
-
 				GameChatSetState( GetChatOffset( ), 0, 1 );
-
 			}
 			sprintf_s( pChatString, MAX_CHAT_MSG_LEN, "%s", msg );
 

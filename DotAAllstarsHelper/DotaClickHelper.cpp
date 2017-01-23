@@ -147,7 +147,7 @@ vector<int> doubleclickSkillIDs;
 
 int __stdcall AddDoubleClickSkillID( int skillID )
 {
-	if ( skillID == 0 && !doubleclickSkillIDs.empty( ))
+	if ( skillID == 0 && !doubleclickSkillIDs.empty( ) )
 	{
 		doubleclickSkillIDs.clear( );
 	}
@@ -593,6 +593,15 @@ int __stdcall TeleportHelper( BOOL enabled )
 
 vector<int> WhiteListForTeleport;
 
+
+BOOL TeleportShiftPress = FALSE;
+
+int __stdcall TeleportShiftKey( BOOL enabled )
+{
+	TeleportShiftPress = enabled;
+	return enabled;
+}
+
 int __stdcall TeleportWhiteListKey( int VK )
 {
 	if ( VK == 0 && !WhiteListForTeleport.empty( ) )
@@ -600,6 +609,8 @@ int __stdcall TeleportWhiteListKey( int VK )
 	WhiteListForTeleport.push_back( VK );
 	return VK;
 }
+
+BOOL SingleShift = FALSE;
 
 BOOL ShopHelperEnabled = FALSE;
 
@@ -623,6 +634,8 @@ BOOL IsGameFrameActive( )
 	}
 	return FALSE;
 }
+
+
 
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
@@ -696,7 +709,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 		// SHIFT+NUMPAD TRICK
-		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && (
+		if ( ( Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP */ ) && (
 			wParam == 0xC ||
 			wParam == 0x23 ||
 			wParam == 0x24 ||
@@ -772,11 +785,10 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 		{
 			//	char keystateprint[ 200 ];
-			if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP || Msg == WM_RBUTTONDOWN )
+			if ( Msg == WM_KEYDOWN ||/* Msg == WM_KEYUP || */Msg == WM_RBUTTONDOWN )
 			{
 				if ( BlockKeyboardAndMouseWhenTeleport )
 				{
-
 					if ( Msg == WM_RBUTTONDOWN )
 					{
 						int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
@@ -786,7 +798,16 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							FindUnitAbils( selectedunit, &abilscount, 'A3VO' );
 							if ( abilscount > 0 )
 							{
-								return DefWindowProc( hWnd, Msg, wParam, lParam );
+								if ( TeleportShiftPress )
+								{
+									if ( ShiftPressed == 0 && !ShiftPressed )
+									{
+										SingleShift = TRUE;
+										ShiftPressed = 1;
+									}
+								}
+								else
+									return DefWindowProc( hWnd, Msg, wParam, lParam );
 							}
 						}
 					}
@@ -815,7 +836,17 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								FindUnitAbils( selectedunit, &abilscount, 'A3VO' );
 								if ( abilscount > 0 )
 								{
-									return DefWindowProc( hWnd, Msg, wParam, lParam );
+									if ( TeleportShiftPress )
+									{
+										if ( ShiftPressed == 0 && !ShiftPressed )
+										{
+											SingleShift = TRUE;
+											ShiftPressed = 1;
+										}
+
+									}
+									else
+										return DefWindowProc( hWnd, Msg, wParam, lParam );
 								}
 							}
 						}
@@ -825,10 +856,23 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 				}
 			}
 
-			if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP || Msg == WM_SYSKEYDOWN || Msg == WM_SYSKEYUP )
+			if ( Msg == WM_KEYDOWN || Msg == WM_XBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+				Msg == WM_SYSKEYDOWN )
 			{
 
-				if ( ShopHelperEnabled && ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) )
+				if ( _Msg == WM_XBUTTONDOWN )
+				{
+					Msg = WM_KEYDOWN;
+					wParam = _wParam & MK_XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2;
+				}
+
+				if ( _Msg == WM_MBUTTONDOWN )
+				{
+					Msg = WM_KEYDOWN;
+					wParam = VK_MBUTTON;
+				}
+
+				if ( ShopHelperEnabled && /*(*/ Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP ) */ )
 				{
 
 					if (
@@ -898,8 +942,8 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							if ( Msg == WM_SYSKEYDOWN )
 								Msg = WM_KEYDOWN;
 
-							if ( Msg == WM_SYSKEYUP )
-								Msg = WM_KEYUP;
+							/*if ( Msg == WM_SYSKEYUP )
+								Msg = WM_KEYUP;*/
 
 							NeedSkipThisKey = TRUE;
 
@@ -961,6 +1005,15 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						}
 
 					}
+
+
+				if ( _Msg == WM_XBUTTONDOWN
+					|| _Msg == WM_MBUTTONDOWN )
+				{
+					Msg = _Msg;
+					wParam = _wParam;
+				}
+
 
 				if ( !NeedSkipThisKey )
 				{
@@ -1029,18 +1082,18 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
-					int unitowner = 0;
-					if ( selectedunitcout == 0 ||
-						( selectedunitcout == 1 &&
-						( ( unitowner = GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) )
-							!= GetLocalPlayerId( ) ) && unitowner != 15 ) )
+					int unitowner = selectedunitcout > 0 ? GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) : 0;
+
+					if ( EnableSelectHelper )
 					{
-
-						/*sprintf_s( processdoubleclic, "%s", "2" );
-						PrintText( processdoubleclic );*/
-
-						if ( EnableSelectHelper )
+						if ( selectedunitcout == 0 ||
+							( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
+							)
 						{
+
+							/*sprintf_s( processdoubleclic, "%s", "2" );
+							PrintText( processdoubleclic );*/
+
 
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
@@ -1058,7 +1111,8 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 						}
 					}
-					else if ( selectedunitcout == 1 )
+
+					if ( selectedunitcout == 1 )
 					{
 						if ( ClickHelper )
 						{
@@ -1084,20 +1138,20 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 											return DefWindowProc( hWnd, Msg, wParam, lParam );
 										}
 									}
-								}
+										}
 
 								LastPressedKeysTime[ wParam ] = GetTickCount( );
+									}
+								}
 							}
-						}
-					}
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
 
-				}
-			}
+						}
+					}
 
 			if ( NeedSkipThisKey )
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
@@ -1112,16 +1166,13 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			{
 				if ( EnableSelectHelper )
 				{
-#ifdef DOTA_HELPER_LOG
-					AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
-#endif
-
 					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
-					int unitowner = 0;
+					int unitowner = selectedunitcout > 0 ? GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) : 0;
+
+
 					if ( selectedunitcout == 0 ||
-						( selectedunitcout == 1 &&
-						( ( unitowner = GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) )
-							!= GetLocalPlayerId( ) ) && unitowner != 15 ) )
+						( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
+						)
 					{
 
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
@@ -1132,9 +1183,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 					}
 				}
 			}
-		}
+				}
 
-	}
+		}
 	else
 	{
 		if ( LOCK_MOUSE_IN_WINDOW )
@@ -1150,7 +1201,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	}
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-}
+	}
 
 
 
@@ -1210,50 +1261,84 @@ sub_6F33A010 sub_6F33A010ptr;
 
 int __stdcall IssueWithoutTargetOrdermy( int a1, int a2, unsigned int a3, unsigned int a4 )
 {
-	int retvalue = IssueWithoutTargetOrderptr( a1, a2, a3, a4 | ShiftPressed );
+	int retvalue = IssueWithoutTargetOrderptr( a1, a2, a3, ((a4 & ShiftPressed) > 0) ? a4 : a4 | ShiftPressed );
+
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 
 	return retvalue;
 }
 int __stdcall IssueTargetOrPointOrder2my( int a1, int a2, float a3, float a4, int a5, int a6 )
 {
-	int retvalue = IssueTargetOrPointOrder2ptr( a1, a2, a3, a4, a5, a6 | ShiftPressed );
-
+	int retvalue = IssueTargetOrPointOrder2ptr( a1, a2, a3, a4, a5, ( (a6 & ShiftPressed) > 0 ) ? a6 : a6 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 int __stdcall sub_6F339D50my( int a1, int a2, int a3, unsigned int a4, unsigned int a5 )
 {
-	int retvalue = sub_6F339D50ptr( a1, a2, a3, a4, a5 | ShiftPressed );
-
+	int retvalue = sub_6F339D50ptr( a1, a2, a3, a4, ( (a5 & ShiftPressed) > 0 ) ? a5 : a5 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 int __stdcall IssueTargetOrPointOrdermy( int a1, int a2, float a3, float a4, int a5, int a6, int a7 )
 {
-	int retvalue = IssueTargetOrPointOrderptr( a1, a2, a3, a4, a5, a6, a7 | ShiftPressed );
-
+	int retvalue = IssueTargetOrPointOrderptr( a1, a2, a3, a4, a5, a6, ( (a7 & ShiftPressed) > 0 ) ? a7 : a7 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 int __stdcall sub_6F339E60my( int a1, int a2, float a3, float a4, int a5, int a6, int a7, int a8 )
 {
-	int retvalue = sub_6F339E60ptr( a1, a2, a3, a4, a5, a6, a7, a8 | ShiftPressed );
-
+	int retvalue = sub_6F339E60ptr( a1, a2, a3, a4, a5, a6, a7, ( (a8 & ShiftPressed) > 0 ) ? a8 : a8 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 int __stdcall sub_6F339F00my( int a1, int a2, int a3, unsigned int a4, unsigned int a5 )
 {
-	int retvalue = sub_6F339F00ptr( a1, a2, a3, a4, a5 | ShiftPressed );
-
+	int retvalue = sub_6F339F00ptr( a1, a2, a3, a4, ( (a5 & ShiftPressed )> 0 ) ? a5 : a5 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 int __stdcall sub_6F339F80my( int a1, int a2, float a3, float a4, int a5, int a6, int a7 )
 {
-	int retvalue = sub_6F339F80ptr( a1, a2, a3, a4, a5, a6, a7 | ShiftPressed );
-
+	int retvalue = sub_6F339F80ptr( a1, a2, a3, a4, a5, a6, ( (a7 & ShiftPressed )> 0 ) ? a7 : a7 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 int __stdcall sub_6F33A010my( int a1, int a2, float a3, float a4, int a5, int a6, int a7, int a8 )
 {
-	int retvalue = sub_6F33A010ptr( a1, a2, a3, a4, a5, a6, a7, a8 | ShiftPressed );
-
+	int retvalue = sub_6F33A010ptr( a1, a2, a3, a4, a5, a6, a7, ( (a8 & ShiftPressed) > 0 ) ? a8 : a8 | ShiftPressed );
+	if ( SingleShift )
+	{
+		SingleShift = FALSE;
+		ShiftPressed = 0;
+	}
 	return retvalue;
 }
 

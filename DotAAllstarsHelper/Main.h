@@ -103,69 +103,69 @@ struct BarStruct
 	float ScaleX;		// 58
 	float ScaleY;		// 5c
 	float Scale;		// 60
-	int _unk18;
-	int _unk19_pointer;
-	int _unk20;
-	int _unk21;
-	int _unk22;
-	int _unk23;
-	int _unk24;
-	int _unk25;
-	int bartype;
-	int _unk26;
-	int _unk27;
-	int _unk28;
-	float offset5;
-	float offset6;
-	float offset7;
-	float offset8;
-	float offset9;
-	int _unk29;
-	int _unk30;
-	int _unk31;
-	int _unk32;
-	int _unk33;
-	int _unk34;
-	int _unk35;
-	int _unk36;
-	int _unk37;
-	int _unk38;
-	int _unk39;
-	int _unk40_pointer;
-	int _unk41_pointer;
-	int _unk42;
-	int _unk43_pointer;
-	int _unk44_pointer;
-	int _unk45;
-	int _unk46_pointer;
-	int _unk47_pointer;
-	int _unk48;
-	int _unk49_pointer;
-	int _unk50_pointer;
-	int _unk51;
-	int _unk52_pointer;
-	int _unk53_pointer;
-	int _unk54;
-	int _unk55_pointer;
-	int _unk56_pointer;
-	int _unk57;
-	int _unk58_pointer;
-	int _unk59_pointer;
-	int _unk60;
-	float offset10;
-	float offset11;
-	float offset12;
-	int _unk61_pointer;
-	int _unk62;
-	int _unk63;
-	int _unk64_pointer;
-	int _unk65_pointer;
-	int _unk66;
-	int _unk67;
-	float offset13;
-	int unitaddr;
-	int _unk68;
-	int _unk69;
+	int _unk18;			// 64
+	int _unk19_pointer; // 68
+	int _unk20;			// 6C
+	int _unk21;			// 70
+	int _unk22;			// 78
+	int _unk23;			// 7C
+	int _unk24;			// 80
+	int _unk25;			// 84
+	int bartype;		// 88
+	int _unk26;			// 8C
+	int _unk27;			// 90
+	int _unk28;			// 94
+	float offset5;		// 98
+	float offset6;		// 9C
+	float offset7;		// 100
+	float offset8;		// 104
+	float offset9;		// 108
+	int _unk29;			// 10C
+	int _unk30;			// 110
+	int _unk31;			// 114
+	int _unk32;			// 118
+	int _unk33;			// 11C
+	int _unk34;			// 120
+	int _unk35;			// 124
+	int _unk36;			// 128
+	int _unk37;			// 12C
+	int _unk38;			// 130
+	int _unk39;			// 134
+	int _unk40_pointer;	// 138
+	int _unk41_pointer;	// 13C
+	int _unk42;			// 140
+	int _unk43_pointer;	// 144
+	int _unk44_pointer;	// 148
+	int _unk45;			// 14C
+	int _unk46_pointer;	// 150
+	int _unk47_pointer;	// 154
+	int _unk48;			// 158
+	int _unk49_pointer;	// 15C
+	int _unk50_pointer;	// 160
+	int _unk51;			// 164
+	int _unk52_pointer;	// 168
+	int _unk53_pointer;	// 16C
+	int _unk54;			// 170
+	int _unk55_pointer;	// 174
+	int _unk56_pointer;	// 178
+	int _unk57;			// 17C
+	int _unk58_pointer;	// 180
+	int _unk59_pointer;	// 184
+	int _unk60;			// 188
+	float offset10;		// 18C
+	float offset11;		// 190
+	float offset12;		// 194
+	int _unk61_pointer;	// 198
+	int _unk62;			// 19C
+	int _unk63;			// 200
+	int _unk64_pointer;	// 204
+	int _unk65_pointer;	// 208
+	int _unk66;			// 20C
+	int _unk67;			// 210
+	float offset13;		// 214
+	int unitaddr;		// 218
+	int _unk68;			// 21C
+	int _unk69;			// 220
 };
 int GetGlobalClassAddr( );
 bool FileExist( const char * name );
@@ -216,6 +216,20 @@ extern BOOL MainFuncWork;
 char *  GetWar3Preferense( int ID );
 extern char MyFpsString[ 512 ];
 
+typedef BOOL( __cdecl * pGetPlayerAlliance )( int hPlayer1, int hPlayer2, int hAlliancetype );
+extern pGetPlayerAlliance GetPlayerAlliance;
+
+
+
+typedef unsigned int( __cdecl * pGetPlayerColor )( int whichPlayer );
+extern pGetPlayerColor GetPlayerColor;
+
+typedef int( __cdecl * pPlayer )( int number );
+extern pPlayer Player;
+
+
+
+
 #pragma region DotaPlayerHelper.cpp
 
 int GetLocalPlayerId( );
@@ -254,7 +268,7 @@ int GetSelectedUnit(int slot);
 #pragma region DotaMPBarHelper.cpp
 
 extern BYTE BarVtableClone[ 0x80 ];
-void ManaBarSwitch( int GameDLL, BOOL b );
+void ManaBarSwitch( BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct );
 typedef void *( __stdcall * Storm_401 )( size_t Size, const char * srcfile, int line, int val );
@@ -328,7 +342,6 @@ extern HWND Warcraft3Window;
 
 extern int GlobalPlayerOffset;
 extern int IsPlayerEnemyOffset;
-extern int GetPlayerByIDOffset;
 extern int DrawSkillPanelOffset;
 extern int DrawSkillPanelOverlayOffset;
 extern int IsDrawSkillPanelOffset;
@@ -364,6 +377,7 @@ extern int GameFrameAtMouseStructOffset;
 extern vector<int> doubleclickSkillIDs;
 extern vector<int> WhiteListForTeleport;
 extern BOOL ShopHelperEnabled;
+extern BOOL TeleportShiftPress;
 extern BOOL BlockKeyAndMouseEmulation;
 extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;

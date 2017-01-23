@@ -1,8 +1,6 @@
 #include "Main.h"
 
 
-
-
 #define ADDRESS LPVOID  // data
 #define GADDRESS LPVOID // game call
 
@@ -273,7 +271,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	return retval;
 }
 
-#pragma optimize("",off)
+//#pragma optimize("",off)
 
 
 
@@ -321,7 +319,7 @@ void __declspec( naked ) FillMemoryForMPBar( )
 		mov     ecx, esi;
 		pop     ebx;
 		jmp     eax;
-}
+	}
 
 }
 
@@ -424,8 +422,10 @@ void __declspec( naked ) f001527F0( )
 		je L093;
 		cmp eax, -1;
 		je L093;
+		pushad;
 		push edi;
 		call SetMPBarConfigForPlayer;
+		popad;
 		mov     eax, dword ptr[ edi + 0x50 ];
 		test    eax, eax;
 		je L093;
@@ -559,14 +559,14 @@ void __declspec( naked ) RedrawMPBar( )
 		mov     a16F004, ecx;
 		call    f001527F0;
 		popad;
-		//mov     eax, GameDLL    // game.dll base
+		//mov     eax, GameDll    // game.dll base
 		mov     eax, sub_6F2C74B0;
 		jmp     eax;
 	}
 }
 
 
-#pragma optimize("",on)
+//#pragma optimize("",on)
 
 BOOL ManabarInitialized = FALSE;
 BOOL ManabarEnabled = FALSE;
@@ -641,22 +641,22 @@ void Unhook( )
 }
 
 
-void ManaBarSwitch( int GameDLL, BOOL b )
+void ManaBarSwitch( BOOL b )
 {
-	*( int* )&a3000AC = 1;
+	*( int* )&a3000AC = 0;
 
 	if ( GameVersion == 0x26a )
 	{
-		*( int* )&sub_6F27AE90 = ( int )GameDLL + 0x27AE90;  // 6F27B9B0 
-		*( int* )&sub_6F334180 = ( int )GameDLL + 0x334180;  // 0x6f334CC0
-		*( int* )&sub_6F6061B0 = ( int )GameDLL + 0x6061B0;  // 0x6f606950
-		*( int* )&sub_6F605CC0 = ( int )GameDLL + 0x605CC0;  // 0x6f606460
-		*( int* )&sub_6F359CC0 = ( int )GameDLL + 0x359CC0;  // 0x6f35A800
-		*( int* )&sub_6F32C880 = ( int )GameDLL + 0x32C880;  // 0x32D3C0
-		*( int* )&sub_6F2C74B0 = ( int )GameDLL + 0x2C74B0;    // 0x6f2C7FD0??
+		*( int* )&sub_6F27AE90 = ( int )GameDll + 0x27AE90;  // 6F27B9B0 
+		*( int* )&sub_6F334180 = ( int )GameDll + 0x334180;  // 0x6f334CC0
+		*( int* )&sub_6F6061B0 = ( int )GameDll + 0x6061B0;  // 0x6f606950
+		*( int* )&sub_6F605CC0 = ( int )GameDll + 0x605CC0;  // 0x6f606460
+		*( int* )&sub_6F359CC0 = ( int )GameDll + 0x359CC0;  // 0x6f35A800
+		*( int* )&sub_6F32C880 = ( int )GameDll + 0x32C880;  // 0x32D3C0
+		*( int* )&sub_6F2C74B0 = ( int )GameDll + 0x2C74B0;    // 0x6f2C7FD0??
 
-		*( int* )&Storm_401_org_malloc = ( int )GameDLL + 0x379AE3;  // 0x6f37A623
-		*( int* )&HPMP_DRAW = ( int )GameDLL + 0x379EE8;  // 0x6F37AA28
+		*( int* )&Storm_401_org_malloc = ( int )GameDll + 0x379AE3;  // 0x6f37A623
+		*( int* )&HPMP_DRAW = ( int )GameDll + 0x379EE8;  // 0x6F37AA28
 
 		if ( b )
 			Hook( );
@@ -677,16 +677,16 @@ void ManaBarSwitch( int GameDLL, BOOL b )
 	}
 	else if ( GameVersion == 0x27a )
 	{
-		*( int* )&sub_6F27AE90 = ( int )GameDLL + 0x669B40; // 669B40
-		*( int* )&sub_6F334180 = ( int )GameDLL + 0x358CF0; // 358CF0
-		*( int* )&sub_6F6061B0 = ( int )GameDLL + 0x0BD830; // 0BD830
-		*( int* )&sub_6F605CC0 = ( int )GameDLL + 0x0BD630; // 0BD630
-		*( int* )&sub_6F359CC0 = ( int )GameDLL + 0x383F60; // 383F60
-		*( int* )&sub_6F32C880 = ( int )GameDLL + 0x327020; // 327020
-		*( int* )&sub_6F2C74B0 = ( int )GameDLL + 0x6374A0; // 6374A0
+		*( int* )&sub_6F27AE90 = ( int )GameDll + 0x669B40; // 669B40
+		*( int* )&sub_6F334180 = ( int )GameDll + 0x358CF0; // 358CF0
+		*( int* )&sub_6F6061B0 = ( int )GameDll + 0x0BD830; // 0BD830
+		*( int* )&sub_6F605CC0 = ( int )GameDll + 0x0BD630; // 0BD630
+		*( int* )&sub_6F359CC0 = ( int )GameDll + 0x383F60; // 383F60
+		*( int* )&sub_6F32C880 = ( int )GameDll + 0x327020; // 327020
+		*( int* )&sub_6F2C74B0 = ( int )GameDll + 0x6374A0; // 6374A0
 
-		*( int* )&Storm_401_org_malloc = ( int )GameDLL + 0x374F14; // 374F14
-		*( int* )&HPMP_DRAW = ( int )GameDLL + 0x3784CA;
+		*( int* )&Storm_401_org_malloc = ( int )GameDll + 0x374F14; // 374F14
+		*( int* )&HPMP_DRAW = ( int )GameDll + 0x3784CA;
 
 		if ( b )
 			Hook( );
@@ -710,9 +710,6 @@ void ManaBarSwitch( int GameDLL, BOOL b )
 
 BOOL __stdcall SetManabarEnabled( BOOL enabled )
 {
-	if ( ManabarInitialized )
-	{
-		*( int* )&a3000AC = enabled;
-	}
+	*( int* )&a3000AC = enabled;
 	return ManabarInitialized;
 }

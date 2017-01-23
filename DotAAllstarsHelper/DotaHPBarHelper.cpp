@@ -16,7 +16,7 @@ float hpbarscaleTowerY[ 20 ];
 
 vector<CustomHPBar> CustomHPBarList[ 20 ];
 
-void __stdcall SetHPBarColorForPlayer( unsigned int playerflag, unsigned int herocolor,
+int __stdcall SetHPBarColorForPlayer( unsigned int playerflag, unsigned int herocolor,
 	unsigned int unitcolor, unsigned int towercolor )
 {
 
@@ -34,11 +34,11 @@ void __stdcall SetHPBarColorForPlayer( unsigned int playerflag, unsigned int her
 		currentflag = currentflag * 2;
 		playerid++;
 	}
-
+	return 0;
 }
 
 
-void __stdcall SetHPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
+int __stdcall SetHPBarXScaleForPlayer( unsigned int playerflag, float heroscale,
 	float unitscale, float towerscale )
 {
 	int playerid = 0;
@@ -55,9 +55,10 @@ void __stdcall SetHPBarXScaleForPlayer( unsigned int playerflag, float heroscale
 		currentflag = currentflag * 2;
 		playerid++;
 	}
+	return 0;
 }
 
-void __stdcall SetHPBarYScaleForPlayer( unsigned int playerflag, float heroscale,
+int __stdcall SetHPBarYScaleForPlayer( unsigned int playerflag, float heroscale,
 	float unitscale, float towerscale )
 {
 	int playerid = 0;
@@ -74,10 +75,11 @@ void __stdcall SetHPBarYScaleForPlayer( unsigned int playerflag, float heroscale
 		currentflag = currentflag * 2;
 		playerid++;
 	}
+	return 0;
 }
 
 
-void __stdcall SetHPCustomHPBarUnit( unsigned int playerflag, int tid, unsigned int color, float xscale, float yscale )
+int __stdcall SetHPCustomHPBarUnit( unsigned int playerflag, int tid, unsigned int color, float xscale, float yscale )
 {
 	int playerid = 0;
 	int currentflag = 1;
@@ -113,6 +115,7 @@ void __stdcall SetHPCustomHPBarUnit( unsigned int playerflag, int tid, unsigned 
 		currentflag = currentflag * 2;
 		playerid++;
 	}
+	return 0;
 }
 
 

@@ -7,7 +7,7 @@ int __stdcall GetUnitOwnerSlot( int unitaddr )
 {
 	if ( unitaddr > 0 )
 		return *( int* )( unitaddr + 88 );
-	return 0;
+	return 15;
 }
 
 
@@ -93,8 +93,8 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 
 		if ( unitownerslot <= 15 && unitownerslot >= 0 )
 		{
-			unsigned int Player1 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( unitownerslot );
-			unsigned int Player2 = ( ( GetPlayerByID )( GameDll + GetPlayerByIDOffset ) )( GetLocalPlayerId( ) );
+			unsigned int Player1 = Player( unitownerslot );
+			unsigned int Player2 = Player( GetLocalPlayerId( ) );
 
 			if ( Player1 == Player2 )
 			{

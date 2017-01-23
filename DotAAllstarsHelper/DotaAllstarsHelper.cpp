@@ -19,7 +19,7 @@ string ToLower( string s )
 }
 
 
-//DWORD GameDLLsz = 0;
+//DWORD GameDllsz = 0;
 //DWORD StormDLLsz = 0;
 
 //  Game.dll
@@ -94,6 +94,7 @@ int Warcraft3WindowProcOffset = 0;
 
 int pPreferencesOffset = 0;
 int pCurrentFrameFocusedAddr = 0;
+pGetPlayerAlliance GetPlayerAlliance;
 #pragma endregion
 
 BOOL MainFuncWork = FALSE;
@@ -134,7 +135,7 @@ pGame_Wc3MessageBox Game_Wc3MessageBox;
 // Question = 2
 int __stdcall Wc3MessageBox( const char * message, int type )
 {
-	Game_Wc3MessageBox( type, message,0, 0, 0, 0, 0 );
+	Game_Wc3MessageBox( type, message, 0, 0, 0, 0, 0 );
 	return TRUE;
 }
 
@@ -146,7 +147,7 @@ char *  GetWar3Preferense( int ID )
 {
 	int pPrefAddr = *( int* )pPreferencesOffset + 40;
 	char * result = 0;
-	if (pPrefAddr > 0)
+	if ( pPrefAddr > 0 )
 	{
 		int pPrefVal = *( int * )( pPrefAddr + 36 );
 		if ( pPrefVal != -1 )
@@ -257,9 +258,6 @@ const char * __stdcall GetCurrentMapPath( int )
 	BuildFilePath( NULL );
 	return CurrentMapPath;
 }
-
-
-
 
 
 
@@ -531,6 +529,12 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 			if ( fixedattackspeed > *( float* )( GameDll + pAttackSpeedLimit ) )
 				fixedattackspeed = *( float* )( GameDll + pAttackSpeedLimit );
 
+			if ( realattackspeed < 0.0f )
+				realattackspeed = 0.01f;
+			if ( fixedattackspeed < 0.0f )
+				fixedattackspeed = 0.01f;
+
+
 			/*	if ( fixedattackspeed == 0 )
 				{
 					fixedattackspeed = 0.0001f;
@@ -608,7 +612,7 @@ int saveedi = 0;
 int saveebp = 0;
 int saveesp = 0;
 
-#pragma optimize("",off)
+//#pragma optimize("",off)
 
 void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook126a( )
 {
@@ -750,7 +754,7 @@ void __declspec( naked )  PrintMoveSpeedHook127a( )
 }
 
 
-#pragma optimize("",on)
+//#pragma optimize("",on)
 
 
 char itemstr1[ 128 ];
@@ -758,15 +762,6 @@ char itemstr2[ 128 ];
 
 char unitstr1[ 128 ];
 char unitstr2[ 128 ];
-
-
-
-typedef unsigned int( __cdecl * pGetPlayerColor )( int whichPlayer );
-pGetPlayerColor GetPlayerColor;
-
-typedef int( __cdecl * pPlayer )( int number );
-pPlayer Player;
-
 
 
 unsigned int         PLAYER_COLOR_RED = 0;
@@ -906,7 +901,7 @@ int __stdcall DrawRegenAllways( BOOL enabled )
 
 int __stdcall SaveStringForHP_MP( int unitaddr )
 {
-	if ( *( BOOL* )IsWindowActive && (NeedDrawRegen || IsKeyPressed( VK_LMENU ) ) )
+	if ( *( BOOL* )IsWindowActive && ( NeedDrawRegen || IsKeyPressed( VK_LMENU ) ) )
 	{
 
 		if ( NeedDrawRegen && IsKeyPressed( VK_LMENU ) )
@@ -960,7 +955,7 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 
 
 #pragma region HookFunctions
-#pragma optimize("",off)
+//#pragma optimize("",off)
 int JumpBackAddr1( )
 {
 	MessageBoxA( 0, 0, 0, 1 );
@@ -1063,8 +1058,10 @@ void __declspec( naked ) HookItemAddr126a( )
 {
 	__asm
 	{
+		pushad;
 		push eax;
 		call SaveStringsForPrintItem;
+		popad;
 		mov ebx, eax;
 		test ebx, ebx;
 		mov[ esp + 0x1C ], ebx;
@@ -1077,8 +1074,10 @@ void __declspec( naked ) HookItemAddr127a( )
 {
 	__asm
 	{
+		pushad;
 		push eax;
 		call SaveStringsForPrintItem;
+		popad;
 		mov edi, eax;
 		mov[ ebp - 0x4F8 ], edi;
 		jmp JumpBackAddr1;
@@ -1093,8 +1092,10 @@ void __declspec( naked ) HookUnitAddr126a( )
 	{
 		push edx;
 		mov eax, ecx;
+		pushad;
 		push eax;
 		call SaveStringForHP_MP;
+		popad;
 		mov ecx, eax;
 		pop edx;
 		push edx;
@@ -1110,8 +1111,10 @@ void __declspec( naked ) HookUnitAddr127a( )
 	{
 		mov ecx, [ edi + 0x00000238 ];
 		mov eax, ecx;
+		pushad;
 		push eax;
 		call SaveStringForHP_MP;
+		popad;
 		mov ecx, eax;
 		test ecx, ecx;
 		jmp JumpBackAddr4;
@@ -1224,19 +1227,23 @@ void __declspec( naked ) HookPrint4_127a( )
 	}
 }
 
+void __stdcall SetCdForAddr( int cd_addr )
+{
+	if ( cd_addr )
+		if ( *( float* )( cd_addr + 4 ) != 1000.0f )
+			*( float* )( cd_addr + 4 ) = 100.0f;
+}
 
 void __declspec( naked ) HookSetCD_1000s_126a( )
 {
-	int cd_addr;
+	//int cd_addr;
 	__asm
 	{
-		mov cd_addr, eax;
-	}
-
-	*( float* )( cd_addr + 4 ) = 100.0;
-
-	__asm
-	{
+		//	mov cd_addr, eax;
+		pushad;
+		push eax;
+		call SetCdForAddr;
+		popad;
 		push esi;
 		push eax;
 		mov eax, [ ecx ];
@@ -1250,15 +1257,14 @@ void __declspec( naked ) HookSetCD_1000s_126a( )
 //37ed3
 void __declspec( naked ) HookSetCD_1000s_127a( )
 {
-	int cd_addr;
+//	int cd_addr;
 	__asm
 	{
-		mov cd_addr, eax;
-	}
-	*( float* )( cd_addr + 4 ) = 100.0;
-
-	__asm
-	{
+		//	mov cd_addr, eax;
+		pushad;
+		push eax;
+		call SetCdForAddr;
+		popad;
 		lea ecx, [ edx + 0xD0 ];
 		jmp JumpBackAddr7;
 	}
@@ -1269,8 +1275,7 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 
 
 
-
-#pragma optimize("",on)
+//#pragma optimize("",on)
 
 
 
@@ -1286,9 +1291,10 @@ struct offsetdata
 {
 	int offaddr;
 	int offdata;
+	unsigned int FeatureFlag;
 };
 std::vector<offsetdata> offsetslist;
-int __stdcall AddNewOffset( int address, int data )
+int __stdcall AddNewOffset_( int address, int data, unsigned int FeatureFlag = 0 )
 {
 	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
 	{
@@ -1301,11 +1307,18 @@ int __stdcall AddNewOffset( int address, int data )
 	offsetdata temp;
 	temp.offaddr = address;
 	temp.offdata = data;
+	temp.FeatureFlag = FeatureFlag;
 	offsetslist.push_back( temp );
 
 	return 1;
 }
-#pragma endregion
+
+
+int __stdcall AddNewOffset( int address, int data )
+{
+	AddNewOffset_( address, data );
+	return 0;
+}
 
 
 vector<LPVOID> FreeExecutableMemoryList;
@@ -1314,6 +1327,24 @@ int __stdcall FreeExecutableMemory( void * addr )
 {
 	FreeExecutableMemoryList.push_back( addr );
 	return 0;
+}
+
+void __stdcall RestoreFeatureOffsets( unsigned int FeatureFlag )
+{
+	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
+	{
+		if ( FeatureFlag & offsetslist[ i ].FeatureFlag )
+		{
+			offsetdata temp = offsetslist[ i ];
+			DWORD oldprotect, oldprotect2;
+			if ( VirtualProtect( ( void* )temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
+			{
+				*( int* )temp.offaddr = temp.offdata;
+				VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
+				FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
+			}
+		}
+	}
 }
 
 void __stdcall RestoreAllOffsets( )
@@ -1330,11 +1361,99 @@ void __stdcall RestoreAllOffsets( )
 			*( int* )temp.offaddr = temp.offdata;
 			VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
 			FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
+	}
+}
+	if ( !offsetslist.empty( ) )
+		offsetslist.clear( );
+}
+
+
+
+#define Feature_AttackSpeed 0x1
+#define Feature_MoveSpeed 0x2
+#define Feature_ItemText 0x4
+#define Feature_UnitHP_MP 0x8
+#define Feature_CUSTOM_FPS_INFO 0x10
+#define Feature_COOLDOWNFIX 0x20
+#define Feature_MANABAR 0x40
+#define Feature_HPBAR 0x80
+#define Feature_FileHelper 0x100
+#define Feature_Widescreen 0x200
+#define Feature_MutePlayer 0x400
+#define Feature_AllySkillViewer 0x800
+#define Feature_ClickHelper 0x1000
+#define Feature14 0x2000
+#define Feature15 0x4000
+#define Feature16 0x8000
+
+struct FeatureRestorer
+{
+	unsigned int FeatureFlag;
+	int Bytes;
+	int Address;
+};
+
+
+int __stdcall DisableFeatures( unsigned int Flags )
+{
+	RestoreFeatureOffsets( Flags );
+
+	if ( Flags & Feature_MANABAR )
+	{
+		ManaBarSwitch(  FALSE );
+	}
+	if ( Flags & Feature_FileHelper )
+	{
+		if ( GameGetFile_org )
+		{
+			MH_DisableHook( GameGetFile_org );
 		}
 	}
-	if (!offsetslist.empty( ) )
-	offsetslist.clear( );
+	if ( Flags & Feature_Widescreen )
+	{
+		if ( SetGameAreaFOV_org )
+		{
+			MH_DisableHook( SetGameAreaFOV_org );
+		}
+	}
+	if ( Flags & Feature_MutePlayer )
+	{
+		if ( pOnChatMessage_org )
+		{
+			MH_DisableHook( pOnChatMessage_org );
+		}
+	}
+
+	if ( Flags & Feature_AllySkillViewer )
+	{
+		if ( IsDrawSkillPanel_org )
+		{
+			MH_DisableHook( IsDrawSkillPanel_org );
+		}
+		if ( IsDrawSkillPanelOverlay_org )
+		{
+			MH_DisableHook( IsDrawSkillPanelOverlay_org );
+		}
+		if ( IsNeedDrawUnit2org )
+		{
+			MH_DisableHook( IsNeedDrawUnit2org );
+		}
+	}
+
+	if ( Flags & Feature_ClickHelper )
+	{
+		if ( WarcraftRealWNDProc_org )
+		{
+			MH_DisableHook( WarcraftRealWNDProc_org );
+		}
+	}
+	return 0;
 }
+
+#pragma endregion
+
+
+
 
 void __stdcall ClearCustomsBars( )
 {
@@ -1381,6 +1500,7 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 		}
 		PressKeyWithDelayEND = FALSE;
 		if ( !Force )
+
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		SkipAllMessages = FALSE;
 	}
@@ -1403,7 +1523,7 @@ void __stdcall DisableAllHooks( )
 	// Очистить список кастом баров
 	ClearCustomsBars( );
 	// Отключить ManaBar 
-	ManaBarSwitch( GameDll, FALSE );
+	ManaBarSwitch( FALSE );
 
 	if ( !FreeExecutableMemoryList.empty( ) )
 	{
@@ -1422,13 +1542,13 @@ void __stdcall DisableAllHooks( )
 	ClickHelper = FALSE;
 	LOCK_MOUSE_IN_WINDOW = FALSE;
 	BlockKeyboardAndMouseWhenTeleport = FALSE;
-	if (!WhiteListForTeleport.empty() )
-		WhiteListForTeleport.clear();
+	if ( !WhiteListForTeleport.empty( ) )
+		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
 
 	ShopHelperEnabled = FALSE;
-
+	TeleportShiftPress = FALSE;
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	NeedDrawRegen = FALSE;
@@ -1510,7 +1630,7 @@ void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 
 int __stdcall _FlushInstructionCache( int addr, unsigned int size )
 {
-	return FlushInstructionCache( GetCurrentProcess( ), (void*)addr, size );
+	return FlushInstructionCache( GetCurrentProcess( ), ( void* )addr, size );
 }
 
 void PatchOffsetValue4( void * addr, UINT value )
@@ -1593,7 +1713,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
 	ShopHelperEnabled = FALSE;
-
+	TeleportShiftPress = FALSE;
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	NeedDrawRegen = FALSE;
@@ -1611,7 +1731,6 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsNeedDrawUnit2offset = 0x28E1D0;
 		IsNeedDrawUnit2offsetRetAddress = 0x2F9B60;
 		IsPlayerEnemyOffset = 0x3C9580;
-		GetPlayerByIDOffset = 0x3BBB30;
 		IsDrawSkillPanelOffset = 0x34F280;
 		DrawSkillPanelOffset = 0x2774C0;
 		IsDrawSkillPanelOverlayOffset = 0x34F2C0;
@@ -1636,7 +1755,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsWindowActive = GameDll + 0xA9E7A4;
 		ChatFound = GameDll + 0xAD15F0;
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
-		ExecuteFunc = (pExecuteFunc)(GameDll + 0x3D3F30);
+		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x3D3F30 );
 		StormErrorHandlerOffset = StormDll + 0x28F0;
 		JassNativeLookupOffset = GameDll + 0x44EA00;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
@@ -1671,55 +1790,55 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		pGAME_SendPacket = GameDll + 0x54D970;
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
-		AddNewOffset( pDrawAttackSpeed, *( int* )pDrawAttackSpeed );
-		AddNewOffset( pDrawAttackSpeed + 3, *( int* )( pDrawAttackSpeed + 3 ) );
+		AddNewOffset_( pDrawAttackSpeed, *( int* )pDrawAttackSpeed, Feature_AttackSpeed );
+		AddNewOffset_( pDrawAttackSpeed + 3, *( int* )( pDrawAttackSpeed + 3 ), Feature_AttackSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawAttackSpeed ), ( BYTE* )PrintAttackSpeedAndOtherInfoHook126a, 5 );
 
 
 		int pDrawMoveSpeed = GameDll + 0x338FB0;
-		AddNewOffset( pDrawMoveSpeed, *( int* )pDrawMoveSpeed );
-		AddNewOffset( pDrawMoveSpeed + 3, *( int* )( pDrawMoveSpeed + 3 ) );
+		AddNewOffset_( pDrawMoveSpeed, *( int* )pDrawMoveSpeed, Feature_MoveSpeed );
+		AddNewOffset_( pDrawMoveSpeed + 3, *( int* )( pDrawMoveSpeed + 3 ), Feature_MoveSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawMoveSpeed ), ( BYTE* )PrintMoveSpeedHook126a, 5 );
 
 
 		int pDrawItemText1 = GameDll + 0x369e72;
-		AddNewOffset( pDrawItemText1, *( int* )pDrawItemText1 );
-		AddNewOffset( pDrawItemText1 + 3, *( int* )( pDrawItemText1 + 3 ) );
+		AddNewOffset_( pDrawItemText1, *( int* )pDrawItemText1, Feature_ItemText );
+		AddNewOffset_( pDrawItemText1 + 3, *( int* )( pDrawItemText1 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText1 ), ( BYTE* )HookPrint1_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr2 ), ( BYTE* )( GameDll + 0x369e83 ), 5 );
 
 
 		int pDrawItemText2 = GameDll + 0x369ee6;
-		AddNewOffset( pDrawItemText2, *( int* )pDrawItemText2 );
-		AddNewOffset( pDrawItemText2 + 3, *( int* )( pDrawItemText2 + 3 ) );
+		AddNewOffset_( pDrawItemText2, *( int* )pDrawItemText2, Feature_ItemText );
+		AddNewOffset_( pDrawItemText2 + 3, *( int* )( pDrawItemText2 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText2 ), ( BYTE* )HookPrint2_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr3 ), ( BYTE* )( GameDll + 0x369ef7 ), 5 );
 
 
 		int pSaveLatestItem = GameDll + 0x369b3d;
-		AddNewOffset( pSaveLatestItem, *( int* )pSaveLatestItem );
-		AddNewOffset( pSaveLatestItem + 3, *( int* )( pSaveLatestItem + 3 ) );
+		AddNewOffset_( pSaveLatestItem, *( int* )pSaveLatestItem, Feature_ItemText );
+		AddNewOffset_( pSaveLatestItem + 3, *( int* )( pSaveLatestItem + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestItem ), ( BYTE* )HookItemAddr126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr1 ), ( BYTE* )( GameDll + 0x369b45 ), 5 );
 
 
 		int pSaveLatestUnit = GameDll + 0x3580ad;
-		AddNewOffset( pSaveLatestUnit, *( int* )pSaveLatestUnit );
-		AddNewOffset( pSaveLatestUnit + 3, *( int* )( pSaveLatestUnit + 3 ) );
+		AddNewOffset_( pSaveLatestUnit, *( int* )pSaveLatestUnit, Feature_UnitHP_MP );
+		AddNewOffset_( pSaveLatestUnit + 3, *( int* )( pSaveLatestUnit + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestUnit ), ( BYTE* )HookUnitAddr126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr4 ), ( BYTE* )( GameDll + 0x3580b2 ), 5 );
 
 
 		int pDrawUnitText1 = GameDll + 0x358198;
-		AddNewOffset( pDrawUnitText1, *( int* )pDrawUnitText1 );
-		AddNewOffset( pDrawUnitText1 + 3, *( int* )( pDrawUnitText1 + 3 ) );
+		AddNewOffset_( pDrawUnitText1, *( int* )pDrawUnitText1, Feature_UnitHP_MP );
+		AddNewOffset_( pDrawUnitText1 + 3, *( int* )( pDrawUnitText1 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText1 ), ( BYTE* )HookPrint3_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr5 ), ( BYTE* )( GameDll + 0x3581a6 ), 5 );
 
 
 		int pDrawUnitText2 = GameDll + 0x3583c2;
-		AddNewOffset( pDrawUnitText2, *( int* )pDrawUnitText2 );
-		AddNewOffset( pDrawUnitText2 + 3, *( int* )( pDrawUnitText2 + 3 ) );
+		AddNewOffset_( pDrawUnitText2, *( int* )pDrawUnitText2, Feature_UnitHP_MP );
+		AddNewOffset_( pDrawUnitText2 + 3, *( int* )( pDrawUnitText2 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText2 ), ( BYTE* )HookPrint4_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr6 ), ( BYTE* )( GameDll + 0x3583d0 ), 5 );
 
@@ -1728,21 +1847,21 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int pAlwaysRefresh2 = GameDll + 0x3583ba;
 		unsigned char JMPBYTE = 0xEB;
 
-		AddNewOffset( pAlwaysRefresh1, *( int* )pAlwaysRefresh1 );
-		AddNewOffset( pAlwaysRefresh2, *( int* )pAlwaysRefresh2 );
+		AddNewOffset_( pAlwaysRefresh1, *( int* )pAlwaysRefresh1, Feature_UnitHP_MP );
+		AddNewOffset_( pAlwaysRefresh2, *( int* )pAlwaysRefresh2, Feature_UnitHP_MP );
 		PatchOffset( ( void* )pAlwaysRefresh1, &JMPBYTE, 1 );
 		PatchOffset( ( void* )pAlwaysRefresh2, &JMPBYTE, 1 );
 
 
 		int pSetCooldown = GameDll + 0x37ed3;
-		AddNewOffset( pSetCooldown, *( int* )pSetCooldown );
-		AddNewOffset( pSetCooldown + 3, *( int* )( pSetCooldown + 3 ) );
+		AddNewOffset_( pSetCooldown, *( int* )pSetCooldown, Feature_COOLDOWNFIX );
+		AddNewOffset_( pSetCooldown + 3, *( int* )( pSetCooldown + 3 ), Feature_COOLDOWNFIX );
 		PlantDetourJMP( ( BYTE* )( pSetCooldown ), ( BYTE* )HookSetCD_1000s_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr7 ), ( BYTE* )( GameDll + 0x37edf ), 5 );
 
 		int pHPBARHELPER = GameDll + 0x364beb;
-		AddNewOffset( pHPBARHELPER, *( int* )pHPBARHELPER );
-		AddNewOffset( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ) );
+		AddNewOffset_( pHPBARHELPER, *( int* )pHPBARHELPER, Feature_HPBAR );
+		AddNewOffset_( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ), Feature_HPBAR );
 		PlantDetourJMP( ( BYTE* )( pHPBARHELPER ), ( BYTE* )HookHPBarColorHelper126a, 6 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr9 ), ( BYTE* )( GameDll + 0x364bf1 ), 5 );
 
@@ -1777,9 +1896,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int PatchMemMB2 = GameDll + 0x33ba0e;
 
 
-		AddNewOffset( PatchMemMB1, *( int* )PatchMemMB1 );
-		AddNewOffset( PatchMemMB2, *( int* )PatchMemMB2 );
-		AddNewOffset( PatchFPSDraw, *( int* )PatchFPSDraw );
+		AddNewOffset_( PatchMemMB1, *( int* )PatchMemMB1, Feature_CUSTOM_FPS_INFO );
+		AddNewOffset_( PatchMemMB2, *( int* )PatchMemMB2, Feature_CUSTOM_FPS_INFO );
+		AddNewOffset_( PatchFPSDraw, *( int* )PatchFPSDraw, Feature_CUSTOM_FPS_INFO );
 
 
 		PatchOffsetValue4( ( void* )PatchMemMB1, 0x8324148B );
@@ -1792,7 +1911,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x383640 );
 		_SetMaxFps( 200 );
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
-		ManaBarSwitch( GameDll, TRUE );
+		ManaBarSwitch(  TRUE );
 
 		DefaultCStatus = GameDll + 0xA8C804;
 		LoadFramesVar1 = GameDll + 0xACD214;
@@ -1804,19 +1923,19 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		SetFramePos = ( pSetFramePos )( GameDll + 0x6061B0 );
 
 		ShowFrameAlternative = ( pShowFrameAlternative )( GameDll + 0x606770 );
-		GetFrameItemAddress = (pGetFrameItemAddress) (GameDll + 0x5FA970);
+		GetFrameItemAddress = ( pGetFrameItemAddress )( GameDll + 0x5FA970 );
 		str2jstr = ( pConvertStrToJassStr )( GameDll + 0x11300 );
 
 		UpdateFrameFlags = ( pUpdateFrameFlags )( GameDll + 0x602370 );
-		pCurrentFrameFocusedAddr = GameDll + 0xACE67C ;
+		pCurrentFrameFocusedAddr = GameDll + 0xACE67C;
 
 
-
+		GetPlayerAlliance = ( pGetPlayerAlliance )( GameDll + 0x3C9D70 );
 
 		InitHook( );
 
-	
-			/* crc32 simple protection */
+
+		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
@@ -1832,7 +1951,6 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsNeedDrawUnit2offset = 0x66E710;
 		IsNeedDrawUnit2offsetRetAddress = 0x359D60;
 		IsPlayerEnemyOffset = 0x1E8090;
-		GetPlayerByIDOffset = 0x1F1E70;
 		IsDrawSkillPanelOffset = 0x3927F0;
 		DrawSkillPanelOffset = 0x660D90;
 		IsDrawSkillPanelOverlayOffset = 0x392830;
@@ -1894,56 +2012,56 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		pGAME_SendPacket = GameDll + 0x30F1B0;
 
 		int pDrawAttackSpeed = GameDll + 0x38C6E0;
-		AddNewOffset( pDrawAttackSpeed, *( int* )pDrawAttackSpeed );
-		AddNewOffset( pDrawAttackSpeed + 3, *( int* )( pDrawAttackSpeed + 3 ) );
+		AddNewOffset_( pDrawAttackSpeed, *( int* )pDrawAttackSpeed, Feature_AttackSpeed );
+		AddNewOffset_( pDrawAttackSpeed + 3, *( int* )( pDrawAttackSpeed + 3 ), Feature_AttackSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawAttackSpeed ), ( BYTE* )PrintAttackSpeedAndOtherInfoHook127a, 5 );
 
 
 
 		int pDrawMoveSpeed = GameDll + 0x38D440;
-		AddNewOffset( pDrawMoveSpeed, *( int* )pDrawMoveSpeed );
-		AddNewOffset( pDrawMoveSpeed + 3, *( int* )( pDrawMoveSpeed + 3 ) );
+		AddNewOffset_( pDrawMoveSpeed, *( int* )pDrawMoveSpeed, Feature_MoveSpeed );
+		AddNewOffset_( pDrawMoveSpeed + 3, *( int* )( pDrawMoveSpeed + 3 ), Feature_MoveSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawMoveSpeed ), ( BYTE* )PrintMoveSpeedHook127a, 5 );
 
 
 		int pDrawItemText1 = GameDll + 0x3ab720;
-		AddNewOffset( pDrawItemText1, *( int* )pDrawItemText1 );
-		AddNewOffset( pDrawItemText1 + 3, *( int* )( pDrawItemText1 + 3 ) );
+		AddNewOffset_( pDrawItemText1, *( int* )pDrawItemText1, Feature_ItemText );
+		AddNewOffset_( pDrawItemText1 + 3, *( int* )( pDrawItemText1 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText1 ), ( BYTE* )HookPrint1_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr2 ), ( BYTE* )( GameDll + 0x3ab730 ), 5 );
 
 
 		int pDrawItemText2 = GameDll + 0x3ab791;
-		AddNewOffset( pDrawItemText2, *( int* )pDrawItemText2 );
-		AddNewOffset( pDrawItemText2 + 3, *( int* )( pDrawItemText2 + 3 ) );
+		AddNewOffset_( pDrawItemText2, *( int* )pDrawItemText2, Feature_ItemText );
+		AddNewOffset_( pDrawItemText2 + 3, *( int* )( pDrawItemText2 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText2 ), ( BYTE* )HookPrint2_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr3 ), ( BYTE* )( GameDll + 0x3ab7a1 ), 5 );
 
 
 		int pSaveLatestItem = GameDll + 0x3ab39e;
-		AddNewOffset( pSaveLatestItem, *( int* )pSaveLatestItem );
-		AddNewOffset( pSaveLatestItem + 3, *( int* )( pSaveLatestItem + 3 ) );
+		AddNewOffset_( pSaveLatestItem, *( int* )pSaveLatestItem, Feature_ItemText );
+		AddNewOffset_( pSaveLatestItem + 3, *( int* )( pSaveLatestItem + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestItem ), ( BYTE* )HookItemAddr127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr1 ), ( BYTE* )( GameDll + 0x3ab3a6 ), 5 );
 
 
 		int pSaveLatestUnit = GameDll + 0x3bb8fd;
-		AddNewOffset( pSaveLatestUnit, *( int* )pSaveLatestUnit );
-		AddNewOffset( pSaveLatestUnit + 3, *( int* )( pSaveLatestUnit + 3 ) );
+		AddNewOffset_( pSaveLatestUnit, *( int* )pSaveLatestUnit, Feature_UnitHP_MP );
+		AddNewOffset_( pSaveLatestUnit + 3, *( int* )( pSaveLatestUnit + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestUnit ), ( BYTE* )HookUnitAddr127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr4 ), ( BYTE* )( GameDll + 0x3bb905 ), 5 );
 
 
 		int pDrawUnitText1 = GameDll + 0x3bbd5e;
-		AddNewOffset( pDrawUnitText1, *( int* )pDrawUnitText1 );
-		AddNewOffset( pDrawUnitText1 + 3, *( int* )( pDrawUnitText1 + 3 ) );
+		AddNewOffset_( pDrawUnitText1, *( int* )pDrawUnitText1, Feature_UnitHP_MP );
+		AddNewOffset_( pDrawUnitText1 + 3, *( int* )( pDrawUnitText1 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText1 ), ( BYTE* )HookPrint3_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr5 ), ( BYTE* )( GameDll + 0x3bbd68 ), 5 );
 
 
 		int pDrawUnitText2 = GameDll + 0x3bbf4a;
-		AddNewOffset( pDrawUnitText2, *( int* )pDrawUnitText2 );
-		AddNewOffset( pDrawUnitText2 + 3, *( int* )( pDrawUnitText2 + 3 ) );
+		AddNewOffset_( pDrawUnitText2, *( int* )pDrawUnitText2, Feature_UnitHP_MP );
+		AddNewOffset_( pDrawUnitText2 + 3, *( int* )( pDrawUnitText2 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText2 ), ( BYTE* )HookPrint4_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr6 ), ( BYTE* )( GameDll + 0x3bbf54 ), 5 );
 
@@ -1952,24 +2070,24 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int pAlwaysRefresh2 = GameDll + 0x3bbf42;
 		unsigned char JMPBYTE = 0xEB;
 
-		AddNewOffset( pAlwaysRefresh1, *( int* )pAlwaysRefresh1 );
-		AddNewOffset( pAlwaysRefresh2, *( int* )pAlwaysRefresh2 );
+		AddNewOffset_( pAlwaysRefresh1, *( int* )pAlwaysRefresh1, Feature_UnitHP_MP );
+		AddNewOffset_( pAlwaysRefresh2, *( int* )pAlwaysRefresh2, Feature_UnitHP_MP );
 		PatchOffset( ( void* )pAlwaysRefresh1, &JMPBYTE, 1 );
 		PatchOffset( ( void* )pAlwaysRefresh2, &JMPBYTE, 1 );
 
 
 		int pSetCooldown = GameDll + 0x3F717F;
-		AddNewOffset( pSetCooldown, *( int* )pSetCooldown );
-		AddNewOffset( pSetCooldown + 3, *( int* )( pSetCooldown + 3 ) );
+		AddNewOffset_( pSetCooldown, *( int* )pSetCooldown, Feature_COOLDOWNFIX );
+		AddNewOffset_( pSetCooldown + 3, *( int* )( pSetCooldown + 3 ), Feature_COOLDOWNFIX );
 		PlantDetourJMP( ( BYTE* )( pSetCooldown ), ( BYTE* )HookSetCD_1000s_127a, 6 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr7 ), ( BYTE* )( GameDll + 0x3F7185 ), 5 );
 
 
 		calladdr1 = GameDll + 0xBFA30;
 		int pHPBARHELPER = GameDll + 0x3bd5b0;
-		AddNewOffset( pHPBARHELPER, *( int* )pHPBARHELPER );
-		AddNewOffset( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ) );
-		AddNewOffset( pHPBARHELPER + 6, *( int* )( pHPBARHELPER + 6 ) );
+		AddNewOffset_( pHPBARHELPER, *( int* )pHPBARHELPER, Feature_HPBAR );
+		AddNewOffset_( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ), Feature_HPBAR );
+		AddNewOffset_( pHPBARHELPER + 6, *( int* )( pHPBARHELPER + 6 ), Feature_HPBAR );
 		PlantDetourJMP( ( BYTE* )( pHPBARHELPER ), ( BYTE* )HookHPBarColorHelper127a, 9 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr9 ), ( BYTE* )( GameDll + 0x3bd5b9 ), 5 );
 
@@ -2007,9 +2125,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int PatchMemMB2 = GameDll + 0x3b19f1;
 
 
-		AddNewOffset( PatchMemMB1, *( int* )PatchMemMB1 );
-		AddNewOffset( PatchMemMB2, *( int* )PatchMemMB2 );
-		AddNewOffset( PatchFPSDraw, *( int* )PatchFPSDraw );
+		AddNewOffset_( PatchMemMB1, *( int* )PatchMemMB1, Feature_CUSTOM_FPS_INFO );
+		AddNewOffset_( PatchMemMB2, *( int* )PatchMemMB2, Feature_CUSTOM_FPS_INFO );
+		AddNewOffset_( PatchFPSDraw, *( int* )PatchFPSDraw, Feature_CUSTOM_FPS_INFO );
 
 
 		PatchOffsetValue4( ( void* )PatchMemMB1, 0x8324148B );
@@ -2024,7 +2142,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );
 
-		ManaBarSwitch( GameDll, TRUE );
+		ManaBarSwitch(  TRUE );
 
 		DefaultCStatus = GameDll + 0xB662CC;
 		LoadFramesVar1 = GameDll + 0xBB9CAC;
@@ -2042,10 +2160,11 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		pCurrentFrameFocusedAddr = ( GameDll + 0xBB9D98 );
 
 
+		GetPlayerAlliance = ( pGetPlayerAlliance )( GameDll + 0x1E3C50 );
 
 		InitHook( );
 
-			/* crc32 simple protection */
+		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
@@ -2066,7 +2185,7 @@ Storm_403 Storm_403_org = NULL;
 const char * GameDllName = "Game.dll";
 const char * StormDllName = "Storm.dll";
 
-int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char * _StormDllName )
+int __stdcall SetCustomGameDllandStormDLL( const char * _GameDllName, const char * _StormDllName )
 {
 	GameDllModule = GetModuleHandleA( _GameDllName );
 	GameDll = ( int )GameDllModule;
@@ -2081,10 +2200,10 @@ int __stdcall SetCustomGameDLLandStormDLL( const char * _GameDllName, const char
 	return 0;
 }
 
-int __stdcall SetGameDllAddr( HMODULE GameDLL )
+int __stdcall SetGameDllAddr( HMODULE GameDllmdl )
 {
-	GameDllModule = GameDLL;
-	GameDll = ( int )GameDllModule;
+	GameDllModule = GameDllmdl;
+	GameDll = ( int ) GameDllModule;
 	return 0;
 }
 
@@ -2160,8 +2279,8 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-	/*	Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
-*/
+		/*	Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+	*/
 		Warcraft3_Process = GetCurrentProcess( );
 
 	}
@@ -2206,7 +2325,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 				VirtualFree( lpAddr, 0, MEM_RELEASE );
 			FreeExecutableMemoryList.clear( );
 		}
-		ManaBarSwitch( GameDll, FALSE );
+		ManaBarSwitch( FALSE );
 		MH_Uninitialize( );
 		ResetTopLevelExceptionFilter( );
 	}

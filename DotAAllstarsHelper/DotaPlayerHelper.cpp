@@ -3,7 +3,8 @@
 
 int GlobalPlayerOffset = 0;
 int IsPlayerEnemyOffset = 0;
-int GetPlayerByIDOffset = 0;
+pGetPlayerColor GetPlayerColor;
+pPlayer Player;
 
 
 

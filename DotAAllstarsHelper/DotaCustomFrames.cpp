@@ -60,6 +60,12 @@ void ShowFrameWithPos( int FrameAddr, float left, float bottom, BOOL unk = TRUE 
 	ShowThisFrame( FrameAddr );
 }
 
+void ShowFrameItemWithPos( int FrameAddr, float left, float bottom, BOOL unk = TRUE )
+{
+	SetFramePos( FrameAddr, 6, left, bottom, TRUE );
+	ShowThisFrame( FrameAddr );
+}
+
 
 void ShowFrameWithPosAligned( int FrameAddr, float left, float bottom, int align, BOOL unk = TRUE )
 {
