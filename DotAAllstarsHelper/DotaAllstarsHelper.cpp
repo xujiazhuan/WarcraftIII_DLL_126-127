@@ -45,6 +45,7 @@ int IsDrawSkillPanelOverlayOffset = 0;
 int IsNeedDrawUnitOriginOffset = 0;
 int IsNeedDrawUnit2offset = 0;
 int IsNeedDrawUnit2offsetRetAddress = 0;
+int Wc3ControlClickButton_offset = 0;
 
 BOOL * InGame = 0;
 int IsWindowActive = 0;
@@ -95,6 +96,9 @@ int Warcraft3WindowProcOffset = 0;
 int pPreferencesOffset = 0;
 int pCurrentFrameFocusedAddr = 0;
 pGetPlayerAlliance GetPlayerAlliance;
+
+
+int DrawUnitBarOffset = 0;
 #pragma endregion
 
 BOOL MainFuncWork = FALSE;
@@ -277,9 +281,9 @@ void InitHook( )
 	BlizzardDebug4_org = ( BlizzardDebug4 )BlizzardDebug4Offset;
 	BlizzardDebug5_org = ( BlizzardDebug5 )BlizzardDebug5Offset;
 	BlizzardDebug6_org = ( BlizzardDebug6 )BlizzardDebug6Offset;
-
+#ifdef DOTA_HELPER_LOG
 	EnableErrorHandler( );
-
+#endif
 
 	if ( Warcraft3Window )
 	{
@@ -335,6 +339,19 @@ void InitHook( )
 	pOnChatMessage_org = ( pOnChatMessage )( GameDll + pOnChatMessage_offset );
 	MH_CreateHook( pOnChatMessage_org, &pOnChatMessage_my, reinterpret_cast< void** >( &pOnChatMessage_ptr ) );
 	MH_EnableHook( pOnChatMessage_org );
+
+	Wc3ControlClickButton_org = ( pWc3ControlClickButton )( Wc3ControlClickButton_offset );
+	MH_CreateHook( Wc3ControlClickButton_org, &Wc3ControlClickButton_my, reinterpret_cast< void** >( &Wc3ControlClickButton_ptr ) );
+	MH_EnableHook( Wc3ControlClickButton_org );
+
+
+	DrawBarForUnit_org = ( pDrawBarForUnit )( DrawUnitBarOffset );
+	MH_CreateHook( DrawBarForUnit_org, &DrawBarForUnit_my, reinterpret_cast< void** >( &DrawBarForUnit_ptr ) );
+	MH_EnableHook( DrawBarForUnit_org );
+
+
+	
+
 	IssueFixerInit( );
 
 #ifdef DOTA_HELPER_LOG
@@ -377,6 +394,15 @@ void UninitializeHook( )
 		MH_DisableHook( pOnChatMessage_org );
 		pOnChatMessage_org = 0;
 	}
+
+	if ( Wc3ControlClickButton_org )
+	{
+		MH_DisableHook( Wc3ControlClickButton_org );
+		Wc3ControlClickButton_org = 0;
+	}
+
+
+	
 
 	if ( SetGameAreaFOV_org )
 	{
@@ -1382,7 +1408,7 @@ void __stdcall RestoreAllOffsets( )
 #define Feature_MutePlayer 0x400
 #define Feature_AllySkillViewer 0x800
 #define Feature_ClickHelper 0x1000
-#define Feature14 0x2000
+#define Feature_FPSfix1 0x2000
 #define Feature15 0x4000
 #define Feature16 0x8000
 
@@ -1407,6 +1433,10 @@ int __stdcall DisableFeatures( unsigned int Flags )
 		if ( GameGetFile_org )
 		{
 			MH_DisableHook( GameGetFile_org );
+		}
+		if ( Wc3ControlClickButton_org )
+		{
+			MH_DisableHook( Wc3ControlClickButton_org );
 		}
 	}
 	if ( Flags & Feature_Widescreen )
@@ -1447,6 +1477,15 @@ int __stdcall DisableFeatures( unsigned int Flags )
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		}
 	}
+
+	if ( Flags & Feature_FPSfix1 )
+	{
+		if ( DrawBarForUnit_org )
+		{
+			MH_DisableHook( DrawBarForUnit_org );
+		}
+	}
+
 	return 0;
 }
 
@@ -1546,6 +1585,8 @@ void __stdcall DisableAllHooks( )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
+	if ( !NeedDrawBarForUnit.empty( ) )
+		NeedDrawBarForUnit.clear( );
 
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
@@ -1553,6 +1594,7 @@ void __stdcall DisableAllHooks( )
 	MainFuncWork = FALSE;
 	NeedDrawRegen = FALSE;
 	GlyphButtonCreated = FALSE;
+	ShowSkillPanelForObservers = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + to_string( 3 ) );
@@ -1712,12 +1754,17 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
+	if ( !NeedDrawBarForUnit.empty( ) )
+		NeedDrawBarForUnit.clear( );
+
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
 	SetWidescreenFixState( FALSE );
 	MainFuncWork = FALSE;
 	NeedDrawRegen = FALSE;
 	GlyphButtonCreated = FALSE;
+	ShowSkillPanelForObservers = FALSE;
+	FPSfix1Enabled = TRUE;
 	SetCustomFovFix( 1.0f );
 
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );
@@ -1931,6 +1978,12 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 		GetPlayerAlliance = ( pGetPlayerAlliance )( GameDll + 0x3C9D70 );
+		Wc3ControlClickButton_offset = GameDll + 0x601F20;
+
+
+		DrawUnitBarOffset = GameDll + 0x2C74B0;
+
+		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x3C9600 );
 
 		InitHook( );
 
@@ -2162,6 +2215,12 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		GetPlayerAlliance = ( pGetPlayerAlliance )( GameDll + 0x1E3C50 );
 
+		Wc3ControlClickButton_offset = GameDll + 0xBE3A0;
+
+		DrawUnitBarOffset = GameDll + 0x6374A0;
+
+		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x1E8170 );
+
 		InitHook( );
 
 		/* crc32 simple protection */
@@ -2279,10 +2338,11 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-		/*	Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
-	*/
+		/*Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );*/
 		Warcraft3_Process = GetCurrentProcess( );
 
+		/*InitDotaHelper( 0x27a );
+		MainFuncWork = TRUE;*/
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{

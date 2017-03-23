@@ -38,6 +38,11 @@ BOOL __stdcall IsTower( int unitaddr )
 }
 
 
+BOOL __stdcall IsUnitInvulnerable( int unitaddr )
+{
+	return ( *( unsigned int* )( unitaddr + 0x20 ) & 8 ) ;
+}
+
 // Проверяет юнит или не юнит
 BOOL __stdcall IsNotBadUnit( int unitaddr )
 {
@@ -262,7 +267,7 @@ int GetObjectDataAddr( int addr )
 
 vector<int> ReturnAbils;
 
-int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode , int abilbasecode )
+int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode, int abilbasecode )
 {
 	if ( !ReturnAbils.empty( ) )
 		ReturnAbils.clear( );

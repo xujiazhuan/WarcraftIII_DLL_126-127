@@ -282,15 +282,24 @@ void JustClickMouse( )
 	SendInput( 1, &Input, sizeof( INPUT ) );
 
 }
-void PressMouseAtSelectedHero( )
+int PressMouseAtSelectedHero( bool IsItem )
 {
+	int errorvalue = 0;
+	if ( !IsCursorSelectTarget( ) )
+		errorvalue = 1;
+	if ( GetCursorOrder( ) == 0xD000F ||
+		GetCursorOrder( ) == 0xD0012 ||
+		GetCursorOrder( ) == 0xD0016 )
+		errorvalue = 2;
 
 	if ( IsCursorSelectTarget( ) &&
 		GetCursorOrder( ) != 0xD000F &&
 		GetCursorOrder( ) != 0xD0012 &&
 		GetCursorOrder( ) != 0xD0016 )
 	{
-		if ( doubleclickSkillIDs.empty( ) || std::find( doubleclickSkillIDs.begin( ), doubleclickSkillIDs.end( ), GetCursorSkillID( ) ) != doubleclickSkillIDs.end( ) ) {
+		if ( IsItem || doubleclickSkillIDs.empty( ) ||
+			std::find( doubleclickSkillIDs.begin( ), doubleclickSkillIDs.end( ), GetCursorSkillID( ) ) != doubleclickSkillIDs.end( ) )
+		{
 			BOOL ButtonDown = FALSE;
 			if ( IsKeyPressed( VK_LBUTTON ) )
 			{
@@ -316,7 +325,11 @@ void PressMouseAtSelectedHero( )
 
 			MouseClick( cursor.x, cursor.y );
 		}
+		else 	errorvalue = 3;
+
 	}
+
+	return errorvalue;
 }
 
 
@@ -636,12 +649,13 @@ BOOL IsGameFrameActive( )
 }
 
 
-
+WPARAM LatestPressedKey = NULL;
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
 	unsigned int Msg = _Msg;
 	BOOL NeedSkipThisKey = FALSE;
+	BOOL ClickHelperWork = FALSE;
 	WPARAM wParam = _wParam;
 	if ( SkipAllMessages || TerminateStarted )
 	{
@@ -859,6 +873,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_KEYDOWN || Msg == WM_XBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
 				Msg == WM_SYSKEYDOWN )
 			{
+				bool itempressed = false;
 
 				if ( _Msg == WM_XBUTTONDOWN )
 				{
@@ -932,6 +947,8 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						}
 					}
 				}
+
+
 				/*sprintf_s( keystateprint, 200, "[0]VK:%X->%X", wParam, lParam );
 				PrintText( keystateprint );*/
 				if ( !NeedSkipThisKey )
@@ -945,13 +962,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							/*if ( Msg == WM_SYSKEYUP )
 								Msg = WM_KEYUP;*/
 
-							NeedSkipThisKey = TRUE;
 
+								/*	sprintf_s( keystateprint, 200, "[1]VK:%X->%X , IsAlt:%X->%X , IsCtrl:%X->%X , IsShift:%X->%X ", wParam, lParam,
+										keyAction.IsAlt, IsKeyPressed( VK_MENU ), keyAction.IsCtrl, IsKeyPressed( VK_CONTROL ), keyAction.IsShift, IsKeyPressed( VK_SHIFT ) );
 
-							/*	sprintf_s( keystateprint, 200, "[1]VK:%X->%X , IsAlt:%X->%X , IsCtrl:%X->%X , IsShift:%X->%X ", wParam, lParam,
-									keyAction.IsAlt, IsKeyPressed( VK_MENU ), keyAction.IsCtrl, IsKeyPressed( VK_CONTROL ), keyAction.IsShift, IsKeyPressed( VK_SHIFT ) );
-
-								PrintText( keystateprint );*/
+									PrintText( keystateprint );*/
 
 							if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift )
 								|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
@@ -959,16 +974,34 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
 								)
 							{
-								/*	sprintf_s( keystateprint, 200, "[2]VK:%X->%X , IsAlt:%X->%X , IsCtrl:%X->%X , IsShift:%X->%X ", wParam, lParam,
-										keyAction.IsAlt, IsKeyPressed( VK_MENU ), keyAction.IsCtrl, IsKeyPressed( VK_CONTROL ), keyAction.IsShift, IsKeyPressed( VK_SHIFT ) );
+								itempressed = !keyAction.IsSkill;
 
-									PrintText( keystateprint );*/
-								if ( Msg == WM_KEYDOWN )
+								NeedSkipThisKey = TRUE;
+
+
+								int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+								
+								int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+								if ( selectedunit > 0 && selectedunitcout > 0 )
 								{
-									int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
-									if ( selectedunit > 0 && GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) > 0 )
+
+									if ( selectedunitcout == 1 && ( !keyAction.IsSkill  || ClickHelper ))
 									{
-										if ( GetUnitOwnerSlot( selectedunit ) != 15 )
+										if ( wParam == LatestPressedKey )
+										{
+											if ( IsCursorSelectTarget( ) )
+											{
+												ClickHelperWork = TRUE;
+												PressMouseAtSelectedHero( itempressed );
+											}
+										}
+									}
+
+									LatestPressedKey = wParam;
+
+									if ( GetUnitOwnerSlot( selectedunit ) != 15 )
+									{
+										if ( !ClickHelperWork )
 										{
 											if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
 											{
@@ -1001,19 +1034,21 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 									}
 								}
 
+
 							}
 						}
 
 					}
 
-
-				if ( _Msg == WM_XBUTTONDOWN
-					|| _Msg == WM_MBUTTONDOWN )
+				if ( !NeedSkipThisKey )
 				{
+					/*	if ( _Msg == WM_XBUTTONDOWN
+							|| _Msg == WM_MBUTTONDOWN )
+						*/
 					Msg = _Msg;
 					wParam = _wParam;
+					//	}
 				}
-
 
 				if ( !NeedSkipThisKey )
 				{
@@ -1064,16 +1099,18 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 					}
 
 				}
-			}
 
-			if ( Msg == WM_KEYDOWN && ( NeedSkipThisKey || !IsKeyPressed( VK_MENU ) ) && ( NeedSkipThisKey || !IsKeyPressed( VK_CONTROL ) ) )
-			{
-				if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
+
+				if ( ( ( wParam >= 0x41 && wParam <= 0x5A ) ||
+					( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
+					|| NeedSkipThisKey )
 				{
+					/*if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
+					{*/
 
 					/*	char processdoubleclic[ 30 ];
-						sprintf_s( processdoubleclic, "%s", "1" );
-						PrintText( processdoubleclic );*/
+					sprintf_s( processdoubleclic, "%s", "1" );
+					PrintText( processdoubleclic );*/
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ );
@@ -1105,6 +1142,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							tmpDelayPress.TimeOut = 120;
 							DelayedPressList.push_back( tmpDelayPress );
 
+							
 							if ( NeedSkipThisKey )
 								return DefWindowProc( hWnd, Msg, wParam, lParam );
 
@@ -1118,40 +1156,47 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						{
 							/*sprintf_s( processdoubleclic, "%s", "22" );
 							PrintText( processdoubleclic );*/
-							if ( !NeedSkipThisKey && IsKeyPressed( VK_LCONTROL ) )
-							{
-								//JustClickMouse( );
-							}
-							else
-							{
-
-								if ( LastPressedKeysTime[ wParam ] + 400 > GetTickCount( ) )
+							/*	if ( !NeedSkipThisKey && IsKeyPressed( VK_LCONTROL ) )
 								{
-									/*	sprintf_s( processdoubleclic, "%s", "33" );
-										PrintText( processdoubleclic );*/
-									if ( IsCursorSelectTarget( ) )
-									{
-										PressMouseAtSelectedHero( );
-										LastPressedKeysTime[ wParam ] = 0;
-										if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
-										{
-											return DefWindowProc( hWnd, Msg, wParam, lParam );
-										}
-									}
-										}
+									//JustClickMouse( );
+								}
+								else
+								{*/
 
-								LastPressedKeysTime[ wParam ] = GetTickCount( );
+							if ( LastPressedKeysTime[ wParam ] + 400 > GetTickCount( ) )
+							{
+								/*sprintf_s( processdoubleclic, "%s", "33" );
+								PrintText( processdoubleclic );*/
+
+								itempressed = wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8;
+
+								if ( IsCursorSelectTarget( ) )
+								{
+									/*sprintf_s( processdoubleclic, "%s->%i", "44", PressMouseAtSelectedHero( ) );
+									PrintText( processdoubleclic );*/
+									PressMouseAtSelectedHero( itempressed );
+									
+									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
+									{
+										LastPressedKeysTime[ wParam ] = 0;
+										return DefWindowProc( hWnd, Msg, wParam, lParam );
 									}
 								}
+							
+
 							}
+							else
+								LastPressedKeysTime[ wParam ] = GetTickCount( );
+						}
+						//}
+					}
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
-
-						}
-					}
+				}
+			}
 
 			if ( NeedSkipThisKey )
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
@@ -1181,9 +1226,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
 #endif
 					}
+					}
 				}
 			}
-				}
 
 		}
 	else
@@ -1261,7 +1306,7 @@ sub_6F33A010 sub_6F33A010ptr;
 
 int __stdcall IssueWithoutTargetOrdermy( int a1, int a2, unsigned int a3, unsigned int a4 )
 {
-	int retvalue = IssueWithoutTargetOrderptr( a1, a2, a3, ((a4 & ShiftPressed) > 0) ? a4 : a4 | ShiftPressed );
+	int retvalue = IssueWithoutTargetOrderptr( a1, a2, a3, ( ( a4 & ShiftPressed ) > 0 ) ? a4 : a4 | ShiftPressed );
 
 	if ( SingleShift )
 	{
@@ -1273,7 +1318,7 @@ int __stdcall IssueWithoutTargetOrdermy( int a1, int a2, unsigned int a3, unsign
 }
 int __stdcall IssueTargetOrPointOrder2my( int a1, int a2, float a3, float a4, int a5, int a6 )
 {
-	int retvalue = IssueTargetOrPointOrder2ptr( a1, a2, a3, a4, a5, ( (a6 & ShiftPressed) > 0 ) ? a6 : a6 | ShiftPressed );
+	int retvalue = IssueTargetOrPointOrder2ptr( a1, a2, a3, a4, a5, ( ( a6 & ShiftPressed ) > 0 ) ? a6 : a6 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;
@@ -1283,7 +1328,7 @@ int __stdcall IssueTargetOrPointOrder2my( int a1, int a2, float a3, float a4, in
 }
 int __stdcall sub_6F339D50my( int a1, int a2, int a3, unsigned int a4, unsigned int a5 )
 {
-	int retvalue = sub_6F339D50ptr( a1, a2, a3, a4, ( (a5 & ShiftPressed) > 0 ) ? a5 : a5 | ShiftPressed );
+	int retvalue = sub_6F339D50ptr( a1, a2, a3, a4, ( ( a5 & ShiftPressed ) > 0 ) ? a5 : a5 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;
@@ -1293,7 +1338,7 @@ int __stdcall sub_6F339D50my( int a1, int a2, int a3, unsigned int a4, unsigned 
 }
 int __stdcall IssueTargetOrPointOrdermy( int a1, int a2, float a3, float a4, int a5, int a6, int a7 )
 {
-	int retvalue = IssueTargetOrPointOrderptr( a1, a2, a3, a4, a5, a6, ( (a7 & ShiftPressed) > 0 ) ? a7 : a7 | ShiftPressed );
+	int retvalue = IssueTargetOrPointOrderptr( a1, a2, a3, a4, a5, a6, ( ( a7 & ShiftPressed ) > 0 ) ? a7 : a7 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;
@@ -1303,7 +1348,7 @@ int __stdcall IssueTargetOrPointOrdermy( int a1, int a2, float a3, float a4, int
 }
 int __stdcall sub_6F339E60my( int a1, int a2, float a3, float a4, int a5, int a6, int a7, int a8 )
 {
-	int retvalue = sub_6F339E60ptr( a1, a2, a3, a4, a5, a6, a7, ( (a8 & ShiftPressed) > 0 ) ? a8 : a8 | ShiftPressed );
+	int retvalue = sub_6F339E60ptr( a1, a2, a3, a4, a5, a6, a7, ( ( a8 & ShiftPressed ) > 0 ) ? a8 : a8 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;
@@ -1313,7 +1358,7 @@ int __stdcall sub_6F339E60my( int a1, int a2, float a3, float a4, int a5, int a6
 }
 int __stdcall sub_6F339F00my( int a1, int a2, int a3, unsigned int a4, unsigned int a5 )
 {
-	int retvalue = sub_6F339F00ptr( a1, a2, a3, a4, ( (a5 & ShiftPressed )> 0 ) ? a5 : a5 | ShiftPressed );
+	int retvalue = sub_6F339F00ptr( a1, a2, a3, a4, ( ( a5 & ShiftPressed ) > 0 ) ? a5 : a5 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;
@@ -1323,7 +1368,7 @@ int __stdcall sub_6F339F00my( int a1, int a2, int a3, unsigned int a4, unsigned 
 }
 int __stdcall sub_6F339F80my( int a1, int a2, float a3, float a4, int a5, int a6, int a7 )
 {
-	int retvalue = sub_6F339F80ptr( a1, a2, a3, a4, a5, a6, ( (a7 & ShiftPressed )> 0 ) ? a7 : a7 | ShiftPressed );
+	int retvalue = sub_6F339F80ptr( a1, a2, a3, a4, a5, a6, ( ( a7 & ShiftPressed ) > 0 ) ? a7 : a7 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;
@@ -1333,7 +1378,7 @@ int __stdcall sub_6F339F80my( int a1, int a2, float a3, float a4, int a5, int a6
 }
 int __stdcall sub_6F33A010my( int a1, int a2, float a3, float a4, int a5, int a6, int a7, int a8 )
 {
-	int retvalue = sub_6F33A010ptr( a1, a2, a3, a4, a5, a6, a7, ( (a8 & ShiftPressed) > 0 ) ? a8 : a8 | ShiftPressed );
+	int retvalue = sub_6F33A010ptr( a1, a2, a3, a4, a5, a6, a7, ( ( a8 & ShiftPressed ) > 0 ) ? a8 : a8 | ShiftPressed );
 	if ( SingleShift )
 	{
 		SingleShift = FALSE;

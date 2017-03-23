@@ -1,5 +1,6 @@
 #include "Main.h"
 
+
 BOOL FPS_LIMIT_ENABLED = FALSE;
 
 ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
@@ -92,3 +93,43 @@ int __stdcall EnableAutoFPSlimit( BOOL enable )
 	return enable;
 }
 
+
+map<int, BOOL> NeedDrawBarForUnit;
+
+BOOL UnitNeedDrawBar( int unitaddr )
+{
+	if ( unitaddr && *( int* )( unitaddr + 0x50 ) )
+	{
+		if ( !IsNotBadUnit( unitaddr ) || IsUnitInvulnerable( unitaddr ) )
+		{
+			if ( NeedDrawBarForUnit[ unitaddr ] )
+				return FALSE;
+			else
+				NeedDrawBarForUnit[ unitaddr ] = TRUE;
+		}
+		else
+			NeedDrawBarForUnit[ unitaddr ] = FALSE;
+
+		return TRUE;
+	}
+	return FALSE;
+}
+
+pDrawBarForUnit DrawBarForUnit_org;
+pDrawBarForUnit DrawBarForUnit_ptr;
+
+BOOL FPSfix1Enabled = TRUE;
+
+void __fastcall DrawBarForUnit_my( int unitaddr )
+{
+	if ( FPSfix1Enabled && UnitNeedDrawBar( unitaddr )  )
+	{
+		DrawBarForUnit_ptr( unitaddr );
+	}
+}
+
+int __stdcall EnableFPSfix1( BOOL enable )
+{
+	FPSfix1Enabled = enable;
+	return 0;
+}

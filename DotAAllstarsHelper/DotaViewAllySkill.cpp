@@ -10,7 +10,7 @@ IsDrawSkillPanel IsDrawSkillPanel_ptr;
 IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_org = NULL;
 IsDrawSkillPanelOverlay IsDrawSkillPanelOverlay_ptr;
 
-
+BOOL ShowSkillPanelForObservers = FALSE;
 
 
 
@@ -39,6 +39,10 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 		{
 			if ( IsHero( ( int )UnitAddr ) )
 				( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+		}
+		else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+		{
+			( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 		}
 		result = 1;
 	}
@@ -73,6 +77,10 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 			if ( IsHero( ( int )UnitAddr ) )
 				( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 		}
+		else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+		{
+			( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
+		}
 		result = 1;
 	}
 	else
@@ -95,6 +103,12 @@ int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thi
 		if ( IsHero( ( int )UnitAddr ) )
 			return 1;
 	}
+
+	if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+	{
+		return 1;
+	}
+
 	//}
 
 	return IsNeedDrawUnit2ptr( UnitAddr );

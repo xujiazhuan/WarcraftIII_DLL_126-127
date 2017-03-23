@@ -470,14 +470,22 @@ ProcessNetEvents ProcessNetEvents_ptr;
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
 #ifdef DOTA_HELPER_LOG
-	//AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__ );
 #endif
 	/*if ( Event > 0 )
 	{*/
-		//int EventID = *( BYTE* )( Event + 20 );
-		ProcessNetEvents_ptr( data, unused, Event );
-		//AddNewCNetEventLog( EventID, data, Event, *( BYTE* )( Event + 12 ) );
-	//}
+	//int EventID = *( BYTE* )( Event + 20 );
+	ProcessNetEvents_ptr( data, unused, Event );
+
+#ifdef DOTA_HELPER_LOG
+	if ( Event > 0 )
+	{
+		int EventID = *( BYTE* )( Event + 20 );
+		AddNewCNetEventLog( EventID, data, Event, *( BYTE* )( Event + 12 ) );
+	}
+#endif
+	//
+//}
 }
 
 
@@ -590,7 +598,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 
 		fclose( f );
 	}
-	catch(...)
+	catch ( ... )
 	{
 		LastExceptionError = "Error in dumping...";
 	}
@@ -598,7 +606,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
-	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?",  "Fatal error detected![SEH]" , MB_YESNO ) == IDYES )
+	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", "Fatal error detected![SEH]", MB_YESNO ) == IDYES )
 	{
 		DumpExceptionInfoToFile( ExceptionInfo );
 		int retval = ( int )OriginFilter( ExceptionInfo );
@@ -1159,7 +1167,6 @@ int __cdecl BlizzardDebug6_my( const char * format, ... )
 
 void EnableErrorHandler( )
 {
-	//	EnableSEHoverVEH( );
 
 	InitTopLevelExceptionFilter( );
 

@@ -228,7 +228,7 @@ int __stdcall SetGlyphButtonEnabled( BOOL enabled )
 
 void ProcessClickAtCustomFrames( )
 {
-	if ( GlyphButtonCreated && GlyphButtonAddr )
+	/*if ( GlyphButtonCreated && GlyphButtonAddr )
 	{
 		int GlyphButtonItemFrame = GetFrameItemAddress( "GlyphItemButton", 0 );
 		if ( GlyphButtonItemFrame > 0 )
@@ -239,5 +239,26 @@ void ProcessClickAtCustomFrames( )
 				ExecuteFunc( &CallBackFuncName );
 			}
 		}
+	}*/
+}
+
+pWc3ControlClickButton Wc3ControlClickButton_ptr;
+pWc3ControlClickButton Wc3ControlClickButton_org;
+
+int __fastcall Wc3ControlClickButton_my( int btnaddr, int, int unk )
+{
+	int retval = Wc3ControlClickButton_ptr( btnaddr, unk );
+	if ( GlyphButtonCreated && GlyphButtonAddr )
+	{
+		int GlyphButtonItemFrame = GetFrameItemAddress( "GlyphItemButton", 0 );
+		if ( GlyphButtonItemFrame > 0 )
+		{
+			if ( btnaddr == GlyphButtonItemFrame )
+			{
+				ExecuteFunc( &CallBackFuncName );
+			}
+		}
 	}
+
+	return retval;
 }

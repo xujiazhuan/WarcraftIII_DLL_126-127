@@ -1,5 +1,5 @@
 ﻿#pragma once
-//#define DOTA_HELPER_LOG
+#define DOTA_HELPER_LOG
 
 
 
@@ -29,7 +29,7 @@
 #include <MinHook.h>
 #include <thread>
 #include <chrono>
-
+#include <map>
 
 
 #include <experimental/filesystem>
@@ -198,10 +198,7 @@ extern pExecuteFunc ExecuteFunc;
 typedef void( __thiscall * pConvertStrToJassStr )( JassString * jStr, const char * cStr );
 extern pConvertStrToJassStr str2jstr;
 
-BOOL __stdcall IsNotBadUnit( int unitaddr );
-BOOL __stdcall IsEnemy( int UnitAddr );
-BOOL __stdcall IsHero( int UnitAddr );
-BOOL __stdcall IsTower( int unitaddr );
+
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
 int __stdcall Wc3MessageBox( const char * message, int type );
@@ -216,25 +213,20 @@ extern BOOL MainFuncWork;
 char *  GetWar3Preferense( int ID );
 extern char MyFpsString[ 512 ];
 
-typedef BOOL( __cdecl * pGetPlayerAlliance )( int hPlayer1, int hPlayer2, int hAlliancetype );
+#pragma region DotaPlayerHelper.cpp
+
+typedef BOOL( __cdecl * pGetPlayerAlliance )( unsigned int hPlayer1, unsigned int hPlayer2, int hAlliancetype );
 extern pGetPlayerAlliance GetPlayerAlliance;
-
-
-
-typedef unsigned int( __cdecl * pGetPlayerColor )( int whichPlayer );
+typedef unsigned int( __cdecl * pGetPlayerColor )( unsigned int whichPlayer );
 extern pGetPlayerColor GetPlayerColor;
-
 typedef int( __cdecl * pPlayer )( int number );
 extern pPlayer Player;
+typedef int( __cdecl * pIsPlayerObs )( unsigned int hPlayer );
+extern pIsPlayerObs IsPlayerObs;
 
-
-
-
-#pragma region DotaPlayerHelper.cpp
 
 int GetLocalPlayerId( );
 int GetPlayerByNumber( int number );
-
 // Проверить являются ли игроки врагами
 typedef int( __cdecl * IsPlayerEnemy )( unsigned int Player1, unsigned int Player2 );
 // Получить игрока по ID
@@ -247,22 +239,25 @@ typedef void( __fastcall * pOnChatMessage )( int a1, int unused, int PlayerID, c
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 );
 extern vector<char *> mutedplayers;
 //sub_6F2FB480
-extern pOnChatMessage pOnChatMessage_org;
-extern pOnChatMessage pOnChatMessage_ptr;
-
+extern pOnChatMessage pOnChatMessage_org, pOnChatMessage_ptr;
+BOOL IsPlayerObserver( int pid );
+BOOL IsLocalPlayerObserver( );
+extern BOOL ShowSkillPanelForObservers;
 #pragma endregion
 
 #pragma region UnitAndItem.cpp
 int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int abilbasecode = 0 );
 int __stdcall GetUnitOwnerSlot( int unitaddr );
+BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int unitaddr );
 BOOL __stdcall IsTower( int unitaddr );
 BOOL __stdcall IsNotBadUnit( int unitaddr );
+BOOL __stdcall IsUnitInvulnerable( int unitaddr );
 BOOL __stdcall IsNotBadItem( int itemaddr );
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 extern pGetHeroInt GetHeroInt;
 int GetSelectedUnitCountBigger( int slot );
-int GetSelectedUnit(int slot);
+int GetSelectedUnit( int slot );
 #pragma endregion
 
 #pragma region DotaMPBarHelper.cpp
@@ -277,32 +272,27 @@ extern Storm_401 Storm_401_org;
 
 
 #pragma region DotaHPBarHelper.cpp
-
 extern unsigned int hpbarcolorsHero[ 20 ];
 extern unsigned int hpbarcolorsUnit[ 20 ];
 extern unsigned int hpbarcolorsTower[ 20 ];
-
 extern float hpbarscaleHeroX[ 20 ];
 extern float hpbarscaleUnitX[ 20 ];
 extern float hpbarscaleTowerX[ 20 ];
-
 extern float hpbarscaleHeroY[ 20 ];
 extern float hpbarscaleUnitY[ 20 ];
 extern float hpbarscaleTowerY[ 20 ];
-
 extern vector<CustomHPBar> CustomHPBarList[ 20 ];
-
 #pragma endregion
 
 #pragma region ErrorHandler.cpp
 #ifdef DOTA_HELPER_LOG
-AddNewLineToDotaChatLog( string s );
+void AddNewLineToJassLog( string s );
+void AddNewLineToDotaChatLog( string s );
+void AddNewLineToDotaHelperLog( string s );
 #endif
 void EnableErrorHandler( );
 void DisableErrorHandler( );
-#ifdef DOTA_HELPER_LOG
-void AddNewLineToDotaHelperLog( string s );
-#endif
+
 extern void ResetTopLevelExceptionFilter( );
 extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 extern BOOL bDllLogEnable;
@@ -339,7 +329,6 @@ extern int GameVersion;
 extern HWND Warcraft3Window;
 
 #pragma region All Offsets Here
-
 extern int GlobalPlayerOffset;
 extern int IsPlayerEnemyOffset;
 extern int DrawSkillPanelOffset;
@@ -358,7 +347,7 @@ extern int pWar3Data1;
 extern int UnitVtable;
 extern int ItemVtable;
 extern int pPrintText2;
-extern void PrintText( const char * text, float staytime = 10.0f);
+extern void PrintText( const char * text, float staytime = 10.0f );
 extern int MapNameOffset1;
 extern int MapNameOffset2;
 extern int pOnChatMessage_offset;
@@ -384,17 +373,13 @@ extern BOOL ClickHelper;
 extern BOOL LOCK_MOUSE_IN_WINDOW;
 extern BOOL BlockKeyboardAndMouseWhenTeleport;
 typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam );
-extern WarcraftRealWNDProc WarcraftRealWNDProc_org;
-extern WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
-
+extern WarcraftRealWNDProc WarcraftRealWNDProc_org, WarcraftRealWNDProc_ptr;
 extern HANDLE hPressKeyWithDelay;
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam );
 extern BOOL PressKeyWithDelayEND;
 DWORD WINAPI PressKeyWithDelay( LPVOID );
-
 extern unsigned char ShiftPressed;
 extern BOOL SkipAllMessages;
-
 extern int IssueWithoutTargetOrderOffset;
 extern int IssueTargetOrPointOrder2Offset;
 extern int sub_6F339D50Offset;
@@ -405,59 +390,44 @@ extern int sub_6F339F80Offset;
 extern int sub_6F33A010Offset;
 void IssueFixerInit( );
 void IssueFixerDisable( );
-
-
 typedef int( __fastcall * c_SimpleButtonClickEvent )( int pButton, int unused, int ClickEventType );
 extern c_SimpleButtonClickEvent SimpleButtonClickEvent;
-
 #pragma endregion
 
 
 #pragma region DotaFilesHelper.cpp
-
 struct ModelCollisionFixStruct
 {
 	string FilePath;
 	float X, Y, Z, Radius;
 };
-
 struct ModelTextureFixStruct
 {
 	string FilePath;
 	int TextureID;
 	string NewTexturePath;
 };
-
-
 struct ModelPatchStruct
 {
 	string FilePath;
 	string patchPath;
 };
-
-
 struct ModelRemoveTagStruct
 {
 	string FilePath;
 	string TagName;
 };
-
 struct ModelSequenceReSpeedStruct
 {
 	string FilePath;
 	string AnimationName;
 	float SpeedUp;
 };
-
-
 struct ModelScaleStruct
 {
 	string FilePath;
 	float Scale;
 };
-
-
-
 struct ModelSequenceValueStruct
 {
 	string FilePath;
@@ -465,8 +435,6 @@ struct ModelSequenceValueStruct
 	int Indx;
 	float Value;
 };
-
-
 extern vector<ModelCollisionFixStruct> ModelCollisionFixList;
 extern vector<ModelTextureFixStruct> ModelTextureFixList;
 extern vector<ModelPatchStruct> ModelPatchList;
@@ -474,29 +442,22 @@ extern vector<ModelRemoveTagStruct> ModelRemoveTagList;
 extern vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
 extern vector<ModelSequenceValueStruct> ModelSequenceValueList;
 extern vector<ModelScaleStruct> ModelScaleList;
-
 struct FileRedirectStruct
 {
 	string NewFilePath;
 	string RealFilePath;
 };
-
 extern vector<FileRedirectStruct> FileRedirectList;
-
 typedef signed int( __stdcall * Storm_403 )( void *a1, const char * str, int line, int id );
 extern Storm_403 Storm_403_org;
-
 typedef BOOL( __fastcall * GameGetFile )( const char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
 BOOL __fastcall GameGetFile_my( const  char * filename, int * OutDataPointer, size_t * OutSize, BOOL unknown );
-extern GameGetFile GameGetFile_org;
-extern GameGetFile GameGetFile_ptr;
+extern GameGetFile GameGetFile_org, GameGetFile_ptr;
 //int __stdcall Storm_279_my( const char * filename, int arg1, int arg2, size_t arg3, int arg4 );
 //typedef int( __stdcall * Storm_279 )( const char * filename, int, int, size_t, int );
 //extern Storm_279 Storm_279_org;
 //extern Storm_279 Storm_279_ptr;
-
 void FreeAllIHelpers( );
-
 struct FakeFileStruct
 {
 	char * filename;
@@ -504,7 +465,6 @@ struct FakeFileStruct
 	size_t size;
 };
 extern vector<FakeFileStruct> FakeFileList;
-
 #pragma endregion
 
 
@@ -514,29 +474,20 @@ int __stdcall SetWidescreenFixState( BOOL widefixenable );
 int __stdcall SetCustomFovFix( float _CustomFovFix );
 void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
 typedef int( __fastcall * SetGameAreaFOV )( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
-extern SetGameAreaFOV SetGameAreaFOV_org;
-extern SetGameAreaFOV SetGameAreaFOV_ptr;
-
-
+extern SetGameAreaFOV SetGameAreaFOV_org, SetGameAreaFOV_ptr;
 #pragma endregion
 
 
 #pragma region DotaWebHelper.cpp
-
 string SendHttpPostRequest( const char * host, const char * path, const char * data );
-
 string SendHttpGetRequest( const char * host, const char * path );
-
 #pragma endregion 
 
 
 #pragma region SendGamePacket.cpp
-
-
 extern int PacketClassPtr;
 extern int pGAME_SendPacket;
 void SendPacket( BYTE* packetData, DWORD size );
-
 #pragma endregion
 
 
@@ -549,14 +500,17 @@ double GetWar3CpuUsage( );
 void UpdateFPS( );
 typedef int( __cdecl * p_SetMaxFps )( int maxfps );
 extern p_SetMaxFps _SetMaxFps;
+typedef void( __fastcall * pDrawBarForUnit )( int unitaddr );
+void __fastcall DrawBarForUnit_my( int unitaddr );
+extern pDrawBarForUnit DrawBarForUnit_org, DrawBarForUnit_ptr;
+extern map<int, BOOL> NeedDrawBarForUnit;
+extern BOOL FPSfix1Enabled;
 #pragma endregion
 
 
 #pragma region DotaChatHelper.cpp
-
-typedef int( __fastcall * pGameChatSetState )( int chat,int unused, BOOL IsOpened );
+typedef int( __fastcall * pGameChatSetState )( int chat, int unused, BOOL IsOpened );
 extern pGameChatSetState GameChatSetState;
-
 #pragma endregion
 
 
@@ -565,7 +519,6 @@ extern int pCurrentFrameFocusedAddr;
 extern int DefaultCStatus;
 extern int LoadFramesVar1;
 extern int LoadFramesVar2;
-
 typedef void( __fastcall * pLoadNewFrameDef )( const char * filename, int var1, int var2, int cstatus );
 extern pLoadNewFrameDef LoadNewFrameDef_org;
 typedef int( __fastcall * pCreateNewFrame ) ( const char * FrameName, int pGlobalGameClass, int unk1, int unk2, int unk3 );
@@ -583,9 +536,11 @@ typedef int( __fastcall * pGetFrameItemAddress )( const char * name, int id );
 extern pGetFrameItemAddress GetFrameItemAddress;
 typedef int( __thiscall * pUpdateFrameFlags )( int FrameAddr, char unk );
 extern pUpdateFrameFlags UpdateFrameFlags;
+typedef int( __thiscall *  pWc3ControlClickButton )( int btnaddr, int unk );
+extern pWc3ControlClickButton Wc3ControlClickButton_org, Wc3ControlClickButton_ptr;
+int __fastcall Wc3ControlClickButton_my( int btnaddr, int, int unk );
 int __stdcall ShowConfigWindow( const char * );
 extern BOOL NeedOpenConfigWindow;
 void ProcessClickAtCustomFrames( );
-
 extern BOOL GlyphButtonCreated;
 #pragma endregion

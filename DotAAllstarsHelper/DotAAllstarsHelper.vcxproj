@@ -10,14 +10,14 @@
     <ProjectGuid>{4B94B582-A36C-43FF-AB86-D01CF1299739}</ProjectGuid>
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
     <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
-    <ProjectName>DotAAllstarsHelper688c</ProjectName>
+    <ProjectName>DotAAllstarsHelper688f</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
@@ -35,6 +35,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
     </IgnoreImportLibrary>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -45,21 +46,17 @@
       </IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <InlineFunctionExpansion>
-      </InlineFunctionExpansion>
-      <FavorSizeOrSpeed>
-      </FavorSizeOrSpeed>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <EnablePREfast>false</EnablePREfast>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <OmitFramePointers>
-      </OmitFramePointers>
+      <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>
       </EnableFiberSafeOptimizations>
       <Optimization>Disabled</Optimization>
       <BufferSecurityCheck>
       </BufferSecurityCheck>
-      <StructMemberAlignment>
-      </StructMemberAlignment>
+      <StructMemberAlignment>Default</StructMemberAlignment>
       <SmallerTypeCheck>
       </SmallerTypeCheck>
       <BasicRuntimeChecks>
@@ -69,12 +66,14 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <EnableParallelCodeGeneration>
       </EnableParallelCodeGeneration>
-      <FloatingPointModel>
-      </FloatingPointModel>
-      <PreprocessorDefinitions>DEBUG;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>
       </EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -91,6 +90,10 @@
       <SetChecksum>true</SetChecksum>
       <CLRSupportLastError>
       </CLRSupportLastError>
+      <RandomizedBaseAddress />
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <EnableUAC>
+      </EnableUAC>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

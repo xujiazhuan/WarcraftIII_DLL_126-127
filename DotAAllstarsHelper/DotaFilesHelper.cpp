@@ -384,6 +384,136 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 
 }
 
+
+void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "ApplyIconFilter" );
+#endif
+
+	ICONMDLCACHE tmpih;
+	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
+	if ( FoundOldHelper )
+	{
+		*OutDataPointer = ( int )tmpih.buf;
+		*OutSize = tmpih.size;
+		return;
+	}
+
+	char * originfiledata = ( char * )( int )*OutDataPointer;
+	size_t sz = *OutSize;
+
+
+	int w = 0, h = 0, bpp = 0, mipmaps = 0, alphaflag = 0, compress = 0, alphaenconding = 0;
+	unsigned long rawImageSize = 0;
+	Buffer InBuffer;
+	InBuffer.buf = ( char* )originfiledata;
+	InBuffer.length = sz;
+	Buffer OutBuffer;
+
+	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
+	if ( rawImageSize > 0 && w > 9 && h > 9 )
+	{
+		BGRAPix * OutImage = ( BGRAPix* )OutBuffer.buf;
+		BGRAPix BlackPix;
+
+		BlackPix.A = 0xFF;
+		BlackPix.R = 70;
+		BlackPix.G = 70;
+		BlackPix.B = 70;
+
+		bool FoundTransparentTexture = false;
+
+		int id = 0;
+		vector<BGRAPix> BGRAPixList;
+		BGRAPixList.assign( &OutImage[ 0 ], &OutImage[ w*h - 1 ] );
+
+
+		for ( BGRAPix & pix : BGRAPixList )
+		{
+			int R = pix.R;
+			int G = pix.G;
+			int B = pix.B;
+
+			//pix.G = FixBounds( ( max( max( pix.R, pix.G ), pix.B ) + min( min( pix.R, pix.G ), pix.B ) ) / 2 );
+			//pix.B = FixBounds( ( max( max( pix.R, pix.G ), pix.B ) + min( min( pix.R, pix.G ), pix.B ) ) / 2 );
+			//pix.R = FixBounds( ( max( max( pix.R, pix.G), pix.B ) + min( min( pix.R, pix.G), pix.B ) ) / 2 );
+			
+			pix.R = FixBounds( 0.2126*R + 0.7152*G + 0.0722*B);
+			pix.G = FixBounds( 0.2126*R + 0.7152*G + 0.0722*B);
+			pix.B = FixBounds( 0.2126*R + 0.7152*G + 0.0722*B);
+
+			/*pix.R = FixBounds( ( pix.R * .393 ) + ( pix.G *.769 ) + ( pix.B * .189 ) );
+			pix.G = FixBounds( ( pix.R * .349 ) + ( pix.G *.686 ) + ( pix.B * .168 ) );
+			pix.B = FixBounds( ( pix.R * .272 ) + ( pix.G *.534 ) + ( pix.B * .131 ) );
+			*/
+
+
+			id++;
+		}
+
+		memcpy( &OutImage[ 0 ], &BGRAPixList[ 0 ], 4 * w*h - 4 );
+
+		/*
+
+		for ( int x = 0; x < h; x++ )
+		{
+			for ( int y = 0; y < w; x++ )
+			{
+				BlackPix.A = OutImage[ x * h + y ].A;
+				if ( BlackPix.A < 0xFF )
+				{
+					FoundTransparentTexture = true;
+					break;
+				}
+			}
+		}
+
+
+		if ( !FoundTransparentTexture )
+			std::fill( &OutImage[ 0 ], &OutImage[ h * w - 1 ], BlackPix );
+
+		BlackPix.R = 0;
+		BlackPix.G = 0;
+		BlackPix.B = 0;
+		*/
+		//
+		//for ( int x = 0; x < h; x++ )
+		//{
+		//	for ( int y = 0; y < w; x++ )
+		//	{
+		//		BlackPix.A = OutImage[ x * h + y ].A;
+		//		OutImage[ x * h + y ] = BlackPix;//верх
+		//	}
+		//}
+
+		Buffer ResultBuffer;
+
+		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename.c_str( ), w, h, bpp, alphaflag, mipmaps );
+
+		if ( OutBuffer.buf != NULL )
+		{
+			OutBuffer.length = 0;
+			delete[ ] OutBuffer.buf;
+			OutBuffer.buf = 0;
+		}
+
+		if ( ResultBuffer.buf != NULL )
+		{
+			tmpih.buf = ResultBuffer.buf;
+			tmpih.size = ResultBuffer.length;
+			tmpih.hashlen = filename.length( );
+			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
+			ICONMDLCACHELIST.push_back( tmpih );
+			if ( !IsMemInCache( *OutDataPointer ) )
+				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
+			*OutDataPointer = ( int )tmpih.buf;
+			*OutSize = tmpih.size;
+		}
+	}
+
+}
+
 BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 	string filename = _filename;
@@ -1802,7 +1932,6 @@ void PrintLog( const char * str )
 BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
 
-
 	BOOL IsFileExist = IsFileExistOld;
 
 #ifdef DOTA_HELPER_LOG
@@ -1830,6 +1959,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 			}
 			else
 			{
+				//ApplyTestFilter( filename, OutDataPointer, OutSize );
 				/*	if ( strstr( FilePathLower.c_str( ), "terrainart" ) == FilePathLower.c_str( ) ||
 						 strstr( FilePathLower.c_str( ), "replaceabletextures\\cliff" ) == FilePathLower.c_str( ) )
 						ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
@@ -1867,6 +1997,7 @@ void AddNewFakeFile( char * filename, BYTE * buffer, size_t FileSize )
 
 BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, unsigned int * OutSize, BOOL unknown )
 {
+
 
 
 #ifdef DOTA_HELPER_LOG

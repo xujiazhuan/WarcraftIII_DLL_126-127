@@ -113,3 +113,21 @@ int __stdcall UnMutePlayer( const char * str )
 	}
 	return 1;
 }
+pIsPlayerObs IsPlayerObs;
+
+BOOL IsPlayerObserver( int pid )
+{
+	unsigned int player = Player( pid );
+	return IsPlayerObs( player );
+}
+
+BOOL IsLocalPlayerObserver( )
+{
+	return IsPlayerObserver( GetLocalPlayerId( ) );
+}
+
+int __stdcall ShowObserverSkillPanel( BOOL enabled )
+{
+	ShowSkillPanelForObservers = enabled;
+	return ShowSkillPanelForObservers;
+}
