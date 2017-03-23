@@ -7,17 +7,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{4B94B582-A36C-43FF-AB86-D01CF1299739}</ProjectGuid>
+    <ProjectGuid>{D89981A7-1DB5-43F9-9C0D-185750FCC7EB}</ProjectGuid>
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
     <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
-    <ProjectName>DotAAllstarsHelper688f</ProjectName>
+    <ProjectName>DotAAllstarsHelper688f_debug</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141_xp</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
@@ -35,25 +35,27 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
     </IgnoreImportLibrary>
-    <GenerateManifest>false</GenerateManifest>
+    <GenerateManifest>true</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
       <IntrinsicFunctions>
       </IntrinsicFunctions>
-      <SDLCheck>
-      </SDLCheck>
+      <SDLCheck>false</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <EnablePREfast>false</EnablePREfast>
       <ExceptionHandling>Sync</ExceptionHandling>
       <OmitFramePointers>true</OmitFramePointers>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <EnableFiberSafeOptimizations>
+      </EnableFiberSafeOptimizations>
       <Optimization>Disabled</Optimization>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BufferSecurityCheck>
+      </BufferSecurityCheck>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <SmallerTypeCheck>
       </SmallerTypeCheck>
@@ -65,17 +67,15 @@
       <EnableParallelCodeGeneration>
       </EnableParallelCodeGeneration>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;DOTA_HELPER_LOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <DebugInformationFormat>None</DebugInformationFormat>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <StringPooling>true</StringPooling>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
-      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <MinimalRebuild>true</MinimalRebuild>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>false</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
@@ -94,57 +94,50 @@
       <DataExecutionPrevention>false</DataExecutionPrevention>
       <EnableUAC>
       </EnableUAC>
-      <IgnoreAllDefaultLibraries>
-      </IgnoreAllDefaultLibraries>
-      <MergeSections>
-      </MergeSections>
-      <AdditionalOptions>/MERGE:".rdata=.text" /MERGE:".tls=.data" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="blpaletter.cpp" />
-    <ClCompile Include="Crc32Dynamic.cpp">
-      <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
-    </ClCompile>
-    <ClCompile Include="DotaAutoFPSlimit.cpp" />
-    <ClCompile Include="DotaChatHelper.cpp" />
-    <ClCompile Include="DotaClickHelper.cpp" />
-    <ClCompile Include="DotaCustomFrames.cpp" />
-    <ClCompile Include="DotaHPBarHelper.cpp" />
-    <ClCompile Include="DotaFilesHelper.cpp" />
-    <ClCompile Include="DotaWebHelper.cpp" />
-    <ClCompile Include="DotaMPBarHelper.cpp" />
-    <ClCompile Include="DotaAllstarsHelper.cpp" />
-    <ClCompile Include="DotaPlayerHelper.cpp" />
-    <ClCompile Include="DotaErrorHandler.cpp" />
-    <ClCompile Include="DotaFOVfix.cpp" />
-    <ClCompile Include="hash_64.cpp" />
-    <ClCompile Include="HttpClass.cpp" />
-    <ClCompile Include="jpgwrapper.cpp" />
-    <ClCompile Include="quantizer.cpp" />
-    <ClCompile Include="SendGamePacket.cpp" />
-    <ClCompile Include="UnitAndItem.cpp" />
-    <ClCompile Include="DotaViewAllySkill.cpp" />
+    <ResourceCompile Include="DotAAllstarsHelper688.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\DotAAllstarsHelper\blpaletter.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\Crc32Dynamic.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaAllstarsHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaAutoFPSlimit.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaChatHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaClickHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaCustomFrames.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaErrorHandler.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaFilesHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaFOVfix.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHPBarHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaMPBarHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaPlayerHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaViewAllySkill.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaWebHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\jpgwrapper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\SendGamePacket.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\DotAAllstarsHelper\blpaletter.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\buffer.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\Common.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\Crc32Dynamic.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\fnv.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\HttpClass.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\jpgwrapper.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\longlong.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\ViewAllySkill.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="blpaletter.h" />
-    <ClInclude Include="buffer.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Crc32Dynamic.h" />
-    <ClInclude Include="fnv.h" />
-    <ClInclude Include="HttpClass.h" />
-    <ClInclude Include="jpgwrapper.h" />
-    <ClInclude Include="longlong.h" />
-    <ClInclude Include="Main.h" />
-    <ClInclude Include="quantizer.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="ViewAllySkill.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="DotAAllstarsHelper688.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
