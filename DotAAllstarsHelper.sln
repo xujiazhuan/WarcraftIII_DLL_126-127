@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DotAAllstarsHelper688f", "DotAAllstarsHelper\DotAAllstarsHelper.vcxproj", "{4B94B582-A36C-43FF-AB86-D01CF1299739}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A291E0B5-2482-4C9A-AE19-160E26F73B1C} = {A291E0B5-2482-4C9A-AE19-160E26F73B1C}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WarcraftMemHackHelper", "WarcraftMemHackHelper\WarcraftMemHackHelper.vcxproj", "{A291E0B5-2482-4C9A-AE19-160E26F73B1C}"
 EndProject
