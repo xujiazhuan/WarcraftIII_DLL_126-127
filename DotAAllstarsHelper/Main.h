@@ -1,5 +1,5 @@
 ﻿#pragma once
-#define DOTA_HELPER_LOG
+//#define DOTA_HELPER_LOG
 
 
 
@@ -32,7 +32,7 @@
 #include <map>
 
 
-#include <experimental/filesystem>
+#include <filesystem>
 namespace fs = std::experimental::filesystem;
 
 
