@@ -282,7 +282,7 @@ void InitHook( )
 	BlizzardDebug5_org = ( BlizzardDebug5 )BlizzardDebug5Offset;
 	BlizzardDebug6_org = ( BlizzardDebug6 )BlizzardDebug6Offset;
 #ifdef DOTA_HELPER_LOG
-	EnableErrorHandler( );
+	EnableErrorHandler( 0 );
 #endif
 
 	if ( Warcraft3Window )
@@ -364,7 +364,7 @@ void UninitializeHook( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ );
 #endif
-	DisableErrorHandler( );
+	DisableErrorHandler(0);
 
 
 #pragma region Game.dll hook
@@ -1585,8 +1585,8 @@ void __stdcall DisableAllHooks( )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
-	if ( !NeedDrawBarForUnit.empty( ) )
-		NeedDrawBarForUnit.clear( );
+//	if ( !NeedDrawBarForUnit.empty( ) )
+//		NeedDrawBarForUnit.clear( );
 
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
@@ -1754,8 +1754,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
-	if ( !NeedDrawBarForUnit.empty( ) )
-		NeedDrawBarForUnit.clear( );
+//	if ( !NeedDrawBarForUnit.empty( ) )
+//		NeedDrawBarForUnit.clear( );
 
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
@@ -1764,7 +1764,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	NeedDrawRegen = FALSE;
 	GlyphButtonCreated = FALSE;
 	ShowSkillPanelForObservers = FALSE;
-	FPSfix1Enabled = TRUE;
+	FPSfix1Enabled = FALSE;
 	SetCustomFovFix( 1.0f );
 
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );

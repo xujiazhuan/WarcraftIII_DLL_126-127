@@ -127,7 +127,6 @@ int __stdcall ShowConfigWindow( const char * filename )
 {
 	LoadCustomFramesIfNeed( );
 
-
 	sprintf_s( ConfigPath, MAX_PATH, "%s", filename );
 
 

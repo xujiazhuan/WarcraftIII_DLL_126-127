@@ -94,21 +94,21 @@ int __stdcall EnableAutoFPSlimit( BOOL enable )
 }
 
 
-map<int, BOOL> NeedDrawBarForUnit;
+//map<int, BOOL> NeedDrawBarForUnit;
 
 BOOL UnitNeedDrawBar( int unitaddr )
 {
-	if ( unitaddr && *( int* )( unitaddr + 0x50 ) )
+	if ( IsNotBadUnit(unitaddr) )
 	{
-		if ( !IsNotBadUnit( unitaddr ) || IsUnitInvulnerable( unitaddr ) )
+		if ( IsUnitInvulnerable( unitaddr ) && GetUnitOwnerSlot( unitaddr ) >= 15 )
 		{
-			if ( NeedDrawBarForUnit[ unitaddr ] )
+			//if ( NeedDrawBarForUnit[ unitaddr ] )
 				return FALSE;
-			else
-				NeedDrawBarForUnit[ unitaddr ] = TRUE;
+			/*else
+				NeedDrawBarForUnit[ unitaddr ] = TRUE;*/
 		}
-		else
-			NeedDrawBarForUnit[ unitaddr ] = FALSE;
+		//else
+		//	NeedDrawBarForUnit[ unitaddr ] = FALSE;
 
 		return TRUE;
 	}
@@ -118,11 +118,15 @@ BOOL UnitNeedDrawBar( int unitaddr )
 pDrawBarForUnit DrawBarForUnit_org;
 pDrawBarForUnit DrawBarForUnit_ptr;
 
-BOOL FPSfix1Enabled = TRUE;
+BOOL FPSfix1Enabled = FALSE;
 
 void __fastcall DrawBarForUnit_my( int unitaddr )
 {
-	if ( FPSfix1Enabled && UnitNeedDrawBar( unitaddr )  )
+	if ( !FPSfix1Enabled )
+	{
+		DrawBarForUnit_ptr( unitaddr );
+	}
+	else if ( FPSfix1Enabled && UnitNeedDrawBar( unitaddr )  )
 	{
 		DrawBarForUnit_ptr( unitaddr );
 	}

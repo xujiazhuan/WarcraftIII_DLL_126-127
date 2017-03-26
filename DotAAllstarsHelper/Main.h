@@ -286,12 +286,12 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 
 #pragma region ErrorHandler.cpp
 #ifdef DOTA_HELPER_LOG
-void AddNewLineToJassLog( string s );
-void AddNewLineToDotaChatLog( string s );
-void AddNewLineToDotaHelperLog( string s );
+void  __stdcall AddNewLineToJassLog( string s );
+void __stdcall  AddNewLineToDotaChatLog( string s );
+void __stdcall  AddNewLineToDotaHelperLog( string s );
 #endif
-void EnableErrorHandler( );
-void DisableErrorHandler( );
+void __stdcall EnableErrorHandler( int );
+void __stdcall DisableErrorHandler( int );
 
 extern void ResetTopLevelExceptionFilter( );
 extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
@@ -503,7 +503,7 @@ extern p_SetMaxFps _SetMaxFps;
 typedef void( __fastcall * pDrawBarForUnit )( int unitaddr );
 void __fastcall DrawBarForUnit_my( int unitaddr );
 extern pDrawBarForUnit DrawBarForUnit_org, DrawBarForUnit_ptr;
-extern map<int, BOOL> NeedDrawBarForUnit;
+//extern map<int, BOOL> NeedDrawBarForUnit;
 extern BOOL FPSfix1Enabled;
 #pragma endregion
 

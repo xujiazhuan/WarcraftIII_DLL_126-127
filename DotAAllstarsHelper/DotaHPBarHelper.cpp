@@ -128,10 +128,10 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	{
 		return retval;
 	}
-
+#ifdef DOTA_HELPER_LOG
 	char _bf[ 140 ];
 	sprintf_s( _bf, 140, "%s-color:%X-bar:%X", "SetColorForUnit", ( unsigned int )coloraddr, ( unsigned int )BarStruct );
-#ifdef DOTA_HELPER_LOG
+
 	AddNewLineToDotaHelperLog( _bf );
 #endif
 
@@ -146,7 +146,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	else
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "SetColorForUnitOk1" );
+		AddNewLineToDotaHelperLog( "[HPBAR] Ok bar" );
 #endif
 
 	}
@@ -156,7 +156,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	if ( unitaddr <= 0 || !IsNotBadUnit( unitaddr ) )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "SetColorForUnitEnd2" );
+		AddNewLineToDotaHelperLog( "[HPBAR] Bad unit" );
 #endif
 		return retval;
 	}
@@ -166,7 +166,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	if ( unitslot > 15 || unitslot < 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "SetColorForUnitEnd3" );
+		AddNewLineToDotaHelperLog( "[HPBAR]:Bad unit slot" );
 #endif
 		return retval;
 	}

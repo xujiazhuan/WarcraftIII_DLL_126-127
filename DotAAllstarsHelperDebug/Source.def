@@ -63,3 +63,5 @@ DisableFeatures
 TeleportShiftKey
 EnableFPSfix1
 ShowObserverSkillPanel
+EnableErrorHandler
+DisableErrorHandler
