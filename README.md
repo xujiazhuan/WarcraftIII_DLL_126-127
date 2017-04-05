@@ -38,7 +38,7 @@ int __stdcall **CreateRawImage**( int **width**, int **height**, RGBAPix **defau
 
 // Load RawImage from ingame filename (tga,blp).
 
-int __stdcall **LoadRawImage**( const char '\*' **filename**, BOOL** IsTga** )
+int __stdcall **LoadRawImage**( const char \* **filename**, BOOL **IsTga** )
 
 // Draw RawImage2 on RawImage.
 
