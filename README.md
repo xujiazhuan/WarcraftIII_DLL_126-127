@@ -17,9 +17,11 @@
 >*(Widescreen support disabled:)*
 >
 >![Widescreen off](/Images/WideScreen_NO.jpg?raw=true "Widescreen support disabled 16:9")
+>
 >*(Widescreen support enabled:)*
 >
 >![Widescreen on](/Images/WideScreen_YES.jpg?raw=true "Widescreen support enabled 16:9")
+>
 >
 >
 >	"Ally skill view"
