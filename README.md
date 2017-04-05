@@ -15,8 +15,10 @@
 >	"Widescreen support"
 >
 >*(Widescreen support disabled:)*
+>
 >![Widescreen off](/Images/WideScreen_NO.jpg?raw=true "Widescreen support disabled 16:9")
 >*(Widescreen support enabled:)*
+>
 >![Widescreen on](/Images/WideScreen_YES.jpg?raw=true "Widescreen support enabled 16:9")
 >
 >
@@ -36,7 +38,7 @@ int __stdcall **CreateRawImage**( int **width**, int **height**, RGBAPix **defau
 
 // Load RawImage from ingame filename (tga,blp).
 
-int __stdcall **LoadRawImage**( const char \* **filename**, BOOL** IsTga** )
+int __stdcall **LoadRawImage**( const char '\*' **filename**, BOOL** IsTga** )
 
 // Draw RawImage2 on RawImage.
 
