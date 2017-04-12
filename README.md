@@ -70,3 +70,6 @@ int __stdcall **SaveRawImageToGameFile**( int **RawImage**, const char \* **file
 
 int __stdcall **DumpRawImageToFile**( int **RawImage**, const char \* **filename** )
 
+"Example result:"
+![RawImage Draw API](/Images/DrawRawImageApi.png?raw=true "You can see result of using experimental Draw API")
+
