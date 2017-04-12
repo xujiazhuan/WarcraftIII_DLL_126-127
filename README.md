@@ -35,10 +35,13 @@
 # RawImage update:
 ```cpp
 // Создает RawImage (RGBA) с указанным цветом
+// Create RawImage with color
 int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 // Загружает RawImage из filename (tga,blp)
-int __stdcall LoadRawImage( const char * filename, BOOL IsTga )
+// Load RawImage from game file
+int __stdcall LoadRawImage( const char * filename )
 // Рисует RawImage2 на RawImage
+// Draw RawImage2 at RawImage
 int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy )
 // Заполняет выбранный пиксель указанным цветом
 int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//RGBAPix = unsigned int
