@@ -51,9 +51,6 @@
     <ClCompile Include="blpaletter.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="jpgwrapper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="quantizer.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -76,6 +73,18 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaCustomFrames.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Jpeg.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaHelperOverlayDirectx8.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaHelperOverlayDirectx9.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaHelperOverlayOpengl.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,9 +115,6 @@
     <ClInclude Include="buffer.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="jpgwrapper.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="fnv.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -119,6 +125,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="HttpClass.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Jpeg.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

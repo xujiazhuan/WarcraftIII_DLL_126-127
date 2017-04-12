@@ -89,13 +89,10 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 				}
 				else
 				{
-
-
 					WarcraftRealWNDProc_ptr( Warcraft3Window, DelayedPressList[ i ].NeedPressMsg, DelayedPressList[ i ].NeedPresswParam, DelayedPressList[ i ].NeedPresslParam );
-
 				}
+
 				DelayedPressList.erase( DelayedPressList.begin( ) + ( int )i );
-				i--;
 			}
 
 		}
@@ -205,10 +202,9 @@ void MouseClickX( int toX, int toY )
 {
 	POINT cursorPos;
 	GetCursorPos( &cursorPos );
-	double screenRes_width = ::GetSystemMetrics( SM_CXSCREEN ) - 1;
-	double screenRes_height = ::GetSystemMetrics( SM_CYSCREEN ) - 1;
-	double dx = toX*( 65535.0f / screenRes_width );
-	double dy = toY*( 65535.0f / screenRes_height );
+
+	double dx = toX*( 65535.0f / DesktopScreen_Width );
+	double dy = toY*( 65535.0f / DesktopScreen_Height );
 	INPUT Input = { 0 };
 
 	Input.type = INPUT_MOUSE;
@@ -231,8 +227,8 @@ void MouseClickX( int toX, int toY )
 	SendInput( 1, &Input, sizeof( INPUT ) );
 	SetHeroFrameXY( );
 
-	dx = cursorPos.x*( 65535.0f / screenRes_width );
-	dy = cursorPos.y*( 65535.0f / screenRes_height );
+	dx = cursorPos.x*( 65535.0f / DesktopScreen_Width );
+	dy = cursorPos.y*( 65535.0f / DesktopScreen_Height );
 
 	Input.type = INPUT_MOUSE;
 	Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
@@ -653,6 +649,8 @@ WPARAM LatestPressedKey = NULL;
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
+
+
 	unsigned int Msg = _Msg;
 	BOOL NeedSkipThisKey = FALSE;
 	BOOL ClickHelperWork = FALSE;
@@ -664,184 +662,150 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-
-
-	//	if ( Msg == WM_KEYDOWN )
-	//	{
-	//		ShowConfigWindow( ".\\config.dota" );
-	//	}
-
-	if ( *( BOOL* )IsWindowActive )
+#ifdef DOTA_HELPER_LOG
+	try
 	{
-		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
-		{
-			*( int* )pCurrentFrameFocusedAddr = 0;
-		}
-
-		if ( Msg == WM_LBUTTONUP )
-		{
-			ProcessClickAtCustomFrames( );
-		}
+#endif
 
 
-		if ( LOCK_MOUSE_IN_WINDOW )
+		//	if ( Msg == WM_KEYDOWN )
+		//	{
+		//		ShowConfigWindow( ".\\config.dota" );
+		//	}
+
+		if ( *( BOOL* )IsWindowActive )
 		{
-			POINT p;
-			tagWINDOWINFO pwi;
-			if ( Warcraft3Window && GetCursorPos( &p ) && GetWindowInfo( Warcraft3Window, &pwi ) && IsMouseOverWindow( pwi.rcClient, p ) )
+			if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 			{
-				ClipCursor( &pwi.rcClient );
+				*( int* )pCurrentFrameFocusedAddr = 0;
 			}
-			else
+
+			if ( Msg == WM_LBUTTONUP )
 			{
-				ClipCursor( 0 );
+				ProcessClickAtCustomFrames( );
 			}
-		}
 
-		auto t_end = std::chrono::high_resolution_clock::now( );
-		if ( std::chrono::duration<float, std::milli>( t_end - t_start ).count( ) > 250.0 )
-		{
-			t_start = t_end;
-			if ( FPS_LIMIT_ENABLED )
+
+			if ( LOCK_MOUSE_IN_WINDOW )
 			{
-				UpdateFPS( );
-			}
-		}
-
-
-
-
-		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
-		{
-			ShiftPressed = ( unsigned char )( Msg == WM_KEYDOWN ? 0x1u : 0x0u );
-		}
-
-		if ( Msg == WM_RBUTTONDOWN )
-		{
-			ShiftPressed = ( unsigned char )( IsKeyPressed( VK_SHIFT ) ? 0x1u : 0x0u );
-		}
-
-
-		// SHIFT+NUMPAD TRICK
-		if ( ( Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP */ ) && (
-			wParam == 0xC ||
-			wParam == 0x23 ||
-			wParam == 0x24 ||
-			wParam == 0x25 ||
-			wParam == 0x26 ||
-			wParam == 0x28
-			) )
-		{
-			int  scanCode = ( int )( ( lParam >> 24 ) & 0x1 );
-
-
-			if ( scanCode != 1 )
-			{
-				switch ( wParam )
+				POINT p;
+				tagWINDOWINFO pwi;
+				if ( Warcraft3Window && GetCursorPos( &p ) && GetWindowInfo( Warcraft3Window, &pwi ) && IsMouseOverWindow( pwi.rcClient, p ) )
 				{
-				case 0x23:
-					wParam = VK_NUMPAD1;
-					break;
-				case 0x28:
-					wParam = VK_NUMPAD2;
-					break;
-				case 0x25:
-					wParam = VK_NUMPAD4;
-					break;
-				case 0xC:
-					wParam = VK_NUMPAD5;
-					break;
-				case 0x24:
-					wParam = VK_NUMPAD7;
-					break;
-				case 0x26:
-					wParam = VK_NUMPAD8;
-					break;
-				default:
-					break;
+					ClipCursor( &pwi.rcClient );
 				}
-				if ( wParam != _wParam )
+				else
+				{
+					ClipCursor( 0 );
+				}
+			}
+
+			auto t_end = std::chrono::high_resolution_clock::now( );
+			if ( std::chrono::duration<float, std::milli>( t_end - t_start ).count( ) > 250.0 )
+			{
+				t_start = t_end;
+				if ( FPS_LIMIT_ENABLED )
+				{
+					UpdateFPS( );
+				}
+			}
+
+
+
+
+			if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
+			{
+				ShiftPressed = ( unsigned char )( Msg == WM_KEYDOWN ? 0x1u : 0x0u );
+			}
+
+			if ( Msg == WM_RBUTTONDOWN )
+			{
+				ShiftPressed = ( unsigned char )( IsKeyPressed( VK_SHIFT ) ? 0x1u : 0x0u );
+			}
+
+
+			// SHIFT+NUMPAD TRICK
+			if ( ( Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP */ ) && (
+				wParam == 0xC ||
+				wParam == 0x23 ||
+				wParam == 0x24 ||
+				wParam == 0x25 ||
+				wParam == 0x26 ||
+				wParam == 0x28
+				) )
+			{
+				int  scanCode = ( int )( ( lParam >> 24 ) & 0x1 );
+
+
+				if ( scanCode != 1 )
+				{
+					switch ( wParam )
+					{
+					case 0x23:
+						wParam = VK_NUMPAD1;
+						break;
+					case 0x28:
+						wParam = VK_NUMPAD2;
+						break;
+					case 0x25:
+						wParam = VK_NUMPAD4;
+						break;
+					case 0xC:
+						wParam = VK_NUMPAD5;
+						break;
+					case 0x24:
+						wParam = VK_NUMPAD7;
+						break;
+					case 0x26:
+						wParam = VK_NUMPAD8;
+						break;
+					default:
+						break;
+					}
+					if ( wParam != _wParam )
+					{
+						if ( !IsKeyPressed( VK_SHIFT ) )
+						{
+							BOOL NumLock = ( ( ( unsigned short )GetKeyState( VK_NUMLOCK ) ) & 0xffff ) != 0;
+							if ( NumLock )
+								ShiftPressed = 0x1;
+							else
+								ShiftPressed = 0x0;
+						}
+					}
+
+				}
+				else
 				{
 					if ( !IsKeyPressed( VK_SHIFT ) )
 					{
-						BOOL NumLock = ( ( ( unsigned short )GetKeyState( VK_NUMLOCK ) ) & 0xffff ) != 0;
-						if ( NumLock )
-							ShiftPressed = 0x1;
-						else
-							ShiftPressed = 0x0;
+						ShiftPressed = 0;
 					}
 				}
-
 			}
-			else
+
+			for ( unsigned int i = 0; i < SkipMessagesList.size( ); i++ )
 			{
-				if ( !IsKeyPressed( VK_SHIFT ) )
+				if ( SkipMessagesList[ i ].Msg == Msg && SkipMessagesList[ i ].wParam == wParam )
 				{
-					ShiftPressed = 0;
+					SkipMessagesList.erase( SkipMessagesList.begin( ) + ( int )i );
+					return DefWindowProc( hWnd, Msg, wParam, lParam );
 				}
 			}
-		}
 
-		for ( unsigned int i = 0; i < SkipMessagesList.size( ); i++ )
-		{
-			if ( SkipMessagesList[ i ].Msg == Msg && SkipMessagesList[ i ].wParam == wParam )
+			if ( Msg == WM_MOUSEMOVE && BLOCKMOUSEMOVING )
 			{
-				SkipMessagesList.erase( SkipMessagesList.begin( ) + ( int )i );
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
-		}
 
-		if ( Msg == WM_MOUSEMOVE && BLOCKMOUSEMOVING )
-		{
-			return DefWindowProc( hWnd, Msg, wParam, lParam );
-		}
-
-		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
-		{
-			//	char keystateprint[ 200 ];
-			if ( Msg == WM_KEYDOWN ||/* Msg == WM_KEYUP || */Msg == WM_RBUTTONDOWN )
+			if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 			{
-				if ( BlockKeyboardAndMouseWhenTeleport )
+				//	char keystateprint[ 200 ];
+				if ( Msg == WM_KEYDOWN ||/* Msg == WM_KEYUP || */Msg == WM_RBUTTONDOWN )
 				{
-					if ( Msg == WM_RBUTTONDOWN )
+					if ( BlockKeyboardAndMouseWhenTeleport )
 					{
-						int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
-						if ( selectedunit > 0 )
-						{
-							unsigned int abilscount = 0;
-							FindUnitAbils( selectedunit, &abilscount, 'A3VO' );
-							if ( abilscount > 0 )
-							{
-								if ( TeleportShiftPress )
-								{
-									if ( ShiftPressed == 0 && !ShiftPressed )
-									{
-										SingleShift = TRUE;
-										ShiftPressed = 1;
-									}
-								}
-								else
-									return DefWindowProc( hWnd, Msg, wParam, lParam );
-							}
-						}
-					}
-
-
-
-					if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
-					{
-						BOOL NeedSkipForTP = TRUE;
-
-						for ( int VK : WhiteListForTeleport )
-						{
-							if ( wParam == VK )
-							{
-								NeedSkipForTP = FALSE;
-								break;
-							}
-						}
-
-						if ( NeedSkipForTP )
+						if ( Msg == WM_RBUTTONDOWN )
 						{
 							int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
 							if ( selectedunit > 0 )
@@ -857,7 +821,6 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 											SingleShift = TRUE;
 											ShiftPressed = 1;
 										}
-
 									}
 									else
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
@@ -865,152 +828,204 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							}
 						}
 
+
+
+						if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
+						{
+							BOOL NeedSkipForTP = TRUE;
+
+							for ( int & VK : WhiteListForTeleport )
+							{
+								if ( wParam == VK )
+								{
+									NeedSkipForTP = FALSE;
+									break;
+								}
+							}
+
+							if ( NeedSkipForTP )
+							{
+								int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+								if ( selectedunit > 0 )
+								{
+									unsigned int abilscount = 0;
+									FindUnitAbils( selectedunit, &abilscount, 'A3VO' );
+									if ( abilscount > 0 )
+									{
+										if ( TeleportShiftPress )
+										{
+											if ( ShiftPressed == 0 && !ShiftPressed )
+											{
+												SingleShift = TRUE;
+												ShiftPressed = 1;
+											}
+
+										}
+										else
+											return DefWindowProc( hWnd, Msg, wParam, lParam );
+									}
+								}
+							}
+
+						}
+
+					}
+				}
+
+				if ( Msg == WM_KEYDOWN || Msg == WM_XBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
+					Msg == WM_SYSKEYDOWN )
+				{
+					bool itempressed = false;
+
+					if ( _Msg == WM_XBUTTONDOWN )
+					{
+						Msg = WM_KEYDOWN;
+						wParam = _wParam & MK_XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2;
 					}
 
-				}
-			}
-
-			if ( Msg == WM_KEYDOWN || Msg == WM_XBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-				Msg == WM_SYSKEYDOWN )
-			{
-				bool itempressed = false;
-
-				if ( _Msg == WM_XBUTTONDOWN )
-				{
-					Msg = WM_KEYDOWN;
-					wParam = _wParam & MK_XBUTTON1 ? VK_XBUTTON1 : VK_XBUTTON2;
-				}
-
-				if ( _Msg == WM_MBUTTONDOWN )
-				{
-					Msg = WM_KEYDOWN;
-					wParam = VK_MBUTTON;
-				}
-
-				if ( ShopHelperEnabled && /*(*/ Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP ) */ )
-				{
-
-					if (
-						wParam == 'Q' ||
-						wParam == 'W' ||
-						wParam == 'E' ||
-						wParam == 'R' ||
-						wParam == 'A' ||
-						wParam == 'S' ||
-						wParam == 'D' ||
-						wParam == 'F' ||
-						wParam == 'Z' ||
-						wParam == 'X' ||
-						wParam == 'C' ||
-						wParam == 'V'
-						)
+					if ( _Msg == WM_MBUTTONDOWN )
 					{
-						int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
-						if ( selectedunit > 0 && GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) > 0 )
+						Msg = WM_KEYDOWN;
+						wParam = VK_MBUTTON;
+					}
+
+					if ( ShopHelperEnabled && /*(*/ Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP ) */ )
+					{
+
+						if (
+							wParam == 'Q' ||
+							wParam == 'W' ||
+							wParam == 'E' ||
+							wParam == 'R' ||
+							wParam == 'A' ||
+							wParam == 'S' ||
+							wParam == 'D' ||
+							wParam == 'F' ||
+							wParam == 'Z' ||
+							wParam == 'X' ||
+							wParam == 'C' ||
+							wParam == 'V'
+							)
 						{
-							if ( GetUnitOwnerSlot( selectedunit ) == 15 )
+							int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+							if ( selectedunit > 0 && GetSelectedUnitCountBigger( GetLocalPlayerId( ) ) > 0 )
 							{
-								// | 0 | 3 | 6 | 9  |
-								// | 1 | 4 | 7 | 10 | 
-								// | 2 | 5 | 8 | 11 |
-
-								NeedSkipThisKey = TRUE;
-
-								if ( Msg == WM_KEYDOWN && !( lParam & 0x40000000 ) )
+								if ( GetUnitOwnerSlot( selectedunit ) == 15 )
 								{
-									if ( wParam == 'Q' )
-										PressSkillPanelButton( 0, FALSE );
-									else if ( wParam == 'W' )
-										PressSkillPanelButton( 3, FALSE );
-									else if ( wParam == 'E' )
-										PressSkillPanelButton( 6, FALSE );
-									else if ( wParam == 'R' )
-										PressSkillPanelButton( 9, FALSE );
-									else if ( wParam == 'A' )
-										PressSkillPanelButton( 1, FALSE );
-									else if ( wParam == 'S' )
-										PressSkillPanelButton( 4, FALSE );
-									else if ( wParam == 'D' )
-										PressSkillPanelButton( 7, FALSE );
-									else if ( wParam == 'F' )
-										PressSkillPanelButton( 10, FALSE );
-									else if ( wParam == 'Z' )
-										PressSkillPanelButton( 2, FALSE );
-									else if ( wParam == 'X' )
-										PressSkillPanelButton( 5, FALSE );
-									else if ( wParam == 'C' )
-										PressSkillPanelButton( 8, FALSE );
-									else if ( wParam == 'V' )
-										PressSkillPanelButton( 11, FALSE );
+									// | 0 | 3 | 6 | 9  |
+									// | 1 | 4 | 7 | 10 | 
+									// | 2 | 5 | 8 | 11 |
+
+									NeedSkipThisKey = TRUE;
+
+									if ( Msg == WM_KEYDOWN && !( lParam & 0x40000000 ) )
+									{
+										if ( wParam == 'Q' )
+											PressSkillPanelButton( 0, FALSE );
+										else if ( wParam == 'W' )
+											PressSkillPanelButton( 3, FALSE );
+										else if ( wParam == 'E' )
+											PressSkillPanelButton( 6, FALSE );
+										else if ( wParam == 'R' )
+											PressSkillPanelButton( 9, FALSE );
+										else if ( wParam == 'A' )
+											PressSkillPanelButton( 1, FALSE );
+										else if ( wParam == 'S' )
+											PressSkillPanelButton( 4, FALSE );
+										else if ( wParam == 'D' )
+											PressSkillPanelButton( 7, FALSE );
+										else if ( wParam == 'F' )
+											PressSkillPanelButton( 10, FALSE );
+										else if ( wParam == 'Z' )
+											PressSkillPanelButton( 2, FALSE );
+										else if ( wParam == 'X' )
+											PressSkillPanelButton( 5, FALSE );
+										else if ( wParam == 'C' )
+											PressSkillPanelButton( 8, FALSE );
+										else if ( wParam == 'V' )
+											PressSkillPanelButton( 11, FALSE );
+									}
 								}
 							}
 						}
 					}
-				}
 
 
-				/*sprintf_s( keystateprint, 200, "[0]VK:%X->%X", wParam, lParam );
-				PrintText( keystateprint );*/
-				if ( !NeedSkipThisKey )
-					for ( KeyActionStruct keyAction : KeyActionList )
-					{
-						if ( keyAction.VK == ( int )wParam )
+					/*sprintf_s( keystateprint, 200, "[0]VK:%X->%X", wParam, lParam );
+					PrintText( keystateprint );*/
+					if ( !NeedSkipThisKey )
+						for ( KeyActionStruct & keyAction : KeyActionList )
 						{
-							if ( Msg == WM_SYSKEYDOWN )
-								Msg = WM_KEYDOWN;
-
-							/*if ( Msg == WM_SYSKEYUP )
-								Msg = WM_KEYUP;*/
-
-
-								/*	sprintf_s( keystateprint, 200, "[1]VK:%X->%X , IsAlt:%X->%X , IsCtrl:%X->%X , IsShift:%X->%X ", wParam, lParam,
-										keyAction.IsAlt, IsKeyPressed( VK_MENU ), keyAction.IsCtrl, IsKeyPressed( VK_CONTROL ), keyAction.IsShift, IsKeyPressed( VK_SHIFT ) );
-
-									PrintText( keystateprint );*/
-
-							if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift )
-								|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
-								|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
-								|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
-								)
+							if ( keyAction.VK == ( int )wParam )
 							{
-								itempressed = !keyAction.IsSkill;
+								if ( Msg == WM_SYSKEYDOWN )
+									Msg = WM_KEYDOWN;
 
-								NeedSkipThisKey = TRUE;
+								/*if ( Msg == WM_SYSKEYUP )
+									Msg = WM_KEYUP;*/
 
 
-								int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
-								
-								int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
-								if ( selectedunit > 0 && selectedunitcout > 0 )
+									/*	sprintf_s( keystateprint, 200, "[1]VK:%X->%X , IsAlt:%X->%X , IsCtrl:%X->%X , IsShift:%X->%X ", wParam, lParam,
+											keyAction.IsAlt, IsKeyPressed( VK_MENU ), keyAction.IsCtrl, IsKeyPressed( VK_CONTROL ), keyAction.IsShift, IsKeyPressed( VK_SHIFT ) );
+
+										PrintText( keystateprint );*/
+
+								if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift )
+									|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+									|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+									|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+									)
 								{
+									itempressed = !keyAction.IsSkill;
 
-									if ( selectedunitcout == 1 && ( !keyAction.IsSkill  || ClickHelper ))
+									NeedSkipThisKey = TRUE;
+
+
+									int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+
+									int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+									if ( selectedunit > 0 && selectedunitcout > 0 )
 									{
-										if ( wParam == LatestPressedKey )
+
+										if ( selectedunitcout == 1 && ( !keyAction.IsSkill || ClickHelper ) )
 										{
-											if ( IsCursorSelectTarget( ) )
+											if ( wParam == LatestPressedKey )
 											{
-												ClickHelperWork = TRUE;
-												PressMouseAtSelectedHero( itempressed );
+												if ( IsCursorSelectTarget( ) )
+												{
+													ClickHelperWork = TRUE;
+													PressMouseAtSelectedHero( itempressed );
+												}
 											}
 										}
-									}
 
-									LatestPressedKey = wParam;
+										LatestPressedKey = wParam;
 
-									if ( GetUnitOwnerSlot( selectedunit ) != 15 )
-									{
-										if ( !ClickHelperWork )
+										if ( GetUnitOwnerSlot( selectedunit ) != 15 )
 										{
-											if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
+											if ( !ClickHelperWork )
 											{
-												if ( keyAction.altbtnID >= 0 )
+												if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
+												{
+													if ( keyAction.altbtnID >= 0 )
+													{
+														if ( !( lParam & 0x40000000 ) )
+														{
+															if ( keyAction.IsSkill )
+																PressSkillPanelButton( keyAction.altbtnID, keyAction.IsRightClick );
+															else
+																PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
+															break;
+														}
+
+													}
+												}
+												else
 												{
 													if ( !( lParam & 0x40000000 ) )
 													{
 														if ( keyAction.IsSkill )
-															PressSkillPanelButton( keyAction.altbtnID, keyAction.IsRightClick );
+															PressSkillPanelButton( keyAction.btnID, keyAction.IsRightClick );
 														else
 															PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
 														break;
@@ -1018,235 +1033,236 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 												}
 											}
-											else
-											{
-												if ( !( lParam & 0x40000000 ) )
-												{
-													if ( keyAction.IsSkill )
-														PressSkillPanelButton( keyAction.btnID, keyAction.IsRightClick );
-													else
-														PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
-													break;
-												}
-
-											}
 										}
 									}
+
+
 								}
+							}
 
+						}
 
+					if ( !NeedSkipThisKey )
+					{
+						/*	if ( _Msg == WM_XBUTTONDOWN
+								|| _Msg == WM_MBUTTONDOWN )
+							*/
+						Msg = _Msg;
+						wParam = _wParam;
+						//	}
+					}
+
+					if ( !NeedSkipThisKey )
+					{
+						for ( int & keyCode : BlockedKeyCodes )
+						{
+							if ( keyCode == ( int )wParam )
+							{
+								return DefWindowProc( hWnd, Msg, wParam, lParam );
 							}
 						}
 
-					}
 
-				if ( !NeedSkipThisKey )
-				{
-					/*	if ( _Msg == WM_XBUTTONDOWN
-							|| _Msg == WM_MBUTTONDOWN )
-						*/
-					Msg = _Msg;
-					wParam = _wParam;
-					//	}
-				}
 
-				if ( !NeedSkipThisKey )
-				{
-					for ( int keyCode : BlockedKeyCodes )
-					{
-						if ( keyCode == ( int )wParam )
+						for ( int & keyCode : RegisteredKeyCodes )
 						{
-							return DefWindowProc( hWnd, Msg, wParam, lParam );
-						}
-					}
-
-
-
-					for ( int keyCode : RegisteredKeyCodes )
-					{
-						if ( keyCode == ( int )wParam )
-						{
-
-							if ( Msg == WM_KEYDOWN && !( lParam & 0x40000000 ) )
+							if ( keyCode == ( int )wParam )
 							{
 
-								SendKeyEvent.push_back( 0x85 );
-								SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
-								SendKeyEvent.push_back( Msg );
-								SendKeyEvent.push_back( wParam );
-								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
-								SendKeyEvent.clear( );
-								//*KeyboardAddrForKey = ( int ) wParam;
-								//*KeyboardAddrForKeyEvent = ( int ) Msg;
-							//	TriggerExecute( KeyboardTriggerHandle );
-							}
-							else if ( Msg == WM_KEYUP )
-							{
+								if ( Msg == WM_KEYDOWN && !( lParam & 0x40000000 ) )
+								{
 
-								SendKeyEvent.push_back( 0x85 );
-								SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
-								SendKeyEvent.push_back( Msg );
-								SendKeyEvent.push_back( wParam );
-								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
-								SendKeyEvent.clear( );
-								//*KeyboardAddrForKey = ( int ) wParam;
-								//*KeyboardAddrForKeyEvent = ( int ) Msg;
-								//TriggerExecute( KeyboardTriggerHandle );
+									SendKeyEvent.push_back( 0x85 );
+									SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
+									SendKeyEvent.push_back( Msg );
+									SendKeyEvent.push_back( wParam );
+									SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
+									SendKeyEvent.clear( );
+									//*KeyboardAddrForKey = ( int ) wParam;
+									//*KeyboardAddrForKeyEvent = ( int ) Msg;
+								//	TriggerExecute( KeyboardTriggerHandle );
+								}
+								else if ( Msg == WM_KEYUP )
+								{
+
+									SendKeyEvent.push_back( 0x85 );
+									SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
+									SendKeyEvent.push_back( Msg );
+									SendKeyEvent.push_back( wParam );
+									SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
+									SendKeyEvent.clear( );
+									//*KeyboardAddrForKey = ( int ) wParam;
+									//*KeyboardAddrForKeyEvent = ( int ) Msg;
+									//TriggerExecute( KeyboardTriggerHandle );
+								}
+								return DefWindowProc( hWnd, Msg, wParam, lParam );
 							}
-							return DefWindowProc( hWnd, Msg, wParam, lParam );
+
 						}
 
 					}
 
-				}
 
+					if ( ( ( wParam >= 0x41 && wParam <= 0x5A ) ||
+						( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
+						|| NeedSkipThisKey )
+					{
+						/*if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
+						{*/
 
-				if ( ( ( wParam >= 0x41 && wParam <= 0x5A ) ||
-					( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
-					|| NeedSkipThisKey )
-				{
-					/*if ( ( wParam >= 0x41 && wParam <= 0x5A ) || ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 ) )
-					{*/
-
-					/*	char processdoubleclic[ 30 ];
-					sprintf_s( processdoubleclic, "%s", "1" );
-					PrintText( processdoubleclic );*/
+						/*	char processdoubleclic[ 30 ];
+						sprintf_s( processdoubleclic, "%s", "1" );
+						PrintText( processdoubleclic );*/
 
 #ifdef DOTA_HELPER_LOG
-					AddNewLineToDotaHelperLog( __func__ );
+						AddNewLineToDotaHelperLog( __func__ );
 #endif
 
 
 
-					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
-					int unitowner = selectedunitcout > 0 ? GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) : 0;
+						int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+						int unitowner = selectedunitcout > 0 ? GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) : 0;
 
+						if ( EnableSelectHelper )
+						{
+							if ( selectedunitcout == 0 ||
+								( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
+								)
+							{
+
+								/*sprintf_s( processdoubleclic, "%s", "2" );
+								PrintText( processdoubleclic );*/
+
+
+								WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+								WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+
+								DelayedPress tmpDelayPress;
+								tmpDelayPress.NeedPresslParam = lParam;
+								tmpDelayPress.NeedPresswParam = wParam;
+								tmpDelayPress.NeedPressMsg = 0;
+								tmpDelayPress.TimeOut = 120;
+								DelayedPressList.push_back( tmpDelayPress );
+
+
+								if ( NeedSkipThisKey )
+									return DefWindowProc( hWnd, Msg, wParam, lParam );
+
+								return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+							}
+						}
+
+						if ( selectedunitcout == 1 )
+						{
+							if ( ClickHelper )
+							{
+								/*sprintf_s( processdoubleclic, "%s", "22" );
+								PrintText( processdoubleclic );*/
+								/*	if ( !NeedSkipThisKey && IsKeyPressed( VK_LCONTROL ) )
+									{
+										//JustClickMouse( );
+									}
+									else
+									{*/
+
+								if ( LastPressedKeysTime[ wParam ] + 400 > GetTickCount( ) )
+								{
+
+									/*sprintf_s( processdoubleclic, "%s", "33" );
+									PrintText( processdoubleclic );*/
+
+									itempressed = wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8;
+
+									if ( IsCursorSelectTarget( ) )
+									{
+										/*sprintf_s( processdoubleclic, "%s->%i", "44", PressMouseAtSelectedHero( ) );
+										PrintText( processdoubleclic );*/
+										PressMouseAtSelectedHero( itempressed );
+
+										if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
+										{
+											LastPressedKeysTime[ wParam ] = 0;
+											return DefWindowProc( hWnd, Msg, wParam, lParam );
+										}
+									}
+
+
+								}
+								else
+									LastPressedKeysTime[ wParam ] = GetTickCount( );
+							}
+							//}
+						}
+
+#ifdef DOTA_HELPER_LOG
+						AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+#endif
+
+					}
+				}
+
+				if ( NeedSkipThisKey )
+					return DefWindowProc( hWnd, Msg, wParam, lParam );
+
+				if ( Msg == WM_LBUTTONDOWN )
+				{
+					oldlParam = lParam;
+				}
+
+
+				if ( Msg == WM_RBUTTONDOWN )
+				{
 					if ( EnableSelectHelper )
 					{
+						int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+						int unitowner = selectedunitcout > 0 ? GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) : 0;
+
+
 						if ( selectedunitcout == 0 ||
 							( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
 							)
 						{
 
-							/*sprintf_s( processdoubleclic, "%s", "2" );
-							PrintText( processdoubleclic );*/
-
-
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 							WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
-
-							DelayedPress tmpDelayPress;
-							tmpDelayPress.NeedPresslParam = lParam;
-							tmpDelayPress.NeedPresswParam = wParam;
-							tmpDelayPress.NeedPressMsg = 0;
-							tmpDelayPress.TimeOut = 120;
-							DelayedPressList.push_back( tmpDelayPress );
-
-							
-							if ( NeedSkipThisKey )
-								return DefWindowProc( hWnd, Msg, wParam, lParam );
-
-							return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-						}
-					}
-
-					if ( selectedunitcout == 1 )
-					{
-						if ( ClickHelper )
-						{
-							/*sprintf_s( processdoubleclic, "%s", "22" );
-							PrintText( processdoubleclic );*/
-							/*	if ( !NeedSkipThisKey && IsKeyPressed( VK_LCONTROL ) )
-								{
-									//JustClickMouse( );
-								}
-								else
-								{*/
-
-							if ( LastPressedKeysTime[ wParam ] + 400 > GetTickCount( ) )
-							{
-								/*sprintf_s( processdoubleclic, "%s", "33" );
-								PrintText( processdoubleclic );*/
-
-								itempressed = wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8;
-
-								if ( IsCursorSelectTarget( ) )
-								{
-									/*sprintf_s( processdoubleclic, "%s->%i", "44", PressMouseAtSelectedHero( ) );
-									PrintText( processdoubleclic );*/
-									PressMouseAtSelectedHero( itempressed );
-									
-									if ( wParam >= VK_NUMPAD1 && wParam <= VK_NUMPAD8 )
-									{
-										LastPressedKeysTime[ wParam ] = 0;
-										return DefWindowProc( hWnd, Msg, wParam, lParam );
-									}
-								}
-							
-
-							}
-							else
-								LastPressedKeysTime[ wParam ] = GetTickCount( );
-						}
-						//}
-					}
-
 #ifdef DOTA_HELPER_LOG
-					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+							AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
 #endif
-
-				}
-			}
-
-			if ( NeedSkipThisKey )
-				return DefWindowProc( hWnd, Msg, wParam, lParam );
-
-			if ( Msg == WM_LBUTTONDOWN )
-			{
-				oldlParam = lParam;
-			}
-
-
-			if ( Msg == WM_RBUTTONDOWN )
-			{
-				if ( EnableSelectHelper )
-				{
-					int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
-					int unitowner = selectedunitcout > 0 ? GetUnitOwnerSlot( GetSelectedUnit( GetLocalPlayerId( ) ) ) : 0;
-
-
-					if ( selectedunitcout == 0 ||
-						( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
-						)
-					{
-
-						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-						WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
-#ifdef DOTA_HELPER_LOG
-						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
-#endif
-					}
+						}
 					}
 				}
 			}
 
 		}
-	else
-	{
-		if ( LOCK_MOUSE_IN_WINDOW )
-			ClipCursor( 0 );
-
-		if ( BlockKeyAndMouseEmulation )
+		else
 		{
-			if ( Msg == WM_RBUTTONDOWN || Msg == WM_KEYDOWN || Msg == WM_KEYUP )
+			if ( LOCK_MOUSE_IN_WINDOW )
+				ClipCursor( 0 );
+
+			if ( BlockKeyAndMouseEmulation )
 			{
-				return DefWindowProc( hWnd, Msg, wParam, lParam );
+				if ( Msg == WM_RBUTTONDOWN || Msg == WM_KEYDOWN || Msg == WM_KEYUP )
+				{
+					return DefWindowProc( hWnd, Msg, wParam, lParam );
+				}
 			}
 		}
+
+
+#ifdef DOTA_HELPER_LOG
 	}
+	catch ( std::exception e )
+	{
+		MessageBoxA( 0, e.what( ), "ClickHelper Перехвачена ошибка! Catch Error!",0 );
+	}
+	catch ( ... )
+	{
+		MessageBoxA( 0, "Неизвестная ошибка.", "ClickHelper Перехвачена ошибка! Catch Error!", 0 );
+	}
+#endif
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-	}
+}
 
 
 

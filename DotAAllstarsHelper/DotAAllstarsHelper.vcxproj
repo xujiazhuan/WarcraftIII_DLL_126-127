@@ -9,7 +9,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{4B94B582-A36C-43FF-AB86-D01CF1299739}</ProjectGuid>
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>
+    </WindowsTargetPlatformVersion>
     <ProjectName>DotAAllstarsHelper688f</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -29,8 +30,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
@@ -41,18 +42,17 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>
-      </IntrinsicFunctions>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>
       </SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnablePREfast>false</EnablePREfast>
       <ExceptionHandling>Sync</ExceptionHandling>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <SmallerTypeCheck>
@@ -66,11 +66,12 @@
       </EnableParallelCodeGeneration>
       <FloatingPointModel>Fast</FloatingPointModel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <StringPooling>true</StringPooling>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <FloatingPointExceptions>
+      </FloatingPointExceptions>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
     <Link>
@@ -91,14 +92,13 @@
       <CLRSupportLastError>
       </CLRSupportLastError>
       <RandomizedBaseAddress />
-      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
       <EnableUAC>
       </EnableUAC>
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
       <MergeSections>
       </MergeSections>
-      <AdditionalOptions>/MERGE:".rdata=.text" /MERGE:".tls=.data" %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -110,6 +110,9 @@
     <ClCompile Include="DotaChatHelper.cpp" />
     <ClCompile Include="DotaClickHelper.cpp" />
     <ClCompile Include="DotaCustomFrames.cpp" />
+    <ClCompile Include="DotaHelperOverlayDirectx8.cpp" />
+    <ClCompile Include="DotaHelperOverlayDirectx9.cpp" />
+    <ClCompile Include="DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
     <ClCompile Include="DotaFilesHelper.cpp" />
     <ClCompile Include="DotaWebHelper.cpp" />
@@ -120,7 +123,7 @@
     <ClCompile Include="DotaFOVfix.cpp" />
     <ClCompile Include="hash_64.cpp" />
     <ClCompile Include="HttpClass.cpp" />
-    <ClCompile Include="jpgwrapper.cpp" />
+    <ClCompile Include="Jpeg.cpp" />
     <ClCompile Include="quantizer.cpp" />
     <ClCompile Include="SendGamePacket.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
@@ -136,7 +139,7 @@
     <ClInclude Include="Crc32Dynamic.h" />
     <ClInclude Include="fnv.h" />
     <ClInclude Include="HttpClass.h" />
-    <ClInclude Include="jpgwrapper.h" />
+    <ClInclude Include="Jpeg.h" />
     <ClInclude Include="longlong.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="quantizer.h" />

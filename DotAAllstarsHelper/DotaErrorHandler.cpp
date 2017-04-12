@@ -89,7 +89,7 @@ std::string ReadRegistryKeyString( const char *registryKey, const char *registry
 	// Open the key
 	HKEY hKey;
 	if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, registryKey, 0, KEY_QUERY_VALUE, &hKey ) != ERROR_SUCCESS )
-		return 0;
+		return std::string( );
 
 	char str[ 256 ] = {};
 	DWORD dwLen = 255;
@@ -121,7 +121,7 @@ std::string GetOSDisplayString( )
 
 
 vector<string> DotaHelperLog;
-vector<string> JassNativesFuncLog;
+vector<string> JNativesFuncLog;
 vector<string> JassLogList;
 vector<string> DotaChatLog;
 
@@ -211,12 +211,12 @@ void __stdcall  AddNewLineToDotaHelperLog( string s )
 void __stdcall  AddNewLineToJassNativesLog( string s )
 {
 	__asm pushad;
-	if ( JassNativesFuncLog.size( ) > 40 )
+	if ( JNativesFuncLog.size( ) > 40 )
 	{
 		ExternalLog( s, LogType::LogType::JassNativesFuncLog );
-		JassNativesFuncLog.erase( JassNativesFuncLog.begin( ) );
+		JNativesFuncLog.erase( JNativesFuncLog.begin( ) );
 	}
-	JassNativesFuncLog.push_back( s );
+	JNativesFuncLog.push_back( s );
 	__asm popad;
 }
 
@@ -326,7 +326,7 @@ int __stdcall DllLogEnable( BOOL enable )
 	return 0;
 }
 
-//JassNativesFuncLog
+//JNativesFuncLog
 
 void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 {
@@ -597,34 +597,130 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 	{
 		FILE * f;
 		fopen_s( &f, "lasterror.txt", "w" );
-		fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
-		fprintf_s( f, "Game.dll:%X\n", GameDll );
-		fprintf_s( f, "Storm.dll:%X\n", StormDll );
-		fprintf_s( f, "ExceptionInfo:%X\n", ( int )ExceptionInfo );
-		fprintf_s( f, "ExceptionInfo->ContextRecord:%X\n", ( int )ExceptionInfo->ContextRecord );
-		fprintf_s( f, "ExceptionInfo->ExceptionRecord:%X\n", ( int )ExceptionInfo->ExceptionRecord );
+		if ( f )
+		{
+			fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
+			fprintf_s( f, "Game.dll:%X\n", GameDll );
+			fprintf_s( f, "Storm.dll:%X\n", StormDll );
+			if ( ExceptionInfo )
+			{
+				fprintf_s( f, "ExceptionInfo:%X\n", ( int )ExceptionInfo );
+				fprintf_s( f, "ExceptionInfo->ContextRecord:%X\n", ( int )ExceptionInfo->ContextRecord );
+				fprintf_s( f, "ExceptionInfo->ExceptionRecord:%X\n", ( int )ExceptionInfo->ExceptionRecord );
+			}
 
-		/*
-		DotaHelperLog;
-		JassNativesFuncLog;
-		JassLogList;
-		DotaChatLog;
-		*/
+			fprintf_s( f, "\n" );
+
+			fprintf_s( f, "\n" );
+
+			fprintf_s( f, "\n" );
+
+			fprintf_s( f, "\n" );
+
+			fprintf_s( f, "[LOG FAST DUMP]\n" );
 
 
-		ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
+			string LastError1, LastError2, LastError3, LastError4;
 
-		LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+			fprintf_s( f, "[DotaHelperLog]\n" );
 
-		fprintf_s( f, "%s", LastExceptionError.c_str( ) );
 
-		fprintf_s( f, "\n%s\n", "End dump." );
+			for ( string & s : DotaHelperLog )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
 
-		fclose( f );
+			fprintf_s( f, "[JNativesFuncLog]\n" );
+
+
+			for ( string & s : JNativesFuncLog )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+			fprintf_s( f, "[JassLogList]\n" );
+
+
+			for ( string &s : JassLogList )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+			fprintf_s( f, "[DotaChatLog]\n" );
+
+			for ( string& s : DotaChatLog )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+			fprintf_s( f, "[CNetEvents]\n" );
+
+			for ( int & EventID : CNetEvents )
+			{
+				fprintf_s( f, "%s(%i)\n", GetNetEventStrByID( EventID ), EventID );
+			}
+
+
+			for ( string & s : Blizzard1Log )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+			for ( string& s : Blizzard2Log )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+			for ( string &s : Blizzard3Log )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+			for ( string &s : Blizzard4Log )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+			for ( string &s : Blizzard4Log_2 )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+			for ( string& s : Blizzard5Log )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+			for ( string& s : Blizzard6Log )
+			{
+				fprintf_s( f, "%s\n", s.c_str( ) );
+			}
+
+
+			fprintf_s( f, "[END LOG FAST DUMP]\n" );
+
+
+			/*
+			DotaHelperLog;
+			JassNativesFuncLog;
+			JassLogList;
+			DotaChatLog;
+			*/
+			if ( ExceptionInfo )
+			{
+
+				ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
+
+				LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+
+			}
+			fprintf_s( f, "%s", LastExceptionError.c_str( ) );
+
+			fprintf_s( f, "\n%s\n", "End dump." );
+
+			fclose( f );
+		}
 	}
 	catch ( ... )
 	{
-		LastExceptionError = "Error in dumping...";
+
 	}
 }
 
@@ -639,7 +735,22 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 		MessageBoxA( 0, tmp, tmp, 0 );
 		return OriginFilter( ExceptionInfo );
 	}
-	else return 0;
+	else
+	{
+		if ( StormErrorHandler_org )
+		{
+			MH_DisableHook( StormErrorHandler_org );
+		}
+
+		LONG retval = OriginFilter( ExceptionInfo );
+
+		/*	if ( StormErrorHandler_org )
+			{
+				MH_DisableHook( StormErrorHandler_org );
+			}
+	*/
+		return retval;
+	}
 }
 
 
@@ -723,7 +834,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 void InitTopLevelExceptionFilter( )
 {
 	//SetUnhandledExceptionFilter( 0 );
-	SetUnhandledExceptionFilter( TopLevelExceptionFilter );
+	//SetUnhandledExceptionFilter( TopLevelExceptionFilter );
 	//AddVectoredExceptionHandler( 0, DotaVectoredToSehHandler );
 }
 
@@ -827,7 +938,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	bDllLogEnable = FALSE;
 	LONG result = NULL;
 
-	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v0.1a]" );
+	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v1.1]" );
 
 	sprintf_s( gamever, 20, "%X", GameVersion );
 
@@ -848,9 +959,8 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << "[DotaHelperLog]" << std::endl;
 
 
-
-	ReadProcessMemory( GetCurrentProcess( ), ( void * )( ESP_for_DUMP - 16 ), EspDump, 16, &EspDumpBytes );
-
+	if ( ESP_for_DUMP )
+		ReadProcessMemory( GetCurrentProcess( ), ( void * )( ESP_for_DUMP - 16 ), EspDump, 16, &EspDumpBytes );
 
 
 
@@ -906,7 +1016,10 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	string LastError1, LastError2, LastError3, LastError4;
 
-	for ( string s : DotaHelperLog )
+
+	PrintErrorLog( a3, "%s\n", "[DotaHelperLog]" );
+
+	for ( string& s : DotaHelperLog )
 	{
 		if ( s == LogTempStr )
 		{
@@ -934,7 +1047,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	PrintErrorLog( a3, "%s", "[Dota Allstars Jass Native log]" );
 	BugReport << std::endl << "[JassNativesLog]" << std::endl;
 
-	for ( string s : JassNativesFuncLog )
+	for ( string& s : JNativesFuncLog )
 	{
 		if ( s == LogTempStr )
 		{
@@ -964,7 +1077,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	PrintErrorLog( a3, "%s", "[Dota Jass Log]" );
 	BugReport << std::endl << "[DotaJassLog]" << std::endl;
 
-	for ( string s : JassLogList )
+	for ( string& s : JassLogList )
 	{
 		if ( s == LogTempStr )
 		{
@@ -994,7 +1107,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << std::endl << "[DotaChatLog]" << std::endl;
 
 
-	for ( string s : DotaChatLog )
+	for ( string& s : DotaChatLog )
 	{
 		if ( s == LogTempStr )
 		{
@@ -1028,42 +1141,42 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	//	SendHttpGetRequest( "d1stats.ru", ("/fatal.php?msg=QQGETQQ" + BugReport.str( ) ).c_str( ) );
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars CNET events]" );
-	for ( int EventID : CNetEvents )
+	for ( int& EventID : CNetEvents )
 	{
 		PrintErrorLog( a3, "%s(%i)", GetNetEventStrByID( EventID ), EventID );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Blizzard1 log]" );
-	for ( string s : Blizzard1Log )
+	for ( string& s : Blizzard1Log )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Blizzard2 log]" );
-	for ( string s : Blizzard2Log )
+	for ( string& s : Blizzard2Log )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Blizzard3 log]" );
-	for ( string s : Blizzard3Log )
+	for ( string& s : Blizzard3Log )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Blizzard4 log]" );
-	for ( string s : Blizzard4Log )
+	for ( string& s : Blizzard4Log )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "-----------------------------------------------" );
-	for ( string s : Blizzard4Log_2 )
+	for ( string& s : Blizzard4Log_2 )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Blizzard5 log]" );
-	for ( string s : Blizzard5Log )
+	for ( string& s : Blizzard5Log )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
 	PrintErrorLog( a3, "%s", "[Dota Allstars Blizzard6 log]" );
-	for ( string s : Blizzard6Log )
+	for ( string& s : Blizzard6Log )
 	{
 		PrintErrorLog( a3, "%s", s.c_str( ) );
 	}
@@ -1189,7 +1302,7 @@ int __cdecl BlizzardDebug6_my( const char * format, ... )
 }
 
 
-void __stdcall EnableErrorHandler(int )
+void __stdcall EnableErrorHandler( int )
 {
 
 	InitTopLevelExceptionFilter( );
@@ -1271,41 +1384,41 @@ int __stdcall StartExtraErrorHandler( int )
 void __stdcall DisableErrorHandler( int )
 {
 
-	if ( !DotaChatLog.empty( ) )
-		DotaChatLog.clear( );
+	//if ( !DotaChatLog.empty( ) )
+	//	DotaChatLog.clear( );
 
-	if ( !JassLogList.empty( ) )
-		JassLogList.clear( );
+	//if ( !JassLogList.empty( ) )
+	//	JassLogList.clear( );
 
-	if ( !DotaHelperLog.empty( ) )
-		DotaHelperLog.clear( );
+	//if ( !DotaHelperLog.empty( ) )
+	//	DotaHelperLog.clear( );
 
-	if ( !JassNativesFuncLog.empty( ) )
-		JassNativesFuncLog.clear( );
+	//if ( !JNativesFuncLog.empty( ) )
+	//	JNativesFuncLog.clear( );
 
-	if ( !CNetEvents.empty( ) )
-		CNetEvents.clear( );
+	//if ( !CNetEvents.empty( ) )
+	//	CNetEvents.clear( );
 
-	if ( !Blizzard1Log.empty( ) )
-		Blizzard1Log.clear( );
+	//if ( !Blizzard1Log.empty( ) )
+	//	Blizzard1Log.clear( );
 
-	if ( !Blizzard2Log.empty( ) )
-		Blizzard2Log.clear( );
+	//if ( !Blizzard2Log.empty( ) )
+	//	Blizzard2Log.clear( );
 
-	if ( !Blizzard3Log.empty( ) )
-		Blizzard3Log.clear( );
+	//if ( !Blizzard3Log.empty( ) )
+	//	Blizzard3Log.clear( );
 
-	if ( !Blizzard4Log.empty( ) )
-		Blizzard4Log.clear( );
+	//if ( !Blizzard4Log.empty( ) )
+	//	Blizzard4Log.clear( );
 
-	if ( !Blizzard4Log_2.empty( ) )
-		Blizzard4Log_2.clear( );
+	//if ( !Blizzard4Log_2.empty( ) )
+	//	Blizzard4Log_2.clear( );
 
-	if ( !Blizzard5Log.empty( ) )
-		Blizzard5Log.clear( );
+	//if ( !Blizzard5Log.empty( ) )
+	//	Blizzard5Log.clear( );
 
-	if ( !Blizzard6Log.empty( ) )
-		Blizzard6Log.clear( );
+	//if ( !Blizzard6Log.empty( ) )
+	//	Blizzard6Log.clear( );
 
 	if ( StormErrorHandler_org )
 	{

@@ -1,5 +1,6 @@
 #include "Main.h"
 
+#pragma optimize("",off)
 
 #define ADDRESS LPVOID  // data
 #define GADDRESS LPVOID // game call
@@ -271,9 +272,6 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	return retval;
 }
 
-//#pragma optimize("",off)
-
-
 
 void __declspec( naked ) FillMemoryForMPBar( )
 {
@@ -336,8 +334,6 @@ void __declspec( naked ) ReallocateMemoryForMPBar( )
 		mov     esi, a16F004;
 		add     esi, 0x158;
 		call    FillMemoryForMPBar;
-
-
 		popad;
 		push    a16F08C;
 		retn;
@@ -412,13 +408,17 @@ void __declspec( naked ) f001527F0( )
 		mov     edi, a16F004;
 		cmp     a3000AC, 0;
 		je L093;
+		pushad;
 		push edi;
 		call IsHero;
 		cmp eax, 0;
+		popad;
 		je L093;
+		pushad;
 		push edi;
 		call IsEnemy;
 		cmp eax, 1;
+		popad;
 		je L093;
 		cmp eax, -1;
 		je L093;
@@ -566,7 +566,7 @@ void __declspec( naked ) RedrawMPBar( )
 }
 
 
-//#pragma optimize("",on)
+#pragma optimize("",on)
 
 BOOL ManabarInitialized = FALSE;
 BOOL ManabarEnabled = FALSE;

@@ -2,8 +2,6 @@
 //#define DOTA_HELPER_LOG
 
 
-
-
 #define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
 #define WINVER 0x0501 
@@ -183,6 +181,14 @@ struct RCString
 	int	Field_0014;
 	int	Field_0018;
 	LPSTR	String;
+	RCString( )
+	{
+		VTable = refCount = Field_0008
+			= Field_000C = Field_0010
+			= Field_0014 = Field_0018
+			= 0;
+		String = NULL;
+	}
 };
 
 // Total Size: 16 bytes
@@ -206,7 +212,12 @@ typedef void( __fastcall * pGame_Wc3MessageBox ) ( int type, const char * text, 
 extern pGame_Wc3MessageBox Game_Wc3MessageBox;
 typedef void( __fastcall * pLoadFrameDefList )( const char * filepath, int env );
 extern pLoadFrameDefList LoadFrameDefList;
-string ToLower( string s );
+
+inline string ToLower( string str )
+{
+	std::transform( str.begin( ), str.end( ), str.begin( ), tolower );
+	return str;
+}
 
 extern BOOL MainFuncWork;
 
@@ -343,7 +354,7 @@ extern int IsWindowActive;
 extern int ChatFound;
 extern int pW3XGlobalClass;
 extern int pGameClass1;
-extern int pWar3Data1;
+extern int pWar3GlobalData1;
 extern int UnitVtable;
 extern int ItemVtable;
 extern int pPrintText2;
@@ -400,33 +411,65 @@ struct ModelCollisionFixStruct
 {
 	string FilePath;
 	float X, Y, Z, Radius;
+	ModelCollisionFixStruct( )
+	{
+		FilePath = string( );
+		X = Y = Z = Radius = 0.0f;
+	}
 };
 struct ModelTextureFixStruct
 {
 	string FilePath;
 	int TextureID;
 	string NewTexturePath;
+	ModelTextureFixStruct( )
+	{
+		FilePath = string( );
+		NewTexturePath = string( );
+		TextureID = 0;
+	}
 };
 struct ModelPatchStruct
 {
 	string FilePath;
 	string patchPath;
+	ModelPatchStruct( )
+	{
+		FilePath = string( );
+		patchPath = string( );
+	}
 };
 struct ModelRemoveTagStruct
 {
 	string FilePath;
 	string TagName;
+	ModelRemoveTagStruct( )
+	{
+		FilePath = string( );
+		TagName = string( );
+	}
 };
 struct ModelSequenceReSpeedStruct
 {
 	string FilePath;
 	string AnimationName;
 	float SpeedUp;
+	ModelSequenceReSpeedStruct( )
+	{
+		FilePath = string( );
+		AnimationName = string( );
+		SpeedUp = 0.0f;
+	}
 };
 struct ModelScaleStruct
 {
 	string FilePath;
 	float Scale;
+	ModelScaleStruct( )
+	{
+		Scale = 0.0f;
+		FilePath = string( );
+	}
 };
 struct ModelSequenceValueStruct
 {
@@ -434,6 +477,13 @@ struct ModelSequenceValueStruct
 	string AnimationName;
 	int Indx;
 	float Value;
+	ModelSequenceValueStruct( )
+	{
+		FilePath = string( );
+		AnimationName = string( );
+		Indx = 0;
+		Value = 0.0f;
+	}
 };
 extern vector<ModelCollisionFixStruct> ModelCollisionFixList;
 extern vector<ModelTextureFixStruct> ModelTextureFixList;
@@ -446,6 +496,11 @@ struct FileRedirectStruct
 {
 	string NewFilePath;
 	string RealFilePath;
+	FileRedirectStruct( )
+	{
+		NewFilePath = string( );
+		RealFilePath = string( );
+	}
 };
 extern vector<FileRedirectStruct> FileRedirectList;
 typedef signed int( __stdcall * Storm_403 )( void *a1, const char * str, int line, int id );
@@ -464,14 +519,49 @@ struct FakeFileStruct
 	BYTE * buffer;
 	size_t size;
 };
+
+struct RawImageStruct
+{
+	int width;
+	int height;
+	Buffer img;
+	Buffer ingamebuffer;
+	BOOL ingame;
+	string filename;
+	BOOL used_for_overlay;
+	float overlay_x; // 0.0 1.0
+	float overlay_y; // 0.0 1.0
+	float size_x; // 0.0 1.0
+	float size_y; // 0.0 1.0
+	void * textureaddr;
+	BOOL needResetTexture;
+	RawImageStruct( )
+	{
+		width = 0;
+		height = 0;
+		img = Buffer( );
+		ingamebuffer = Buffer( );
+		ingame = FALSE;
+		filename = string( );
+		used_for_overlay = FALSE;
+		overlay_x = overlay_y = size_x = size_y =  0.0f;
+		textureaddr = NULL;
+		needResetTexture = FALSE;
+	}
+};
+
+extern vector<RawImageStruct> ListOfRawImages;
+
 extern vector<FakeFileStruct> FakeFileList;
+void ClearAllRawImages( );
 #pragma endregion
 
 
 #pragma region DotaFovFix.cpp
-
+extern BOOL EnableFixFOV;
 int __stdcall SetWidescreenFixState( BOOL widefixenable );
 int __stdcall SetCustomFovFix( float _CustomFovFix );
+extern Matrix1 globalmatrix;
 void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
 typedef int( __fastcall * SetGameAreaFOV )( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 );
 extern SetGameAreaFOV SetGameAreaFOV_org, SetGameAreaFOV_ptr;
@@ -544,3 +634,29 @@ extern BOOL NeedOpenConfigWindow;
 void ProcessClickAtCustomFrames( );
 extern BOOL GlyphButtonCreated;
 #pragma endregion
+
+
+#pragma region Overlays
+// for all warcraft versions
+void UninitOpenglHook( );
+void InitOpenglHook( );
+
+// 1.26a
+void Uninitd3d8Hook( );
+void Initd3d8Hook( );
+
+// 1.27a
+void Uninitd3d9Hook( );
+void Initd3d9Hook( );
+
+void DrawOverlayDx9( );
+void DrawOverlayDx8( );
+void DrawOverlayGl( );
+
+extern BOOL OverlayDrawed;
+
+#pragma endregion
+
+const float DesktopScreen_Width = ( float )GetSystemMetrics( SM_CXSCREEN );
+const float DesktopScreen_Height = ( float )GetSystemMetrics( SM_CYSCREEN );
+

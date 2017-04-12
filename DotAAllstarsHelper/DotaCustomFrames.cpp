@@ -247,6 +247,9 @@ pWc3ControlClickButton Wc3ControlClickButton_org;
 int __fastcall Wc3ControlClickButton_my( int btnaddr, int, int unk )
 {
 	int retval = Wc3ControlClickButton_ptr( btnaddr, unk );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ + to_string(1 ) );
+#endif
 	if ( GlyphButtonCreated && GlyphButtonAddr )
 	{
 		int GlyphButtonItemFrame = GetFrameItemAddress( "GlyphItemButton", 0 );
@@ -258,6 +261,8 @@ int __fastcall Wc3ControlClickButton_my( int btnaddr, int, int unk )
 			}
 		}
 	}
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+#endif
 	return retval;
 }

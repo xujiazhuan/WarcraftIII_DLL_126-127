@@ -69,6 +69,7 @@ int __stdcall SetCustomFovFix( float _CustomFovFix )
 	return 0;
 }
 
+Matrix1 globalmatrix;
 
 void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, float a5, float a6 )
 {
@@ -80,5 +81,7 @@ void __fastcall SetGameAreaFOV_my( Matrix1 * a1, int a2, float a3, float a4, flo
 	{
 		SetGameAreaFOV_ptr( a1, a2, a3, a4, a5, a6 );
 	}
+
+	globalmatrix = *a1;
 }
 

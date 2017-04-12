@@ -71,9 +71,6 @@
     <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="..\DotAAllstarsHelper\jpgwrapper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -81,6 +78,18 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\Jpeg.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx8.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx9.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayOpengl.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -103,9 +112,6 @@
     <ClInclude Include="..\DotAAllstarsHelper\HttpClass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\DotAAllstarsHelper\jpgwrapper.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\DotAAllstarsHelper\longlong.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -119,6 +125,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\Jpeg.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

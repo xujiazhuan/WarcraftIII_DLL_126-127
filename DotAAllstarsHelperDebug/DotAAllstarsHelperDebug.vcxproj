@@ -29,8 +29,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
@@ -91,7 +91,7 @@
       <CLRSupportLastError>
       </CLRSupportLastError>
       <RandomizedBaseAddress />
-      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <DataExecutionPrevention>true</DataExecutionPrevention>
       <EnableUAC>
       </EnableUAC>
     </Link>
@@ -110,6 +110,9 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaErrorHandler.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFilesHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFOVfix.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx8.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx9.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHPBarHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaMPBarHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaPlayerHelper.cpp" />
@@ -117,7 +120,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaWebHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp" />
-    <ClCompile Include="..\DotAAllstarsHelper\jpgwrapper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\Jpeg.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\SendGamePacket.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp" />
@@ -129,7 +132,7 @@
     <ClInclude Include="..\DotAAllstarsHelper\Crc32Dynamic.h" />
     <ClInclude Include="..\DotAAllstarsHelper\fnv.h" />
     <ClInclude Include="..\DotAAllstarsHelper\HttpClass.h" />
-    <ClInclude Include="..\DotAAllstarsHelper\jpgwrapper.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\Jpeg.h" />
     <ClInclude Include="..\DotAAllstarsHelper\longlong.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
     <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />

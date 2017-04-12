@@ -12,12 +12,6 @@ bool FileExist( const char * name )
 	return f.good( );
 }
 
-string ToLower( string s )
-{
-	std::transform( s.begin( ), s.end( ), s.begin( ), tolower );
-	return s;
-}
-
 
 //DWORD GameDllsz = 0;
 //DWORD StormDLLsz = 0;
@@ -53,7 +47,7 @@ int ChatFound = 0;
 
 int pW3XGlobalClass = 0;
 int pGameClass1 = 0;
-int pWar3Data1 = 0;
+int pWar3GlobalData1 = 0;
 
 int UnitVtable = 0;
 int ItemVtable = 0;
@@ -108,6 +102,9 @@ int GetGlobalClassAddr( )
 	return *( int* )pW3XGlobalClass;
 }
 
+#pragma optimize("",off)
+
+
 void PrintText( const char * text, float staytime )
 {
 	if ( *InGame )
@@ -124,6 +121,9 @@ void PrintText( const char * text, float staytime )
 		}
 	}
 }
+
+#pragma optimize("",on)
+
 
 
 pConvertStrToJassStr str2jstr;
@@ -263,7 +263,20 @@ const char * __stdcall GetCurrentMapPath( int )
 	return CurrentMapPath;
 }
 
+BOOL OverlayDrawed = FALSE;
 
+typedef int( __fastcall * DrawInterface_p )( int, int );
+DrawInterface_p DrawInterface_org;
+DrawInterface_p DrawInterface_ptr;
+
+int __fastcall DrawInterface_my( int arg1, int arg2)
+{
+	DrawOverlayDx8( );
+	DrawOverlayDx9( );
+	DrawOverlayGl( );
+	OverlayDrawed = TRUE;
+	return DrawInterface_ptr( arg1, arg2 );
+}
 
 void InitHook( )
 {
@@ -350,9 +363,20 @@ void InitHook( )
 	MH_EnableHook( DrawBarForUnit_org );
 
 
-	
+
 
 	IssueFixerInit( );
+
+	/*MH_CreateHook( DrawWc3UI_org, &DrawWc3UI_my, reinterpret_cast< void** >( &DrawWc3UI_ptr ) );
+	MH_EnableHook( DrawWc3UI_org );
+
+	MH_CreateHook( DrawWc3Cursor_org, &DrawWc3Cursor_my, reinterpret_cast< void** >( &DrawWc3Cursor_ptr ) );
+	MH_EnableHook( DrawWc3Cursor_org );*/
+
+	MH_CreateHook( DrawInterface_org, &DrawInterface_my, reinterpret_cast< void** >( &DrawInterface_ptr ) );
+	MH_EnableHook( DrawInterface_org );
+
+
 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
@@ -364,7 +388,7 @@ void UninitializeHook( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ );
 #endif
-	DisableErrorHandler(0);
+	DisableErrorHandler( 0 );
 
 
 #pragma region Game.dll hook
@@ -402,7 +426,7 @@ void UninitializeHook( )
 	}
 
 
-	
+
 
 	if ( SetGameAreaFOV_org )
 	{
@@ -423,6 +447,12 @@ void UninitializeHook( )
 	//	Storm_279_org = 0;
 	//}
 
+
+	if ( DrawInterface_org )
+	{
+		MH_DisableHook( DrawInterface_org );
+		DrawInterface_org = NULL;
+	}
 
 
 
@@ -463,6 +493,8 @@ BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 	return TRUE;
 }
 
+
+#pragma optimize("",off)
 
 
 
@@ -535,6 +567,8 @@ BOOL IsClassEqual( int ClassID1, int ClassID2 )
 {
 	return ClassID1 == ClassID2;
 }
+
+
 
 // Функция принимает данные о скорости атаки (и о увеличении урона от способностей) и сохраняет в буфер который будет использоваться при отрисовке
 int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float * BAT, int * unitaddr )
@@ -638,7 +672,6 @@ int saveedi = 0;
 int saveebp = 0;
 int saveesp = 0;
 
-//#pragma optimize("",off)
 
 void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook126a( )
 {
@@ -779,8 +812,6 @@ void __declspec( naked )  PrintMoveSpeedHook127a( )
 	}
 }
 
-
-//#pragma optimize("",on)
 
 
 char itemstr1[ 128 ];
@@ -981,7 +1012,7 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 
 
 #pragma region HookFunctions
-//#pragma optimize("",off)
+
 int JumpBackAddr1( )
 {
 	MessageBoxA( 0, 0, 0, 1 );
@@ -1283,7 +1314,7 @@ void __declspec( naked ) HookSetCD_1000s_126a( )
 //37ed3
 void __declspec( naked ) HookSetCD_1000s_127a( )
 {
-//	int cd_addr;
+	//	int cd_addr;
 	__asm
 	{
 		//	mov cd_addr, eax;
@@ -1301,7 +1332,7 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 
 
 
-//#pragma optimize("",on)
+#pragma optimize("",on)
 
 
 
@@ -1387,8 +1418,8 @@ void __stdcall RestoreAllOffsets( )
 			*( int* )temp.offaddr = temp.offdata;
 			VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
 			FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
+		}
 	}
-}
 	if ( !offsetslist.empty( ) )
 		offsetslist.clear( );
 }
@@ -1426,7 +1457,7 @@ int __stdcall DisableFeatures( unsigned int Flags )
 
 	if ( Flags & Feature_MANABAR )
 	{
-		ManaBarSwitch(  FALSE );
+		ManaBarSwitch( FALSE );
 	}
 	if ( Flags & Feature_FileHelper )
 	{
@@ -1573,6 +1604,9 @@ void __stdcall DisableAllHooks( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
+	UninitOpenglHook( );
+	Uninitd3d8Hook( );
+	Uninitd3d9Hook( );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
 	bDllLogEnable = TRUE;
@@ -1585,8 +1619,8 @@ void __stdcall DisableAllHooks( )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
-//	if ( !NeedDrawBarForUnit.empty( ) )
-//		NeedDrawBarForUnit.clear( );
+	//	if ( !NeedDrawBarForUnit.empty( ) )
+	//		NeedDrawBarForUnit.clear( );
 
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
@@ -1706,9 +1740,11 @@ DWORD GetDllCrc32( )
 }
 
 
+
 unsigned int __stdcall InitDotaHelper( int gameversion )
 {
 #ifdef DOTA_HELPER_LOG
+	std::cout << "InitDotaHelper" << endl;
 	AddNewLineToDotaHelperLog( __func__ );
 #endif
 	InitThreadCpuUsage( );
@@ -1754,8 +1790,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
 		doubleclickSkillIDs.clear( );
-//	if ( !NeedDrawBarForUnit.empty( ) )
-//		NeedDrawBarForUnit.clear( );
+	//	if ( !NeedDrawBarForUnit.empty( ) )
+	//		NeedDrawBarForUnit.clear( );
 
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
@@ -1927,8 +1963,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
-		pWar3Data1 = GameDll + 0xACBD40;
-		pWar3Data1 = *( int* )pWar3Data1;
+		pWar3GlobalData1 = GameDll + 0xACBD40;
+		pWar3GlobalData1 = *( int* )pWar3GlobalData1;
 		Warcraft3Window = *( HWND* )( GameDll + 0xAD147C );
 		Warcraft3WindowProcOffset = GameDll + 0x6C6AA0;
 
@@ -1958,7 +1994,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x383640 );
 		_SetMaxFps( 200 );
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
-		ManaBarSwitch(  TRUE );
+		ManaBarSwitch( TRUE );
 
 		DefaultCStatus = GameDll + 0xA8C804;
 		LoadFramesVar1 = GameDll + 0xACD214;
@@ -1985,9 +2021,11 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x3C9600 );
 
+		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x341740 );
 		InitHook( );
 
-
+		InitOpenglHook( );
+		Initd3d8Hook( );
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
@@ -2162,8 +2200,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
-		pWar3Data1 = GameDll + 0xBC5420;
-		pWar3Data1 = *( int* )pWar3Data1;
+		pWar3GlobalData1 = GameDll + 0xBC5420;
+		pWar3GlobalData1 = *( int* )pWar3GlobalData1;
 		Warcraft3Window = *( HWND* )( GameDll + 0xBDAB88 );
 		Warcraft3WindowProcOffset = GameDll + 0x153710;
 
@@ -2195,7 +2233,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );
 
-		ManaBarSwitch(  TRUE );
+		ManaBarSwitch( TRUE );
 
 		DefaultCStatus = GameDll + 0xB662CC;
 		LoadFramesVar1 = GameDll + 0xBB9CAC;
@@ -2221,7 +2259,13 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x1E8170 );
 
+		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x3ACCF0 );
+
+
 		InitHook( );
+
+		InitOpenglHook( );
+		Initd3d9Hook( );
 
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
@@ -2262,7 +2306,7 @@ int __stdcall SetCustomGameDllandStormDLL( const char * _GameDllName, const char
 int __stdcall SetGameDllAddr( HMODULE GameDllmdl )
 {
 	GameDllModule = GameDllmdl;
-	GameDll = ( int ) GameDllModule;
+	GameDll = ( int )GameDllModule;
 	return 0;
 }
 
@@ -2327,14 +2371,21 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 	GetCurrentModule = Module;
 	if ( reason == DLL_PROCESS_ATTACH )
 	{
+		/*std::streambuf *coutbuf = std::cout.rdbuf( );
+		std::ofstream out( "debug.log" );
+		std::cout.rdbuf( out.rdbuf( ) );
+*/
+#ifdef DOTA_HELPER_LOG
+		FILE * f;
+		freopen_s( &f, "DotaAllstarsDataLog.txt", "w", stdout );
+		freopen_s( &f, "DotaAllstarsErrorLog.txt", "w", stderr );
+#endif
 		DisableThreadLibraryCalls( Module );
 		MH_Initialize( );
 		GameDllModule = GetModuleHandleA( GameDllName );
 		GameDll = ( int )GameDllModule;
-		DisableThreadLibraryCalls( Module );
 		StormDllModule = GetModuleHandleA( StormDllName );
 		StormDll = ( int )StormDllModule;
-
 
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
@@ -2368,6 +2419,9 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 			ExitProcess( 0 );
 		}
 
+		UninitOpenglHook( );
+		Uninitd3d8Hook( );
+		Uninitd3d9Hook( );
 		ClearCustomsBars( );
 		FreeAllVectors( );
 		FreeAllIHelpers( );

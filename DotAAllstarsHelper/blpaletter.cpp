@@ -231,7 +231,7 @@ int GetRequiredMipMaps( int width, int height )
 	return mips;
 }
 
-bool CreateJpgBLP( Buffer &rawData, Buffer &output, int quality, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
 {
 	Buffer target[ 16 ];
 	Buffer scaled[ 16 ];
@@ -271,7 +271,8 @@ bool CreateJpgBLP( Buffer &rawData, Buffer &output, int quality, char const *, i
 				scaled[ 0 ] = source;
 			else // generate mipmaps
 				ScaleImage( ( unsigned char* )scaled[ i - 1 ].buf, xdimension * 2, ydimension * 2, xdimension, ydimension, 4, scaled[ i ] );
-			if ( !ConvertToJpg( scaled[ i ], target[ i ], xdimension, ydimension, 4, quality, true ) )
+			//if ( !ConvertToJpg( scaled[ i ], target[ i ], xdimension, ydimension, 4, quality, true ) )
+			if ( !Jpeg.Write( scaled[ i ], target[ i ], xdimension, ydimension, quality ) )
 			{
 				for ( int j = 0; j <= i; j++ )
 				{ // cleanup
@@ -325,7 +326,7 @@ bool CreateJpgBLP( Buffer &rawData, Buffer &output, int quality, char const *, i
 	return true;
 }
 
-bool CreatePalettedBLP( Buffer &rawData, Buffer &output, int colors, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+bool CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
 {
 	CQuantizer* q = new CQuantizer( ( unsigned int )colors, 8 );
 	q->ProcessImage( ( unsigned char* )rawData.buf, ( unsigned long )( width * height ), ( unsigned char )bytespp, 0x00 );
@@ -417,7 +418,7 @@ bool CreatePalettedBLP( Buffer &rawData, Buffer &output, int colors, char const 
 	return true;
 }
 
-bool TGA2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, const char* filename )
+bool TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename )
 {
 	TGAHeader* header = ( TGAHeader* )input.buf;
 	if ( header->colorMapType != 0 || header->imageType != 2 || header->width == 0 || header->height == 0 )
@@ -430,16 +431,38 @@ bool TGA2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, 
 		return false;
 
 	bpp = 4;
-	if ( header->bpp < 32 )
+	if ( header->bpp < 4 )
 		bpp = 3;
 	width = header->width;
 	height = header->height;
+
 	output.length = ( unsigned long )( width*height*bpp );
-	output.buf = input.buf + sizeof( TGAHeader ) + header->imageIDLength;
+	output.buf = new char[ output.length ];
+	memcpy( output.buf, input.buf + sizeof( TGAHeader ) + header->imageIDLength, output.length );
+
 	return true;
 }
 
-bool BMP2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
+bool RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, const char* filename )
+{
+	TGAHeader header;
+	memset( &header, 0, sizeof( TGAHeader ) );
+
+	header.imageType = 2;
+	header.width = width;
+	header.height = height;
+	header.bpp = bpp * 8;
+	header.imagedescriptor = bpp == 4 ? 8 : 0;
+	output.length = sizeof( TGAHeader ) + width * height * bpp;
+	output.buf = new char[ output.length ];
+
+	memcpy( output.buf, &header, sizeof( TGAHeader ) );
+	memcpy( output.buf + sizeof( TGAHeader ), input.buf, output.length - sizeof( TGAHeader ) );
+
+	return true;
+}
+
+bool BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
 {
 	BITMAPFILEHEADER *FileHeader = ( BITMAPFILEHEADER* )input.buf;
 	BITMAPINFOHEADER *InfoHeader = ( BITMAPINFOHEADER* )( FileHeader + 1 );
@@ -457,8 +480,11 @@ bool BMP2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, 
 		bpp = 3;
 	width = InfoHeader->biWidth;
 	height = InfoHeader->biHeight;
+
 	output.length = ( unsigned long )( width*height*bpp );
-	output.buf = input.buf + FileHeader->bfOffBits;
+	output.buf = new char[ output.length ];
+	memcpy( output.buf, input.buf + FileHeader->bfOffBits, output.length );
+
 	if ( bpp == 4 ) // invert alpha
 		for ( int i = 0; i < width*height; i++ )
 			output.buf[ i*bpp + 3 ] = 0xFF - output.buf[ i*bpp + 3 ];
@@ -483,7 +509,7 @@ void SwapBLPHeader( BLPHeader *header )
 }
 
 
-static void textureInvertRBInPlace( RGBAPix *bufsrc, unsigned long srcsize )
+void textureInvertRBInPlace( RGBAPix *bufsrc, unsigned long srcsize )
 {
 	for ( unsigned long i = 0; i < ( srcsize / 4 ); i++ )
 	{
@@ -607,7 +633,7 @@ RGBAPix* blp1_convert_paletted_no_alpha( uint8_t* pSrc, RGBAPix* pInfos, unsigne
 	return outrgba;
 }
 
-unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename )
+unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename )
 {
 	BLPHeader blph;
 	bpp = 4;
@@ -642,6 +668,8 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 	compresstype = ( int )blph.compress;
 
 	pictype = ( int )blph.alphaEncoding;
+
+
 	if ( blph.compress == 1 )
 	{
 		if ( input.length < curpos + 256 * 4 )
@@ -658,8 +686,6 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 
 		if ( alphaflag > 0 && ( blph.alphaEncoding == 4 || blph.alphaEncoding == 3 ) )
 		{
-			bpp = 4;
-
 			if ( input.length < curpos + blph.sizex * blph.sizey * 2 )
 				return 0;
 
@@ -683,11 +709,9 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 		}
 		else if ( alphaflag > 0 && blph.alphaEncoding == 5 )
 		{
-
-			bpp = 4;
-
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
+
 
 
 			uint8_t* tdata = new uint8_t[ ( unsigned int )size ];
@@ -706,10 +730,9 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 		}
 		else
 		{
-			bpp = 4;
-
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
+
 
 
 			uint8_t* tdata = new uint8_t[ ( unsigned int )size ];
@@ -731,34 +754,35 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 	// JPEG compressed
 	else if ( blph.compress == 0 )
 	{
-		bpp = 4;
-
-		long JPEGHeaderSize;
+		unsigned long JPEGHeaderSize;
 		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
 		JPEGHeaderSize = _blp_swap_int32( JPEGHeaderSize );
-		curpos += 4;
+		
+		Buffer tempdata;
+		tempdata.length = blph.psize[ 0 ] + JPEGHeaderSize;
+		tempdata.buf = new char[ blph.psize[ 0 ] + JPEGHeaderSize ];
+		memcpy( tempdata.buf, input.buf + curpos + 4, ( size_t )JPEGHeaderSize );
 
-		Buffer tdata;
-		tdata.length = blph.psize[ 0 ] + JPEGHeaderSize;
-		tdata.buf = new char[ blph.psize[ 0 ] + JPEGHeaderSize ];
-		memcpy( tdata.buf, input.buf + curpos, ( size_t )JPEGHeaderSize );
+
+
 
 		curpos = blph.poffs[ 0 ];
-		memcpy( ( tdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
+		memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
 
-
-		if ( !JPG2Raw( tdata, output, width, height, bpp, filename ) )
+		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
 		{
-			delete[ ] tdata.buf;
+			delete[ ] tempdata.buf;
 			width = 0;
 			height = 0;
 			return ( 0 );
 		}
 
-		delete[ ] tdata.buf;
+		delete[ ] tempdata.buf;
+
+
 
 		// Output should be RGBA, BLPs use BGRA
-		textureInvertRBInPlace( ( RGBAPix* )output.buf, output.length );
+		//textureInvertRBInPlace( ( RGBAPix* )output.buf, output.length );
 
 		width = ( int )blph.sizex;
 		height = ( int )blph.sizey;
@@ -769,23 +793,31 @@ unsigned long Blp2Raw( Buffer &input, Buffer &output, int &width, int &height, i
 	return 0;
 }
 
-bool JPG2Raw( Buffer &input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
+bool JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
 {
 	width = 0;
 	height = 0;
-	bpp = 32;
-	if ( !DecompressJpg( input, output, width, height, bpp ) )
+	bpp = 4;
+	//if ( !DecompressJpg( input, output, width, height, bpp ) )
+	if ( !Jpeg.Read( input, output, &width, &height) )
 		return false;
 
-	if ( !IsPowerOfTwo( width ) || !IsPowerOfTwo( height ) )
-	{
-		delete[ ] output.buf;
-		return false;
-	}
-	if ( bpp != 4 && bpp != 3 )
-	{
-		delete[ ] output.buf;
-		return false;
-	}
+	//if ( !IsPowerOfTwo( width ) || !IsPowerOfTwo( height ) )
+	//{
+	//	delete[ ] output.buf;
+	//	return false;
+	//}
+	//if ( bpp != 4 && bpp != 3 )
+	//{
+	//	delete[ ] output.buf;
+	//	return false;
+	//}
 	return true;
+}
+
+
+
+int ArrayXYtoId( int width, int x, int y )
+{
+	return  width * x + y;
 }

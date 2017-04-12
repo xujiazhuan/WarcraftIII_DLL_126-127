@@ -140,7 +140,6 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "SetColorForUnitEnd1" );
 #endif
-
 		return retval;
 	}
 	else
@@ -148,7 +147,6 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "[HPBAR] Ok bar" );
 #endif
-
 	}
 
 
@@ -325,7 +323,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SetColorForUnitEnd9" );
+	AddNewLineToDotaHelperLog( "[HPBAR] End success" );
 #endif
 	return retval;
 }
