@@ -3363,7 +3363,7 @@ void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 	GlobalRawImageCallbackData->mousex = mouseposx;
 	GlobalRawImageCallbackData->mousey = mouseposy;
 
-	for ( unsigned int i = ListOfRawImages.size( ) - 1; i >= 0; i-- )
+	for ( unsigned int i = ListOfRawImages.size( ) - 1; i > 0; i-- )
 	{
 		RawImageStruct & img = ListOfRawImages[ i ];
 		if ( img.used_for_overlay &&
