@@ -631,6 +631,9 @@ int __stdcall ShopHelper( BOOL enable )
 
 BOOL IsGameFrameActive( )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
 	int pGlAddr = GetGlobalClassAddr( );
 	if ( pGlAddr > 0 )
 	{
@@ -649,6 +652,8 @@ WPARAM LatestPressedKey = NULL;
 
 POINTS GlobalMousePos = { 0,0 };
 
+//BOOL DebugMsgShow = FALSE;
+
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
 
@@ -662,10 +667,26 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		return DefWindowProc( hWnd, Msg, wParam, lParam );// WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
 
+	//if ( !DebugMsgShow )
+	//{
+	//	DebugMsgShow = TRUE;
+	//	if ( IsKeyPressed( VK_F1 ) )
+	//	{
+	//		char debugmsg[ 200 ];
+	//		sprintf_s( debugmsg, "Current file cache size:%i", ICONMDLCACHELIST.size( ) );
+	//		MessageBoxA( 0, debugmsg, debugmsg, 0 );
+	//	}
+	//	DebugMsgShow = FALSE;
+	//}
+
+
+
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );// by Karaulov
+#endif
 
 
 #ifdef DOTA_HELPER_LOG
@@ -686,22 +707,21 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 		if ( *( BOOL* )IsWindowActive )
 		{
-
-
-
 			if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 			{
 				*( int* )pCurrentFrameFocusedAddr = 0;
 			}
 
-
+			if ( Msg == WM_LBUTTONUP )
+			{
+				ProcessClickAtCustomFrames( );
+			}
 			if ( GlobalRawImageCallbackData )
 			{
 				if ( Msg == WM_LBUTTONUP )
 				{
 					GlobalRawImageCallbackData->IsLeftButton = TRUE;
 					RawImageGlobalCallbackFunc( RawImageEventType::MouseUp, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
-					ProcessClickAtCustomFrames( );
 				}
 
 				if ( Msg == WM_LBUTTONDOWN )

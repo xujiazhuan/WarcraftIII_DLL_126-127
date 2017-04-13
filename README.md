@@ -42,7 +42,7 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 int __stdcall LoadRawImage( const char * filename )
 // Рисует RawImage2 на RawImage
 // Draw RawImage2 at RawImage
-int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy )
+int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy, int blendmode )
 // Заполняет выбранный пиксель указанным цветом
 // Fill pixel with color
 int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//RGBAPix = unsigned int
@@ -91,9 +91,9 @@ int __stdcall RawImage_GetHeight( int RawImage )
 // Изменяет размер RawImage
 // Resize RawImage
 int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
-// Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре.
-// Draw RawImage as overlay ingame. 
-int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos )
+// Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре. Можно установить размер (от 0.0 до 1.0).
+// Draw RawImage as overlay ingame. xsize / ysize not working in this version (use 0.0)
+int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos, float xsize, float ysize )
 ```
 "Example result:"
 ![RawImage Draw API](/Images/DrawRawImageApi.png?raw=true "You can see result of using experimental Draw API")

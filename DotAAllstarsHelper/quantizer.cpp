@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "quantizer.h"
 
 unsigned char FixBounds( int i )

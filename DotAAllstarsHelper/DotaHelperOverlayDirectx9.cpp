@@ -125,6 +125,9 @@ void DrawOverlayDx9( )
 	{
 		return;
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
 	ID3DXSprite* pSprite;
 	D3D9CreateSprite_org( d, &pSprite );
 	pSprite->Begin( D3DXSPRITE_ALPHABLEND );

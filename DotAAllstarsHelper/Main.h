@@ -13,6 +13,9 @@
 
 
 #pragma region Includes
+
+#pragma comment(lib,"legacy_stdio_definitions.lib")
+#include <stdint.h>
 #include <cstdio>
 #include <cstring>
 #include <csetjmp>
@@ -39,6 +42,10 @@ using namespace std;
 #include <winsock2.h>
 #pragma comment (lib, "Ws2_32.lib")
 #include "buffer.h"
+
+#define MASK_56 (((u_int64_t)1<<56)-1) /* i.e., (u_int64_t)0xffffffffffffff */
+
+#include "fnv.h"
 #pragma endregion
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
 
@@ -497,6 +504,16 @@ extern vector<ModelRemoveTagStruct> ModelRemoveTagList;
 extern vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
 extern vector<ModelSequenceValueStruct> ModelSequenceValueList;
 extern vector<ModelScaleStruct> ModelScaleList;
+
+struct ICONMDLCACHE
+{
+	uint64_t _hash;
+	size_t hashlen;
+	char * buf;
+	size_t size;
+};
+
+extern vector<ICONMDLCACHE> ICONMDLCACHELIST;
 struct FileRedirectStruct
 {
 	string NewFilePath;

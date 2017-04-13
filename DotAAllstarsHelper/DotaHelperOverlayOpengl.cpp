@@ -89,6 +89,9 @@ void DrawOverlayGl( )
 	if ( !GlobalDc || !*InGame ) {
 		return;
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
 
 	if ( !DotaGlobalOverlay_OPENGL )
 		DotaGlobalOverlay_OPENGL = wglCreateContext( GlobalDc );

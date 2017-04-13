@@ -20,6 +20,9 @@ GAME_SendPacket_p GAME_SendPacket = NULL;
 
 void SendPacket( BYTE* packetData, DWORD size )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
 	// @warning: this function thread-unsafe, do not use it in other thread.
 	// note: this is very useful function, in fact this function
 	// does wc3 ingame action, so you can use it for anything you want,

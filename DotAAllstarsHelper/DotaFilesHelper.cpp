@@ -1,13 +1,10 @@
 
 #include <experimental/filesystem>
 #include "Main.h"
-extern "C" { FILE __iob_func[ 3 ] = { *stdin,*stdout,*stderr }; }
-#pragma comment(lib,"legacy_stdio_definitions.lib")
+
 #include "blpaletter.h"
 
-#define MASK_56 (((u_int64_t)1<<56)-1) /* i.e., (u_int64_t)0xffffffffffffff */
 
-#include "fnv.h"
 
 u_int64_t GetBufHash( const char * data, size_t data_len )
 {
@@ -17,13 +14,6 @@ u_int64_t GetBufHash( const char * data, size_t data_len )
 	return hash;
 }
 
-struct ICONMDLCACHE
-{
-	u_int64_t hash;
-	size_t hashlen;
-	char * buf;
-	size_t size;
-};
 
 vector<ICONMDLCACHE> ICONMDLCACHELIST;
 vector<FileRedirectStruct> FileRedirectList;
@@ -37,7 +27,7 @@ BOOL GetFromIconMdlCache( string filename, ICONMDLCACHE * iconhelperout )
 	u_int64_t hash = GetBufHash( filename.c_str( ), filelen );
 	for ( ICONMDLCACHE & ih : ICONMDLCACHELIST )
 	{
-		if ( ih.hashlen == filelen && ih.hash == hash )
+		if ( ih.hashlen == filelen && ih._hash == hash )
 		{
 			*iconhelperout = ih;
 			return TRUE;
@@ -250,7 +240,7 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
 			tmpih.hashlen = filename.length( );
-			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
+			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
@@ -361,7 +351,7 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
 			tmpih.hashlen = filename.length( );
-			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
+			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
@@ -488,7 +478,7 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
 			tmpih.hashlen = filename.length( );
-			tmpih.hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
+			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
 			if ( !IsMemInCache( *OutDataPointer ) )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
@@ -1655,7 +1645,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
 			tmpih->hashlen = filename.length( );
-			tmpih->hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
+			tmpih->_hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
 
 			ICONMDLCACHELIST.push_back( *tmpih );
 
@@ -1735,7 +1725,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			tmpih->size = ResultBuffer.length;
 
 			tmpih->hashlen = filename.length( );
-			tmpih->hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
+			tmpih->_hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
 
 			ICONMDLCACHELIST.push_back( *tmpih );
 
@@ -2022,7 +2012,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 				tmpih2->size = ResultBuffer.length;
 
 				tmpih2->hashlen = DotaRedirectHelp.NewFilePath.length( );
-				tmpih2->hash = GetBufHash( DotaRedirectHelp.NewFilePath.c_str( ), tmpih2->hashlen );
+				tmpih2->_hash = GetBufHash( DotaRedirectHelp.NewFilePath.c_str( ), tmpih2->hashlen );
 
 				ICONMDLCACHELIST.push_back( *tmpih2 );
 

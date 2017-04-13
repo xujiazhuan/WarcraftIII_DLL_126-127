@@ -584,8 +584,13 @@ int __stdcall TraceEsp_Print( int )
 	return esp_val;
 }
 
+BOOL ErrorDumped = FALSE;
+
 void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 {
+	if ( ErrorDumped )
+		return;
+	ErrorDumped = TRUE;
 	if ( !IsVEHex )
 	{
 #ifdef DOTA_HELPER_LOG
@@ -726,9 +731,9 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
+	DumpExceptionInfoToFile( ExceptionInfo );
 	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", "Fatal error detected![SEH]", MB_YESNO ) == IDYES )
 	{
-		DumpExceptionInfoToFile( ExceptionInfo );
 		int retval = ( int )OriginFilter( ExceptionInfo );
 		char tmp[ 100 ];
 		sprintf_s( tmp, 100, "%X", retval );
@@ -753,6 +758,7 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 	}
 }
 
+int EndGameFound = 10;
 
 LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 {
@@ -763,8 +769,6 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 	{
 		return 0;
 	}
-
-
 
 
 	if ( !ExceptionInfo )
@@ -790,18 +794,19 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 		ExceptionInfo->ExceptionRecord = new EXCEPTION_RECORD( );
 	}
 
-	DumpExceptionInfoToFile( ExceptionInfo );
 
 	PEXCEPTION_RECORD ex = ExceptionInfo->ExceptionRecord;
 
 	DWORD exceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
 
 	if ( ( exceptionCode & ERROR_SEVERITY_ERROR ) != ERROR_SEVERITY_ERROR ) {
+		cerr << "Found ERROR_SEVERITY_ERROR..." << endl;
 		return ExceptionContinueSearch;
 	}
 
 
 	if ( exceptionCode & APPLICATION_ERROR_MASK ) {
+		cerr << "Found APPLICATION_ERROR_MASK..." << endl;
 		return ExceptionContinueSearch;
 	}
 
@@ -813,6 +818,13 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaChatLog( continueablecode );
 #endif
+		EndGameFound--;
+		if ( !EndGameFound )
+		{
+			ExitProcess( 0 );
+		}
+		DumpExceptionInfoToFile( ExceptionInfo );
+
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 
@@ -822,10 +834,12 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 
 
 	sprintf_s( continueablecode, 200, "%s:%X:%s", "Test: [VEH]TopLevelExceptionFilter", ex->ExceptionCode, to_string( ex->ExceptionFlags & EXCEPTION_NONCONTINUABLE ).c_str( ) );
+	cerr << continueablecode << endl;
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( continueablecode );
 #endif
 	TopLevelExceptionFilter( ExceptionInfo );
+	DumpExceptionInfoToFile( ExceptionInfo );
 
 	return 0;
 }
@@ -835,12 +849,12 @@ void InitTopLevelExceptionFilter( )
 {
 	//SetUnhandledExceptionFilter( 0 );
 	//SetUnhandledExceptionFilter( TopLevelExceptionFilter );
-	//AddVectoredExceptionHandler( 0, DotaVectoredToSehHandler );
+	AddVectoredExceptionHandler( 0, DotaVectoredToSehHandler );
 }
 
 void ResetTopLevelExceptionFilter( )
 {
-	//SetUnhandledExceptionFilter( OriginFilter );
+	SetUnhandledExceptionFilter( OriginFilter );
 }
 
 #define MAX_PROCESSES 1024 

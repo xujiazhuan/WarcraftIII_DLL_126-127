@@ -115,6 +115,9 @@ void DrawOverlayDx8(  )
 	{
 		return;
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
 	ID3DXSprite* pSprite;
 	D3DXCreateSprite( d, &pSprite );
 	pSprite->Begin( );

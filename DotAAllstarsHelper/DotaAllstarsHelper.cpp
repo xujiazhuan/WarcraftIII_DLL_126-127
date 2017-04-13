@@ -463,7 +463,9 @@ void UninitializeHook( )
 
 
 #pragma endregion
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ + string( "->End" ) );
+#endif
 	IssueFixerDisable( );
 }
 
@@ -2401,6 +2403,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 	{
 
 		TerminateStarted = TRUE;
+		ResetTopLevelExceptionFilter( );
 		// Cleanup
 		if ( hRefreshTimer )
 		{
@@ -2443,7 +2446,6 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		}
 		ManaBarSwitch( FALSE );
 		MH_Uninitialize( );
-		ResetTopLevelExceptionFilter( );
 	}
 	return TRUE;
 }

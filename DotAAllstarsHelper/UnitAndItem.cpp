@@ -40,7 +40,7 @@ BOOL __stdcall IsTower( int unitaddr )
 
 BOOL __stdcall IsUnitInvulnerable( int unitaddr )
 {
-	return ( *( unsigned int* )( unitaddr + 0x20 ) & 8 ) ;
+	return ( *( unsigned int* )( unitaddr + 0x20 ) & 8 );
 }
 
 // Проверяет юнит или не юнит
@@ -96,7 +96,7 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 			return FALSE;
 		}
 
-		if ( unitownerslot <= 15 && unitownerslot >= 0 )
+		if ( unitownerslot <= 15 && unitownerslot >= 0 && GetLocalPlayerId( ) <= 15 && GetLocalPlayerId( ) >= 0 )
 		{
 			unsigned int Player1 = Player( unitownerslot );
 			unsigned int Player2 = Player( GetLocalPlayerId( ) );
