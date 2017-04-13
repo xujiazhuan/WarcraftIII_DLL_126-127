@@ -198,6 +198,11 @@ struct JassString
 	int		Field_0004;
 	RCString*	Value;
 	int		Field_000C;
+	JassString( )
+	{
+		VTable = Field_0004 = Field_000C = 0;
+		Value = NULL;
+	}
 };
 typedef void( __cdecl * pExecuteFunc )( JassString * funcname );
 extern pExecuteFunc ExecuteFunc;
@@ -520,8 +525,36 @@ struct FakeFileStruct
 	size_t size;
 };
 
+
+enum class RawImageEventType : unsigned int
+{
+	MouseUp = 1U,
+	MouseDown = 2U,
+	MouseClick = 4U,
+	MouseEnter = 8U,
+	MouseLeave = 16U,
+	MouseMove = 32U,
+	ALL = 63U
+};
+
+
+struct RawImageCallbackData
+{
+	int RawImage;
+	RawImageEventType EventType;
+	float mousex;
+	float mousey;
+	BOOL IsAltPressed;
+	BOOL IsCtrlPressed;
+	BOOL IsLeftButton;
+};
+
+extern RawImageCallbackData * GlobalRawImageCallbackData;
+void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey );
+
 struct RawImageStruct
 {
+	int RawImage;
 	int width;
 	int height;
 	Buffer img;
@@ -535,6 +568,12 @@ struct RawImageStruct
 	float size_y; // 0.0 1.0
 	void * textureaddr;
 	BOOL needResetTexture;
+	BOOL MouseCallback;
+	JassString MouseActionCallback;
+	BOOL IsMouseDown;
+	BOOL IsMouseEntered;
+	unsigned int events;
+
 	RawImageStruct( )
 	{
 		width = 0;
@@ -544,9 +583,15 @@ struct RawImageStruct
 		ingame = FALSE;
 		filename = string( );
 		used_for_overlay = FALSE;
-		overlay_x = overlay_y = size_x = size_y =  0.0f;
+		overlay_x = overlay_y = size_x = size_y = 0.0f;
 		textureaddr = NULL;
 		needResetTexture = FALSE;
+		RawImage = 0;
+		events = 0;
+		IsMouseDown = FALSE;
+		IsMouseEntered = FALSE;
+		MouseCallback = FALSE;
+		MouseActionCallback = JassString( );
 	}
 };
 

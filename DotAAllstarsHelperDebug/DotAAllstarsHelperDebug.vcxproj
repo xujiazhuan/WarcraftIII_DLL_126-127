@@ -29,8 +29,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\dx_includes\;</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\dx_includes\;</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>

@@ -2253,10 +2253,7 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 	tmpRawImage.width = width;
 	tmpRawImage.height = height;
 	tmpRawImage.filename = string( );
-	tmpRawImage.ingame = FALSE;
-	tmpRawImage.used_for_overlay = FALSE;
-	tmpRawImage.textureaddr = NULL;
-	tmpRawImage.needResetTexture = FALSE;
+	tmpRawImage.RawImage = resultid;
 	ListOfRawImages.push_back( tmpRawImage );
 
 	return resultid;
@@ -2323,12 +2320,12 @@ int __stdcall LoadRawImage( const char * filename )
 
 		if ( rawImageSize > 0 )
 		{
-			RawImageStruct tmpRawImage;
+			RawImageStruct tmpRawImage = RawImageStruct( );
 			tmpRawImage.img = OutBuffer;
 			tmpRawImage.width = w;
 			tmpRawImage.height = h;
 			tmpRawImage.filename = filename;
-			tmpRawImage.ingame = FALSE;
+			tmpRawImage.RawImage = resultid;
 			ListOfRawImages.push_back( tmpRawImage );
 		}
 	}
@@ -2337,8 +2334,18 @@ int __stdcall LoadRawImage( const char * filename )
 	return resultid;
 }
 
+
+enum BlendModes : int
+{
+	BlendNormal,
+	BlendAdd,
+	BlendSubtract,
+	BlendMultiple
+
+};
+
 // Рисует RawImage2 на RawImage
-int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy )
+int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy, int blendmode )
 {
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -2351,8 +2358,8 @@ int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int draw
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
-	RawImageStruct tmpRawImage2 = ListOfRawImages[ RawImage2 ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage2 = ListOfRawImages[ RawImage2 ];
 
 
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
@@ -2362,14 +2369,26 @@ int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int draw
 	{
 		for ( int y = drawy, y2 = 0; y < tmpRawImage.height && y2 < tmpRawImage2.height; y++, y2++ )
 		{
-			RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] = RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
+			if ( blendmode == BlendModes::BlendNormal )
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] = RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
+			else if ( blendmode == BlendModes::BlendAdd )
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] =
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] + RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
+			else if ( blendmode == BlendModes::BlendSubtract )
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] =
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] - RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
+			else if ( blendmode == BlendModes::BlendMultiple )
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] =
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] * RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
+			else
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] =
+				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] / RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
 		}
 	}
 
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 
@@ -2384,7 +2403,7 @@ int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//R
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	if ( x >= 0 && y >= 0 && x < tmpRawImage.width && y < tmpRawImage.height )
 	{
@@ -2394,7 +2413,6 @@ int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//R
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 
@@ -2442,7 +2460,7 @@ int __stdcall RawImage_DrawRect( int RawImage, int drawx, int drawy, int widthsi
 void drawLineOverlap( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd, uint8_t aOverlap,
 	RGBAPix aColor ) {
 	int16_t tDeltaX, tDeltaY, tDeltaXTimes2, tDeltaYTimes2, tError, tStepX, tStepY;
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	int maxwidth = tmpRawImage.width;
 	int maxheight = tmpRawImage.height;
 	/*
@@ -2564,7 +2582,7 @@ void drawLineOverlap( int RawImage, int aXStart, int aYStart, int aXEnd, int aYE
 void drawThickLine( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd, int aThickness,
 	uint8_t aThicknessMode, RGBAPix aColor ) {
 	int16_t i, tDeltaX, tDeltaY, tDeltaXTimes2, tDeltaYTimes2, tError, tStepX, tStepY;
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	int maxwidth = tmpRawImage.width;
 	int maxheight = tmpRawImage.height;
 
@@ -2766,7 +2784,7 @@ int __stdcall RawImage_DrawCircle( int RawImage, int x, int y, int radius, int s
 		return FALSE;
 	}
 	size /= 2;
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	for ( int x2 = 0; x2 < tmpRawImage.width; x2++ )
 	{
@@ -2785,7 +2803,6 @@ int __stdcall RawImage_DrawCircle( int RawImage, int x, int y, int radius, int s
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 
@@ -2803,7 +2820,7 @@ int __stdcall RawImage_FillCircle( int RawImage, int x, int y, int radius, RGBAP
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	for ( int x2 = 0; x2 < tmpRawImage.width; x2++ )
 	{
@@ -2819,7 +2836,6 @@ int __stdcall RawImage_FillCircle( int RawImage, int x, int y, int radius, RGBAP
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 
@@ -2835,7 +2851,7 @@ int __stdcall RawImage_EraseCircle( int RawImage, int x, int y, int radius, BOOL
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	RGBAPix tmpPix = RGBAPix( );
 
@@ -2857,7 +2873,6 @@ int __stdcall RawImage_EraseCircle( int RawImage, int x, int y, int radius, BOOL
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 
@@ -2872,7 +2887,7 @@ int __stdcall RawImage_EraseColor( int RawImage, RGBAPix color, int power )
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	RGBAPix tmpPix = RGBAPix( );
 	unsigned char// A = color.A,
@@ -2901,7 +2916,6 @@ int __stdcall RawImage_EraseColor( int RawImage, RGBAPix color, int power )
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 	return TRUE;
@@ -2942,7 +2956,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 
 	HDC hDC = CreateCompatibleDC( NULL );
@@ -3157,7 +3171,6 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
-		ListOfRawImages[ RawImage ] = tmpRawImage;
 	}
 
 
@@ -3174,7 +3187,7 @@ int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL 
 	}
 
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	tmpRawImage.filename = filename;
 	Buffer tmpRawImageBuffer = tmpRawImage.img;
 	Buffer ResultBuffer = Buffer( );
@@ -3192,7 +3205,6 @@ int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL 
 	}
 
 	tmpRawImage.ingame = enabled;
-	ListOfRawImages[ RawImage ] = tmpRawImage;
 	return TRUE;
 }
 
@@ -3266,7 +3278,7 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	Buffer tmpOldBuffer = tmpRawImage.img;
 	Buffer tmpNewBuffer = Buffer( );
 	ScaleImage( ( unsigned char * )tmpOldBuffer.buf, tmpRawImage.width, tmpRawImage.height, newwidth, newheight, 4, tmpNewBuffer );
@@ -3276,7 +3288,7 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 	tmpRawImage.width = newwidth;
 	if ( tmpRawImage.used_for_overlay )
 		tmpRawImage.needResetTexture = TRUE;
-	ListOfRawImages[ RawImage ] = tmpRawImage;
+
 	return TRUE;
 }
 
@@ -3288,17 +3300,164 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 		return FALSE;
 	}
 
-	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	tmpRawImage.used_for_overlay = enabled;
 	tmpRawImage.overlay_x = xpos;
 	tmpRawImage.overlay_y = ypos;
 	tmpRawImage.size_x = xsize;
 	tmpRawImage.size_y = ysize;
-	ListOfRawImages[ RawImage ] = tmpRawImage;
+
+	return TRUE;
+}
+
+RawImageCallbackData * GlobalRawImageCallbackData = NULL;
+
+int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
+{
+	GlobalRawImageCallbackData = callbackdata;
+
+
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+	if ( !MouseActionCallback || MouseActionCallback[ 0 ] == '\0' )
+	{
+		tmpRawImage.MouseCallback = FALSE;
+		tmpRawImage.MouseActionCallback = JassString( );
+	}
+	else
+	{
+		tmpRawImage.MouseActionCallback = JassString( );
+		str2jstr( &tmpRawImage.MouseActionCallback, MouseActionCallback );
+		tmpRawImage.MouseCallback = TRUE;
+	}
+
+	tmpRawImage.events = events;
+	tmpRawImage.IsMouseDown = FALSE;
+	tmpRawImage.IsMouseEntered = FALSE;
+
 	return TRUE;
 }
 
 
+void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey )
+{
+	if ( !GlobalRawImageCallbackData )
+		return;
+
+	GlobalRawImageCallbackData->IsAltPressed = IsKeyPressed( VK_MENU );
+	GlobalRawImageCallbackData->IsCtrlPressed = IsKeyPressed( VK_CONTROL );
+	GlobalRawImageCallbackData->EventType = callbacktype;
+	float ScreenX = *GetWindowXoffset;
+	float ScreenY = *GetWindowYoffset;
+
+	float zoomx = ScreenX / DesktopScreen_Width;
+	float zoomy = ScreenY / DesktopScreen_Height;
+
+	float mouseposx = mousex / ScreenX;
+	float mouseposy = mousey / ScreenY;
+	GlobalRawImageCallbackData->mousex = mouseposx;
+	GlobalRawImageCallbackData->mousey = mouseposy;
+
+	for ( unsigned int i = ListOfRawImages.size( ) - 1; i >= 0; i-- )
+	{
+		RawImageStruct & img = ListOfRawImages[ i ];
+		if ( img.used_for_overlay &&
+			img.MouseCallback &&
+			( img.events & ( unsigned int )callbacktype ) > 0 )
+		{
+			BOOL MouseEnteredInRawImage = FALSE;
+			float posx = ScreenX * img.overlay_x;
+			float posy = ScreenY * img.overlay_y;
+			float sizex = img.width * zoomx;
+			float sizey = img.height * zoomy;
+			//posy -= sizey;
+			GlobalRawImageCallbackData->RawImage = img.RawImage;
+
+
+			if ( mousex > posx && mousex < posx + sizex && mousey > posy && mousey < posy + sizey )
+			{
+				MouseEnteredInRawImage = TRUE;
+			}
+
+
+			switch ( callbacktype )
+			{
+			case RawImageEventType::MouseUp:
+				if ( img.IsMouseDown )
+				{
+					img.IsMouseDown = FALSE;
+
+					if ( MouseEnteredInRawImage )
+						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
+
+					ExecuteFunc( &img.MouseActionCallback );
+					return;
+				}
+				break;
+			case RawImageEventType::MouseDown:
+				if ( !img.IsMouseDown && MouseEnteredInRawImage )
+				{
+					img.IsMouseDown = TRUE;
+					ExecuteFunc( &img.MouseActionCallback );
+					return;
+				}
+				break;
+			case RawImageEventType::MouseClick:
+				break;
+			case RawImageEventType::MouseEnter:
+				break;
+			case RawImageEventType::MouseLeave:
+				break;
+			case RawImageEventType::MouseMove:
+				if ( img.IsMouseEntered )
+				{
+					if ( !MouseEnteredInRawImage )
+					{
+						img.IsMouseEntered = FALSE;
+						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseLeave;
+						ExecuteFunc( &img.MouseActionCallback );
+					}
+				}
+				else
+				{
+					if ( MouseEnteredInRawImage )
+					{
+						img.IsMouseEntered = TRUE;
+						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;
+						ExecuteFunc( &img.MouseActionCallback );
+					}
+				}
+				break;
+			case RawImageEventType::ALL:
+				if ( img.IsMouseDown )
+				{
+					img.IsMouseDown = FALSE;
+					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseUp;
+					ExecuteFunc( &img.MouseActionCallback );
+				}
+				if ( img.IsMouseEntered )
+				{
+					img.IsMouseEntered = FALSE;
+					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseLeave;
+					ExecuteFunc( &img.MouseActionCallback );
+				}
+				break;
+			default:
+				break;
+			}
+
+
+
+
+		}
+	}
+
+}
 
 
 //
@@ -3328,7 +3487,7 @@ void ApplyIconFrameFilter( string filename, int * OutDataPointer, size_t * OutSi
 {
 	int RawImage = CreateRawImage( 128, 128, RGBAPix( ) );
 	int RawImage2 = LoadRawImage( filename.c_str( ) );
-	RawImage_DrawImg( RawImage, RawImage2, 32, 32 );
+	RawImage_DrawImg( RawImage, RawImage2, 32, 32, 0 );
 	RGBAPix tmppix = RGBAPix( );
 	SaveRawImageToGameFile( RawImage, ( filename + "_frame.blp" ).c_str( ), FALSE, TRUE );
 }

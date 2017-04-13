@@ -4,6 +4,7 @@
 #include "Main.h"
 
 unsigned char FixBounds( int i );
+unsigned char FixBounds( float i );
 unsigned char FixBounds( double i );
 
 union BGRAPix

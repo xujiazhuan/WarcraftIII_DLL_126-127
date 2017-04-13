@@ -23,10 +23,14 @@ void DrawAllRawImages( )
 	glLoadIdentity( );
 	float ScreenX = *GetWindowXoffset;
 	float ScreenY = *GetWindowYoffset;
+
 	glViewport( 0, 0, ( GLsizei )ScreenX, ( GLsizei )ScreenY );
 	glOrtho( 0.0, ScreenX, ScreenY, 0, -1.0, 1.0 );
 	glMatrixMode( GL_MODELVIEW );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+	float zoomx = ScreenX / DesktopScreen_Width;
+	float zoomy = ScreenY / DesktopScreen_Height;
 
 	for ( auto & img : ListOfRawImages )
 	{
@@ -39,9 +43,7 @@ void DrawAllRawImages( )
 
 		//float AspectRatio = DesktopScreen_Height / DesktopScreen_Width;
 		//float AspectRatio2 = DesktopScreen_Width / DesktopScreen_Height;
-		float zoomx = ScreenX / DesktopScreen_Width;
-		float zoomy = ScreenY / DesktopScreen_Height;
-
+	
 		glPixelZoom( zoomx, -zoomy );
 		
 

@@ -1628,6 +1628,7 @@ void __stdcall DisableAllHooks( )
 	MainFuncWork = FALSE;
 	NeedDrawRegen = FALSE;
 	GlyphButtonCreated = FALSE;
+	GlobalRawImageCallbackData = NULL;
 	ShowSkillPanelForObservers = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
@@ -1801,6 +1802,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	GlyphButtonCreated = FALSE;
 	ShowSkillPanelForObservers = FALSE;
 	FPSfix1Enabled = FALSE;
+	GlobalRawImageCallbackData = NULL;
 	SetCustomFovFix( 1.0f );
 
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );

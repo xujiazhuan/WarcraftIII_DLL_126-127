@@ -647,6 +647,8 @@ BOOL IsGameFrameActive( )
 
 WPARAM LatestPressedKey = NULL;
 
+POINTS GlobalMousePos = { 0,0 };
+
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
 
@@ -662,10 +664,19 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+
+
+
+
 #ifdef DOTA_HELPER_LOG
 	try
 	{
 #endif
+
+		if ( Msg == WM_MOUSEMOVE )
+		{
+			GlobalMousePos = MAKEPOINTS( lParam );
+		}
 
 
 		//	if ( Msg == WM_KEYDOWN )
@@ -675,16 +686,47 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 		if ( *( BOOL* )IsWindowActive )
 		{
+
+
+
 			if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 			{
 				*( int* )pCurrentFrameFocusedAddr = 0;
 			}
 
-			if ( Msg == WM_LBUTTONUP )
-			{
-				ProcessClickAtCustomFrames( );
-			}
 
+			if ( GlobalRawImageCallbackData )
+			{
+				if ( Msg == WM_LBUTTONUP )
+				{
+					GlobalRawImageCallbackData->IsLeftButton = TRUE;
+					RawImageGlobalCallbackFunc( RawImageEventType::MouseUp, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+					ProcessClickAtCustomFrames( );
+				}
+
+				if ( Msg == WM_LBUTTONDOWN )
+				{
+					GlobalRawImageCallbackData->IsLeftButton = TRUE;
+					RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+				}
+
+				if ( Msg == WM_RBUTTONUP )
+				{
+					GlobalRawImageCallbackData->IsLeftButton = FALSE;
+					RawImageGlobalCallbackFunc( RawImageEventType::MouseUp, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+				}
+
+				if ( Msg == WM_RBUTTONDOWN )
+				{
+					GlobalRawImageCallbackData->IsLeftButton = FALSE;
+					RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+				}
+
+				if ( Msg == WM_MOUSEMOVE )
+				{
+					RawImageGlobalCallbackFunc( RawImageEventType::MouseMove, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+				}
+			}
 
 			if ( LOCK_MOUSE_IN_WINDOW )
 			{
@@ -1190,15 +1232,15 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								}
 								else
 									LastPressedKeysTime[ wParam ] = GetTickCount( );
-							}
+								}
 							//}
-						}
+							}
 
 #ifdef DOTA_HELPER_LOG
 						AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
-					}
+						}
 				}
 
 				if ( NeedSkipThisKey )
@@ -1236,6 +1278,10 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		}
 		else
 		{
+
+			// Process RawImages. Mouse up and leave;
+			RawImageGlobalCallbackFunc( RawImageEventType::ALL, 0.0f, 0.0f );
+
 			if ( LOCK_MOUSE_IN_WINDOW )
 				ClipCursor( 0 );
 
@@ -1253,7 +1299,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	}
 	catch ( std::exception e )
 	{
-		MessageBoxA( 0, e.what( ), "ClickHelper Перехвачена ошибка! Catch Error!",0 );
+		MessageBoxA( 0, e.what( ), "ClickHelper Перехвачена ошибка! Catch Error!", 0 );
 	}
 	catch ( ... )
 	{
@@ -1262,7 +1308,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #endif
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-}
+			}
 
 
 

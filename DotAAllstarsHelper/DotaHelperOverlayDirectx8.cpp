@@ -1,4 +1,3 @@
-
 #include "Main.h"
 #include <d3d8.h>
 #include <d3dx8.h>
@@ -7,6 +6,7 @@
 // Thanks ENAleksey(http://xgm.guru/user/ENAleksey) for help 
 
 IDirect3DDevice8* deviceglobal = NULL;
+
 /*************************************************************************
 * D3DXMatrixTransformation2D
 */
@@ -88,8 +88,6 @@ D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(
 
 void DrawImage( IDirect3DDevice8* d, ID3DXSprite* pSprite, IDirect3DTexture8* texture, float width, float height, float x, float y )
 {
-
-
 	D3DXMATRIX matAll;
 	float scalex = *GetWindowXoffset / DesktopScreen_Width;
 	float scaley = *GetWindowYoffset / DesktopScreen_Height;
@@ -108,7 +106,6 @@ void DrawImage( IDirect3DDevice8* d, ID3DXSprite* pSprite, IDirect3DTexture8* te
 	D3DXMatrixTransformation2D( &matAll, NULL, 0.0f, &scaling, &spriteCentre, 0.0f, &position );
 
 	pSprite->DrawTransform( texture, NULL, &matAll, 0xffffffff );
-
 }
 
 void DrawOverlayDx8(  )

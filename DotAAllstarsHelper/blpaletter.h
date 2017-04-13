@@ -119,7 +119,7 @@ struct RGBAPix
 		return ( unsigned int )( this->A << 24 | this->R << 16 | this->G << 8 | this->B << 0 );
 	}
 
-	unsigned int FromUINT(unsigned int color )
+	unsigned int FromUINT( unsigned int color )
 	{
 		return ( unsigned int )( this->A << 24 | this->R << 16 | this->G << 8 | this->B << 0 );
 	}
@@ -137,6 +137,72 @@ struct RGBAPix
 			this->A = A;
 		}
 		return *this;
+	}
+	RGBAPix operator * ( RGBAPix & pix )
+	{
+		if ( pix.A > 0 && this->A > 0 )
+			this->A = FixBounds( 255.f / ( this->A / pix.A ) );
+		else
+			this->A = 0;
+		if ( pix.R > 0 && this->R > 0 )
+			this->R = FixBounds( 255.f / ( this->R / pix.R ) );
+		else
+			this->R = 0;
+		if ( pix.G > 0 && this->G > 0 )
+			this->G = FixBounds( 255.f / ( this->G / pix.G ) );
+		else
+			this->G = 0;
+		if ( pix.B > 0 && this->B > 0 )
+			this->B = FixBounds( 255.f / ( this->B / pix.B ) );
+		else
+			this->B = 0;
+
+
+		return ( *this );
+	}
+	RGBAPix operator + ( RGBAPix & pix )
+	{
+		this->A = FixBounds( this->A + pix.A );
+		this->R = FixBounds( this->R + pix.R );
+		this->G = FixBounds( this->G + pix.G );
+		this->B = FixBounds( this->B + pix.B );
+
+		return ( *this );
+	}
+
+
+
+	RGBAPix operator / ( RGBAPix & pix )
+	{
+		if ( pix.A > 0 && this->A > 0 )
+			this->A = FixBounds( 255.f / ( pix.A / this->A ) );
+		else
+			this->A = 255;
+		if ( pix.R > 0 && this->R > 0 )
+			this->R = FixBounds( 255.f / ( pix.R / this->R ) );
+		else
+			this->R = 255;
+		if ( pix.G > 0 && this->G > 0 )
+			this->G = FixBounds( 255.f / ( pix.G / this->G ) );
+		else
+			this->G = 255;
+		if ( pix.B > 0 && this->B > 0 )
+			this->B = FixBounds( 255.f / ( pix.B / this->B ) );
+		else
+			this->B = 255;
+
+
+		return ( *this );
+	}
+
+	RGBAPix operator - ( RGBAPix & pix )
+	{
+		this->A = FixBounds( this->A - pix.A );
+		this->R = FixBounds( this->R - pix.R );
+		this->G = FixBounds( this->G - pix.G );
+		this->B = FixBounds( this->B - pix.B );
+
+		return ( *this );
 	}
 
 

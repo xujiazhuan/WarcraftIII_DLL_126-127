@@ -90,3 +90,4 @@ GetScreenWidth
 GetScreenHeight
 GetWindowWidth
 GetWindowHeight
+RawImage_AddCallback

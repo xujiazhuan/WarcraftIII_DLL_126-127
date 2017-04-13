@@ -9,9 +9,18 @@ unsigned char FixBounds( int i )
 	return ( unsigned char )i;
 }
 
+unsigned char FixBounds( float i )
+{
+	if ( i >( double )0xFF )
+		return 0xFF;
+	else if ( i < ( double )0x00 )
+		return 0x00;
+	return ( unsigned char )i;
+}
+
 unsigned char FixBounds( double i )
 {
-	if ( i > ( double )0xFF )
+	if ( i >( double )0xFF )
 		return 0xFF;
 	else if ( i < ( double )0x00 )
 		return 0x00;
