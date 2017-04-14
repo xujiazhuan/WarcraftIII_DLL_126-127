@@ -278,8 +278,13 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 	InBuffer.buf = ( char* )originfiledata;
 	InBuffer.length = sz;
 	Buffer OutBuffer;
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "ApplyIconFilter2" );
+#endif
 	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "ApplyIconFilter3" );
+#endif
 	if ( rawImageSize > 0 )
 	{
 		BGRAPix * OutImage = ( BGRAPix* )OutBuffer.buf;
@@ -340,11 +345,15 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 		}
 
 		Buffer ResultBuffer;
-
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "ApplyIconFilter4" );
+#endif
 		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename.c_str( ), w, h, bpp, alphaflag, mipmaps );
 
 		OutBuffer.Clear( );
-
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "ApplyIconFilter5" );
+#endif
 		if ( ResultBuffer.buf != NULL )
 		{
 			ICONMDLCACHE tmpih;
@@ -357,7 +366,18 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( "ApplyIconFilter6" );
+#endif
 		}
+#ifdef DOTA_HELPER_LOG
+		else
+		{
+
+			AddNewLineToDotaHelperLog( "ApplyIconFilter bad" );
+
+		}
+#endif
 	}
 
 }
@@ -2047,7 +2067,18 @@ void AddNewFakeFile( char * filename, BYTE * buffer, size_t FileSize )
 
 BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, unsigned int * OutSize, BOOL unknown )
 {
+	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
+
+
+	if ( !*InGame && !MainFuncWork )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "Game not found or main not set" );
+#endif
+
+		return IsFileExist;
+	}
 
 
 #ifdef DOTA_HELPER_LOG
@@ -2089,18 +2120,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
 #endif
 
-	BOOL IsFileExist = GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 
-
-
-	if ( !*InGame && !MainFuncWork )
-	{
-#ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "Game not found or main not set" );
-#endif
-
-		return IsFileExist;
-	}
 
 	if ( filename == NULL || *filename == '\0' )
 	{

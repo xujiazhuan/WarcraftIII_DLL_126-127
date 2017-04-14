@@ -40,7 +40,7 @@ extern "C"
 //+-----------------------------------------------------------------------------
 struct JPEG_SOURCE_MANAGER
 {
-	JPEG_SOURCE_MANAGER()
+	JPEG_SOURCE_MANAGER( )
 	{
 		SourceBuffer = NULL;
 		SourceBufferSize = 0;
@@ -59,7 +59,7 @@ struct JPEG_SOURCE_MANAGER
 //+-----------------------------------------------------------------------------
 struct JPEG_DESTINATION_MANAGER
 {
-	JPEG_DESTINATION_MANAGER()
+	JPEG_DESTINATION_MANAGER( )
 	{
 		DestinationBuffer = NULL;
 		DestinationBufferSize = 0;
@@ -78,25 +78,25 @@ struct JPEG_DESTINATION_MANAGER
 //+-----------------------------------------------------------------------------
 class JPEG
 {
-	public:
-		JPEG();
-		virtual ~JPEG();
+public:
+	JPEG( );
+	virtual ~JPEG( );
 
-		BOOL Write( Buffer& SourceBuffer, Buffer& TargetBuffer, INT Width, INT Height, INT Quality);
-		BOOL Read( Buffer SourceBuffer, Buffer& TargetBuffer, INT* Width = NULL, INT* Height = NULL);
+	BOOL Write( Buffer& SourceBuffer, Buffer& TargetBuffer, INT Width, INT Height, INT Quality );
+	BOOL Read( Buffer& SourceBuffer, Buffer& TargetBuffer, INT* Width = NULL, INT* Height = NULL );
 
-	protected:
-		static VOID SetMemorySource(jpeg_decompress_struct* Info, UCHAR* Buffer, ULONG Size);
-		static VOID SetMemoryDestination(jpeg_compress_struct* Info, UCHAR* Buffer, ULONG Size);
+protected:
+	static VOID SetMemorySource( jpeg_decompress_struct* Info, UCHAR* Buffer, ULONG Size );
+	static VOID SetMemoryDestination( jpeg_compress_struct* Info, UCHAR* Buffer, ULONG Size );
 
-		static VOID SourceInit(jpeg_decompress_struct* Info);
-		static BOOLEAN SourceFill(jpeg_decompress_struct* Info);
-		static VOID SourceSkip(jpeg_decompress_struct* Info, LONG NrOfBytes);
-		static VOID SourceTerminate(jpeg_decompress_struct* Info);
+	static VOID SourceInit( jpeg_decompress_struct* Info );
+	static BOOLEAN SourceFill( jpeg_decompress_struct* Info );
+	static VOID SourceSkip( jpeg_decompress_struct* Info, LONG NrOfBytes );
+	static VOID SourceTerminate( jpeg_decompress_struct* Info );
 
-		static VOID DestinationInit(jpeg_compress_struct* Info);
-		static BOOLEAN DestinationEmpty(jpeg_compress_struct* Info);
-		static VOID DestinationTerminate(jpeg_compress_struct* Info);
+	static VOID DestinationInit( jpeg_compress_struct* Info );
+	static BOOLEAN DestinationEmpty( jpeg_compress_struct* Info );
+	static VOID DestinationTerminate( jpeg_compress_struct* Info );
 };
 
 

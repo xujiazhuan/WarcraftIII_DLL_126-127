@@ -643,7 +643,9 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	unsigned long textureSize = 0;
 	if ( input.buf == NULL || input.length == NULL || input.length < sizeof( BLPHeader ) )
 		return 0;
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ );
+#endif
 
 	memcpy( &blph, input.buf, sizeof( BLPHeader ) );
 
@@ -669,9 +671,15 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 	pictype = ( int )blph.alphaEncoding;
 
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ + string("2") );
+#endif
 	if ( blph.compress == 1 )
 	{
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":compress:1" ) );
+#endif
 		if ( input.length < curpos + 256 * 4 )
 		{
 			return 0;
@@ -686,6 +694,9 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 		if ( alphaflag > 0 && ( blph.alphaEncoding == 4 || blph.alphaEncoding == 3 ) )
 		{
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( ":alpha:4 or 3" ) );
+#endif
 			if ( input.length < curpos + blph.sizex * blph.sizey * 2 )
 				return 0;
 
@@ -705,10 +716,17 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
+
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( "41" ) );
+#endif
 			return textureSize;
 		}
 		else if ( alphaflag > 0 && blph.alphaEncoding == 5 )
 		{
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( ":alpha:5" ) );
+#endif
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
 
@@ -726,10 +744,16 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
 
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( "41" ) );
+#endif
 			return textureSize;
 		}
 		else
 		{
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( ":alpha:0" ) );
+#endif
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
 
@@ -747,6 +771,9 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
 
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( "41" ) );
+#endif
 			return textureSize;
 		}
 
@@ -754,6 +781,10 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	// JPEG compressed
 	else if ( blph.compress == 0 )
 	{
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG" ) );
+#endif
 		unsigned long JPEGHeaderSize;
 		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
 		JPEGHeaderSize = _blp_swap_int32( JPEGHeaderSize );
@@ -768,16 +799,27 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 		curpos = blph.poffs[ 0 ];
 		memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
-
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEGFILE CREATED" ) );
+#endif
 		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
 		{
-			delete[ ] tempdata.buf;
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:ERROR" ) );
+#endif
+			tempdata.Clear( );
 			width = 0;
 			height = 0;
+
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:RERROR" ) );
+#endif
 			return ( 0 );
 		}
-
-		delete[ ] tempdata.buf;
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:OK" ) );
+#endif
+		tempdata.Clear( );
 
 
 
@@ -786,7 +828,9 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 		width = ( int )blph.sizex;
 		height = ( int )blph.sizey;
-
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:ROK" ) );
+#endif
 		return textureSize;
 	}
 
@@ -795,8 +839,6 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 bool JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
 {
-	width = 0;
-	height = 0;
 	bpp = 4;
 	//if ( !DecompressJpg( input, output, width, height, bpp ) )
 	if ( !Jpeg.Read( input, output, &width, &height) )

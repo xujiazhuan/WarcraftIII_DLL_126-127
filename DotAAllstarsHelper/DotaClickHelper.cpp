@@ -256,7 +256,8 @@ void MouseClick( int toX, int toY )
 	POINT * ClickPoint = new POINT( );
 	ClickPoint->x = toX;
 	ClickPoint->y = toY;
-	CreateThread( 0, 0, ThreadTest, ClickPoint, 0, 0 );
+	CloseHandle( CreateThread( 0, 0, ThreadTest, ClickPoint, 0, 0 ) );
+
 }
 
 void JustClickMouse( )

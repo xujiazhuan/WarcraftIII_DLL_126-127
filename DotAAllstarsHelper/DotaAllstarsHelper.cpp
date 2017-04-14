@@ -269,7 +269,7 @@ typedef int( __fastcall * DrawInterface_p )( int, int );
 DrawInterface_p DrawInterface_org;
 DrawInterface_p DrawInterface_ptr;
 
-int __fastcall DrawInterface_my( int arg1, int arg2)
+int __fastcall DrawInterface_my( int arg1, int arg2 )
 {
 	DrawOverlayDx8( );
 	DrawOverlayDx9( );
@@ -1563,16 +1563,9 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 	if ( WarcraftRealWNDProc_org )
 	{
 		SkipAllMessages = TRUE;
-		PressKeyWithDelayEND = TRUE;
-		WaitForSingleObject( hPressKeyWithDelay, 2000 );
-		if ( hPressKeyWithDelay )
-		{
-			TerminateThread( hPressKeyWithDelay, 0 );
-			hPressKeyWithDelay = 0;
-		}
-		PressKeyWithDelayEND = FALSE;
+		TerminateThread( hPressKeyWithDelay, 0 );
+		CloseHandle( hPressKeyWithDelay );
 		if ( !Force )
-
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		SkipAllMessages = FALSE;
 	}
@@ -1662,7 +1655,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
-					hRefreshTimer = 0;
+
 					return 0;
 				}
 			}
@@ -1676,7 +1669,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
-					hRefreshTimer = 0;
+
 					return 0;
 				}
 			}
@@ -1690,7 +1683,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 		Sleep( 200 );
 	}
-	hRefreshTimer = 0;
+
 	return 0;
 }
 
@@ -1753,14 +1746,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	InitThreadCpuUsage( );
 	if ( hRefreshTimer )
 	{
-		RefreshTimerEND = TRUE;
-		WaitForSingleObject( hRefreshTimer, 2000 );
-		RefreshTimerEND = FALSE;
-		if ( hRefreshTimer )
-		{
-			TerminateProcess( hRefreshTimer, 0 );
-			hRefreshTimer = 0;
-		}
+		TerminateThread( hRefreshTimer, 0 );
+		CloseHandle( hRefreshTimer );
 	}
 	//RemoveMapSizeLimit( );
 	GameVersion = gameversion;
@@ -2407,12 +2394,9 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		// Cleanup
 		if ( hRefreshTimer )
 		{
-			RefreshTimerEND = TRUE;
-			WaitForSingleObject( hRefreshTimer, 2000 );
-			if ( hRefreshTimer )
-				TerminateProcess( hRefreshTimer, 0 );
+			TerminateThread( hRefreshTimer, 0 );
+			CloseHandle( hRefreshTimer );
 		}
-
 
 
 		UnloadHWNDHandler( TRUE );
