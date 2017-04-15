@@ -21,7 +21,7 @@ vector<FileRedirectStruct> FileRedirectList;
 
 
 
-BOOL GetFromIconMdlCache( string filename, ICONMDLCACHE * iconhelperout )
+BOOL GetFromIconMdlCache( const string filename, ICONMDLCACHE * iconhelperout )
 {
 	size_t filelen = filename.length( );
 	u_int64_t hash = GetBufHash( filename.c_str( ), filelen );
@@ -36,7 +36,7 @@ BOOL GetFromIconMdlCache( string filename, ICONMDLCACHE * iconhelperout )
 	return FALSE;
 }
 
-BOOL IsFileRedirected( string filename )
+BOOL IsFileRedirected( const string filename )
 {
 	for ( FileRedirectStruct & DotaRedirectHelp : FileRedirectList )
 	{
@@ -1932,7 +1932,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 	AddNewLineToDotaHelperLog( "Read from cache..." );
 #endif
 	ICONMDLCACHE tmpih;
-	BOOL FoundOldHelper = GetFromIconMdlCache( filename.c_str( ), &tmpih );
+	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
 	if ( FoundOldHelper )
 	{
 		*OutDataPointer = ( int )tmpih.buf;
@@ -2040,7 +2040,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 				*OutSize = tmpih2->size;
 
 				IsFileExist = ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
-
+				delete tmpih2;
 				return IsFileExist;
 			}
 
@@ -2292,7 +2292,6 @@ int __stdcall LoadRawImage( const char * filename )
 			GameGetFile_org( ( filename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
 			if ( !PatchFileData || !PatchFileSize )
 			{
-				int filenamelen = strlen( filename );
 				if ( filenamelen >= 4 )
 				{
 					char * tmpfilename = new char[ filenamelen ];
@@ -2943,7 +2942,7 @@ int __stdcall RawImage_LoadFontFromResource( const char * filepath )
 	int PatchFileData = 0;
 	size_t PatchFileSize = 0;
 	GameGetFile_org( filepath, &PatchFileData, &PatchFileSize, TRUE );
-	DWORD Font;//Globals, this is the Font in the RAM
+	DWORD Font = NULL;//Globals, this is the Font in the RAM
 	AddFontMemResourceEx( ( void* )PatchFileData, PatchFileSize, NULL, &Font );
 	return TRUE;
 }
@@ -2973,6 +2972,11 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	char* pSrcData = 0;
 	BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), tmpRawImage.width, tmpRawImage.height, 1, 24, BI_RGB, 0, 0, 0, 0, 0 };
 	HBITMAP hTempBmp = CreateDIBSection( hDC, &bmi, DIB_RGB_COLORS, ( void** )&pSrcData, NULL, 0 );
+	if ( !hTempBmp )
+	{
+		DeleteDC( hDC );
+		return FALSE;
+	}
 	RECT rect = RECT( );
 	rect.left = x;
 	rect.top = y;
@@ -3003,7 +3007,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	BOOL italicenabled = FALSE;
 	BOOL underlineenabled = FALSE;
 	BOOL strikeoutenabled = FALSE;
-	int i = 0;
+
 	BOOL newline = FALSE;
 	for ( int i = 0; i < len; )
 	{
@@ -3048,7 +3052,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 				TempFont = NULL;
 				continue;
 			}
-			else if ( text[ i ] == '|' && ( text[ i + 1 ] == 'i' || text[ i + 1 ] == 'i' ) )
+			else if ( text[ i ] == '|' && ( text[ i + 1 ] == 'i' || text[ i + 1 ] == 'I' ) )
 			{
 				i += 2;
 				italicenabled = TRUE;
@@ -3277,7 +3281,7 @@ int __stdcall RawImage_GetHeight( int RawImage )
 		return 64;
 	}
 
-	return ListOfRawImages[ RawImage ].width;
+	return ListOfRawImages[ RawImage ].height;
 }
 
 // Изменяет размер RawImage

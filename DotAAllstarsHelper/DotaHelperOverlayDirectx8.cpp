@@ -86,7 +86,7 @@ D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(
 	return pout;
 }
 
-void DrawImage( IDirect3DDevice8* d, ID3DXSprite* pSprite, IDirect3DTexture8* texture, float width, float height, float x, float y )
+void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture8* texture, float width, float height, float x, float y )
 {
 	D3DXMATRIX matAll;
 	float scalex = *GetWindowXoffset / DesktopScreen_Width;
@@ -108,7 +108,7 @@ void DrawImage( IDirect3DDevice8* d, ID3DXSprite* pSprite, IDirect3DTexture8* te
 	pSprite->DrawTransform( texture, NULL, &matAll, 0xffffffff );
 }
 
-void DrawOverlayDx8(  )
+void DrawOverlayDx8( )
 {
 	IDirect3DDevice8 * d = deviceglobal;
 	if ( !d || OverlayDrawed )
@@ -157,12 +157,12 @@ void DrawOverlayDx8(  )
 		IDirect3DTexture8 * ppTexture = ( IDirect3DTexture8 * )img.textureaddr;
 		if ( !ppTexture )
 		{
-			d->CreateTexture( img.width, img.height, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture );
+			d->CreateTexture( ( UINT )img.width, ( UINT )img.height, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture );
 			D3DLOCKED_RECT rect;
 
 			ppTexture->LockRect( 0, &rect, 0, 0 );
 			unsigned char* dest = static_cast< unsigned char* >( rect.pBits );
-			memcpy( dest, img.img.buf, img.width * img.height * 4 );
+			memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
 			ppTexture->UnlockRect( 0 );
 			img.textureaddr = ppTexture;
 		}
@@ -173,7 +173,7 @@ void DrawOverlayDx8(  )
 		}
 		else
 		{*/
-			DrawImage( d, pSprite, ppTexture, ( float )img.width, ( float )img.height, *GetWindowXoffset * img.overlay_x, *GetWindowYoffset * img.overlay_y );
+		DrawImage( pSprite, ppTexture, ( float )img.width, ( float )img.height, *GetWindowXoffset * img.overlay_x, *GetWindowYoffset * img.overlay_y );
 		//}
 	}
 	pSprite->End( );

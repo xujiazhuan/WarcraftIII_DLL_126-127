@@ -123,21 +123,41 @@ struct RGBAPix
 	{
 		return ( unsigned int )( this->A << 24 | this->R << 16 | this->G << 8 | this->B << 0 );
 	}
-	RGBAPix FromString( const char * str )
-	{
-		if ( str && strlen( str ) == 8 )
-		{
 
+	RGBAPix FromString( const char * text )
+	{
+		if ( text && strlen( text ) == 8 )
+		{
+			char colorstr[ 11 ];
+			colorstr[ 0 ] = '0';// text[ i + 2 ];
+			colorstr[ 1 ] = 'x';//text[ i + 3 ];
+			//A
+			colorstr[ 2 ] = text[ 0 ];
+			colorstr[ 3 ] = text[ 1 ];
+			//R
+			colorstr[ 4 ] = text[ 6 ];
+			colorstr[ 5 ] = text[ 7 ];
+			//G
+			colorstr[ 6 ] = text[ 4 ];
+			colorstr[ 7 ] = text[ 5 ];
+			//B
+			colorstr[ 8 ] = text[ 2 ];
+			colorstr[ 9 ] = text[ 3 ];
+			colorstr[ 10 ] = '\0';
+
+			// Смысла от прозрачного текста нет так что считаем что FF это 0 прозрачность
+			this->FromUINT( strtoul( colorstr, NULL, 0 ) );
 		}
 		else
 		{
-			this->R = R;
-			this->G = G;
-			this->B = B;
-			this->A = A;
+			this->R = 0;
+			this->G = 0;
+			this->B = 0;
+			this->A = 0;
 		}
 		return *this;
 	}
+
 	RGBAPix operator * ( RGBAPix & pix )
 	{
 		if ( pix.A > 0 && this->A > 0 )

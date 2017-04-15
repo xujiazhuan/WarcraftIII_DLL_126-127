@@ -94,7 +94,7 @@ typedef HRESULT( WINAPI *
 
 D3DXCreateSprite_p D3D9CreateSprite_org;
 
-void DrawImage( IDirect3DDevice9* d, ID3DXSprite* pSprite, IDirect3DTexture9* texture, float width, float height, float x, float y )
+void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture9* texture, float width, float height, float x, float y )
 {
 	D3DXMATRIX matAll;
 	float scalex = *GetWindowXoffset / DesktopScreen_Width;
@@ -171,22 +171,22 @@ void DrawOverlayDx9( )
 		IDirect3DTexture9 * ppTexture = ( IDirect3DTexture9 * )img.textureaddr;
 		if ( !ppTexture )
 		{
-			d->CreateTexture( img.width, img.height, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture, NULL );
+			d->CreateTexture( ( UINT )img.width, ( UINT )img.height, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture, NULL );
 			D3DLOCKED_RECT rect;
 
 			ppTexture->LockRect( 0, &rect, 0, 0 );
 			unsigned char* dest = static_cast< unsigned char* >( rect.pBits );
-			memcpy( dest, img.img.buf, img.width * img.height * 4 );
+			memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
 			ppTexture->UnlockRect( 0 );
 			img.textureaddr = ppTexture;
 		}
-	/*	if ( img.size_x > 0.0f && img.size_y > 0.0f )
-		{
+		/*	if ( img.size_x > 0.0f && img.size_y > 0.0f )
+			{
 
-		}
-		else
-		{*/
-			DrawImage( d, pSprite, ppTexture, ( float )img.width, ( float )img.height, *GetWindowXoffset * img.overlay_x, *GetWindowYoffset * img.overlay_y );
+			}
+			else
+			{*/
+		DrawImage( pSprite, ppTexture, ( float )img.width, ( float )img.height, *GetWindowXoffset * img.overlay_x, *GetWindowYoffset * img.overlay_y );
 		//}
 		//ppTexture->Release( );
 
@@ -231,14 +231,21 @@ void Uninitd3d9Hook( )
 
 void Initd3d9Hook( )
 {
-	HMODULE d3d9_43 = LoadLibraryA( "d3dx9_43.dll" );
+	char loadanyd3dx[ 20 ];
+	HMODULE d3d9_43 = NULL;
+	for ( int i = 43; i > 20; i-- )
+	{
+		memset( loadanyd3dx, 0, 20 );
+		sprintf_s( loadanyd3dx, "d3dx9_%i.dll", i );
+		d3d9_43 = LoadLibraryA( "d3dx9_43.dll" );
+		if ( d3d9_43 != NULL )
+			break;
+	}
 	if ( !d3d9_43 )
 	{
-		d3d9_43 = LoadLibraryA( "d3dx9_42.dll" );
-
 		return;
 	}
-	D3D9CreateSprite_org = ( D3DXCreateSprite_p )( GetProcAddress( GetModuleHandleA( "d3dx9_43.dll" ), "D3DXCreateSprite" ) );
+	D3D9CreateSprite_org = ( D3DXCreateSprite_p )GetProcAddress( d3d9_43, "D3DXCreateSprite" );
 	EndScene_dx9_org = ( EndScene_dx9_p )( GameDll + 0x0ECFF0 );
 	MH_CreateHook( EndScene_dx9_org, &EndScene_dx9_my, reinterpret_cast< void** >( &EndScene_dx9_ptr ) );
 	MH_EnableHook( EndScene_dx9_org );

@@ -171,7 +171,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 #endif
 
 
-	if ( unitaddr <= 0 || !IsNotBadUnit( unitaddr ) )
+	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )
 		return retval;
 
 #ifdef DOTA_HELPER_LOG

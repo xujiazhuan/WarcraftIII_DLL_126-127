@@ -166,7 +166,7 @@ char *  GetWar3Preferense( int ID )
 				while ( *( int * )result != ID )
 				{
 					result = *( char ** )&result[ *( int * )( *( int * )( ID + 28 ) + 12 * ( *( int * )( pPrefAddr + 36 ) & ID ) ) + 4 ];
-					if ( ( signed int )result <= 0 )
+					if ( !result  )
 					{
 						break;
 					}
@@ -1563,8 +1563,11 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 	if ( WarcraftRealWNDProc_org )
 	{
 		SkipAllMessages = TRUE;
-		TerminateThread( hPressKeyWithDelay, 0 );
-		CloseHandle( hPressKeyWithDelay );
+		if ( hPressKeyWithDelay )
+		{
+			TerminateThread( hPressKeyWithDelay, 0 );
+			CloseHandle( hPressKeyWithDelay );
+		}
 		if ( !Force )
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		SkipAllMessages = FALSE;
@@ -1754,9 +1757,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 	while ( mutedplayers.size( ) )
 	{
-		void * fMemAddr = mutedplayers.back( );
+		char * fMemAddr = mutedplayers.back( );
 		if ( fMemAddr )
-			free( fMemAddr );
+			free( fMemAddr);
 		mutedplayers.pop_back( );
 	}
 
@@ -2282,9 +2285,13 @@ const char * StormDllName = "Storm.dll";
 int __stdcall SetCustomGameDllandStormDLL( const char * _GameDllName, const char * _StormDllName )
 {
 	GameDllModule = GetModuleHandleA( _GameDllName );
+	if ( !GameDllModule )
+		return FALSE;
 	GameDll = ( int )GameDllModule;
 
 	StormDllModule = GetModuleHandleA( _StormDllName );
+	if ( !StormDllModule )
+		return FALSE;
 	StormDll = ( int )StormDllModule;
 
 	Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
@@ -2328,6 +2335,8 @@ DWORD GetW3TlsForIndex( DWORD index )
 			if ( te32.th32OwnerProcessID == pid )
 			{
 				HANDLE hThread = OpenThread( THREAD_ALL_ACCESS, FALSE, te32.th32ThreadID );
+				if ( !hThread )
+					continue;
 				CONTEXT ctx = { CONTEXT_SEGMENTS };
 				LDT_ENTRY ldt;
 				GetThreadContext( hThread, &ctx );
@@ -2373,6 +2382,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 #endif
 		DisableThreadLibraryCalls( Module );
 		MH_Initialize( );
+
 		GameDllModule = GetModuleHandleA( GameDllName );
 		GameDll = ( int )GameDllModule;
 		StormDllModule = GetModuleHandleA( StormDllName );
@@ -2417,7 +2427,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		RestoreAllOffsets( );
 		while ( mutedplayers.size( ) )
 		{
-			void * fMemAddr = mutedplayers.back( );
+			char * fMemAddr = mutedplayers.back( );
 			if ( fMemAddr )
 				free( fMemAddr );
 			mutedplayers.pop_back( );

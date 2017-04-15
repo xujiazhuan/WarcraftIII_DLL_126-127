@@ -135,25 +135,22 @@ vector<string> Blizzard6Log;
 
 vector<int> CNetEvents;
 
-namespace LogType
+enum class LogType : UINT
 {
-	enum LogType : UINT
-	{
-		DotaChatLog,
-		DotaHelperLog,
-		JassNativesFuncLog,
-		JassLogList
-	};
-}
+	DotaChatLog,
+	DotaHelperLog,
+	JassNativesFuncLog,
+	JassLogList
+};
 
 HWND ExternErrorHandler = FindWindowA( 0, "Dota Allstars Extern Error Handler" );
 DWORD ExternErrorHandlerLastCheck = 0;
-void ExternalLog( string s, LogType::LogType logtype )
+void ExternalLog( string s, LogType logtype )
 {
 	if ( ExternErrorHandler > 0 && IsWindow( ExternErrorHandler ) )
 	{
 		COPYDATASTRUCT cds;
-		cds.dwData = logtype;
+		cds.dwData = ( ULONG_PTR )logtype;
 		cds.cbData = s.length( );
 		cds.lpData = ( PVOID )s.c_str( );
 		if ( S_OK != SendMessage( ExternErrorHandler, WM_COPYDATA, ( WPARAM )ExternErrorHandler, ( LPARAM )( LPVOID )&cds ) )
@@ -180,142 +177,120 @@ int __stdcall JassLog( const char * s )
 #ifdef DOTA_HELPER_LOG
 void __stdcall  AddNewLineToDotaChatLog( string s )
 {
-	__asm pushad;
 	if ( bDllLogEnable )
 	{
-		ExternalLog( s, LogType::LogType::DotaChatLog );
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( DotaChatLog.size( ) > 11 )
 		{
 			DotaChatLog.erase( DotaChatLog.begin( ) );
 		}
 		DotaChatLog.push_back( s );
 	}
-	__asm popad;
 }
 
 void __stdcall  AddNewLineToDotaHelperLog( string s )
 {
-	__asm pushad;
 	if ( bDllLogEnable )
 	{
-		ExternalLog( s, LogType::LogType::DotaHelperLog );
+		ExternalLog( s, LogType::DotaHelperLog );
 		if ( DotaHelperLog.size( ) > 20 )
 		{
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
 		}
 		DotaHelperLog.push_back( s );
 	}
-	__asm popad;
 }
 
 void __stdcall  AddNewLineToJassNativesLog( string s )
 {
-	__asm pushad;
 	if ( JNativesFuncLog.size( ) > 40 )
 	{
-		ExternalLog( s, LogType::LogType::JassNativesFuncLog );
+		ExternalLog( s, LogType::JassNativesFuncLog );
 		JNativesFuncLog.erase( JNativesFuncLog.begin( ) );
 	}
 	JNativesFuncLog.push_back( s );
-	__asm popad;
 }
 
 
 void __stdcall  AddNewLineToJassLog( string s )
 {
-	__asm pushad;
 	if ( JassLogList.size( ) > 35 )
 	{
-		ExternalLog( s, LogType::LogType::JassLogList );
+		ExternalLog( s, LogType::JassLogList );
 		JassLogList.erase( JassLogList.begin( ) );
 	}
 	JassLogList.push_back( s );
-	__asm popad;
 }
 
 
 
 void __stdcall  AddNewLineToBlizzard1Log( string s )
 {
-	__asm pushad;
 	if ( Blizzard1Log.size( ) > 35 )
 	{
 		Blizzard1Log.erase( Blizzard1Log.begin( ) );
 	}
 	Blizzard1Log.push_back( s );
-	__asm popad;
 }
 
 
 void __stdcall  AddNewLineToBlizzard2Log( string s )
 {
-	__asm pushad;
 	if ( Blizzard2Log.size( ) > 35 )
 	{
 		Blizzard2Log.erase( Blizzard2Log.begin( ) );
 	}
 	Blizzard2Log.push_back( s );
-	__asm popad;
 }
 
 
 void  __stdcall AddNewLineToBlizzard3Log( string s )
 {
-	__asm pushad;
 	if ( Blizzard3Log.size( ) > 35 )
 	{
 		Blizzard3Log.erase( Blizzard3Log.begin( ) );
 	}
 	Blizzard3Log.push_back( s );
-	__asm popad;
 }
 
 
 void __stdcall  AddNewLineToBlizzard4Log( string s )
 {
-	__asm pushad;
 	if ( Blizzard4Log.size( ) > 35 )
 	{
 		Blizzard4Log.erase( Blizzard4Log.begin( ) );
 	}
 	Blizzard4Log.push_back( s );
-	__asm popad;
 }
 
 void  __stdcall AddNewLineToBlizzard4Log_2( string s )
 {
-	__asm pushad;
 	if ( Blizzard4Log_2.size( ) > 35 )
 	{
 		Blizzard4Log_2.erase( Blizzard4Log_2.begin( ) );
 	}
 	Blizzard4Log_2.push_back( s );
-	__asm popad;
 }
 
 
 
 void  __stdcall AddNewLineToBlizzard5Log( string s )
 {
-	__asm pushad;
 	if ( Blizzard5Log.size( ) > 35 )
 	{
 		Blizzard5Log.erase( Blizzard5Log.begin( ) );
 	}
 	Blizzard5Log.push_back( s );
-	__asm popad;
 }
 
 
 void __stdcall AddNewLineToBlizzard6Log( string s )
 {
-	__asm pushad;
 	if ( Blizzard6Log.size( ) > 35 )
 	{
 		Blizzard6Log.erase( Blizzard6Log.begin( ) );
 	}
 	Blizzard6Log.push_back( s );
-	__asm popad;
 }
 #endif
 
@@ -588,6 +563,8 @@ BOOL ErrorDumped = FALSE;
 
 void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 {
+	string LastError1, LastError2, LastError3, LastError4;
+
 	if ( ErrorDumped )
 		return;
 	ErrorDumped = TRUE;
@@ -624,8 +601,6 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 
 			fprintf_s( f, "[LOG FAST DUMP]\n" );
 
-
-			string LastError1, LastError2, LastError3, LastError4;
 
 			fprintf_s( f, "[DotaHelperLog]\n" );
 
@@ -818,13 +793,12 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaChatLog( continueablecode );
 #endif
-		EndGameFound--;
-		if ( !EndGameFound )
+		if ( *InGame )
 		{
+			TopLevelExceptionFilter( ExceptionInfo );
+			DumpExceptionInfoToFile( ExceptionInfo );
 			ExitProcess( 0 );
 		}
-		DumpExceptionInfoToFile( ExceptionInfo );
-
 		return EXCEPTION_CONTINUE_EXECUTION;
 	}
 
@@ -1221,7 +1195,7 @@ int __fastcall BlizzardDebug1_my( const char * str )
 
 	}
 	return retval;
-}
+	}
 
 BlizzardDebug2 BlizzardDebug2_org = NULL;
 BlizzardDebug2 BlizzardDebug2_ptr;

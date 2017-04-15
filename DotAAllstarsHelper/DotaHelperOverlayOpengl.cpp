@@ -147,9 +147,12 @@ void UninitOpenglHook( )
 void InitOpenglHook( )
 {
 	HMODULE hOpenGL = GetModuleHandleA( "opengl32.dll" );
-	wglSwapLayerBuffers_org = ( wglSwapLayerBuffers_p )GetProcAddress( hOpenGL, "wglSwapLayerBuffers" );
-	MH_CreateHook( wglSwapLayerBuffers_org, &wglSwapLayerBuffers_my, reinterpret_cast< void** >( &wglSwapLayerBuffers_ptr ) );
-	MH_EnableHook( wglSwapLayerBuffers_org );
+	if ( hOpenGL )
+	{
+		wglSwapLayerBuffers_org = ( wglSwapLayerBuffers_p )GetProcAddress( hOpenGL, "wglSwapLayerBuffers" );
+		MH_CreateHook( wglSwapLayerBuffers_org, &wglSwapLayerBuffers_my, reinterpret_cast< void** >( &wglSwapLayerBuffers_ptr ) );
+		MH_EnableHook( wglSwapLayerBuffers_org );
+	}
 	//	glGetIntegerv( GL_MAX_VIEWPORT_DIMS, maxviewport );
 
 }

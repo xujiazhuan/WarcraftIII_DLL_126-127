@@ -43,7 +43,7 @@ void CCrc32Dynamic::Init( void )
 //***********************************************
 void CCrc32Dynamic::Free( void )
 {
-	delete m_pdwCrc32Table;
+	delete [] m_pdwCrc32Table;
 	m_pdwCrc32Table = NULL;
 }
 

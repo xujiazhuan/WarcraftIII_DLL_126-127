@@ -291,8 +291,11 @@ bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 		{
 			if ( i < truemipmaps )
 			{
-				blpHeader.poffs[ i ] = blpHeader.poffs[ i - 1 ];
-				blpHeader.psize[ i ] = blpHeader.psize[ i - 1 ];
+				if ( i > 0 )
+				{
+					blpHeader.poffs[ i ] = blpHeader.poffs[ i - 1 ];
+					blpHeader.psize[ i ] = blpHeader.psize[ i - 1 ];
+				}
 			}
 			else
 			{
@@ -366,8 +369,11 @@ bool CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *
 		{
 			if ( i < truemipmaps )
 			{ // war3 requires at least 8 mipmaps for the alpha channel to work
-				blpHeader.poffs[ i ] = blpHeader.poffs[ i - 1 ];
-				blpHeader.psize[ i ] = blpHeader.psize[ i - 1 ];
+				if ( i > 0 )
+				{
+					blpHeader.poffs[ i ] = blpHeader.poffs[ i - 1 ];
+					blpHeader.psize[ i ] = blpHeader.psize[ i - 1 ];
+				}
 			}
 			else
 			{
@@ -672,7 +678,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	pictype = ( int )blph.alphaEncoding;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string("2") );
+	AddNewLineToDotaHelperLog( __func__ + string( "2" ) );
 #endif
 	if ( blph.compress == 1 )
 	{
@@ -788,7 +794,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		unsigned long JPEGHeaderSize;
 		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
 		JPEGHeaderSize = _blp_swap_int32( JPEGHeaderSize );
-		
+
 		Buffer tempdata;
 		tempdata.length = blph.psize[ 0 ] + JPEGHeaderSize;
 		tempdata.buf = new char[ blph.psize[ 0 ] + JPEGHeaderSize ];
@@ -841,7 +847,7 @@ bool JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 {
 	bpp = 4;
 	//if ( !DecompressJpg( input, output, width, height, bpp ) )
-	if ( !Jpeg.Read( input, output, &width, &height) )
+	if ( !Jpeg.Read( input, output, &width, &height ) )
 		return false;
 
 	//if ( !IsPowerOfTwo( width ) || !IsPowerOfTwo( height ) )

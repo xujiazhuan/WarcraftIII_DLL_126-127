@@ -45,6 +45,7 @@ struct JPEG_SOURCE_MANAGER
 		SourceBuffer = NULL;
 		SourceBufferSize = 0;
 		Buffer = NULL;
+		Manager = jpeg_source_mgr( );
 	}
 
 	jpeg_source_mgr Manager;
@@ -64,6 +65,7 @@ struct JPEG_DESTINATION_MANAGER
 		DestinationBuffer = NULL;
 		DestinationBufferSize = 0;
 		Buffer = NULL;
+		Manager = jpeg_destination_mgr( );
 	}
 
 	jpeg_destination_mgr Manager;

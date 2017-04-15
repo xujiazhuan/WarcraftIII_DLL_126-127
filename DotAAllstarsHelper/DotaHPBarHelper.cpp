@@ -124,7 +124,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 	int retval = 0;
 	__asm mov retval, eax;
 
-	if ( BarStruct <= 0 )
+	if ( !BarStruct )
 	{
 		return retval;
 	}
@@ -151,7 +151,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 
 
 	int unitaddr = BarStruct->unitaddr;
-	if ( unitaddr <= 0 || !IsNotBadUnit( unitaddr ) )
+	if ( !unitaddr || !IsNotBadUnit( unitaddr ) )
 	{
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "[HPBAR] Bad unit" );
@@ -192,7 +192,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 					BarStruct->ScaleY = CustomHPBarList[ unitslot ][ i ].scaley;
 				}
 
-				if ( ( int )coloraddr <= 0 )
+				if ( !coloraddr  )
 				{
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( "SetColorForUnitEnd4" );
@@ -234,7 +234,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 				BarStruct->ScaleY = hpbarscaleHeroY[ unitslot ];
 			}
 		}
-		if ( ( int )coloraddr <= 0 )
+		if ( !coloraddr  )
 		{
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd6" );
@@ -270,7 +270,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 				BarStruct->ScaleY = hpbarscaleTowerY[ unitslot ];
 			}
 		}
-		if ( ( int )coloraddr <= 0 )
+		if ( !coloraddr  )
 		{
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd7" );
@@ -305,7 +305,7 @@ int __stdcall SetColorForUnit( unsigned int * coloraddr, BarStruct * BarStruct )
 				BarStruct->ScaleY = hpbarscaleUnitY[ unitslot ];
 			}
 		}
-		if ( ( int )coloraddr <= 0 )
+		if ( !coloraddr )
 		{
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "SetColorForUnitEnd8" );

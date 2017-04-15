@@ -93,6 +93,7 @@ int __stdcall MutePlayer( const char * str )
 			return 1;
 		}
 	}
+
 	mutedplayers.push_back( _strdup( str ) );
 	return 1;
 }

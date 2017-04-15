@@ -27,7 +27,7 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 	if ( addr1 )
 	{
 		GETOID = *( int * )( addr1 + 444 );
-		if ( GETOID <= 0 )
+		if ( !GETOID  )
 			OID = 852290;
 		else
 			OID = *( int * )( GETOID + 8 );
@@ -66,7 +66,7 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 	if ( addr1 )
 	{
 		GETOID = *( int * )( addr1 + 444 );
-		if ( GETOID <= 0 )
+		if ( !GETOID  )
 			OID = 852290;
 		else
 			OID = *( int * )( GETOID + 8 );

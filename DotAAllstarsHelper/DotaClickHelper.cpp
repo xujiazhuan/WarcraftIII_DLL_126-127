@@ -99,7 +99,6 @@ DWORD WINAPI PressKeyWithDelay( LPVOID )
 
 
 	}
-	hPressKeyWithDelay = NULL;
 	return 0;
 }
 
@@ -256,8 +255,9 @@ void MouseClick( int toX, int toY )
 	POINT * ClickPoint = new POINT( );
 	ClickPoint->x = toX;
 	ClickPoint->y = toY;
-	CloseHandle( CreateThread( 0, 0, ThreadTest, ClickPoint, 0, 0 ) );
-
+	HANDLE thr = CreateThread( 0, 0, ThreadTest, ClickPoint, 0, 0 );
+	if ( thr != NULL )
+		CloseHandle( thr );
 }
 
 void JustClickMouse( )
@@ -1253,15 +1253,15 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								}
 								else
 									LastPressedKeysTime[ wParam ] = GetTickCount( );
-								}
-							//}
 							}
+							//}
+						}
 
 #ifdef DOTA_HELPER_LOG
 						AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
-						}
+					}
 				}
 
 				if ( NeedSkipThisKey )
@@ -1329,7 +1329,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #endif
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-			}
+}
 
 
 

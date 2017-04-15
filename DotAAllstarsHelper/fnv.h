@@ -146,11 +146,7 @@ extern const Fnv64_t fnv0_64_init;
 #define FNV0_64_INIT (fnv0_64_init)
 #endif /* HAVE_64BIT_LONG_LONG */
 
-#pragma warning(disable:4668)
-#pragma warning(disable:4820)
-#pragma warning(disable:4710)
-#pragma warning(disable:4100)
-#pragma warning(disable:4514)
+
 
 /*
  * 64 bit FNV-1 non-zero initial basis
