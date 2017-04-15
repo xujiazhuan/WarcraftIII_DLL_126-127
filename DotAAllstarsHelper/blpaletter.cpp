@@ -867,5 +867,5 @@ bool JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 
 int ArrayXYtoId( int width, int x, int y )
 {
-	return  width * x + y;
+	return  width * y + x;
 }

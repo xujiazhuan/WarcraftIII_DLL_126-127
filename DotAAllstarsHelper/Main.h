@@ -321,7 +321,7 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 extern BOOL bDllLogEnable;
 typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
 extern StormErrorHandler StormErrorHandler_org;
-typedef int( __fastcall *LookupNative )( LPSTR );
+typedef int( __fastcall *LookupNative )(int global, int unused, LPSTR name );
 extern LookupNative LookupNative_org;
 typedef signed int( __fastcall * LookupJassFunc )( int a1, int unused, char * funcname );
 extern LookupJassFunc LookupJassFunc_org;

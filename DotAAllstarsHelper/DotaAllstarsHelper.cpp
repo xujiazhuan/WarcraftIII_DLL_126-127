@@ -1834,7 +1834,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
 		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x3D3F30 );
 		StormErrorHandlerOffset = StormDll + 0x28F0;
-		JassNativeLookupOffset = GameDll + 0x44EA00;
+		JassNativeLookupOffset = GameDll + 0x45D070;
 		JassFuncLookupOffset = GameDll + 0x45AE80;
 		ProcessNetEventsOffset = GameDll + 0x551D80;
 		BlizzardDebug1Offset = GameDll + 0x7AEC10;
@@ -2062,7 +2062,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
 		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x1E0650 );
 		StormErrorHandlerOffset = StormDll + 0x8230;
-		JassNativeLookupOffset = GameDll + 0x7E2FE0;
+		JassNativeLookupOffset = GameDll + 0x7EF590;
 		JassFuncLookupOffset = GameDll + 0x7EFBB0;
 		ProcessNetEventsOffset = GameDll + 0x3098D0;
 		BlizzardDebug1Offset = GameDll + 0x179f20;

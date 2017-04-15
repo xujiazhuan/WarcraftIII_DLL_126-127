@@ -36,15 +36,18 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 		{
 			( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 		}
-		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( IsEnemy( ( int )UnitAddr ) == FALSE )
+		else if ( IsNotBadUnit( ( int )UnitAddr ) )
 		{
-			if ( IsHero( ( int )UnitAddr ) )
+			// Затем дополнительную которая отрисует скилы всем союзным героям.
+			if ( IsEnemy( ( int )UnitAddr ) == FALSE )
+			{
+				if ( IsHero( ( int )UnitAddr ) )
+					( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+			}
+			else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+			{
 				( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
-		}
-		else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
-		{
-			( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+			}
 		}
 		result = 1;
 	}
@@ -78,15 +81,18 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 		{
 			( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 		}
-		// Затем дополнительную которая отрисует скилы всем союзным героям.
-		else if ( IsEnemy( ( int )UnitAddr ) == FALSE )
+		else if ( IsNotBadUnit( ( int )UnitAddr ) )
 		{
-			if ( IsHero( ( int )UnitAddr ) )
+			// Затем дополнительную которая отрисует скилы всем союзным героям.
+			if ( IsEnemy( ( int )UnitAddr ) == FALSE )
+			{
+				if ( IsHero( ( int )UnitAddr ) )
+					( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
+			}
+			else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+			{
 				( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
-		}
-		else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
-		{
-			( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
+			}
 		}
 		result = 1;
 	}
@@ -95,7 +101,7 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 		result = 0;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string("2"));
+	AddNewLineToDotaHelperLog( __func__ + string( "2" ) );
 #endif
 	return result;
 }

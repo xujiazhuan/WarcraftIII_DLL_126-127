@@ -328,15 +328,22 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 LookupNative LookupNative_org = NULL;
 LookupNative LookupNative_ptr;
 
-int __fastcall LookupNative_my( LPSTR funcname )
+int __fastcall LookupNative_my( int global, int unused, LPSTR funcname )
 {
-	int retval = LookupNative_ptr( funcname );
 	if ( funcname && *funcname != '\0' )
 	{
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToJassNativesLog( funcname );
 #endif
 	}
+	else
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToJassNativesLog( "NULL-JASS-NATIVE-NAME-FOUND!" );
+#endif
+	}
+	int retval = LookupNative_ptr( global, unused, funcname );
+
 	return retval;
 }
 
@@ -349,7 +356,7 @@ signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
 	if ( funcname &&  *funcname != '\0' )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToJassNativesLog( funcname );
+		AddNewLineToJassLog( funcname );
 #endif
 	}
 	return retval;
@@ -1196,7 +1203,7 @@ int __fastcall BlizzardDebug1_my( const char * str )
 
 	}
 	return retval;
-	}
+}
 
 BlizzardDebug2 BlizzardDebug2_org = NULL;
 BlizzardDebug2 BlizzardDebug2_ptr;

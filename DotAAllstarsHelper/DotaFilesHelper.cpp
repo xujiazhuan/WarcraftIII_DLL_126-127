@@ -2960,6 +2960,9 @@ int __stdcall RawImage_SetFontSettings( const char * fontname, int fontsize, uns
 // Пишет текст в указанных координатах с указанными цветом и настройками шрифта RawImage_SetFontSettings
 int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, RGBAPix color )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawText"  );
+#endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -2967,7 +2970,9 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawText2" );
+#endif
 	HDC hDC = CreateCompatibleDC( NULL );
 	char* pSrcData = 0;
 	BITMAPINFO bmi = { sizeof( BITMAPINFOHEADER ), tmpRawImage.width, tmpRawImage.height, 1, 24, BI_RGB, 0, 0, 0, 0, 0 };
@@ -2977,6 +2982,9 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 		DeleteDC( hDC );
 		return FALSE;
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawText3" );
+#endif
 	RECT rect = RECT( );
 	rect.left = x;
 	rect.top = y;
@@ -2986,7 +2994,9 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	HBITMAP hBmpOld = ( HBITMAP )SelectObject( hDC, hTempBmp );
 	HFONT NewFont = CreateFontA( _fontsize, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _fontname );
 	HFONT TempFont = NULL;
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawText4" );
+#endif
 	UINT textcolor = color.ToUINT( );
 	UINT oldcolor = color.ToUINT( );
 
@@ -3000,7 +3010,9 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	SelectObject( hDC, NewFont );
 	SetTextColor( hDC, color.ToUINT( ) );
 
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawText5" );
+#endif
 
 	int len = strlen( text );
 	BOOL boldenabled = FALSE;
@@ -3151,20 +3163,6 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	GdiFlush( );
 	ReleaseDC( NULL, hDC );
 
-
-
-	Buffer tmpbuf = Buffer( );
-	tmpbuf.buf = ( char * )pSrcData;
-	tmpbuf.length = tmpRawImage.width * tmpRawImage.height * 3;
-	//Buffer newbuf = Buffer( );
-	//RAW2Tga( tmpbuf, newbuf, tmpRawImage.width, tmpRawImage.height, 3, "out.tga" );
-	//FILE * f;
-	//fopen_s( &f, "out.tga", "wb" );
-	//fwrite( newbuf.buf, newbuf.length, 1, f );
-	//fclose( f );
-
-
-
 	RGBPix* tmpBitmapPixList = ( RGBPix* )pSrcData;
 
 
@@ -3173,10 +3171,11 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 		for ( int y0 = 0; y0 < tmpRawImage.height; y0++ )
 		{
 			if ( tmpBitmapPixList[ ArrayXYtoId( tmpRawImage.width, x0, y0 ) ].ToUINT( ) != 0 )
+			{
 				RawImageData[ ArrayXYtoId( tmpRawImage.width, x0, y0 ) ] = tmpBitmapPixList[ ArrayXYtoId( tmpRawImage.width, x0, y0 ) ].ToRGBAPix( );
+			}
 		}
 	}
-
 
 	DeleteDC( hDC );
 	DeleteObject( hBmpOld );
@@ -3186,7 +3185,9 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	{
 		tmpRawImage.needResetTexture = TRUE;
 	}
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawText" + string( "end" ) );
+#endif
 
 	return TRUE;
 }
@@ -3309,6 +3310,9 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 // Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре. 
 int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos, float xsize, float ysize )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawOverlay" );
+#endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -3320,7 +3324,9 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	tmpRawImage.overlay_y = ypos;
 	tmpRawImage.size_x = xsize;
 	tmpRawImage.size_y = ysize;
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "RawImage_DrawOverlay" + string("end") );
+#endif
 	return TRUE;
 }
 
