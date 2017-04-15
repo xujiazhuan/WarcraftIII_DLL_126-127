@@ -94,6 +94,9 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 	{
 		result = 0;
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ + string("2"));
+#endif
 	return result;
 }
 

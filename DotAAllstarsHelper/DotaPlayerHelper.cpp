@@ -118,8 +118,22 @@ pIsPlayerObs IsPlayerObs;
 
 BOOL IsPlayerObserver( int pid )
 {
-	unsigned int player = Player( pid );
-	return IsPlayerObs( player );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "IsPlayerObserver" );
+#endif
+	if ( pid >= 0 && pid <= 15 )
+	{
+		unsigned int player = Player( pid );
+		BOOL retval = IsPlayerObs( player );
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "IsPlayerObserver::OK" );
+#endif
+	}
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "IsPlayerObserver::BAD" );
+#endif
+	return FALSE;
 }
 
 BOOL IsLocalPlayerObserver( )

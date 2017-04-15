@@ -15,6 +15,9 @@ int __stdcall GetUnitOwnerSlot( int unitaddr )
 // Является ли юнит героем
 BOOL __stdcall IsHero( int unitaddr )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "IsHero" );
+#endif
 	if ( unitaddr > 0 )
 	{
 		unsigned int ishero = *( unsigned int* )( unitaddr + 48 );
@@ -46,6 +49,9 @@ BOOL __stdcall IsUnitInvulnerable( int unitaddr )
 // Проверяет юнит или не юнит
 BOOL __stdcall IsNotBadUnit( int unitaddr )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "IsNotBadUnit" );
+#endif
 	if ( unitaddr > 0 )
 	{
 		int xaddraddr = ( int )&UnitVtable;
