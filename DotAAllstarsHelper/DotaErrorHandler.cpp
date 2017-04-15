@@ -710,10 +710,12 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", "Fatal error detected![SEH]", MB_YESNO ) == IDYES )
 	{
 		int retval = ( int )OriginFilter( ExceptionInfo );
-		char tmp[ 100 ];
-		sprintf_s( tmp, 100, "%X", retval );
-		MessageBoxA( 0, tmp, tmp, 0 );
-		return OriginFilter( ExceptionInfo );
+#ifdef DOTA_HELPER_LOG
+		char tmperr[ 100 ];
+		sprintf_s( tmperr, 100, "Error code:%X", retval );
+		AddNewLineToDotaChatLog( tmperr );
+#endif
+		return retval;
 	}
 	else
 	{

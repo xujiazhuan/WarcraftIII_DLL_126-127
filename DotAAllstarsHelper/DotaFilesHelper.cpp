@@ -2283,13 +2283,13 @@ int __stdcall LoadRawImage( const char * filename )
 
 	int PatchFileData = 0;
 	size_t PatchFileSize = 0;
-	GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
+	GameGetFile_ptr( filename, &PatchFileData, &PatchFileSize, TRUE );
 	if ( !PatchFileData || !PatchFileSize )
 	{
-		GameGetFile_org( ( filename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+		GameGetFile_ptr( ( filename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
 		if ( !PatchFileData || !PatchFileSize )
 		{
-			GameGetFile_org( ( filename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+			GameGetFile_ptr( ( filename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
 			if ( !PatchFileData || !PatchFileSize )
 			{
 				if ( filenamelen >= 4 )
@@ -2297,10 +2297,10 @@ int __stdcall LoadRawImage( const char * filename )
 					char * tmpfilename = new char[ filenamelen ];
 					memset( tmpfilename, 0, filenamelen );
 					memcpy( tmpfilename, filename, filenamelen - 4 );
-					GameGetFile_org( ( tmpfilename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+					GameGetFile_ptr( ( tmpfilename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
 					if ( !PatchFileData || !PatchFileSize )
 					{
-						GameGetFile_org( ( tmpfilename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+						GameGetFile_ptr( ( tmpfilename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
 					}
 
 					delete[ ] tmpfilename;
@@ -2941,7 +2941,7 @@ int __stdcall RawImage_LoadFontFromResource( const char * filepath )
 {
 	int PatchFileData = 0;
 	size_t PatchFileSize = 0;
-	GameGetFile_org( filepath, &PatchFileData, &PatchFileSize, TRUE );
+	GameGetFile_ptr( filepath, &PatchFileData, &PatchFileSize, TRUE );
 	DWORD Font = NULL;//Globals, this is the Font in the RAM
 	AddFontMemResourceEx( ( void* )PatchFileData, PatchFileSize, NULL, &Font );
 	return TRUE;
