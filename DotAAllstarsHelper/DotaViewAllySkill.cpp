@@ -27,10 +27,10 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 	if ( addr1 )
 	{
 		GETOID = *( int * )( addr1 + 444 );
-		if ( !GETOID  )
-			OID = 852290;
-		else
+		if ( GETOID > 0 )
 			OID = *( int * )( GETOID + 8 );
+		else
+			OID = 852290;
 		// Сначала вызвать оригинальную функцию
 		if ( ( ( IsNeedDrawUnitOrigin )( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
@@ -52,6 +52,9 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 	{
 		result = 0;
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__ + string( "2" ) );
+#endif
 	return result;
 }
 
@@ -66,10 +69,10 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 	if ( addr1 )
 	{
 		GETOID = *( int * )( addr1 + 444 );
-		if ( !GETOID  )
-			OID = 852290;
-		else
+		if ( GETOID > 0 )
 			OID = *( int * )( GETOID + 8 );
+		else
+			OID = 852290;
 		// Сначала вызвать оригинальную функцию
 		if ( ( ( IsNeedDrawUnitOrigin )( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{

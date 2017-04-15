@@ -796,10 +796,9 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 		if ( *InGame )
 		{
 			TopLevelExceptionFilter( ExceptionInfo );
-			DumpExceptionInfoToFile( ExceptionInfo );
-			ExitProcess( 0 );
 		}
-		return EXCEPTION_CONTINUE_EXECUTION;
+		DumpExceptionInfoToFile( ExceptionInfo );
+		return ExceptionContinueSearch;
 	}
 
 
@@ -815,7 +814,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 	TopLevelExceptionFilter( ExceptionInfo );
 	DumpExceptionInfoToFile( ExceptionInfo );
 
-	return 0;
+	return ExceptionContinueSearch;
 }
 
 
