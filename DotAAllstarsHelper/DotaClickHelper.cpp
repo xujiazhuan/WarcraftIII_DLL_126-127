@@ -655,6 +655,15 @@ BOOL IsGameFrameActive( )
 }
 
 
+BOOL rawimage_skipmouseevent = FALSE;
+
+int __stdcall RawImage_SkipMouseClick( BOOL enabled )
+{
+	rawimage_skipmouseevent = enabled;
+	return rawimage_skipmouseevent;
+}
+
+
 WPARAM LatestPressedKey = NULL;
 
 POINTS GlobalMousePos = { 0,0 };
@@ -663,8 +672,6 @@ POINTS GlobalMousePos = { 0,0 };
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
-
-
 	unsigned int Msg = _Msg;
 	BOOL NeedSkipThisKey = FALSE;
 	BOOL ClickHelperWork = FALSE;
@@ -692,7 +699,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( "0" ));
+	AddNewLineToDotaHelperLog( __func__ + string( "0" ) );
 #endif
 
 
@@ -730,7 +737,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_LBUTTONDOWN )
 			{
 				GlobalRawImageCallbackData->IsLeftButton = TRUE;
-				RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+				if ( RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y )
+					&& rawimage_skipmouseevent )
+					return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
 
 			if ( Msg == WM_RBUTTONUP )
@@ -742,7 +751,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_RBUTTONDOWN )
 			{
 				GlobalRawImageCallbackData->IsLeftButton = FALSE;
-				RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y );
+				if ( RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y )
+					&& rawimage_skipmouseevent )
+					return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
 
 			if ( Msg == WM_MOUSEMOVE )
@@ -1124,11 +1135,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						if ( keyCode == ( int )wParam )
 						{
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__ + string( "::END7" ));
+							AddNewLineToDotaHelperLog( __func__ + string( "::END7" ) );
 #endif
 							return DefWindowProc( hWnd, Msg, wParam, lParam );
 						}
-					}
+				}
 
 
 
@@ -1164,14 +1175,14 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								//TriggerExecute( KeyboardTriggerHandle );
 							}
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__ + string( "::END6" ));
+							AddNewLineToDotaHelperLog( __func__ + string( "::END6" ) );
 #endif
 							return DefWindowProc( hWnd, Msg, wParam, lParam );
 						}
 
 					}
 
-				}
+			}
 
 
 				if ( ( ( wParam >= 0x41 && wParam <= 0x5A ) ||
@@ -1216,7 +1227,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							DelayedPressList.push_back( tmpDelayPress );
 
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__ + string( "::END5" ));
+							AddNewLineToDotaHelperLog( __func__ + string( "::END5" ) );
 #endif
 							if ( NeedSkipThisKey )
 								return DefWindowProc( hWnd, Msg, wParam, lParam );
@@ -1256,7 +1267,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 									{
 										LastPressedKeysTime[ wParam ] = 0;
 #ifdef DOTA_HELPER_LOG
-										AddNewLineToDotaHelperLog( __func__ + string( "::END4" ));
+										AddNewLineToDotaHelperLog( __func__ + string( "::END4" ) );
 #endif
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
 									}
@@ -1268,19 +1279,19 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								LastPressedKeysTime[ wParam ] = GetTickCount( );
 						}
 						//}
-					}
+						}
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
-				}
+					}
 			}
 
 			if ( NeedSkipThisKey )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__ + string( "::END3" ));
+				AddNewLineToDotaHelperLog( __func__ + string( "::END3" ) );
 #endif
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
@@ -1309,9 +1320,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #ifdef DOTA_HELPER_LOG
 						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
 #endif
-					}
 				}
 			}
+				}
 		}
 
 	}
@@ -1329,7 +1340,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_RBUTTONDOWN || Msg == WM_KEYDOWN || Msg == WM_KEYUP )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__ + string( "::END2" ));
+				AddNewLineToDotaHelperLog( __func__ + string( "::END2" ) );
 #endif
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
@@ -1338,11 +1349,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( "::END1" ));
+	AddNewLineToDotaHelperLog( __func__ + string( "::END1" ) );
 #endif
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-}
+	}
 
 
 

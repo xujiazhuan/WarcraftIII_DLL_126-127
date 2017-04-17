@@ -2249,6 +2249,8 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 	AddNewLineToDotaHelperLog( "CreateRawImage" );
 	cout << "CreateRawImage:" << endl;
 #endif
+	width = width + ( width % 2 );
+	height = height + ( height % 2 );
 
 	RawImageStruct tmpRawImage = RawImageStruct( );
 	Buffer tmpRawImageBuffer = Buffer( );
@@ -3293,6 +3295,9 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 		return FALSE;
 	}
 
+	newwidth = newwidth + ( newwidth % 2 );
+	newheight = newheight + ( newheight % 2 );
+
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	Buffer tmpOldBuffer = tmpRawImage.img;
 	Buffer tmpNewBuffer = Buffer( );
@@ -3364,10 +3369,12 @@ int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallba
 }
 
 
-void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey )
+BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey )
 {
 	if ( !GlobalRawImageCallbackData )
-		return;
+		return FALSE;
+
+	
 
 	GlobalRawImageCallbackData->IsAltPressed = IsKeyPressed( VK_MENU );
 	GlobalRawImageCallbackData->IsCtrlPressed = IsKeyPressed( VK_CONTROL );
@@ -3416,7 +3423,7 @@ void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
 
 					ExecuteFunc( &img.MouseActionCallback );
-					return;
+					return FALSE;
 				}
 				break;
 			case RawImageEventType::MouseDown:
@@ -3424,7 +3431,7 @@ void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				{
 					img.IsMouseDown = TRUE;
 					ExecuteFunc( &img.MouseActionCallback );
-					return;
+					return TRUE;
 				}
 				break;
 			case RawImageEventType::MouseClick:
@@ -3477,6 +3484,7 @@ void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 		}
 	}
 
+	return FALSE;
 }
 
 

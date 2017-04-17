@@ -1613,6 +1613,7 @@ void __stdcall DisableAllHooks( )
 	ClickHelper = FALSE;
 	LOCK_MOUSE_IN_WINDOW = FALSE;
 	BlockKeyboardAndMouseWhenTeleport = FALSE;
+	rawimage_skipmouseevent = FALSE;
 	if ( !WhiteListForTeleport.empty( ) )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )
@@ -1779,6 +1780,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	ClickHelper = FALSE;
 	LOCK_MOUSE_IN_WINDOW = FALSE;
 	BlockKeyboardAndMouseWhenTeleport = FALSE;
+	rawimage_skipmouseevent = FALSE;
 	if ( !WhiteListForTeleport.empty( ) )
 		WhiteListForTeleport.clear( );
 	if ( !doubleclickSkillIDs.empty( ) )

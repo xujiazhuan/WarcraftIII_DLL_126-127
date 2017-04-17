@@ -86,8 +86,9 @@ RawImage_GetWidth
 RawImage_GetHeight
 RawImage_Resize
 RawImage_DrawOverlay
+RawImage_AddCallback
+RawImage_SkipMouseClick
 GetScreenWidth
 GetScreenHeight
 GetWindowWidth
 GetWindowHeight
-RawImage_AddCallback

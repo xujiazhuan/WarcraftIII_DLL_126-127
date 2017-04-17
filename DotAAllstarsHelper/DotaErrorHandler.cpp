@@ -566,15 +566,15 @@ int __stdcall TraceEsp_Print( int )
 	return esp_val;
 }
 
-BOOL ErrorDumped = FALSE;
+int dumperrorid = 0;
 
 void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 {
 	string LastError1, LastError2, LastError3, LastError4;
 
-	if ( ErrorDumped )
+	if ( dumperrorid > 10 )
 		return;
-	ErrorDumped = TRUE;
+	dumperrorid++;
 	if ( !IsVEHex )
 	{
 #ifdef DOTA_HELPER_LOG
@@ -585,12 +585,17 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 	try
 	{
 		FILE * f;
+		char filenamedump[ 50 ];
+		sprintf_s( filenamedump, "lasterror_%i.txt", dumperrorid );
 		fopen_s( &f, "lasterror.txt", "w" );
 		if ( f )
 		{
 			fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
 			fprintf_s( f, "Game.dll:%X\n", GameDll );
 			fprintf_s( f, "Storm.dll:%X\n", StormDll );
+			fprintf_s( f, "Lasterror:%X\n", GetLastError( ) );
+
+
 			if ( ExceptionInfo )
 			{
 				fprintf_s( f, "ExceptionInfo:%X\n", ( int )ExceptionInfo );
@@ -785,12 +790,14 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 
 	if ( ( exceptionCode & ERROR_SEVERITY_ERROR ) != ERROR_SEVERITY_ERROR ) {
 		cerr << "Found ERROR_SEVERITY_ERROR..." << endl;
+		DumpExceptionInfoToFile( ExceptionInfo );
 		return ExceptionContinueSearch;
 	}
 
 
 	if ( exceptionCode & APPLICATION_ERROR_MASK ) {
 		cerr << "Found APPLICATION_ERROR_MASK..." << endl;
+		DumpExceptionInfoToFile( ExceptionInfo );
 		return ExceptionContinueSearch;
 	}
 
@@ -804,6 +811,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 #endif
 		if ( *InGame )
 		{
+			dumperrorid--;
 			TopLevelExceptionFilter( ExceptionInfo );
 		}
 		DumpExceptionInfoToFile( ExceptionInfo );
@@ -820,6 +828,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( continueablecode );
 #endif
+	dumperrorid--;
 	TopLevelExceptionFilter( ExceptionInfo );
 	DumpExceptionInfoToFile( ExceptionInfo );
 

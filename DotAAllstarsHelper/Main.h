@@ -395,6 +395,7 @@ extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
 extern BOOL LOCK_MOUSE_IN_WINDOW;
 extern BOOL BlockKeyboardAndMouseWhenTeleport;
+extern BOOL rawimage_skipmouseevent;
 typedef LRESULT( __fastcall *  WarcraftRealWNDProc )( HWND hWnd, unsigned int Msg, WPARAM wParam, LPARAM lParam );
 extern WarcraftRealWNDProc WarcraftRealWNDProc_org, WarcraftRealWNDProc_ptr;
 extern HANDLE hPressKeyWithDelay;
@@ -566,8 +567,10 @@ struct RawImageCallbackData
 	BOOL IsLeftButton;
 };
 
+
+
 extern RawImageCallbackData * GlobalRawImageCallbackData;
-void RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey );
+BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey );
 
 struct RawImageStruct
 {
