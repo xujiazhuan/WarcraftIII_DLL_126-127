@@ -2963,7 +2963,7 @@ int __stdcall RawImage_SetFontSettings( const char * fontname, int fontsize, uns
 int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, RGBAPix color )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText"  );
+	AddNewLineToDotaHelperLog( "RawImage_DrawText" );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -3330,7 +3330,7 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	tmpRawImage.size_x = xsize;
 	tmpRawImage.size_y = ysize;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawOverlay" + string("end") );
+	AddNewLineToDotaHelperLog( "RawImage_DrawOverlay" + string( "end" ) );
 #endif
 	return TRUE;
 }
@@ -3374,7 +3374,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 	if ( !GlobalRawImageCallbackData )
 		return FALSE;
 
-	
+
 
 	GlobalRawImageCallbackData->IsAltPressed = IsKeyPressed( VK_MENU );
 	GlobalRawImageCallbackData->IsCtrlPressed = IsKeyPressed( VK_CONTROL );
@@ -3392,7 +3392,11 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 	for ( unsigned int i = ListOfRawImages.size( ) - 1; i > 0; i-- )
 	{
+		BOOL retval = rawimage_skipmouseevent;
+
 		RawImageStruct & img = ListOfRawImages[ i ];
+		RGBAPix* RawImageData = ( RGBAPix* )img.img.buf;
+
 		if ( img.used_for_overlay &&
 			img.MouseCallback &&
 			( img.events & ( unsigned int )callbacktype ) > 0 )
@@ -3407,6 +3411,29 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 			if ( mousex > posx && mousex < posx + sizex && mousey > posy && mousey < posy + sizey )
 			{
+				int img_x = img.width - ( int )( posx + sizex - mousex );
+				int img_y = img.height - ( int )( posy + sizey - mousey );
+
+
+
+
+				if ( img_x > img.width )
+					img_x = img.width;
+
+				if ( img_y > img.height )
+					img_y = img.height;
+
+				if ( img_x < 0 )
+					img_x = 0;
+
+				if ( img_y < 0 )
+					img_y = 0;
+
+				RGBAPix eventpix = RawImageData[ ArrayXYtoId( img.width, img_x, img_y ) ];
+
+				if ( eventpix.A <= 20 )
+					retval = FALSE;
+
 				MouseEnteredInRawImage = TRUE;
 			}
 
@@ -3419,8 +3446,8 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 					if ( MouseEnteredInRawImage )
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
-
-					ExecuteFunc( &img.MouseActionCallback );
+					if ( retval )
+						ExecuteFunc( &img.MouseActionCallback );
 					return FALSE;
 				}
 				break;
@@ -3428,8 +3455,9 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				if ( !img.IsMouseDown && MouseEnteredInRawImage )
 				{
 					img.IsMouseDown = TRUE;
-					ExecuteFunc( &img.MouseActionCallback );
-					return TRUE;
+					if ( retval )
+						ExecuteFunc( &img.MouseActionCallback );
+					return retval;
 				}
 				break;
 			case RawImageEventType::MouseClick:
@@ -3452,9 +3480,12 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				{
 					if ( MouseEnteredInRawImage )
 					{
-						img.IsMouseEntered = TRUE;
-						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;
-						ExecuteFunc( &img.MouseActionCallback );
+						if ( retval )
+						{
+							img.IsMouseEntered = TRUE;
+							GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;
+							ExecuteFunc( &img.MouseActionCallback );
+						}
 					}
 				}
 				break;

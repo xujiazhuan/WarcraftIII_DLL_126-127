@@ -655,7 +655,7 @@ BOOL IsGameFrameActive( )
 }
 
 
-BOOL rawimage_skipmouseevent = FALSE;
+BOOL rawimage_skipmouseevent = TRUE;
 
 int __stdcall RawImage_SkipMouseClick( BOOL enabled )
 {
@@ -741,8 +741,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_LBUTTONDOWN )
 			{
 				GlobalRawImageCallbackData->IsLeftButton = TRUE;
-				if ( RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y )
-					&& rawimage_skipmouseevent )
+				if ( RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y ) )
 					return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
 
@@ -755,8 +754,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_RBUTTONDOWN )
 			{
 				GlobalRawImageCallbackData->IsLeftButton = FALSE;
-				if ( RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y )
-					&& rawimage_skipmouseevent )
+				if ( RawImageGlobalCallbackFunc( RawImageEventType::MouseDown, ( float )GlobalMousePos.x, ( float )GlobalMousePos.y ) )
 					return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
 
