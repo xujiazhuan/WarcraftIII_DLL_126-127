@@ -175,7 +175,7 @@ int __stdcall JassLog( const char * s )
 
 
 #ifdef DOTA_HELPER_LOG
-void __stdcall  AddNewLineToDotaChatLog( string s )
+void __stdcall  AddNewLineToDotaChatLog( const string s )
 {
 	if ( bDllLogEnable )
 	{
@@ -188,7 +188,7 @@ void __stdcall  AddNewLineToDotaChatLog( string s )
 	}
 }
 
-void __stdcall  AddNewLineToDotaHelperLog( string s )
+void __stdcall  AddNewLineToDotaHelperLog( const string s )
 {
 	if ( bDllLogEnable )
 	{
@@ -201,7 +201,7 @@ void __stdcall  AddNewLineToDotaHelperLog( string s )
 	}
 }
 
-void __stdcall  AddNewLineToJassNativesLog( string s )
+void __stdcall  AddNewLineToJassNativesLog( const string s )
 {
 	if ( JNativesFuncLog.size( ) > 40 )
 	{
@@ -212,7 +212,7 @@ void __stdcall  AddNewLineToJassNativesLog( string s )
 }
 
 
-void __stdcall  AddNewLineToJassLog( string s )
+void __stdcall  AddNewLineToJassLog( const string s )
 {
 	if ( JassLogList.size( ) > 35 )
 	{
@@ -224,7 +224,7 @@ void __stdcall  AddNewLineToJassLog( string s )
 
 
 
-void __stdcall  AddNewLineToBlizzard1Log( string s )
+void __stdcall  AddNewLineToBlizzard1Log( const string s )
 {
 	if ( Blizzard1Log.size( ) > 35 )
 	{
@@ -234,7 +234,7 @@ void __stdcall  AddNewLineToBlizzard1Log( string s )
 }
 
 
-void __stdcall  AddNewLineToBlizzard2Log( string s )
+void __stdcall  AddNewLineToBlizzard2Log( const string s )
 {
 	if ( Blizzard2Log.size( ) > 35 )
 	{
@@ -244,7 +244,7 @@ void __stdcall  AddNewLineToBlizzard2Log( string s )
 }
 
 
-void  __stdcall AddNewLineToBlizzard3Log( string s )
+void  __stdcall AddNewLineToBlizzard3Log( const string s )
 {
 	if ( Blizzard3Log.size( ) > 35 )
 	{
@@ -254,7 +254,7 @@ void  __stdcall AddNewLineToBlizzard3Log( string s )
 }
 
 
-void __stdcall  AddNewLineToBlizzard4Log( string s )
+void __stdcall  AddNewLineToBlizzard4Log( const string s )
 {
 	if ( Blizzard4Log.size( ) > 35 )
 	{
@@ -263,7 +263,7 @@ void __stdcall  AddNewLineToBlizzard4Log( string s )
 	Blizzard4Log.push_back( s );
 }
 
-void  __stdcall AddNewLineToBlizzard4Log_2( string s )
+void  __stdcall AddNewLineToBlizzard4Log_2( const string s )
 {
 	if ( Blizzard4Log_2.size( ) > 35 )
 	{
@@ -274,7 +274,7 @@ void  __stdcall AddNewLineToBlizzard4Log_2( string s )
 
 
 
-void  __stdcall AddNewLineToBlizzard5Log( string s )
+void  __stdcall AddNewLineToBlizzard5Log( const string s )
 {
 	if ( Blizzard5Log.size( ) > 35 )
 	{
@@ -284,7 +284,7 @@ void  __stdcall AddNewLineToBlizzard5Log( string s )
 }
 
 
-void __stdcall AddNewLineToBlizzard6Log( string s )
+void __stdcall AddNewLineToBlizzard6Log( const string s )
 {
 	if ( Blizzard6Log.size( ) > 35 )
 	{
@@ -355,8 +355,8 @@ signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
 	signed int retval = LookupJassFunc_ptr( a1, unused, funcname );
 	if ( funcname &&  *funcname != '\0' )
 	{
-#ifdef DOTA_HELPER_LOG
-		AddNewLineToJassLog( funcname );
+#ifdef DOTA_HELPER_LOGz
+		AddNewLineToJassNativesLog( funcname );
 #endif
 	}
 	return retval;
@@ -587,7 +587,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 		FILE * f;
 		char filenamedump[ 50 ];
 		sprintf_s( filenamedump, "lasterror_%i.txt", dumperrorid );
-		fopen_s( &f, "lasterror.txt", "w" );
+		fopen_s( &f, filenamedump, "w" );
 		if ( f )
 		{
 			fprintf_s( f, "%s[%s]\n", "Dump default error info...", IsVEHex ? "SEH" : "VEH" );
@@ -712,7 +712,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 	}
 	catch ( ... )
 	{
-
+		MessageBoxA( 0, "SUPER FATAL ERROR!", " UNREAL FATAL ERROR ", 0 );
 	}
 }
 
@@ -1194,6 +1194,17 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 
 
+typedef unsigned int( __stdcall * Ordinal590_p )( char *a1 );
+Ordinal590_p Ordinal590_org;
+Ordinal590_p Ordinal590_ptr;
+
+unsigned int __stdcall Ordinal590_my( char *a1 )
+{	
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "STORM_590:" + string( a1 ) );
+#endif
+	return Ordinal590_ptr( a1 );
+}
 
 
 BlizzardDebug1 BlizzardDebug1_org = NULL;
@@ -1336,6 +1347,10 @@ void __stdcall EnableErrorHandler( int )
 		MH_EnableHook( ProcessNetEvents_org );
 	}
 
+
+	Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
+	//MH_CreateHook( Ordinal590_org, &Ordinal590_my, reinterpret_cast< void** >( &Ordinal590_ptr ) );
+//	MH_EnableHook( Ordinal590_org );
 
 	//if ( BlizzardDebug1_org )
 	//{

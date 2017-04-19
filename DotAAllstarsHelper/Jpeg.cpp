@@ -3,6 +3,7 @@
 //+-----------------------------------------------------------------------------
 #include "Main.h"
 extern "C" { FILE __iob_func[ 3 ] = { *stdin,*stdout,*stderr }; }
+#define JPEG_INTERNALS
 #include "Jpeg.h"
 
 
@@ -80,6 +81,40 @@ BOOL JPEG::Write( Buffer& SourceBuffer, Buffer& TargetBuffer, INT Width, INT Hei
 	return TRUE;
 }
 
+void FinishJpeg( jpeg_decompress_struct * cinfo )
+{
+	//if ( ( cinfo->global_state == DSTATE_SCANNING ||
+	//	cinfo->global_state == DSTATE_RAW_OK ) && !cinfo->buffered_image ) {
+	//	/* Terminate final pass of non-buffered mode */
+	//	if ( cinfo->output_scanline < cinfo->output_height )
+	//		ERREXIT( cinfo, JERR_TOO_LITTLE_DATA );
+	//	( *cinfo->master->finish_output_pass ) ( cinfo );
+	//	cinfo->global_state = DSTATE_STOPPING;
+	//}
+	//else if ( cinfo->global_state == DSTATE_BUFIMAGE ) {
+	//	/* Finishing after a buffered-image operation */
+	//	cinfo->global_state = DSTATE_STOPPING;
+	//}
+	//else if ( cinfo->global_state != DSTATE_STOPPING ) {
+	//	/* STOPPING = repeat call after a suspension, anything else is error */
+	//	ERREXIT1( cinfo, JERR_BAD_STATE, cinfo->global_state );
+	//}
+	/* Read until EOI */
+	/*while ( !cinfo->inputctl->eoi_reached ) {
+		if ( ( *cinfo->inputctl->consume_input ) ( cinfo ) == JPEG_SUSPENDED )
+			return;		/* Suspend, come back later */
+	//}*/
+	/* Do final cleanup */
+	//( *cinfo->src->term_source ) ( cinfo );
+	/* We can use jpeg_abort to release memory and reset global_state */
+
+	// finish_output_pass crash when debugging mode enabled
+	// Read until EOI crash when debugging mode enabled
+
+	cinfo->global_state = DSTATE_STOPPING;
+	( *cinfo->src->term_source ) ( cinfo );
+	jpeg_abort( ( j_common_ptr )cinfo );
+}
 
 //+-----------------------------------------------------------------------------
 //| Reads JPEG data
@@ -89,6 +124,7 @@ BOOL JPEG::Read( Buffer & SourceBuffer, Buffer& TargetBuffer, INT* Width, INT* H
 	INT i;
 	INT Stride;
 	INT Offset;
+	JSAMPARRAY Pointer;
 	CHAR Opaque;
 	//JSAMPARRAY Pointer;
 	jpeg_decompress_struct Info;
@@ -118,18 +154,19 @@ BOOL JPEG::Read( Buffer & SourceBuffer, Buffer& TargetBuffer, INT* Width, INT* H
 	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART1" ) );
 #endif
 
-	while ( Info.output_scanline < Info.output_height ) {
-		unsigned char *rowp[ 1 ];
-		rowp[ 0 ] = ( unsigned char * )&TargetBuffer[ 0 ] + Stride * Info.output_scanline;
-		jpeg_read_scanlines( &Info, rowp, 1 );
+	Pointer = ( *Info.mem->alloc_sarray )( reinterpret_cast<j_common_ptr>( &Info ), JPOOL_IMAGE, Stride, 1 );
+	while ( Info.output_scanline < Info.output_height )
+	{
+		jpeg_read_scanlines( &Info, Pointer, 1 );
+		memcpy( TargetBuffer.GetData( Offset ), Pointer[ 0 ], Stride );
+		Offset += Stride;
 	}
-
 
 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART2" ) );
 #endif
-	jpeg_finish_decompress( &Info );
+	FinishJpeg( &Info );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART3" ) );
 #endif

@@ -41,6 +41,10 @@ public:
 	{
 		return buf;
 	}
+	char * GetData( int offset )
+	{
+		return buf + offset;
+	}
 
 	unsigned long GetSize( )
 	{

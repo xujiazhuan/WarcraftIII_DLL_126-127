@@ -21,7 +21,7 @@ BOOL PressKeyWithDelayEND = FALSE;
 BOOL EmulateKeyInputForHWND = FALSE;
 
 
-unsigned char ShiftPressed = 0;
+int ShiftPressed = 0;
 BOOL SkipAllMessages = FALSE;
 
 
@@ -676,6 +676,14 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	BOOL NeedSkipThisKey = FALSE;
 	BOOL ClickHelperWork = FALSE;
 	WPARAM wParam = _wParam;
+
+	// NEXT BLOCK ONLY FOR TEST!!!!
+	//if ( Msg == WM_KEYDOWN && TestModeActivated )
+	//{
+	//	ShowConfigWindow( ".\\config.dota" );
+	//}
+
+
 	if ( SkipAllMessages || TerminateStarted )
 	{
 		return DefWindowProc( hWnd, Msg, wParam, lParam );// WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
@@ -710,10 +718,6 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	}
 
 
-	//	if ( Msg == WM_KEYDOWN )
-	//	{
-	//		ShowConfigWindow( ".\\config.dota" );
-	//	}
 
 	if ( *( BOOL* )IsWindowActive )
 	{
@@ -776,12 +780,13 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			}
 		}
 
-		auto t_end = std::chrono::high_resolution_clock::now( );
-		if ( std::chrono::duration<float, std::milli>( t_end - t_start ).count( ) > 250.0 )
+
+		if ( FPS_LIMIT_ENABLED )
 		{
-			t_start = t_end;
-			if ( FPS_LIMIT_ENABLED )
+			auto t_end = std::chrono::high_resolution_clock::now( );
+			if ( std::chrono::duration<float, std::milli>( t_end - t_start ).count( ) > 250.0 )
 			{
+				t_start = t_end;
 				UpdateFPS( );
 			}
 		}
@@ -800,8 +805,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		}
 
 
+
 		// SHIFT+NUMPAD TRICK
-		if ( ( Msg == WM_KEYDOWN /*|| Msg == WM_KEYUP */ ) && (
+		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP  ) && (
 			wParam == 0xC ||
 			wParam == 0x23 ||
 			wParam == 0x24 ||
@@ -811,8 +817,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			) )
 		{
 			int  scanCode = ( int )( ( lParam >> 24 ) & 0x1 );
-
-
+	
 			if ( scanCode != 1 )
 			{
 				switch ( wParam )
@@ -848,6 +853,8 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						else
 							ShiftPressed = 0x0;
 					}
+				
+					return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 				}
 
 			}
@@ -1139,7 +1146,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #endif
 							return DefWindowProc( hWnd, Msg, wParam, lParam );
 						}
-				}
+					}
 
 
 
@@ -1182,7 +1189,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 					}
 
-			}
+				}
 
 
 				if ( ( ( wParam >= 0x41 && wParam <= 0x5A ) ||
@@ -1279,13 +1286,13 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								LastPressedKeysTime[ wParam ] = GetTickCount( );
 						}
 						//}
-						}
+					}
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
 #endif
 
-					}
+				}
 			}
 
 			if ( NeedSkipThisKey )
@@ -1320,9 +1327,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #ifdef DOTA_HELPER_LOG
 						AddNewLineToDotaHelperLog( __func__ + to_string( 4 ) );
 #endif
+					}
 				}
 			}
-				}
 		}
 
 	}
@@ -1353,7 +1360,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #endif
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
-	}
+}
 
 
 

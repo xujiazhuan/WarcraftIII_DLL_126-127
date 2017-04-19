@@ -192,15 +192,30 @@ int GetSelectedUnit( int slot )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( "GetSelectedUnit" );
 #endif
-	int plr = GetPlayerByNumber( slot );
-	if ( plr > 0 )
+	if ( slot >= 0 && slot <= 15 )
 	{
-		int PlayerData1 = *( int* )( plr + 0x34 );
-		if ( PlayerData1 > 0 )
+		int plr = GetPlayerByNumber( slot );
+		if ( plr > 0 )
 		{
-			return *( int * )( PlayerData1 + 0x1e0 );
+			int PlayerData1 = *( int* )( plr + 0x34 );
+			if ( PlayerData1 > 0 )
+			{
+				return *( int * )( PlayerData1 + 0x1e0 );
+			}
 		}
+#ifdef DOTA_HELPER_LOG
+		else
+		{
+			AddNewLineToDotaChatLog( "GetSelectedUnit::FATAL_ERROR_PLAYERADDR:" + to_string( slot ) );
+		}
+#endif
 	}
+#ifdef DOTA_HELPER_LOG
+	else
+	{
+		AddNewLineToDotaChatLog( "GetSelectedUnit::FATAL_ERROR_PLAYERSLOT:" + to_string(slot) );
+	}
+#endif
 
 	return NULL;
 }

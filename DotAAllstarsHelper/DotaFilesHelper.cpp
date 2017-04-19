@@ -3405,12 +3405,10 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 			//posy -= sizey;
 			GlobalRawImageCallbackData->RawImage = img.RawImage;
 
-
 			if ( mousex > posx && mousex < posx + sizex && mousey > posy && mousey < posy + sizey )
 			{
 				MouseEnteredInRawImage = TRUE;
 			}
-
 
 			switch ( callbacktype )
 			{
@@ -3477,10 +3475,6 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 			default:
 				break;
 			}
-
-
-
-
 		}
 	}
 

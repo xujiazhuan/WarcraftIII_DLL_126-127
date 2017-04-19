@@ -171,9 +171,6 @@ DWORD CCrc32Dynamic::FileCrc32Streams( char * szFilename, DWORD &dwCrc32 ) const
 //***********************************************
 DWORD CCrc32Dynamic::FileCrc32Win32( char * szFilename, DWORD &dwCrc32 ) const
 {
-	_ASSERTE( szFilename );
-	_ASSERTE( lstrlen( szFilename ) );
-
 	DWORD dwErrorCode = NO_ERROR;
 	HANDLE hFile = NULL;
 
@@ -224,9 +221,6 @@ DWORD CCrc32Dynamic::FileCrc32Win32( char * szFilename, DWORD &dwCrc32 ) const
 //***********************************************
 DWORD CCrc32Dynamic::FileCrc32Filemap( char * szFilename, DWORD &dwCrc32 ) const
 {
-	_ASSERTE( szFilename );
-	_ASSERTE( lstrlen( szFilename ) );
-
 	DWORD dwErrorCode = NO_ERROR;
 	HANDLE hFile = NULL, hFilemap = NULL;
 
@@ -323,9 +317,6 @@ DWORD CCrc32Dynamic::FileCrc32Filemap( char * szFilename, DWORD &dwCrc32 ) const
 //***********************************************
 DWORD CCrc32Dynamic::FileCrc32Assembly( char * szFilename, DWORD &dwCrc32 ) const
 {
-	_ASSERTE( szFilename );
-	_ASSERTE( lstrlen( szFilename ) );
-
 	DWORD dwErrorCode = NO_ERROR;
 	HANDLE hFile = NULL;
 

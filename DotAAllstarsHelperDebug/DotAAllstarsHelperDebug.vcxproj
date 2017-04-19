@@ -94,6 +94,8 @@
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <EnableUAC>
       </EnableUAC>
+      <HeapReserveSize>4194304</HeapReserveSize>
+      <StackReserveSize>4194304</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

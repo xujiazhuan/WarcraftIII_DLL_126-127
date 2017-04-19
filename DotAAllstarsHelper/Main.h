@@ -51,6 +51,7 @@ using namespace std;
 
 extern BOOL TerminateStarted;
 extern BOOL IsVEHex;
+extern BOOL TestModeActivated;
 
 struct CustomHPBar
 {
@@ -309,9 +310,9 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 
 #pragma region ErrorHandler.cpp
 #ifdef DOTA_HELPER_LOG
-void  __stdcall AddNewLineToJassLog( string s );
-void __stdcall  AddNewLineToDotaChatLog( string s );
-void __stdcall  AddNewLineToDotaHelperLog( string s );
+void  __stdcall AddNewLineToJassLog( const string s );
+void __stdcall  AddNewLineToDotaChatLog( const string s );
+void __stdcall  AddNewLineToDotaHelperLog( const string s );
 #endif
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );
@@ -402,7 +403,7 @@ extern HANDLE hPressKeyWithDelay;
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam );
 extern BOOL PressKeyWithDelayEND;
 DWORD WINAPI PressKeyWithDelay( LPVOID );
-extern unsigned char ShiftPressed;
+extern int ShiftPressed;
 extern BOOL SkipAllMessages;
 extern int IssueWithoutTargetOrderOffset;
 extern int IssueTargetOrPointOrder2Offset;

@@ -237,7 +237,7 @@ void Initd3d9Hook( )
 	{
 		memset( loadanyd3dx, 0, 20 );
 		sprintf_s( loadanyd3dx, "d3dx9_%i.dll", i );
-		d3d9_43 = LoadLibraryA( "d3dx9_43.dll" );
+		d3d9_43 = LoadLibraryA( loadanyd3dx );
 		if ( d3d9_43 != NULL )
 			break;
 	}

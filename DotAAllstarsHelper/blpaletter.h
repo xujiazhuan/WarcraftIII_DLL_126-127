@@ -158,7 +158,7 @@ struct RGBAPix
 		return *this;
 	}
 
-	RGBAPix operator * ( RGBAPix & pix )
+	RGBAPix operator * ( RGBAPix pix )
 	{
 		if ( pix.A > 0 && this->A > 0 )
 			this->A = FixBounds( 255.f / ( this->A / pix.A ) );
@@ -180,7 +180,7 @@ struct RGBAPix
 
 		return ( *this );
 	}
-	RGBAPix operator + ( RGBAPix & pix )
+	RGBAPix operator + ( RGBAPix pix )
 	{
 		this->A = FixBounds( this->A + pix.A );
 		this->R = FixBounds( this->R + pix.R );
@@ -192,7 +192,7 @@ struct RGBAPix
 
 
 
-	RGBAPix operator / ( RGBAPix & pix )
+	RGBAPix operator / ( RGBAPix pix )
 	{
 		if ( pix.A > 0 && this->A > 0 )
 			this->A = FixBounds( 255.f / ( pix.A / this->A ) );
@@ -215,7 +215,7 @@ struct RGBAPix
 		return ( *this );
 	}
 
-	RGBAPix operator - ( RGBAPix & pix )
+	RGBAPix operator - ( RGBAPix pix )
 	{
 		this->A = FixBounds( this->A - pix.A );
 		this->R = FixBounds( this->R - pix.R );

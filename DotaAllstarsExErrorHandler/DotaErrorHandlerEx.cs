@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Linq;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
@@ -194,15 +193,17 @@ namespace DotaAllstarsExErrorHandler
         private void SaveButton_Click(object sender, EventArgs e)
         {
             File.Open(SaveFileName.Text, FileMode.Create).Close();
-            File.AppendAllText(SaveFileName.Text, "DotaChatLog:\n");
-            File.AppendAllLines(SaveFileName.Text, DotaChatLog.Items.Cast<String>().ToList());
-            File.AppendAllText(SaveFileName.Text, "DotaHelperLog:\n");
-            File.AppendAllLines(SaveFileName.Text, DotaHelperLog.Items.Cast<String>().ToList());
-            File.AppendAllText(SaveFileName.Text, "JassNativesFuncLog:\n");
-            File.AppendAllLines(SaveFileName.Text, JassNativesFuncLog.Items.Cast<String>().ToList());
-            File.AppendAllText(SaveFileName.Text, "JassLogList:\n");
-            File.AppendAllLines(SaveFileName.Text, JassLogList.Items.Cast<String>().ToList());
+            List<string> outdata = new List<string>();
 
+            outdata.Add( "DotaChatLog:\n");
+            outdata.AddRange(DotaChatLog.Items.Cast<String>().ToList());
+            outdata.Add("DotaHelperLog:\n");
+            outdata.AddRange(DotaHelperLog.Items.Cast<String>().ToList());
+            outdata.Add("JassNativesFuncLog:\n");
+            outdata.AddRange(JassNativesFuncLog.Items.Cast<String>().ToList());
+            outdata.Add("JassLogList:\n");
+            outdata.AddRange( JassLogList.Items.Cast<String>().ToList());
+            File.WriteAllLines(SaveFileName.Text, outdata.ToArray());
         }
         private void Form1_Load(object sender, EventArgs e)
         {

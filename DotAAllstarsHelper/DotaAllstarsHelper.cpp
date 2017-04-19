@@ -166,7 +166,7 @@ char *  GetWar3Preferense( int ID )
 				while ( *( int * )result != ID )
 				{
 					result = *( char ** )&result[ *( int * )( *( int * )( ID + 28 ) + 12 * ( *( int * )( pPrefAddr + 36 ) & ID ) ) + 4 ];
-					if ( !result  )
+					if ( !result )
 					{
 						break;
 					}
@@ -298,15 +298,35 @@ void InitHook( )
 	EnableErrorHandler( 0 );
 #endif
 
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "Wc3 window hook..." );
+#endif
+	if ( !Warcraft3Window )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "FATAL ERROR:Wc3 window not found" );
+		AddNewLineToDotaHelperLog( "in memory.Try to using old method :" );
+#endif
+		Warcraft3Window = FindWindowA( "Warcraft III", 0 );
+		if ( !Warcraft3Window )
+			Warcraft3Window = FindWindowA( 0, "Warcraft III" );
+	}
+
 	if ( Warcraft3Window )
 	{
-
 		WarcraftRealWNDProc_org = ( WarcraftRealWNDProc )Warcraft3WindowProcOffset;
 		hPressKeyWithDelay = CreateThread( 0, 0, PressKeyWithDelay, 0, 0, 0 );
 		MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
 		MH_EnableHook( WarcraftRealWNDProc_org );
-
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "Wc3 window hook:OK" );
+#endif
 	}
+#ifdef DOTA_HELPER_LOG
+	else
+		AddNewLineToDotaHelperLog( "Wc3 window hook:BAD" );
+#endif
 
 	SetGameAreaFOV_org = ( SetGameAreaFOV )( SetGameAreaFOVoffset + GameDll );
 
@@ -1760,7 +1780,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	{
 		char * fMemAddr = mutedplayers.back( );
 		if ( fMemAddr )
-			free( fMemAddr);
+			free( fMemAddr );
 		mutedplayers.pop_back( );
 	}
 
@@ -1803,9 +1823,15 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 	if ( gameversion == 0x26a )
 	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Clear old hooks and free memory:" ) );
+#endif
 		UninitializeHook( );
-
 		FreeAllIHelpers( );
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Init variables:" ) );
+#endif
 		pOnChatMessage_offset = 0x2FB480;
 		IsNeedDrawUnit2offset = 0x28E1D0;
 		IsNeedDrawUnit2offsetRetAddress = 0x2F9B60;
@@ -1858,9 +1884,19 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		sub_6F33A010Offset = 0x33A010;
 
 		GameGetFileOffset = 0x4C1550;
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Load storm address:" ) );
+#endif
+
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
 		//Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Init JMP hooks:" ) );
+#endif
 
 		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
 
@@ -1955,8 +1991,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		SetGameAreaFOVoffset = 0x7B66F0;
 
-
-		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
+		if ( !TestModeActivated )
+			hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
 		pWar3GlobalData1 = GameDll + 0xACBD40;
@@ -1973,6 +2009,10 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		int PatchMemMB1 = GameDll + 0x33ba0a;
 		int PatchMemMB2 = GameDll + 0x33ba0e;
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Init 2:" ) );
+#endif
 
 
 		AddNewOffset_( PatchMemMB1, *( int* )PatchMemMB1, Feature_CUSTOM_FPS_INFO );
@@ -1991,6 +2031,10 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_SetMaxFps( 200 );
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
 		ManaBarSwitch( TRUE );
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Init 3:" ) );
+#endif
 
 		DefaultCStatus = GameDll + 0xA8C804;
 		LoadFramesVar1 = GameDll + 0xACD214;
@@ -2018,6 +2062,10 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x3C9600 );
 
 		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x341740 );
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:Init minhook:" ) );
+#endif
 		InitHook( );
 
 		InitOpenglHook( );
@@ -2025,15 +2073,23 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.26a]:ALL OKAY. Init complete:" ) );
 #endif
 		return crc32;
 	}
 	else if ( gameversion == 0x27a )
 	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:Clear old hooks and free memory:" ) );
+#endif
 		UninitializeHook( );
 
 		FreeAllIHelpers( );
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:Init variables:" ) );
+#endif
+
 		pOnChatMessage_offset = 0x355CF0;
 		IsNeedDrawUnit2offset = 0x66E710;
 		IsNeedDrawUnit2offsetRetAddress = 0x359D60;
@@ -2088,6 +2144,11 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 		GameGetFileOffset = 0x048C10;
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:Load storm address:" ) );
+#endif
+
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
 		/*Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
@@ -2097,6 +2158,11 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		PacketClassPtr = GameDll + 0x973210;
 		pGAME_SendPacket = GameDll + 0x30F1B0;
+
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:Init JMP hooks:" ) );
+#endif
+
 
 		int pDrawAttackSpeed = GameDll + 0x38C6E0;
 		AddNewOffset_( pDrawAttackSpeed, *( int* )pDrawAttackSpeed, Feature_AttackSpeed );
@@ -2192,8 +2258,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		SetGameAreaFOVoffset = 0xD31D0;
 
-
-		hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
+		if ( !TestModeActivated )
+			hRefreshTimer = CreateThread( 0, 0, RefreshTimer, 0, 0, 0 );
 
 
 		pWar3GlobalData1 = GameDll + 0xBC5420;
@@ -2211,6 +2277,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int PatchMemMB1 = GameDll + 0x3b19ed;
 		int PatchMemMB2 = GameDll + 0x3b19f1;
 
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:Init 2:" ) );
+#endif
 
 		AddNewOffset_( PatchMemMB1, *( int* )PatchMemMB1, Feature_CUSTOM_FPS_INFO );
 		AddNewOffset_( PatchMemMB2, *( int* )PatchMemMB2, Feature_CUSTOM_FPS_INFO );
@@ -2257,7 +2326,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x3ACCF0 );
 
-
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:Init minhook:" ) );
+#endif
 		InitHook( );
 
 		InitOpenglHook( );
@@ -2266,7 +2337,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+		AddNewLineToDotaHelperLog( __func__ + string( ":[1.27a]:ALL OKAY. Init complete:" ) );
 #endif
 		return crc32;
 	}
@@ -2366,6 +2437,7 @@ void SetTlsForMe( )
 	TlsSetValue( TlsIndex, tls );
 }
 
+BOOL TestModeActivated = FALSE;
 
 #pragma region Main
 BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
@@ -2394,9 +2466,11 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
 		/*Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );*/
 		Warcraft3_Process = GetCurrentProcess( );
+		// NEXT 3 LINES ONLY FOR TEST !!!
+		// TestModeActivated = TRUE;
+		// InitDotaHelper( 0x26a );
+		//	MainFuncWork = TRUE;
 
-		/*InitDotaHelper( 0x27a );
-		MainFuncWork = TRUE;*/
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
