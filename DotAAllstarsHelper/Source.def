@@ -92,3 +92,4 @@ GetScreenWidth
 GetScreenHeight
 GetWindowWidth
 GetWindowHeight
+ShowSkillPanelForAllUnits

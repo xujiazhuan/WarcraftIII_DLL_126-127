@@ -92,5 +92,6 @@ GetScreenWidth
 GetScreenHeight
 GetWindowWidth
 GetWindowHeight
+ShowSkillPanelForAllUnits
 TopLevelExceptionFilter
 DotaVectoredToSehHandler

@@ -554,7 +554,7 @@ StormErrorHandler StormErrorHandler_org = NULL;
 StormErrorHandler StormErrorHandler_ptr;
 
 
-string url_encode( const string &value )
+string url_encode( const string & value )
 {
 	ostringstream escaped;
 	escaped.fill( '0' );

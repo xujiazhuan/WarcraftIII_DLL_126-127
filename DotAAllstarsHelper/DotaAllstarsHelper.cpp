@@ -1666,6 +1666,7 @@ void __stdcall DisableAllHooks( )
 	GlyphButtonCreated = FALSE;
 	GlobalRawImageCallbackData = NULL;
 	ShowSkillPanelForObservers = FALSE;
+	ShowSkillPanelOnlyForHeroes = TRUE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1832,6 +1833,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	NeedDrawRegen = FALSE;
 	GlyphButtonCreated = FALSE;
 	ShowSkillPanelForObservers = FALSE;
+	ShowSkillPanelOnlyForHeroes = TRUE;
 	FPSfix1Enabled = FALSE;
 	GlobalRawImageCallbackData = NULL;
 	SetCustomFovFix( 1.0f );

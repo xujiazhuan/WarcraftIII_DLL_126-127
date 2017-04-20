@@ -265,6 +265,7 @@ extern pOnChatMessage pOnChatMessage_org, pOnChatMessage_ptr;
 BOOL IsPlayerObserver( int pid );
 BOOL IsLocalPlayerObserver( );
 extern BOOL ShowSkillPanelForObservers;
+extern BOOL ShowSkillPanelOnlyForHeroes;
 #pragma endregion
 
 #pragma region UnitAndItem.cpp

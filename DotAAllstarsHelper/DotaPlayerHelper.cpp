@@ -63,7 +63,7 @@ char GlobalChatMessageBuffer[ 1024 ];
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	char * playername = GetPlayerName( PlayerID, 1 );
 
@@ -95,12 +95,12 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 		}
 
 	}
+#ifdef DOTA_HELPER_LOG
 	else
 	{
-#ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( "Bad player", __LINE__ );
-#endif
 	}
+#endif
 	pOnChatMessage_ptr( a1, unused, PlayerID, message, a4, a5 );
 }
 
@@ -142,19 +142,19 @@ pIsPlayerObs IsPlayerObs;
 BOOL IsPlayerObserver( int pid )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	if ( pid >= 0 && pid <= 15 )
 	{
 		unsigned int player = Player( pid );
 		BOOL retval = IsPlayerObs( player );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	return FALSE;
 }
@@ -164,8 +164,3 @@ BOOL IsLocalPlayerObserver( )
 	return IsPlayerObserver( GetLocalPlayerId( ) );
 }
 
-int __stdcall ShowObserverSkillPanel( BOOL enabled )
-{
-	ShowSkillPanelForObservers = enabled;
-	return ShowSkillPanelForObservers;
-}
