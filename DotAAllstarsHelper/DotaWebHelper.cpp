@@ -10,7 +10,7 @@ string LatestDownloadedString;
 string SendHttpPostRequest( const char * host, const char * path, const char * data )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SendHttpPostRequest" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	HTTPRequest req( host, 80 );
 	if ( req.GetErrorCode( ) == 0 )
@@ -24,7 +24,7 @@ string SendHttpPostRequest( const char * host, const char * path, const char * d
 string SendHttpGetRequest( const char * host, const char * path )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SendHttpGetRequest" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	HTTPRequest req( host, 80 );
 	if ( req.GetErrorCode( ) == 0 )
@@ -39,7 +39,7 @@ string SendHttpGetRequest( const char * host, const char * path )
 void DownloadNewMapToFile( char* szUrl, char * filepath )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "DownloadNewMapToFile" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	DownStatus = 0;
 	HINTERNET hOpen = NULL;

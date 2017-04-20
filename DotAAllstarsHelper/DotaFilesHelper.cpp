@@ -168,7 +168,7 @@ int idddd = 0;
 void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ApplyTerrainFilter" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -265,7 +265,7 @@ int __stdcall ApplyTerrainFilterDirectly( char * filename, int * OutDataPointer,
 void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ApplyIconFilter" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	char * originfiledata = ( char * )( int )*OutDataPointer;
@@ -279,11 +279,11 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 	InBuffer.length = sz;
 	Buffer OutBuffer;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ApplyIconFilter2" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ApplyIconFilter3" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( rawImageSize > 0 )
 	{
@@ -346,13 +346,13 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 
 		Buffer ResultBuffer;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "ApplyIconFilter4" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename.c_str( ), w, h, bpp, alphaflag, mipmaps );
 
 		OutBuffer.Clear( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "ApplyIconFilter5" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( ResultBuffer.buf != NULL )
 		{
@@ -367,14 +367,14 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( "ApplyIconFilter6" );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		}
 #ifdef DOTA_HELPER_LOG
 		else
 		{
 
-			AddNewLineToDotaHelperLog( "ApplyIconFilter bad" );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 		}
 #endif
@@ -389,7 +389,7 @@ void ApplyIconFrameFilter( string filename, int * OutDataPointer, size_t * OutSi
 void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ApplyIconFilter" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	ICONMDLCACHE tmpih;
@@ -513,7 +513,7 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 {
 	string filename = _filename;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "FixDisabledIconPath" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	BOOL CreateDarkIcon = FALSE;
@@ -780,7 +780,7 @@ struct Mdx_GeosetAnimation
 void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesForReplace )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ProcessNodeAnims" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	Mdx_Track tmpTrack;
 	size_t offset = _offset;
@@ -870,7 +870,7 @@ BYTE HelperBytesPart3[ ] = { 0xFF,0xFF,0xFF,0xFF,
 void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ProcessModel" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	BYTE * ModelBytes = ( BYTE* )*OutDataPointer;
 	size_t sz = *OutSize;
@@ -1916,20 +1916,20 @@ void PrintLog( const char * str )
 BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ProcessFile start..." );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	BOOL IsFileExist = IsFileExistOld;
 
 	if ( !OutDataPointer || !OutSize || filename.length( ) < 3 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "Bad file found" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return IsFileExist;
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "Read from cache..." );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
@@ -1938,12 +1938,12 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 		*OutDataPointer = ( int )tmpih.buf;
 		*OutSize = tmpih.size;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "Read from cache [OK]." );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return TRUE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "Not found in cache. Process next..." );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	for ( RawImageStruct & s : ListOfRawImages )
@@ -1953,10 +1953,10 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 			if ( ToLower( filename ) == ToLower( s.filename ) )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( "Print filename1:" + filename );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( "Print filename2:" + s.filename );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 				*OutDataPointer = ( int )s.ingamebuffer.buf;
 				*OutSize = s.ingamebuffer.length;
@@ -1966,14 +1966,14 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "Print filename:" + filename );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
 	string FileExtension = ToLower( fs::path( filename ).extension( ).string( ) );
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "ProcessFileStart...[" + FileExtension + "], Path:" + ToLower( fs::path( filename ).extension( ).string( ) ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -2074,7 +2074,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	if ( !*InGame && !MainFuncWork )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "Game not found or main not set" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		return IsFileExist;
@@ -2082,14 +2082,14 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( string( "Start File Helper..[" ) + to_string( unknown ) + "]" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	if ( TerminateStarted )
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "TerminateStarted" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
@@ -2098,7 +2098,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	if ( !OutDataPointer || !OutSize )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "Bad Pointers" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 	}
@@ -2115,9 +2115,9 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 #ifdef DOTA_HELPER_LOG
 	if ( filename && *filename != '\0' )
-		AddNewLineToDotaHelperLog( string( "FileHelper:" ) + string( filename ) );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	else
-		AddNewLineToDotaHelperLog( "FileHelper(BADFILENAME)" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -2126,7 +2126,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "Bad file name" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		return IsFileExist;
@@ -2135,13 +2135,13 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	if ( !IsFileExist )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "NoFileFound" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	}
 	else
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "FileFound" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	}
 #ifdef DOTA_HELPER_LOG
@@ -2163,11 +2163,11 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 #ifdef DOTA_HELPER_LOG
 	if ( !IsFileExist )
 	{
-		AddNewLineToDotaHelperLog( "NoFileFound" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	}
 	else
 	{
-		AddNewLineToDotaHelperLog( "FileFound" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	}
 #endif
 
@@ -2183,7 +2183,7 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 {
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "CreateIconFrameMask" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	cout << "CreateIconFrameMask:" << iconpath << endl;
 #endif
 
@@ -2192,7 +2192,7 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "CreateIconFrameMask:OK2" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	return TRUE;
 }
@@ -2246,7 +2246,7 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 {
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "CreateRawImage" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	cout << "CreateRawImage:" << endl;
 #endif
 	width = width + ( width % 2 );
@@ -2276,7 +2276,7 @@ int __stdcall LoadRawImage( const char * filename )
 {
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "LoadRawImage" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	cout << "LoadRawImage:" << endl;
 #endif
 
@@ -2312,7 +2312,7 @@ int __stdcall LoadRawImage( const char * filename )
 		}
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "LoadRawImage2" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	cout << "LoadRawImage2:" << endl;
 #endif
 	if ( PatchFileData &&  PatchFileSize > 5 )
@@ -2963,7 +2963,7 @@ int __stdcall RawImage_SetFontSettings( const char * fontname, int fontsize, uns
 int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, RGBAPix color )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -2973,7 +2973,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText2" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	HDC hDC = CreateCompatibleDC( NULL );
 	char* pSrcData = 0;
@@ -2985,7 +2985,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 		return FALSE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText3" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	RECT rect = RECT( );
 	rect.left = x;
@@ -2997,7 +2997,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	HFONT NewFont = CreateFontA( _fontsize, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _fontname );
 	HFONT TempFont = NULL;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText4" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	UINT textcolor = color.ToUINT( );
 	UINT oldcolor = color.ToUINT( );
@@ -3013,7 +3013,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 	SetTextColor( hDC, color.ToUINT( ) );
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText5" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	int len = strlen( text );
@@ -3188,7 +3188,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 		tmpRawImage.needResetTexture = TRUE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawText" + string( "end" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	return TRUE;
@@ -3316,7 +3316,7 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos, float xsize, float ysize )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawOverlay" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -3330,7 +3330,7 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	tmpRawImage.size_x = xsize;
 	tmpRawImage.size_y = ysize;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "RawImage_DrawOverlay" + string( "end" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	return TRUE;
 }

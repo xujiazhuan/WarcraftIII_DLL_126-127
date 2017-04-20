@@ -17,7 +17,7 @@ int __stdcall SetMaxFps( int fps )
 
 void InitThreadCpuUsage( ) {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	SYSTEM_INFO sysInfo;
 	FILETIME ftime, fsys, fuser;
@@ -41,7 +41,7 @@ void InitThreadCpuUsage( ) {
 
 double GetWar3CpuUsage( ) {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	FILETIME ftime, fsys, fuser;
 	ULARGE_INTEGER now, sys, user;
@@ -105,7 +105,7 @@ int __stdcall EnableAutoFPSlimit( BOOL enable )
 BOOL __stdcall UnitNeedDrawBar( int unitaddr )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( unitaddr && IsNotBadUnit( unitaddr ) )
 	{

@@ -90,7 +90,7 @@ void DrawOverlayGl( )
 		return;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	if ( !DotaGlobalOverlay_OPENGL )

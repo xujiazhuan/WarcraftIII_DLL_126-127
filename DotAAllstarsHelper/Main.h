@@ -1,8 +1,6 @@
 ﻿#pragma once
 //#define DOTA_HELPER_LOG
 
-
-#define MY_HEADER_FILE_
 #define _WIN32_WINNT 0x0501 
 #define WINVER 0x0501 
 #define NTDDI_VERSION 0x05010000
@@ -310,9 +308,9 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 
 #pragma region ErrorHandler.cpp
 #ifdef DOTA_HELPER_LOG
-void  __stdcall AddNewLineToJassLog( const string s );
-void __stdcall  AddNewLineToDotaChatLog( const string s );
-void __stdcall  AddNewLineToDotaHelperLog( const string s );
+void  __stdcall AddNewLineToJassLog( const char * s );
+void __stdcall  AddNewLineToDotaChatLog( const char * s );
+void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );
 #endif
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );

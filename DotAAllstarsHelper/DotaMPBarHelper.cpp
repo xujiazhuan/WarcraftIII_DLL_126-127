@@ -58,42 +58,42 @@ float mpbaroffsetTowerY[ 20 ];
 
 void __stdcall MPBARLOG1( )
 {
-	AddNewLineToDotaHelperLog( "RedrawMPBar" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 
 void __stdcall MPBARLOG2( )
 {
-	AddNewLineToDotaHelperLog( "f001527F0" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 
 void __stdcall MPBARLOG3( )
 {
-	AddNewLineToDotaHelperLog( "f00152710" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 void __stdcall MPBARLOG4( )
 {
-	AddNewLineToDotaHelperLog( "f152980" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 
 void __stdcall MPBARLOG5( )
 {
-	AddNewLineToDotaHelperLog( "f152950" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 
 void __stdcall MPBARLOG6( )
 {
-	AddNewLineToDotaHelperLog( "ReallocateMemoryForMPBar" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 
 void __stdcall MPBARLOG7( )
 {
-	AddNewLineToDotaHelperLog( "FillMemoryForMPBar" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 }
 
 
@@ -167,7 +167,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	__asm mov retval, eax;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -175,7 +175,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 		return retval;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer[ok]" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	int unitslot = GetUnitOwnerSlot( unitaddr );
@@ -184,7 +184,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer[ok2]" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	aMPBarSizeX = aMPBarSizeX_default;
@@ -266,7 +266,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "SetMPBarConfigForPlayer[end]" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	return retval;
@@ -330,10 +330,12 @@ void __declspec( naked ) ReallocateMemoryForMPBar( )
 		push    eax;
 		call    Storm_401_org;
 		pushad;
+		pusha;
 		mov     a16F004, eax;
 		mov     esi, a16F004;
 		add     esi, 0x158;
 		call    FillMemoryForMPBar;
+		popa;
 		popad;
 		push    a16F08C;
 		retn;
@@ -409,22 +411,28 @@ void __declspec( naked ) f001527F0( )
 		cmp     a3000AC, 0;
 		je L093;
 		pushad;
+		pusha;
 		push edi;
 		call IsHero;
 		cmp eax, 0;
+		popa;
 		popad;
 		je L093;
 		pushad;
+		pusha;
 		push edi;
 		call IsEnemy;
 		cmp eax, 1;
+		popa;
 		popad;
 		je L093;
 		cmp eax, -1;
 		je L093;
 		pushad;
+		pusha;
 		push edi;
 		call SetMPBarConfigForPlayer;
+		popa;
 		popad;
 		mov     eax, dword ptr[ edi + 0x50 ];
 		test    eax, eax;
@@ -556,8 +564,10 @@ void __declspec( naked ) RedrawMPBar( )
 {
 	__asm {
 		pushad;
+		pusha;
 		mov     a16F004, ecx;
 		call    f001527F0;
+		popa;
 		popad;
 		//mov     eax, GameDll    // game.dll base
 		mov     eax, sub_6F2C74B0;

@@ -131,7 +131,7 @@ int __stdcall ShowConfigWindow( const char * filename )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( "::showconfig::" ) + string(filename) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	if ( !NeedOpenConfigWindow )
@@ -252,7 +252,7 @@ int __fastcall Wc3ControlClickButton_my( int btnaddr, int, int unk )
 {
 	int retval = Wc3ControlClickButton_ptr( btnaddr, unk );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + to_string( 1 ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( GlyphButtonCreated && GlyphButtonAddr )
 	{
@@ -266,7 +266,7 @@ int __fastcall Wc3ControlClickButton_my( int btnaddr, int, int unk )
 		}
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + to_string( 2 ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	return retval;
 }

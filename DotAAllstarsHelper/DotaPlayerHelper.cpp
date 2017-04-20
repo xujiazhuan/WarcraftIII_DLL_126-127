@@ -56,17 +56,34 @@ vector<char *> mutedplayers;
 //sub_6F2FB480
 pOnChatMessage pOnChatMessage_org = NULL;
 pOnChatMessage pOnChatMessage_ptr;
+#ifdef DOTA_HELPER_LOG
+char GlobalChatMessageBuffer[ 1024 ];
+#endif
+
 void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * message, int a4, float a5 )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "pOnChatMessage_my" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	char * playername = GetPlayerName( PlayerID, 1 );
 
 	if ( playername && *playername != '\0' )
 	{
+
+
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaChatLog( string( playername ) + ":" + string( message ) );
+		if ( message && *message != '\0' )
+		{
+			memset( GlobalChatMessageBuffer, 0, 1024 );
+			sprintf_s( GlobalChatMessageBuffer, "%s:%s", playername, message );
+			AddNewLineToDotaChatLog( GlobalChatMessageBuffer );
+		}
+		else
+		{
+#ifdef DOTA_HELPER_LOG
+			AddNewLineToDotaHelperLog( "Bad message", __LINE__ );
+#endif
+		}
 #endif
 
 		for ( unsigned int i = 0; i < mutedplayers.size( ); i++ )
@@ -76,8 +93,14 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 				return;
 			}
 		}
-	}
 
+	}
+	else
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( "Bad player", __LINE__ );
+#endif
+	}
 	pOnChatMessage_ptr( a1, unused, PlayerID, message, a4, a5 );
 }
 
@@ -119,19 +142,19 @@ pIsPlayerObs IsPlayerObs;
 BOOL IsPlayerObserver( int pid )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "IsPlayerObserver" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( pid >= 0 && pid <= 15 )
 	{
 		unsigned int player = Player( pid );
 		BOOL retval = IsPlayerObs( player );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( "IsPlayerObserver::OK" );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "IsPlayerObserver::BAD" );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	return FALSE;
 }

@@ -151,7 +151,7 @@ BOOL JPEG::Read( Buffer & SourceBuffer, Buffer& TargetBuffer, INT* Width, INT* H
 	Stride = Info.output_width * Info.output_components;
 	Offset = 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART1" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	Pointer = ( *Info.mem->alloc_sarray )( reinterpret_cast<j_common_ptr>( &Info ), JPOOL_IMAGE, Stride, 1 );
@@ -164,15 +164,15 @@ BOOL JPEG::Read( Buffer & SourceBuffer, Buffer& TargetBuffer, INT* Width, INT* H
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART2" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	FinishJpeg( &Info );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART3" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	( *reinterpret_cast< BYTE* >( &Opaque ) ) = 255;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART4" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( Info.output_components == 3 )
 	{
@@ -186,7 +186,7 @@ BOOL JPEG::Read( Buffer & SourceBuffer, Buffer& TargetBuffer, INT* Width, INT* H
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PART5" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	flip_vertically( ( unsigned char * )&TargetBuffer[ 0 ], Info.output_width, Info.output_height, 4 );
@@ -196,7 +196,7 @@ BOOL JPEG::Read( Buffer & SourceBuffer, Buffer& TargetBuffer, INT* Width, INT* H
 
 	jpeg_destroy_decompress( &Info );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:PARTEND" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	return TRUE;
 	}

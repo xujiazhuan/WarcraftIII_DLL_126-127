@@ -175,9 +175,9 @@ int __stdcall JassLog( const char * s )
 
 
 #ifdef DOTA_HELPER_LOG
-void __stdcall  AddNewLineToDotaChatLog( const string s )
+void __stdcall  AddNewLineToDotaChatLog( const char * s )
 {
-	if ( bDllLogEnable )
+	if ( bDllLogEnable && s && s[ 0 ] != '\0' )
 	{
 		ExternalLog( s, LogType::DotaChatLog );
 		if ( DotaChatLog.size( ) > 11 )
@@ -188,109 +188,140 @@ void __stdcall  AddNewLineToDotaChatLog( const string s )
 	}
 }
 
-void __stdcall  AddNewLineToDotaHelperLog( const string s )
+char ErrorHelperBuffer[ 1024 ];
+
+void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line )
 {
-	if ( bDllLogEnable )
+	if ( bDllLogEnable && s && s[ 0 ] != '\0' )
 	{
-		ExternalLog( s, LogType::DotaHelperLog );
+		memset( ErrorHelperBuffer, 0, 1024 );
+		sprintf_s( ErrorHelperBuffer, "Func:%s:%i", s, line );
+		ExternalLog( ErrorHelperBuffer, LogType::DotaHelperLog );
 		if ( DotaHelperLog.size( ) > 20 )
 		{
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
 		}
-		DotaHelperLog.push_back( s );
+		DotaHelperLog.push_back( ErrorHelperBuffer );
 	}
 }
 
-void __stdcall  AddNewLineToJassNativesLog( const string s )
+void __stdcall  AddNewLineToJassNativesLog( const char * s )
 {
-	if ( JNativesFuncLog.size( ) > 40 )
+	if ( s && s[ 0 ] != '\0' )
 	{
-		ExternalLog( s, LogType::JassNativesFuncLog );
-		JNativesFuncLog.erase( JNativesFuncLog.begin( ) );
+		if ( JNativesFuncLog.size( ) > 40 )
+		{
+			ExternalLog( s, LogType::JassNativesFuncLog );
+			JNativesFuncLog.erase( JNativesFuncLog.begin( ) );
+		}
+		JNativesFuncLog.push_back( s );
 	}
-	JNativesFuncLog.push_back( s );
 }
 
 
-void __stdcall  AddNewLineToJassLog( const string s )
+void __stdcall  AddNewLineToJassLog( const char * s )
 {
-	if ( JassLogList.size( ) > 35 )
+	if ( s && s[ 0 ] != '\0' )
 	{
-		ExternalLog( s, LogType::JassLogList );
-		JassLogList.erase( JassLogList.begin( ) );
+		if ( JassLogList.size( ) > 35 )
+		{
+			ExternalLog( s, LogType::JassLogList );
+			JassLogList.erase( JassLogList.begin( ) );
+		}
+		JassLogList.push_back( s );
 	}
-	JassLogList.push_back( s );
-}
-
-
-
-void __stdcall  AddNewLineToBlizzard1Log( const string s )
-{
-	if ( Blizzard1Log.size( ) > 35 )
-	{
-		Blizzard1Log.erase( Blizzard1Log.begin( ) );
-	}
-	Blizzard1Log.push_back( s );
-}
-
-
-void __stdcall  AddNewLineToBlizzard2Log( const string s )
-{
-	if ( Blizzard2Log.size( ) > 35 )
-	{
-		Blizzard2Log.erase( Blizzard2Log.begin( ) );
-	}
-	Blizzard2Log.push_back( s );
-}
-
-
-void  __stdcall AddNewLineToBlizzard3Log( const string s )
-{
-	if ( Blizzard3Log.size( ) > 35 )
-	{
-		Blizzard3Log.erase( Blizzard3Log.begin( ) );
-	}
-	Blizzard3Log.push_back( s );
-}
-
-
-void __stdcall  AddNewLineToBlizzard4Log( const string s )
-{
-	if ( Blizzard4Log.size( ) > 35 )
-	{
-		Blizzard4Log.erase( Blizzard4Log.begin( ) );
-	}
-	Blizzard4Log.push_back( s );
-}
-
-void  __stdcall AddNewLineToBlizzard4Log_2( const string s )
-{
-	if ( Blizzard4Log_2.size( ) > 35 )
-	{
-		Blizzard4Log_2.erase( Blizzard4Log_2.begin( ) );
-	}
-	Blizzard4Log_2.push_back( s );
 }
 
 
 
-void  __stdcall AddNewLineToBlizzard5Log( const string s )
+void __stdcall  AddNewLineToBlizzard1Log( const char * s )
 {
-	if ( Blizzard5Log.size( ) > 35 )
+	if ( s && s[ 0 ] != '\0' )
 	{
-		Blizzard5Log.erase( Blizzard5Log.begin( ) );
+		if ( Blizzard1Log.size( ) > 35 )
+		{
+			Blizzard1Log.erase( Blizzard1Log.begin( ) );
+		}
+		Blizzard1Log.push_back( s );
 	}
-	Blizzard5Log.push_back( s );
 }
 
 
-void __stdcall AddNewLineToBlizzard6Log( const string s )
+void __stdcall  AddNewLineToBlizzard2Log( const char * s )
 {
-	if ( Blizzard6Log.size( ) > 35 )
+	if ( s && s[ 0 ] != '\0' )
 	{
-		Blizzard6Log.erase( Blizzard6Log.begin( ) );
+		if ( Blizzard2Log.size( ) > 35 )
+		{
+			Blizzard2Log.erase( Blizzard2Log.begin( ) );
+		}
+		Blizzard2Log.push_back( s );
 	}
-	Blizzard6Log.push_back( s );
+}
+
+
+void  __stdcall AddNewLineToBlizzard3Log( const char * s )
+{
+	if ( s && s[ 0 ] != '\0' )
+	{
+		if ( Blizzard3Log.size( ) > 35 )
+		{
+			Blizzard3Log.erase( Blizzard3Log.begin( ) );
+		}
+		Blizzard3Log.push_back( s );
+	}
+}
+
+
+void __stdcall  AddNewLineToBlizzard4Log( const char * s )
+{
+	if ( s && s[ 0 ] != '\0' )
+	{
+		if ( Blizzard4Log.size( ) > 35 )
+		{
+			Blizzard4Log.erase( Blizzard4Log.begin( ) );
+		}
+		Blizzard4Log.push_back( s );
+	}
+}
+
+void  __stdcall AddNewLineToBlizzard4Log_2( const char * s )
+{
+	if ( s && s[ 0 ] != '\0' )
+	{
+		if ( Blizzard4Log_2.size( ) > 35 )
+		{
+			Blizzard4Log_2.erase( Blizzard4Log_2.begin( ) );
+		}
+		Blizzard4Log_2.push_back( s );
+	}
+}
+
+
+
+void  __stdcall AddNewLineToBlizzard5Log( const char * s )
+{
+	if ( s && s[ 0 ] != '\0' )
+	{
+		if ( Blizzard5Log.size( ) > 35 )
+		{
+			Blizzard5Log.erase( Blizzard5Log.begin( ) );
+		}
+		Blizzard5Log.push_back( s );
+	}
+}
+
+
+void __stdcall AddNewLineToBlizzard6Log( const char * s )
+{
+	if ( s && s[ 0 ] != '\0' )
+	{
+		if ( Blizzard6Log.size( ) > 35 )
+		{
+			Blizzard6Log.erase( Blizzard6Log.begin( ) );
+		}
+		Blizzard6Log.push_back( s );
+	}
 }
 #endif
 
@@ -316,7 +347,7 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 		if ( MessageBoxA( Warcraft3Window, "Warning desync detected. Start force crash for detect problem?", "DESYNC, CRASH, YES OR NO?", MB_YESNO | MB_ICONWARNING ) == IDYES )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( "WarningDesyncDetected.StartForceCrashForDetectProblem" );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			//ShowWindow( Warcraft3Window, SW_HIDE );
 			//MessageBoxA( Warcraft3Window, "Warning desync detected. Start force crash for detect problem", "Desync detected!", 0 );
@@ -358,7 +389,7 @@ signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
 #ifdef DOTA_HELPER_LOGz
 		AddNewLineToJassNativesLog( funcname );
 #endif
-	}
+}
 	return retval;
 }
 
@@ -474,7 +505,7 @@ ProcessNetEvents ProcessNetEvents_ptr;
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	/*if ( Event > 0 )
 	{*/
@@ -558,11 +589,11 @@ int __stdcall TraceEsp_Print( int )
 	int esp_val = 0;
 	__asm mov esp_val, esp;
 	ostringstream escaped;
-	escaped << std::hex << esp_val;
+	escaped << "Test: Esp=0x" << std::hex << esp_val;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( "Test: Esp=0x" + escaped.str( ) );
+	AddNewLineToDotaChatLog( escaped.str( ).c_str( ) );
 #endif
-
+	escaped.clear( );
 	return esp_val;
 }
 
@@ -1199,9 +1230,9 @@ Ordinal590_p Ordinal590_org;
 Ordinal590_p Ordinal590_ptr;
 
 unsigned int __stdcall Ordinal590_my( char *a1 )
-{	
+{
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "STORM_590:" + string( a1 ) );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	return Ordinal590_ptr( a1 );
 }

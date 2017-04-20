@@ -21,7 +21,7 @@ GAME_SendPacket_p GAME_SendPacket = NULL;
 void SendPacket( BYTE* packetData, DWORD size )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	// @warning: this function thread-unsafe, do not use it in other thread.
 	// note: this is very useful function, in fact this function

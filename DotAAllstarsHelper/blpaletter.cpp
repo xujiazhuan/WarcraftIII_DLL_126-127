@@ -650,7 +650,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	if ( input.buf == NULL || input.length == NULL || input.length < sizeof( BLPHeader ) )
 		return 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	memcpy( &blph, input.buf, sizeof( BLPHeader ) );
@@ -678,13 +678,13 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	pictype = ( int )blph.alphaEncoding;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__ + string( "2" ) );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( blph.compress == 1 )
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + string( ":compress:1" ) );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( input.length < curpos + 256 * 4 )
 		{
@@ -701,7 +701,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		if ( alphaflag > 0 && ( blph.alphaEncoding == 4 || blph.alphaEncoding == 3 ) )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( ":alpha:4 or 3" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			if ( input.length < curpos + blph.sizex * blph.sizey * 2 )
 				return 0;
@@ -724,14 +724,14 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			height = ( int )blph.sizey;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( "41" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			return textureSize;
 		}
 		else if ( alphaflag > 0 && blph.alphaEncoding == 5 )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( ":alpha:5" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
@@ -751,14 +751,14 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			height = ( int )blph.sizey;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( "41" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			return textureSize;
 		}
 		else
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( ":alpha:0" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
@@ -778,7 +778,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			height = ( int )blph.sizey;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( "41" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			return textureSize;
 		}
@@ -789,7 +789,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG" ) );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		unsigned long JPEGHeaderSize;
 		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
@@ -806,24 +806,24 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		curpos = blph.poffs[ 0 ];
 		memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEGFILE CREATED" ) );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:ERROR" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			tempdata.Clear( );
 			width = 0;
 			height = 0;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:RERROR" ) );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			return ( 0 );
 		}
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:OK" ) );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		tempdata.Clear( );
 
@@ -835,7 +835,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		width = ( int )blph.sizex;
 		height = ( int )blph.sizey;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__ + string( ":compression:JPEG:ROK" ) );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return textureSize;
 	}
