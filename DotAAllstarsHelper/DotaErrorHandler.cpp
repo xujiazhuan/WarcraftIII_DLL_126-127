@@ -8,7 +8,7 @@ BOOL IsVEHex = FALSE;
 
 #include <Psapi.h>
 #pragma comment(lib,"Psapi.lib")
-
+void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
 class InfoFromSE
 {
 public:
@@ -120,20 +120,20 @@ std::string GetOSDisplayString( )
 }
 
 
-vector<string> DotaHelperLog;
-vector<string> JNativesFuncLog;
-vector<string> JassLogList;
-vector<string> DotaChatLog;
+vector<string> DotaHelperLog( 100 );
+vector<string> JNativesFuncLog( 100 );
+vector<string> JassLogList( 100 );
+vector<string> DotaChatLog( 100 );
 
-vector<string> Blizzard1Log;
-vector<string> Blizzard2Log;
-vector<string> Blizzard3Log;
-vector<string> Blizzard4Log;
-vector<string> Blizzard4Log_2;
-vector<string> Blizzard5Log;
-vector<string> Blizzard6Log;
+vector<string> Blizzard1Log( 100 );
+vector<string> Blizzard2Log( 100 );
+vector<string> Blizzard3Log( 100 );
+vector<string> Blizzard4Log( 100 );
+vector<string> Blizzard4Log_2( 100 );
+vector<string> Blizzard5Log( 100 );
+vector<string> Blizzard6Log( 100 );
 
-vector<int> CNetEvents;
+vector<int> CNetEvents( 100 );
 
 enum class LogType : UINT
 {
@@ -182,9 +182,12 @@ void __stdcall  AddNewLineToDotaChatLog( const char * s )
 		ExternalLog( s, LogType::DotaChatLog );
 		if ( DotaChatLog.size( ) > 11 )
 		{
+			DotaChatLog[ 0 ].clear( );
 			DotaChatLog.erase( DotaChatLog.begin( ) );
 		}
-		DotaChatLog.push_back( s );
+
+		std::string logstr = string( s );
+		DotaChatLog.push_back( logstr );
 	}
 }
 
@@ -199,9 +202,12 @@ void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line )
 		ExternalLog( ErrorHelperBuffer, LogType::DotaHelperLog );
 		if ( DotaHelperLog.size( ) > 20 )
 		{
+			DotaHelperLog[ 0 ].clear( );
 			DotaHelperLog.erase( DotaHelperLog.begin( ) );
 		}
-		DotaHelperLog.push_back( ErrorHelperBuffer );
+
+		std::string logstr = string( s );
+		DotaHelperLog.push_back( logstr );
 	}
 }
 
@@ -209,12 +215,15 @@ void __stdcall  AddNewLineToJassNativesLog( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::JassNativesFuncLog );
 		if ( JNativesFuncLog.size( ) > 40 )
 		{
-			ExternalLog( s, LogType::JassNativesFuncLog );
+			JNativesFuncLog[ 0 ].clear( );
 			JNativesFuncLog.erase( JNativesFuncLog.begin( ) );
 		}
-		JNativesFuncLog.push_back( s );
+
+		std::string logstr = string( s );
+		JNativesFuncLog.push_back( logstr );
 	}
 }
 
@@ -223,12 +232,15 @@ void __stdcall  AddNewLineToJassLog( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::JassLogList );
 		if ( JassLogList.size( ) > 35 )
 		{
-			ExternalLog( s, LogType::JassLogList );
+			JassLogList[ 0 ].clear( );
 			JassLogList.erase( JassLogList.begin( ) );
 		}
-		JassLogList.push_back( s );
+
+		std::string logstr = string( s );
+		JassLogList.push_back( logstr );
 	}
 }
 
@@ -359,7 +371,7 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 LookupNative LookupNative_org = NULL;
 LookupNative LookupNative_ptr;
 
-int __fastcall LookupNative_my( int global, int unused, LPSTR funcname )
+int __fastcall LookupNative_my( int global, int unused, const char * funcname )
 {
 	if ( funcname && *funcname != '\0' )
 	{
@@ -375,21 +387,48 @@ int __fastcall LookupNative_my( int global, int unused, LPSTR funcname )
 	}
 	int retval = LookupNative_ptr( global, unused, funcname );
 
+
+
+
 	return retval;
 }
 
 LookupJassFunc LookupJassFunc_org = NULL;
 LookupJassFunc LookupJassFunc_ptr;
 
-signed int __fastcall LookupJassFunc_my( int a1, int unused, char * funcname )
+signed int __fastcall LookupJassFunc_my( int global, int unused, const char * funcname )
 {
-	signed int retval = LookupJassFunc_ptr( a1, unused, funcname );
+#ifdef DOTA_HELPER_LOG
+	bool funcnamefound = false;
 	if ( funcname &&  *funcname != '\0' )
 	{
-#ifdef DOTA_HELPER_LOGz
+		funcnamefound = true;
+
 		AddNewLineToJassNativesLog( funcname );
+
+	}
+	else
+	{
+
+		AddNewLineToJassNativesLog( "NULL-JASS-FUNCTION-NAME-FOUND!" );
+
+	}
 #endif
-}
+	signed int retval = LookupJassFunc_ptr( global, unused, funcname );
+
+#ifdef DOTA_HELPER_LOG
+	if ( retval == 0 )
+	{
+		if ( funcnamefound )
+			MessageBoxA( 0, "LookupJassFunc want to return 0", funcname, MB_OK );
+		else
+			MessageBoxA( 0, "LookupJassFunc want to return 0", "NULL FUNC", MB_OK );
+
+		AddNewLineToJassNativesLog( "LookupJassFunc want to return 0!" );
+
+		DumpExceptionInfoToFile( 0 );
+	}
+#endif
 	return retval;
 }
 

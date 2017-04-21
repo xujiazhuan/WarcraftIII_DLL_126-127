@@ -321,9 +321,9 @@ extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 extern BOOL bDllLogEnable;
 typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
 extern StormErrorHandler StormErrorHandler_org;
-typedef int( __fastcall *LookupNative )(int global, int unused, LPSTR name );
+typedef int( __fastcall *LookupNative )(int global, int unused, const char * name );
 extern LookupNative LookupNative_org;
-typedef signed int( __fastcall * LookupJassFunc )( int a1, int unused, char * funcname );
+typedef signed int( __fastcall * LookupJassFunc )( int global, int unused, const char * funcname );
 extern LookupJassFunc LookupJassFunc_org;
 typedef void( __fastcall * ProcessNetEvents )( void * data, int unused_, int Event );
 extern ProcessNetEvents ProcessNetEvents_org;
@@ -565,6 +565,8 @@ struct RawImageCallbackData
 	BOOL IsAltPressed;
 	BOOL IsCtrlPressed;
 	BOOL IsLeftButton;
+	int offsetx;
+	int offsety;
 };
 
 

@@ -1234,6 +1234,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #ifdef DOTA_HELPER_LOG
 							AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
+
 							if ( NeedSkipThisKey )
 								return DefWindowProc( hWnd, Msg, wParam, lParam );
 

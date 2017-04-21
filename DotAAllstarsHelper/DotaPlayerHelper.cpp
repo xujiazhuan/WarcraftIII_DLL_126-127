@@ -70,7 +70,6 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 	if ( playername && *playername != '\0' )
 	{
 
-
 #ifdef DOTA_HELPER_LOG
 		if ( message && *message != '\0' )
 		{
@@ -80,9 +79,7 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 		}
 		else
 		{
-#ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( "Bad message", __LINE__ );
-#endif
 		}
 #endif
 

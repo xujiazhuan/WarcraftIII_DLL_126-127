@@ -116,6 +116,7 @@
     <ClCompile Include="DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
     <ClCompile Include="DotaFilesHelper.cpp" />
+    <ClCompile Include="DotaRawImagesDrawApi.cpp" />
     <ClCompile Include="DotaWebHelper.cpp" />
     <ClCompile Include="DotaMPBarHelper.cpp" />
     <ClCompile Include="DotaAllstarsHelper.cpp" />

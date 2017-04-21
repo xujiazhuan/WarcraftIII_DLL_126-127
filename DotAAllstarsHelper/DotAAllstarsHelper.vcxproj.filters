@@ -87,6 +87,9 @@
     <ClCompile Include="DotaHelperOverlayOpengl.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="DotaRawImagesDrawApi.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">
