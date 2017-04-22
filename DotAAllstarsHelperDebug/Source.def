@@ -93,5 +93,6 @@ GetScreenHeight
 GetWindowWidth
 GetWindowHeight
 ShowSkillPanelForAllUnits
+SetAutoSelectHero
 TopLevelExceptionFilter
 DotaVectoredToSehHandler

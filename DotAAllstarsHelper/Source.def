@@ -93,3 +93,4 @@ GetScreenHeight
 GetWindowWidth
 GetWindowHeight
 ShowSkillPanelForAllUnits
+SetAutoSelectHero

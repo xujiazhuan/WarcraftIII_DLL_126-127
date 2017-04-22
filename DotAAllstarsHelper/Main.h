@@ -399,6 +399,7 @@ extern BOOL TeleportShiftPress;
 extern BOOL BlockKeyAndMouseEmulation;
 extern BOOL EnableSelectHelper;
 extern BOOL ClickHelper;
+extern BOOL AutoSelectHero;
 extern BOOL LOCK_MOUSE_IN_WINDOW;
 extern BOOL BlockKeyboardAndMouseWhenTeleport;
 extern BOOL rawimage_skipmouseevent;

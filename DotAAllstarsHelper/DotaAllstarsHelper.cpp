@@ -900,18 +900,16 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 		if ( IsNotBadItem( itemaddr ) )
 		{
 			int itemowner = *( int* )( itemaddr + 0x74 );
-			if ( itemowner > 15 || itemowner < 0 )
-			{
-				sprintf_s( itemstr1, 128, "%%s%%s%%s%%s%%s" );
-				sprintf_s( itemstr2, 128, "%%s%%s%%s" );
-			}
-			else
+			if ( itemowner <= 15 && itemowner >= 0 )
 			{
 				sprintf_s( itemstr1, 128, "Owned by %s%s|r|n%%s%%s%%s%%s%%s", GetPlayerColorString( Player( itemowner ) ), GetPlayerName( itemowner, 0 ) );
 				sprintf_s( itemstr2, 128, "Owned by %s%s|r|n%%s%%s%%s", GetPlayerColorString( Player( itemowner ) ), GetPlayerName( itemowner, 0 ) );
+				return itemaddr;
 			}
 		}
 	}
+	sprintf_s( itemstr1, 128, "%%s%%s%%s%%s%%s" );
+	sprintf_s( itemstr2, 128, "%%s%%s%%s" );
 	return itemaddr;
 }
 
@@ -1646,6 +1644,7 @@ void __stdcall DisableAllHooks( )
 	FreeAllVectors( );
 	bDllLogEnable = TRUE;
 	EnableSelectHelper = FALSE;
+	AutoSelectHero = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
 	ClickHelper = FALSE;
 	LOCK_MOUSE_IN_WINDOW = FALSE;
@@ -1671,7 +1670,7 @@ void __stdcall DisableAllHooks( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-}
+	}
 
 void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
@@ -1721,10 +1720,10 @@ unsigned long __stdcall RefreshTimer( void * )
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-		}
+	}
 
 		Sleep( 200 );
-	}
+}
 
 	return 0;
 }
@@ -1814,6 +1813,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 	Warcraft3Window = 0;
 	EnableSelectHelper = FALSE;
+	AutoSelectHero = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
 	ClickHelper = FALSE;
 	LOCK_MOUSE_IN_WINDOW = FALSE;

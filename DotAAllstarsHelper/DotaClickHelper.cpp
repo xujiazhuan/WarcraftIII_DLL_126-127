@@ -710,6 +710,14 @@ int __stdcall RawImage_SkipMouseClick( BOOL enabled )
 	return rawimage_skipmouseevent;
 }
 
+BOOL AutoSelectHero = FALSE;
+
+int __stdcall SetAutoSelectHero( BOOL enabled )
+{
+	AutoSelectHero = TRUE;
+	return AutoSelectHero;
+}
+
 
 WPARAM LatestPressedKey = NULL;
 
@@ -836,7 +844,15 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			}
 		}
 
+		if ( AutoSelectHero )
+			if ( Msg == WM_KEYDOWN && wParam >= VK_F1 && wParam <= VK_F5 )
+			{
+				LPARAM lpFKEYScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( wParam, 0 ) << 16 ) );
+				LPARAM lpFKEYScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( wParam, 0 ) << 16 ) );
 
+				WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, wParam, lpFKEYScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, wParam, lpFKEYScanKeyUP );
+			}
 
 
 		if ( ( Msg == WM_KEYDOWN || Msg == WM_KEYUP ) && ( _wParam == VK_SHIFT || _wParam == VK_LSHIFT || _wParam == VK_RSHIFT ) )
