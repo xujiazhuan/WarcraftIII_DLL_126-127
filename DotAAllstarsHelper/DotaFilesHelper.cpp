@@ -2071,6 +2071,13 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 
 	// ONLY FOR TEST
+	//if ( filename && filename[ 0 ] != '\0' )
+	//{
+	//	std::ofstream outfile;
+	//	outfile.open( "test.txt", std::ios_base::app );
+	//	outfile << filename << std::endl;
+	//	outfile.close( );
+	//}
 
 	if ( !*InGame && !MainFuncWork )
 	{
