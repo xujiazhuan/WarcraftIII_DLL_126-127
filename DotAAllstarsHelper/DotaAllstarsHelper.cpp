@@ -1873,7 +1873,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GetItemInSlotAddr = GameDll + 0x3C7730 + 0xA;
 		GetItemTypeId = ( pGetItemTypeId )( GameDll + 0x3C4C60 );
 		GetPlayerColor = ( pGetPlayerColor )( GameDll + 0x3C1240 );
-		Player = ( pPlayer )( GameDll + 0x3BBB30 );
+		_Player = ( pPlayer )( GameDll + 0x3BBB30 );
 		GetPlayerName = ( p_GetPlayerName )( GameDll + 0x2F8F90 );
 		_BarVTable = GameDll + 0x93E604;
 		IsWindowActive = GameDll + 0xA9E7A4;
@@ -2131,7 +2131,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GetItemInSlotAddr = GameDll + 0x1FAF50 + 0xC;
 		GetItemTypeId = ( pGetItemTypeId )( GameDll + 0x1E2CC0 );
 		GetPlayerColor = ( pGetPlayerColor )( GameDll + 0x1E3CA0 );
-		Player = ( pPlayer )( GameDll + 0x1F1E70 );
+		_Player = ( pPlayer )( GameDll + 0x1F1E70 );
 		GetPlayerName = ( p_GetPlayerName )( GameDll + 0x34F730 );
 		_BarVTable = GameDll + 0x98F52C;
 		IsWindowActive = GameDll + 0xB673EC;

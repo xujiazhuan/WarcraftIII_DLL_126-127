@@ -4,8 +4,23 @@
 int GlobalPlayerOffset = 0;
 int IsPlayerEnemyOffset = 0;
 pGetPlayerColor GetPlayerColor;
-pPlayer Player;
+pPlayer _Player;
 
+int __stdcall Player( int slotid )
+{
+	if ( slotid < 0 || slotid > 15 )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( "ERROR! BAD PLAYER SLOT", __LINE__ );
+		MessageBoxA( 0, "Error, bad player slot!", "FATAL ERROR", 0 );
+		DumpExceptionInfoToFile( 0 );
+#endif
+		return _Player( 0 );
+	}
+
+	return _Player( slotid );
+}
 
 
 int GetGlobalPlayerData( )
@@ -17,6 +32,18 @@ int GetPlayerByNumber( int number )
 {
 	int arg1 = GetGlobalPlayerData( );
 	int result = 0;
+
+	if ( number < 0 || number > 15 )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( "ERROR! BAD PLAYER SLOT", __LINE__ );
+		MessageBoxA( 0, "Error, bad player slot!", "FATAL ERROR", 0 );
+		DumpExceptionInfoToFile( 0 );
+#endif
+		return _Player( 0 );
+	}
+
 	if ( arg1 > NULL )
 	{
 		result = ( int )arg1 + ( number * 4 ) + 0x58;

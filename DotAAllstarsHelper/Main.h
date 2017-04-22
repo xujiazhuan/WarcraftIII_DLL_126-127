@@ -21,6 +21,10 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+
+#include <concurrent_vector.h>
+#define safevector concurrency::concurrent_vector
+
 #include <fstream> 
 #include <iostream>
 #include <sstream>
@@ -242,7 +246,8 @@ extern pGetPlayerAlliance GetPlayerAlliance;
 typedef unsigned int( __cdecl * pGetPlayerColor )( unsigned int whichPlayer );
 extern pGetPlayerColor GetPlayerColor;
 typedef int( __cdecl * pPlayer )( int number );
-extern pPlayer Player;
+extern pPlayer _Player;
+int __stdcall Player( int number );
 typedef int( __cdecl * pIsPlayerObs )( unsigned int hPlayer );
 extern pIsPlayerObs IsPlayerObs;
 
@@ -315,13 +320,14 @@ void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );
 #endif
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );
+void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
 
 extern void ResetTopLevelExceptionFilter( );
 extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
 extern BOOL bDllLogEnable;
 typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
 extern StormErrorHandler StormErrorHandler_org;
-typedef int( __fastcall *LookupNative )(int global, int unused, const char * name );
+typedef int( __fastcall *LookupNative )( int global, int unused, const char * name );
 extern LookupNative LookupNative_org;
 typedef signed int( __fastcall * LookupJassFunc )( int global, int unused, const char * funcname );
 extern LookupJassFunc LookupJassFunc_org;
@@ -401,7 +407,7 @@ extern WarcraftRealWNDProc WarcraftRealWNDProc_org, WarcraftRealWNDProc_ptr;
 extern HANDLE hPressKeyWithDelay;
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int Msg, WPARAM _wParam, LPARAM lParam );
 extern BOOL PressKeyWithDelayEND;
-DWORD WINAPI PressKeyWithDelay( LPVOID );
+unsigned long __stdcall PressKeyWithDelay( LPVOID );
 extern int ShiftPressed;
 extern BOOL SkipAllMessages;
 extern int IssueWithoutTargetOrderOffset;

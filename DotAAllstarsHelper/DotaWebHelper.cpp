@@ -148,14 +148,14 @@ char * _addr = 0;
 char * _request = 0;
 char * _filepath = 0;
 
-DWORD WINAPI SENDGETREQUEST( LPVOID )
+unsigned long __stdcall SENDGETREQUEST( LPVOID )
 {
 	SendHttpGetRequest( _addr, _request );
 	return 0;
 }
 
 
-DWORD WINAPI SENDSAVEFILEREQUEST( LPVOID )
+unsigned long __stdcall SENDSAVEFILEREQUEST( LPVOID )
 {
 	DownloadNewMapToFile( _addr, _filepath );
 	return 0;

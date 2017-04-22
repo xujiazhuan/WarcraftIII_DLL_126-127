@@ -8,7 +8,7 @@ BOOL IsVEHex = FALSE;
 
 #include <Psapi.h>
 #pragma comment(lib,"Psapi.lib")
-void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
+
 class InfoFromSE
 {
 public:
@@ -120,18 +120,27 @@ std::string GetOSDisplayString( )
 }
 
 
-vector<string> DotaHelperLog( 100 );
-vector<string> JNativesFuncLog( 100 );
-vector<string> JassLogList( 100 );
-vector<string> DotaChatLog( 100 );
+void safevector_erase( safevector<string> & s )
+{
+	// try just swap, erase not available in concurrent vector?
+	for ( unsigned int i = 0; i < ( s.size( ) - 1 ); i++ )
+	{
+		s[ i ] = s[ i + 1 ];
+	}
+}
 
-vector<string> Blizzard1Log( 100 );
-vector<string> Blizzard2Log( 100 );
-vector<string> Blizzard3Log( 100 );
-vector<string> Blizzard4Log( 100 );
-vector<string> Blizzard4Log_2( 100 );
-vector<string> Blizzard5Log( 100 );
-vector<string> Blizzard6Log( 100 );
+safevector<string> DotaHelperLog;
+safevector<string> JNativesFuncLog;
+safevector<string> JassLogList;
+safevector<string> DotaChatLog;
+
+safevector<string> Blizzard1Log;
+safevector<string> Blizzard2Log;
+safevector<string> Blizzard3Log;
+safevector<string> Blizzard4Log;
+safevector<string> Blizzard4Log_2;
+safevector<string> Blizzard5Log;
+safevector<string> Blizzard6Log;
 
 vector<int> CNetEvents( 100 );
 
@@ -180,14 +189,13 @@ void __stdcall  AddNewLineToDotaChatLog( const char * s )
 	if ( bDllLogEnable && s && s[ 0 ] != '\0' )
 	{
 		ExternalLog( s, LogType::DotaChatLog );
-		if ( DotaChatLog.size( ) > 11 )
+		if ( DotaChatLog.size( ) > 50 )
 		{
-			DotaChatLog[ 0 ].clear( );
-			DotaChatLog.erase( DotaChatLog.begin( ) );
+			DotaChatLog[ 50 ] = s;
+			safevector_erase( DotaChatLog );
 		}
-
-		std::string logstr = string( s );
-		DotaChatLog.push_back( logstr );
+		else
+			DotaChatLog.push_back( s );
 	}
 }
 
@@ -200,14 +208,13 @@ void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line )
 		memset( ErrorHelperBuffer, 0, 1024 );
 		sprintf_s( ErrorHelperBuffer, "Func:%s:%i", s, line );
 		ExternalLog( ErrorHelperBuffer, LogType::DotaHelperLog );
-		if ( DotaHelperLog.size( ) > 20 )
+		if ( DotaHelperLog.size( ) > 50 )
 		{
-			DotaHelperLog[ 0 ].clear( );
-			DotaHelperLog.erase( DotaHelperLog.begin( ) );
+			DotaHelperLog[ 50 ] = s;
+			safevector_erase( DotaHelperLog );
 		}
-
-		std::string logstr = string( s );
-		DotaHelperLog.push_back( logstr );
+		else
+			DotaHelperLog.push_back( s );
 	}
 }
 
@@ -216,14 +223,13 @@ void __stdcall  AddNewLineToJassNativesLog( const char * s )
 	if ( s && s[ 0 ] != '\0' )
 	{
 		ExternalLog( s, LogType::JassNativesFuncLog );
-		if ( JNativesFuncLog.size( ) > 40 )
+		if ( JNativesFuncLog.size( ) > 50 )
 		{
-			JNativesFuncLog[ 0 ].clear( );
-			JNativesFuncLog.erase( JNativesFuncLog.begin( ) );
+			JNativesFuncLog[ 50 ] = s;
+			safevector_erase( JNativesFuncLog );
 		}
-
-		std::string logstr = string( s );
-		JNativesFuncLog.push_back( logstr );
+		else
+			JNativesFuncLog.push_back( s );
 	}
 }
 
@@ -233,14 +239,13 @@ void __stdcall  AddNewLineToJassLog( const char * s )
 	if ( s && s[ 0 ] != '\0' )
 	{
 		ExternalLog( s, LogType::JassLogList );
-		if ( JassLogList.size( ) > 35 )
+		if ( JassLogList.size( ) > 50 )
 		{
-			JassLogList[ 0 ].clear( );
-			JassLogList.erase( JassLogList.begin( ) );
+			JassLogList[ 50 ] = s;
+			safevector_erase( JassLogList );
 		}
-
-		std::string logstr = string( s );
-		JassLogList.push_back( logstr );
+		else
+			JassLogList.push_back( s );
 	}
 }
 
@@ -250,11 +255,13 @@ void __stdcall  AddNewLineToBlizzard1Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard1Log.size( ) > 35 )
+		if ( Blizzard1Log.size( ) > 50 )
 		{
-			Blizzard1Log.erase( Blizzard1Log.begin( ) );
+			Blizzard1Log[ 50 ] = s;
+			safevector_erase( Blizzard1Log );
 		}
-		Blizzard1Log.push_back( s );
+		else
+			Blizzard1Log.push_back( s );
 	}
 }
 
@@ -263,11 +270,13 @@ void __stdcall  AddNewLineToBlizzard2Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard2Log.size( ) > 35 )
+		if ( Blizzard2Log.size( ) > 50 )
 		{
-			Blizzard2Log.erase( Blizzard2Log.begin( ) );
+			Blizzard2Log[ 50 ] = s;
+			safevector_erase( Blizzard2Log );
 		}
-		Blizzard2Log.push_back( s );
+		else
+			Blizzard2Log.push_back( s );
 	}
 }
 
@@ -276,11 +285,13 @@ void  __stdcall AddNewLineToBlizzard3Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard3Log.size( ) > 35 )
+		if ( Blizzard3Log.size( ) > 50 )
 		{
-			Blizzard3Log.erase( Blizzard3Log.begin( ) );
+			Blizzard3Log[ 50 ] = s;
+			safevector_erase( Blizzard3Log );
 		}
-		Blizzard3Log.push_back( s );
+		else
+			Blizzard3Log.push_back( s );
 	}
 }
 
@@ -289,11 +300,13 @@ void __stdcall  AddNewLineToBlizzard4Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard4Log.size( ) > 35 )
+		if ( Blizzard4Log.size( ) > 50 )
 		{
-			Blizzard4Log.erase( Blizzard4Log.begin( ) );
+			Blizzard4Log[ 50 ] = s;
+			safevector_erase( Blizzard4Log );
 		}
-		Blizzard4Log.push_back( s );
+		else
+			Blizzard4Log.push_back( s );
 	}
 }
 
@@ -301,11 +314,13 @@ void  __stdcall AddNewLineToBlizzard4Log_2( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard4Log_2.size( ) > 35 )
+		if ( Blizzard4Log_2.size( ) > 50 )
 		{
-			Blizzard4Log_2.erase( Blizzard4Log_2.begin( ) );
+			Blizzard4Log_2[ 50 ] = s;
+			safevector_erase( Blizzard4Log_2 );
 		}
-		Blizzard4Log_2.push_back( s );
+		else
+			Blizzard4Log_2.push_back( s );
 	}
 }
 
@@ -315,11 +330,13 @@ void  __stdcall AddNewLineToBlizzard5Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard5Log.size( ) > 35 )
+		if ( Blizzard5Log.size( ) > 50 )
 		{
-			Blizzard5Log.erase( Blizzard5Log.begin( ) );
+			Blizzard5Log[ 50 ] = s;
+			safevector_erase( Blizzard5Log );
 		}
-		Blizzard5Log.push_back( s );
+		else
+			Blizzard5Log.push_back( s );
 	}
 }
 
@@ -328,11 +345,13 @@ void __stdcall AddNewLineToBlizzard6Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
-		if ( Blizzard6Log.size( ) > 35 )
+		if ( Blizzard6Log.size( ) > 50 )
 		{
-			Blizzard6Log.erase( Blizzard6Log.begin( ) );
+			Blizzard6Log[ 50 ] = s;
+			safevector_erase( Blizzard6Log );
 		}
-		Blizzard6Log.push_back( s );
+		else
+			Blizzard6Log.push_back( s );
 	}
 }
 #endif
@@ -391,7 +410,7 @@ int __fastcall LookupNative_my( int global, int unused, const char * funcname )
 
 
 	return retval;
-}
+	}
 
 LookupJassFunc LookupJassFunc_org = NULL;
 LookupJassFunc LookupJassFunc_ptr;
@@ -784,7 +803,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 	{
 		MessageBoxA( 0, "SUPER FATAL ERROR!", " UNREAL FATAL ERROR ", 0 );
 	}
-}
+	}
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
@@ -1311,7 +1330,7 @@ int __cdecl BlizzardDebug2_my( const char * src, int lineid, const char * classn
 #endif
 	}
 	return retval;
-}
+	}
 
 BlizzardDebug3 BlizzardDebug3_org = NULL;
 BlizzardDebug3 BlizzardDebug3_ptr;

@@ -113,7 +113,7 @@ void WINAPI SMemFree( LPVOID lpvMemory )
 	if ( lpvMemory ) VirtualFree( lpvMemory, 0, MEM_RELEASE );// Storm_403_org( lpvMemory, "delete", -1, 0 );
 }
 
-DWORD WINAPI SMemCopy( LPVOID lpDestination, LPCVOID lpSource, DWORD dwLength )
+unsigned long __stdcall SMemCopy( LPVOID lpDestination, LPCVOID lpSource, DWORD dwLength )
 {
 	DWORD dwPrevLen = dwLength;
 	LPDWORD lpdwDestination = ( LPDWORD )lpDestination, lpdwSource = ( LPDWORD )lpSource;
