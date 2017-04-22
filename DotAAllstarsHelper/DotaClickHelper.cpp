@@ -1112,7 +1112,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
 
 								int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
-								if ( selectedunit > 0 && selectedunitcout > 0 )
+								if ( !ClickHelperWork && selectedunit > 0 && selectedunitcout > 0 )
 								{
 
 									if ( selectedunitcout == 1 && ( !keyAction.IsSkill || ClickHelper ) )
@@ -1290,7 +1290,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 					if ( selectedunitcout == 1 )
 					{
-						if ( ClickHelper )
+						if ( !ClickHelperWork && ClickHelper )
 						{
 							/*sprintf_s( processdoubleclic, "%s", "22" );
 							PrintText( processdoubleclic );*/
@@ -1363,7 +1363,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 					if ( selectedunitcout == 0 ||
-						( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
+						( unitowner != GetLocalPlayerId( ) && ( unitowner == 15 || !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) ) )
 						)
 					{
 
