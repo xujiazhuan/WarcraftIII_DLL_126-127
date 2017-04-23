@@ -1,3 +1,5 @@
+#pragma optimize("",off)
+
 #include "Main.h"
 #include <iomanip>
 #include <eh.h>
@@ -53,7 +55,7 @@ public:
 		}
 	}
 
-	static std::string information( struct _EXCEPTION_POINTERS* ep, bool has_exception_code = false, exception_code_t code = 0 )
+	static std::string information( struct _EXCEPTION_POINTERS* ep, BOOL has_exception_code = FALSE, exception_code_t code = 0 )
 	{
 		HMODULE hm;
 		::GetModuleHandleEx( GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, static_cast< LPCTSTR >( ep->ExceptionRecord->ExceptionAddress ), &hm );
@@ -410,7 +412,7 @@ int __fastcall LookupNative_my( int global, int unused, const char * funcname )
 
 
 	return retval;
-	}
+}
 
 LookupJassFunc LookupJassFunc_org = NULL;
 LookupJassFunc LookupJassFunc_ptr;
@@ -418,10 +420,10 @@ LookupJassFunc LookupJassFunc_ptr;
 signed int __fastcall LookupJassFunc_my( int global, int unused, const char * funcname )
 {
 #ifdef DOTA_HELPER_LOG
-	bool funcnamefound = false;
+	BOOL funcnamefound = FALSE;
 	if ( funcname &&  *funcname != '\0' )
 	{
-		funcnamefound = true;
+		funcnamefound = TRUE;
 
 		AddNewLineToJassNativesLog( funcname );
 
@@ -740,35 +742,44 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 			{
 				fprintf_s( f, "%s(%i)\n", GetNetEventStrByID( EventID ), EventID );
 			}
-
+			fprintf_s( f, "[Blizzard1Log]\n" );
 
 			for ( string & s : Blizzard1Log )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
 			}
+			fprintf_s( f, "[Blizzard2Log]\n" );
 
 			for ( string& s : Blizzard2Log )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
 			}
+			fprintf_s( f, "[Blizzard3Log]\n" );
 
 			for ( string &s : Blizzard3Log )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
 			}
+			fprintf_s( f, "[Blizzard4Log]\n" );
 
 			for ( string &s : Blizzard4Log )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
 			}
+			fprintf_s( f, "[Blizzard4Log_2]\n" );
+
 			for ( string &s : Blizzard4Log_2 )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
 			}
+			fprintf_s( f, "[Blizzard5Log]\n" );
+
 			for ( string& s : Blizzard5Log )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
 			}
+			fprintf_s( f, "[Blizzard6Log]\n" );
+
 			for ( string& s : Blizzard6Log )
 			{
 				fprintf_s( f, "%s\n", s.c_str( ) );
@@ -789,7 +800,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 
 				ESP_for_DUMP = ExceptionInfo->ContextRecord->Esp;
 
-				LastExceptionError = InfoFromSE( ).information( ExceptionInfo, true, ExceptionInfo->ExceptionRecord->ExceptionCode );
+				LastExceptionError = InfoFromSE( ).information( ExceptionInfo, TRUE, ExceptionInfo->ExceptionRecord->ExceptionCode );
 
 			}
 			fprintf_s( f, "%s", LastExceptionError.c_str( ) );
@@ -803,7 +814,7 @@ void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 	{
 		MessageBoxA( 0, "SUPER FATAL ERROR!", " UNREAL FATAL ERROR ", 0 );
 	}
-	}
+}
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
@@ -1058,7 +1069,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 
 
-	BugReport << ( const char * )( *( BOOL* )IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
+	BugReport << ( const char * )( *IsWindowActive ? "WindowOpened" : "WindowMinimized" ) << std::endl;
 
 
 	PrintErrorLog( a3, "\n%s\n", "Process ingame..." );
@@ -1282,6 +1293,81 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 }
 
 
+int oldretaddr;
+int oldespvalue;
+int newespvalue;
+int oldebpvalue;
+
+
+
+int save_eax, save_ebx, save_ecx, save_edx, save_esi, save_edi, save_ebp, save_esp;
+short save_ax, save_cx, save_dx, save_bx, save_bp, save_si, save_di;
+
+#define safepopad \
+	__asm mov eax, save_eax \
+	__asm mov ebx, save_ebx \
+	__asm mov ecx, save_ecx \
+	__asm mov edx, save_edx \
+	__asm mov esi, save_esi \
+	__asm mov edi, save_edi \
+	__asm mov ax, save_ax \
+	__asm mov cx, save_cx \
+	__asm mov dx, save_dx \
+	__asm mov bx, save_bx \
+	__asm mov bp, save_bp \
+	__asm mov si, save_si \
+	__asm mov di, save_di \
+	__asm mov esp, save_esp \
+	__asm mov ebp, oldretaddr \
+	__asm mov [esp], ebp \
+	__asm mov esp, save_esp \
+	__asm mov ebp, save_ebp 
+
+
+#define safepushad \
+	__asm mov save_eax, eax  \
+	__asm mov save_ebx, ebx  \
+	__asm mov save_ecx, ecx  \
+	__asm mov save_edx, edx  \
+	__asm mov save_esi, esi  \
+	__asm mov save_edi, edi  \
+	__asm mov save_ebp, ebp  \
+	__asm mov save_esp, esp  \
+	__asm mov save_ax, ax  \
+	__asm mov save_cx, cx  \
+	__asm mov save_dx, dx  \
+	__asm mov save_bx, bx  \
+	__asm mov save_bp, bp  \
+	__asm mov save_si, si  \
+	__asm mov save_di, di  \
+	__asm mov eax, [esp] \
+	__asm mov oldretaddr, eax 
+
+
+//
+//
+//
+//#define safepopad \
+//	__asm mov esp, newespvalue \
+//	__asm popa \
+//	__asm popad \
+//	__asm mov ebp, oldretaddr \
+//	__asm mov [esp], ebp \
+//	__asm mov ebp, oldebpvalue 
+//
+//
+//#define safepushad \
+//	__asm mov oldespvalue, esp \
+//	__asm mov oldebpvalue, ebp \
+//	__asm mov esp,[esp] \
+//	__asm mov oldretaddr, esp \
+//	__asm mov esp, oldespvalue \
+//	__asm pushad \
+//	__asm pusha \
+//	__asm mov newespvalue, esp \
+//	__asm mov esp, oldespvalue
+
+
 
 typedef unsigned int( __stdcall * Ordinal590_p )( char *a1 );
 Ordinal590_p Ordinal590_org;
@@ -1299,155 +1385,211 @@ unsigned int __stdcall Ordinal590_my( char *a1 )
 BlizzardDebug1 BlizzardDebug1_org = NULL;
 BlizzardDebug1 BlizzardDebug1_ptr;
 
-int __fastcall BlizzardDebug1_my( const char * str )
+void __fastcall BlizzardDebug1_my_2( const char * str )
 {
-	int retval = 0;
-	__asm mov retval, eax;
-	if ( str && *str )
+	if ( str && *str != '\0' )
 	{
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToBlizzard1Log( str );
+		//PrintText( str );
 #endif
-		PrintText( str );
-
+		
 	}
-	return retval;
+	else
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToBlizzard1Log( "BlizzardDebug1:NULL" );
+#endif
+	}
 }
+
+void __declspec( naked ) BlizzardDebug1_my( )
+{
+	__asm
+	{
+		safepushad;
+		add esp, 4;
+		call BlizzardDebug1_my_2;
+		safepopad;
+		ret;
+	}
+}
+
 
 BlizzardDebug2 BlizzardDebug2_org = NULL;
 BlizzardDebug2 BlizzardDebug2_ptr;
+char tmpdebug[ 1024 ];
 
-int __cdecl BlizzardDebug2_my( const char * src, int lineid, const char * classname )
+void __cdecl BlizzardDebug2_my_2( const char * src, int lineid, const char * classname )
 {
-	int retval = 0;
-	__asm mov retval, eax;
-	if ( src && classname && *src && *classname )
-	{
+	BOOL srcok = src && *src != '\0';
+	BOOL classnameok = classname && *classname != '\0';
+
 #ifdef DOTA_HELPER_LOG
-		char tmpdebug[ 256 ];
-		sprintf_s( tmpdebug, 256, "Sorce:%s\nLine:%i\nClass:%s", src, lineid, classname );
-		AddNewLineToBlizzard2Log( tmpdebug );
+	sprintf_s( tmpdebug, 1024, "Sorce:%s\nLine:%i\nClass:%s", srcok ? src : "NULL", lineid, classnameok ? classname : "NULL" );
+	//PrintText( tmpdebug );
+	AddNewLineToBlizzard2Log( tmpdebug );
 #endif
+}
+
+void __declspec( naked ) BlizzardDebug2_my( )
+{
+	__asm
+	{
+		safepushad;
+		add esp, 4;
+		call BlizzardDebug2_my_2;
+		safepopad;
+		ret;
 	}
-	return retval;
-	}
+}
+
 
 BlizzardDebug3 BlizzardDebug3_org = NULL;
 BlizzardDebug3 BlizzardDebug3_ptr;
 
-int __cdecl BlizzardDebug3_my( const char * format, ... )
+void __cdecl BlizzardDebug3_my_2( const char * format, ... )
 {
-	int retval = 0;
-	__asm mov retval, eax;
-	char dest[ 256 ];
+	if ( !format || *format == '\0' )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToBlizzard3Log( "BlizzardDebug3:NULL" );
+#endif
+		return;
+	}
 	va_list argptr;
 	va_start( argptr, format );
-	vsprintf_s( dest, 256, format, argptr );
+	vsprintf_s( tmpdebug, 1024, format, argptr );
 	va_end( argptr );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToBlizzard3Log( dest );
+	AddNewLineToBlizzard3Log( tmpdebug );
+	//PrintText( tmpdebug );
 #endif
-	return retval;
 }
+
+void __declspec( naked ) BlizzardDebug3_my( )
+{
+	__asm
+	{
+		safepushad;
+		add esp, 4;
+		call BlizzardDebug3_my_2;
+		safepopad;
+		ret;
+	}
+}
+
 
 BlizzardDebug4 BlizzardDebug4_org = NULL;
 BlizzardDebug4 BlizzardDebug4_ptr;
-int __cdecl BlizzardDebug4_my( BOOL type1, const char * format, ... )
+void __cdecl BlizzardDebug4_my_2( BOOL type1, const char * format, ... )
 {
-	int retval = 0;
-	__asm mov retval, eax;
-	char dest[ 256 ];
+	if ( !format || *format == '\0' )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToBlizzard4Log( "BlizzardDebug4:NULL" );
+#endif
+		return;
+	}
 	va_list argptr;
 	va_start( argptr, format );
-	vsprintf_s( dest, 256, format, argptr );
+	vsprintf_s( tmpdebug, 1024, format, argptr );
 	va_end( argptr );
 #ifdef DOTA_HELPER_LOG
 	if ( type1 )
-		AddNewLineToBlizzard4Log( dest );
+		AddNewLineToBlizzard4Log( tmpdebug );
 	else
-		AddNewLineToBlizzard4Log_2( dest );
+		AddNewLineToBlizzard4Log_2( tmpdebug );
+
+	//PrintText( tmpdebug );
 #endif
-	return retval;
 }
+
+
+void __declspec( naked ) BlizzardDebug4_my( )
+{
+	__asm
+	{
+		safepushad;
+		add esp, 4;
+		call BlizzardDebug4_my_2;
+		safepopad;
+		ret;
+	}
+}
+
 
 BlizzardDebug5 BlizzardDebug5_org = NULL;
 BlizzardDebug5 BlizzardDebug5_ptr;
 
-int __cdecl BlizzardDebug5_my( const char * format, ... )
+void __cdecl BlizzardDebug5_my_2( const char * format, ... )
 {
-	int retval = 0;
-	__asm mov retval, eax;
-	char dest[ 256 ];
+	if ( !format || *format == '\0' )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToBlizzard5Log( "BlizzardDebug5:NULL" );
+#endif
+		return;
+	}
 	va_list argptr;
 	va_start( argptr, format );
-	vsprintf_s( dest, 256, format, argptr );
+	vsprintf_s( tmpdebug, 1024, format, argptr );
 	va_end( argptr );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToBlizzard5Log( dest );
+	AddNewLineToBlizzard5Log( tmpdebug );
+	//PrintText( tmpdebug );
 #endif
-	return retval;
 }
+
+
+void __declspec( naked ) BlizzardDebug5_my( )
+{
+	__asm
+	{
+		safepushad;
+		add esp, 4;
+		call BlizzardDebug5_my_2;
+		safepopad;
+		ret;
+	}
+}
+
 
 BlizzardDebug6 BlizzardDebug6_org = NULL;
 BlizzardDebug6 BlizzardDebug6_ptr;
 
-int __cdecl BlizzardDebug6_my( const char * format, ... )
+void __cdecl BlizzardDebug6_my_2( const char * format, ... )
 {
-	int retval = 0;
-	__asm mov retval, eax;
-	char dest[ 256 ];
+	if ( !format || *format == '\0' )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToBlizzard6Log( "BlizzardDebug6:NULL" );
+#endif
+		return;
+	}
 	va_list argptr;
 	va_start( argptr, format );
-	vsprintf_s( dest, 256, format, argptr );
+	vsprintf_s( tmpdebug, 1024, format, argptr );
 	va_end( argptr );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToBlizzard6Log( dest );
+	AddNewLineToBlizzard6Log( tmpdebug );
+	//PrintText( tmpdebug );
 #endif
-	return retval;
 }
 
 
-void __stdcall EnableErrorHandler( int )
+void __declspec( naked ) BlizzardDebug6_my( )
 {
-
-	InitTopLevelExceptionFilter( );
-
-	if ( StormErrorHandler_org )
+	__asm
 	{
-		MH_CreateHook( StormErrorHandler_org, &StormErrorHandler_my, reinterpret_cast< void** >( &StormErrorHandler_ptr ) );
-		MH_EnableHook( StormErrorHandler_org );
+		safepushad;
+		add esp, 4;
+		call BlizzardDebug6_my_2;
+		safepopad;
+		ret;
 	}
-
-	if ( LookupNative_org )
-	{
-		MH_CreateHook( LookupNative_org, &LookupNative_my, reinterpret_cast< void** >( &LookupNative_ptr ) );
-		MH_EnableHook( LookupNative_org );
-	}
-
-	if ( LookupJassFunc_org )
-	{
-		MH_CreateHook( LookupJassFunc_org, &LookupJassFunc_my, reinterpret_cast< void** >( &LookupJassFunc_ptr ) );
-		MH_EnableHook( LookupJassFunc_org );
-	}
-
-	if ( ProcessNetEvents_org )
-	{
-		MH_CreateHook( ProcessNetEvents_org, &ProcessNetEvents_my, reinterpret_cast< void** >( &ProcessNetEvents_ptr ) );
-		MH_EnableHook( ProcessNetEvents_org );
-	}
-
-
-	Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
-	//MH_CreateHook( Ordinal590_org, &Ordinal590_my, reinterpret_cast< void** >( &Ordinal590_ptr ) );
-//	MH_EnableHook( Ordinal590_org );
-
-	//if ( BlizzardDebug1_org )
-	//{
-	//	MH_CreateHook( BlizzardDebug1_org, &BlizzardDebug1_my, reinterpret_cast< void** >( &BlizzardDebug1_ptr ) );
-	//	MH_EnableHook( BlizzardDebug1_org );
-	//}
-
 }
+
 
 int __stdcall StartExtraErrorHandler( int )
 {
@@ -1490,6 +1632,43 @@ int __stdcall StartExtraErrorHandler( int )
 	}
 	return 0;
 }
+
+void __stdcall EnableErrorHandler( int )
+{
+
+	InitTopLevelExceptionFilter( );
+
+	if ( StormErrorHandler_org )
+	{
+		MH_CreateHook( StormErrorHandler_org, &StormErrorHandler_my, reinterpret_cast< void** >( &StormErrorHandler_ptr ) );
+		MH_EnableHook( StormErrorHandler_org );
+	}
+
+	if ( LookupNative_org )
+	{
+		MH_CreateHook( LookupNative_org, &LookupNative_my, reinterpret_cast< void** >( &LookupNative_ptr ) );
+		MH_EnableHook( LookupNative_org );
+	}
+
+	if ( LookupJassFunc_org )
+	{
+		MH_CreateHook( LookupJassFunc_org, &LookupJassFunc_my, reinterpret_cast< void** >( &LookupJassFunc_ptr ) );
+		MH_EnableHook( LookupJassFunc_org );
+	}
+
+	if ( ProcessNetEvents_org )
+	{
+		MH_CreateHook( ProcessNetEvents_org, &ProcessNetEvents_my, reinterpret_cast< void** >( &ProcessNetEvents_ptr ) );
+		MH_EnableHook( ProcessNetEvents_org );
+	}
+
+
+	Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
+
+
+	StartExtraErrorHandler( 0 );
+}
+
 void __stdcall DisableErrorHandler( int )
 {
 
@@ -1583,3 +1762,5 @@ void __stdcall DisableErrorHandler( int )
 
 }
 
+
+#pragma optimize("",on)

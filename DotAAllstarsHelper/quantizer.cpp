@@ -34,7 +34,7 @@ CQuantizer::CQuantizer( unsigned int nMaxColors, unsigned int nColorBits )
 	m_pTree = 0;
 	m_nLeafCount = 0;
 	m_lastIndex = 0;
-	m_needsAlpha = false;
+	m_needsAlpha = FALSE;
 	for ( int i = 0; i <= ( int )m_nColorBits; i++ )
 		m_pReducibleNodes[ i ] = 0;
 	m_nMaxColors = m_nOutputMaxColors = nMaxColors;
@@ -47,21 +47,21 @@ CQuantizer::~CQuantizer( )
 		DeleteTree( &m_pTree );
 }
 
-bool CQuantizer::ProcessImage( unsigned char* image, unsigned long size, unsigned char bytespp, unsigned char alpha )
+BOOL CQuantizer::ProcessImage( unsigned char* image, unsigned long size, unsigned char bytespp, unsigned char alpha )
 {
 	for ( unsigned long i = 0; i < size; i++ )
 	{
 		BGRAPix *pix = ( BGRAPix* )( image + i * bytespp );
 		AddColor( &m_pTree, pix->R, pix->G, pix->B, 0, m_nColorBits, 0, &m_nLeafCount, m_pReducibleNodes );
 		if ( pix->A != alpha )
-			m_needsAlpha = true;
+			m_needsAlpha = TRUE;
 		if ( m_nLeafCount > m_nMaxColors )
 			ReduceTree( m_nColorBits, &m_nLeafCount, m_pReducibleNodes );
 	}
 	while ( m_nLeafCount > m_nMaxColors )
 		ReduceTree( m_nColorBits, &m_nLeafCount, m_pReducibleNodes );
 	m_needsAlpha = m_needsAlpha && bytespp == 4;
-	return true;
+	return TRUE;
 }
 
 void CQuantizer::FloydSteinbergDither( unsigned char* image, long width, long height, unsigned char bytespp, unsigned char* target, BGRAPix* pal )
@@ -157,7 +157,7 @@ void* CQuantizer::CreateNode( int nLevel, unsigned int nColorBits, unsigned int*
 {
 	Node* pNode = ( Node* )calloc( 1, sizeof( Node ) );
 	if ( !pNode ) return 0;
-	pNode->bIsLeaf = ( ( unsigned int )nLevel == nColorBits ) ? true : false;
+	pNode->bIsLeaf = ( ( unsigned int )nLevel == nColorBits ) ? TRUE : FALSE;
 	pNode->nIndex = 0;
 	if ( pNode->bIsLeaf ) ( *pLeafCount )++;
 	else
@@ -197,7 +197,7 @@ void CQuantizer::ReduceTree( unsigned int nColorBits, unsigned int* pLeafCount, 
 		}
 	}
 
-	pNode->bIsLeaf = true;
+	pNode->bIsLeaf = TRUE;
 	pNode->nRedSum = nRedSum;
 	pNode->nGreenSum = nGreenSum;
 	pNode->nBlueSum = nBlueSum;
@@ -320,7 +320,7 @@ void CQuantizer::SetColorTable( BGRAPix* prgb )
 	}
 }
 
-bool CQuantizer::ColorsAreEqual( BGRAPix* a, BGRAPix* b )
+BOOL CQuantizer::ColorsAreEqual( BGRAPix* a, BGRAPix* b )
 {
 	return ( a->B == b->B && a->G == b->G && a->R == b->R && a->A == b->A );
 }
@@ -360,7 +360,7 @@ unsigned char CQuantizer::GetNearestIndexFast( BGRAPix* c, BGRAPix* pal )
 	return m_lastIndex;
 }
 
-bool CQuantizer::NeedsAlphaChannel( )
+BOOL CQuantizer::NeedsAlphaChannel( )
 {
 	return m_needsAlpha;
 }

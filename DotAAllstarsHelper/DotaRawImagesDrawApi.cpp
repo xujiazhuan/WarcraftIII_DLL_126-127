@@ -406,7 +406,7 @@ void drawThickLine( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd
 	tDeltaY = aXEnd - aXStart;
 	tDeltaX = aYEnd - aYStart;
 	// mirror 4 quadrants to one and adjust deltas and stepping direction
-	bool tSwap = true; // count effective mirroring
+	BOOL tSwap = TRUE; // count effective mirroring
 	if ( tDeltaX < 0 ) {
 		tDeltaX = -tDeltaX;
 		tStepX = -1;
@@ -425,7 +425,7 @@ void drawThickLine( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd
 	}
 	tDeltaXTimes2 = tDeltaX << 1;
 	tDeltaYTimes2 = tDeltaY << 1;
-	bool tOverlap;
+	BOOL tOverlap;
 	// adjust for right direction of thickness from line origin
 	int tDrawStartAdjustCount = aThickness / 2;
 	if ( aThicknessMode == LINE_THICKNESS_DRAW_COUNTERCLOCKWISE ) {
@@ -1121,11 +1121,11 @@ int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallba
 	if ( !MouseActionCallback || MouseActionCallback[ 0 ] == '\0' )
 	{
 		tmpRawImage.MouseCallback = FALSE;
-		tmpRawImage.MouseActionCallback = JassString( );
+		tmpRawImage.MouseActionCallback = RCString( );
 	}
 	else
 	{
-		tmpRawImage.MouseActionCallback = JassString( );
+		tmpRawImage.MouseActionCallback = RCString( );
 		str2jstr( &tmpRawImage.MouseActionCallback, MouseActionCallback );
 		tmpRawImage.MouseCallback = TRUE;
 	}

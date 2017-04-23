@@ -1,6 +1,6 @@
 #include "blpaletter.h"
 
-bool IsPowerOfTwo( const long i )
+BOOL IsPowerOfTwo( const long i )
 {
 	long t = i;
 	while ( t % 2 == 0 )
@@ -9,40 +9,40 @@ bool IsPowerOfTwo( const long i )
 }
 
 
-bool GetFirstBytes( const char* filename, char* buffer, unsigned long length )
+BOOL GetFirstBytes( const char* filename, char* buffer, unsigned long length )
 {
 	FILE* file;
 	fopen_s( &file, filename, "rb" );
 	if ( !file )
-		return false;
+		return FALSE;
 	if ( fread( buffer, 1, length, file ) < length )
 	{
 		fclose( file );
-		return false;
+		return FALSE;
 	}
 	fclose( file );
-	return true;
+	return TRUE;
 }
 
 
-bool MaskOk( unsigned char *mask, int expectedWidth, int expectedHeight, int expectedBpp, long &offset, const char *maskFile )
+BOOL MaskOk( unsigned char *mask, int expectedWidth, int expectedHeight, int expectedBpp, long &offset, const char *maskFile )
 {
 	TGAHeader* header = ( TGAHeader* )mask;
 	if ( header->colorMapType != 0 || header->imageType != 2 || header->width == 0 || header->height == 0 )
-		return false;
+		return FALSE;
 
 	if ( header->width != expectedWidth || header->height != expectedHeight )
-		return false;
+		return FALSE;
 
 	if ( header->bpp / 8 != expectedBpp )
-		return false;
+		return FALSE;
 
 	offset = ( long )( sizeof( TGAHeader ) + header->imageIDLength );
-	return true;
+	return TRUE;
 }
 
 template<typename T>
-inline void AssignWeightedPixel( double *target, T *source, double weight, int bytespp, bool add )
+inline void AssignWeightedPixel( double *target, T *source, double weight, int bytespp, BOOL add )
 {
 	if ( !add )
 	{
@@ -100,14 +100,14 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 			int pix = ( int )floor( sum );
 			double weight = min( diffW, 1.0 - fmod( sum, 1.0 ) );
 			for ( int j = 0; j < oldH; j++ )
-				AssignWeightedPixel( &temp[ ( j*newW + i )*bytespp ], &rawData[ ( j*oldW + pix )*bytespp ], ( weight / diffW ), bytespp, false );
+				AssignWeightedPixel( &temp[ ( j*newW + i )*bytespp ], &rawData[ ( j*oldW + pix )*bytespp ], ( weight / diffW ), bytespp, FALSE );
 			sum += weight;
 			while ( sum < newSum )
 			{
 				weight = min( newSum - sum, 1.0 );
 				pix++;
 				for ( int j = 0; j < oldH; j++ )
-					AssignWeightedPixel( &temp[ ( j*newW + i )*bytespp ], &rawData[ ( j*oldW + pix )*bytespp ], ( weight / diffW ), bytespp, true );
+					AssignWeightedPixel( &temp[ ( j*newW + i )*bytespp ], &rawData[ ( j*oldW + pix )*bytespp ], ( weight / diffW ), bytespp, TRUE );
 				sum += weight;
 			}
 		}
@@ -133,14 +133,14 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 			int pix = ( int )floor( sum );
 			double weight = min( diffH, 1.0 - fmod( sum, 1.0 ) );
 			for ( int i = 0; i < newW; i++ )
-				AssignWeightedPixel( &final[ ( j*newW + i )*bytespp ], &temp[ ( pix*newW + i )*bytespp ], ( weight / diffH ), bytespp, false );
+				AssignWeightedPixel( &final[ ( j*newW + i )*bytespp ], &temp[ ( pix*newW + i )*bytespp ], ( weight / diffH ), bytespp, FALSE );
 			sum += weight;
 			while ( sum < newSum )
 			{
 				weight = min( newSum - sum, 1.0 );
 				pix++;
 				for ( int i = 0; i < newW; i++ )
-					AssignWeightedPixel( &final[ ( j*newW + i )*bytespp ], &temp[ ( pix*newW + i )*bytespp ], ( weight / diffH ), bytespp, true );
+					AssignWeightedPixel( &final[ ( j*newW + i )*bytespp ], &temp[ ( pix*newW + i )*bytespp ], ( weight / diffH ), bytespp, TRUE );
 				sum += weight;
 			}
 		}
@@ -164,10 +164,10 @@ void DivideColor( unsigned char &pixel, unsigned char &mask )
 	pixel = ( unsigned char )( ( double )pixel * ( ( double )mask / ( double )0xFF ) );
 }
 
-bool ApplyOverlay( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int maskBpp )
+BOOL ApplyOverlay( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int maskBpp )
 {
 	if ( !mask )
-		return false;
+		return FALSE;
 	for ( int i = 0; i < width * height; i++ )
 	{
 		DivideColor( rawData[ i*bytespp ], mask[ i*maskBpp ] );
@@ -176,13 +176,13 @@ bool ApplyOverlay( unsigned char* rawData, unsigned char* mask, int width, int h
 		if ( bytespp == 4 && maskBpp == 4 )
 			DivideColor( rawData[ i*bytespp + 3 ], mask[ i*maskBpp + 3 ] );
 	}
-	return true;
+	return TRUE;
 }
 
-bool ApplyBorder( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int borderBpp )
+BOOL ApplyBorder( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int borderBpp )
 {
 	if ( !mask )
-		return false;
+		return FALSE;
 	if ( borderBpp == 4 )
 	{
 		for ( int i = 0; i < width * height; i++ )
@@ -215,7 +215,7 @@ bool ApplyBorder( unsigned char* rawData, unsigned char* mask, int width, int he
 			}
 		}
 	}
-	return true;
+	return TRUE;
 }
 
 
@@ -231,7 +231,7 @@ int GetRequiredMipMaps( int width, int height )
 	return mips;
 }
 
-bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
 {
 	Buffer target[ 16 ];
 	Buffer scaled[ 16 ];
@@ -271,7 +271,7 @@ bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 				scaled[ 0 ] = source;
 			else // generate mipmaps
 				ScaleImage( ( unsigned char* )scaled[ i - 1 ].buf, xdimension * 2, ydimension * 2, xdimension, ydimension, 4, scaled[ i ] );
-			//if ( !ConvertToJpg( scaled[ i ], target[ i ], xdimension, ydimension, 4, quality, true ) )
+			//if ( !ConvertToJpg( scaled[ i ], target[ i ], xdimension, ydimension, 4, quality, TRUE ) )
 			if ( !Jpeg.Write( scaled[ i ], target[ i ], xdimension, ydimension, quality ) )
 			{
 				for ( int j = 0; j <= i; j++ )
@@ -281,7 +281,7 @@ bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 					if ( target[ j ].buf )
 						delete[ ] target[ j ].buf;
 				}
-				return false;
+				return FALSE;
 			}
 			blpHeader.poffs[ i ] = output.length;
 			blpHeader.psize[ i ] = target[ i ].length;
@@ -326,10 +326,10 @@ bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 		width = width / 2;
 		height = height / 2;
 	}
-	return true;
+	return TRUE;
 }
 
-bool CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
 {
 	CQuantizer* q = new CQuantizer( ( unsigned int )colors, 8 );
 	q->ProcessImage( ( unsigned char* )rawData.buf, ( unsigned long )( width * height ), ( unsigned char )bytespp, 0x00 );
@@ -421,20 +421,20 @@ bool CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *
 	}
 
 	delete q;
-	return true;
+	return TRUE;
 }
 
-bool TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename )
+BOOL TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename )
 {
 	TGAHeader* header = ( TGAHeader* )input.buf;
 	if ( header->colorMapType != 0 || header->imageType != 2 || header->width == 0 || header->height == 0 )
-		return false;
+		return FALSE;
 
 	if ( !IsPowerOfTwo( header->width ) || !IsPowerOfTwo( header->height ) )
-		return false;
+		return FALSE;
 
 	if ( header->bpp != 32 && header->bpp != 24 )
-		return false;
+		return FALSE;
 
 	bpp = 4;
 	if ( header->bpp < 4 )
@@ -446,10 +446,10 @@ bool TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 	output.buf = new char[ output.length ];
 	memcpy( output.buf, input.buf + sizeof( TGAHeader ) + header->imageIDLength, output.length );
 
-	return true;
+	return TRUE;
 }
 
-bool RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, const char* filename )
+BOOL RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, const char* filename )
 {
 	TGAHeader header;
 	memset( &header, 0, sizeof( TGAHeader ) );
@@ -465,21 +465,21 @@ bool RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, cons
 	memcpy( output.buf, &header, sizeof( TGAHeader ) );
 	memcpy( output.buf + sizeof( TGAHeader ), input.buf, output.length - sizeof( TGAHeader ) );
 
-	return true;
+	return TRUE;
 }
 
-bool BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
+BOOL BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
 {
 	BITMAPFILEHEADER *FileHeader = ( BITMAPFILEHEADER* )input.buf;
 	BITMAPINFOHEADER *InfoHeader = ( BITMAPINFOHEADER* )( FileHeader + 1 );
 	if ( FileHeader->bfType != 0x4D42 )
-		return false;
+		return FALSE;
 
 	if ( !IsPowerOfTwo( InfoHeader->biWidth ) || !IsPowerOfTwo( InfoHeader->biHeight ) )
-		return false;
+		return FALSE;
 
 	if ( InfoHeader->biBitCount != 32 && InfoHeader->biBitCount != 24 )
-		return false;
+		return FALSE;
 
 	bpp = 4;
 	if ( InfoHeader->biBitCount < 32 )
@@ -494,7 +494,7 @@ bool BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 	if ( bpp == 4 ) // invert alpha
 		for ( int i = 0; i < width*height; i++ )
 			output.buf[ i*bpp + 3 ] = 0xFF - output.buf[ i*bpp + 3 ];
-	return true;
+	return TRUE;
 }
 
 void SwapBLPHeader( BLPHeader *header )
@@ -545,7 +545,7 @@ void flip_vertically( unsigned char *pixels, const size_t width, const size_t he
 }
 
 
-tBGRAPixel * blp1_convert_paletted_separated_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height, bool invertAlpha )
+tBGRAPixel * blp1_convert_paletted_separated_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height, BOOL invertAlpha )
 {
 	tBGRAPixel* pBuffer = new tBGRAPixel[ width * height ];
 	tBGRAPixel* pDst = pBuffer;
@@ -574,7 +574,7 @@ tBGRAPixel * blp1_convert_paletted_separated_alpha_BGRA( uint8_t* pSrc, tBGRAPix
 	return pBuffer;
 }
 
-RGBAPix * blp1_convert_paletted_separated_alpha( uint8_t* pSrc, RGBAPix* pInfos, unsigned int width, unsigned int height, bool invertAlpha )
+RGBAPix * blp1_convert_paletted_separated_alpha( uint8_t* pSrc, RGBAPix* pInfos, unsigned int width, unsigned int height, BOOL invertAlpha )
 {
 	RGBAPix * outrgba = ( RGBAPix * )blp1_convert_paletted_separated_alpha_BGRA( pSrc, ( tBGRAPixel * )pInfos, width, height, invertAlpha );
 
@@ -843,24 +843,24 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	return 0;
 }
 
-bool JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
+BOOL JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
 {
 	bpp = 4;
 	//if ( !DecompressJpg( input, output, width, height, bpp ) )
 	if ( !Jpeg.Read( input, output, &width, &height ) )
-		return false;
+		return FALSE;
 
 	//if ( !IsPowerOfTwo( width ) || !IsPowerOfTwo( height ) )
 	//{
 	//	delete[ ] output.buf;
-	//	return false;
+	//	return FALSE;
 	//}
 	//if ( bpp != 4 && bpp != 3 )
 	//{
 	//	delete[ ] output.buf;
-	//	return false;
+	//	return FALSE;
 	//}
-	return true;
+	return TRUE;
 }
 
 

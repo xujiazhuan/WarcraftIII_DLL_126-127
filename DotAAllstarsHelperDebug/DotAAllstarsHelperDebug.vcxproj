@@ -139,6 +139,7 @@
     <ClInclude Include="..\DotAAllstarsHelper\longlong.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
     <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\Structures.h" />
     <ClInclude Include="..\DotAAllstarsHelper\ViewAllySkill.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>

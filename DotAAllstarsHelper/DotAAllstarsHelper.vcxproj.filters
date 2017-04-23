@@ -133,6 +133,9 @@
     <ClInclude Include="Jpeg.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Structures.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DotAAllstarsHelper688.rc">

@@ -87,12 +87,12 @@ int __stdcall SetHPCustomHPBarUnit( unsigned int playerflag, int tid, unsigned i
 	{
 		if ( playerflag & currentflag )
 		{
-			bool needadd = true;
+			BOOL needadd = TRUE;
 			for ( unsigned int i = 0; i < CustomHPBarList[ playerid ].size( ); i++ )
 			{
 				if ( CustomHPBarList[ playerid ][ i ].unittypeid == tid )
 				{
-					needadd = false;
+					needadd = FALSE;
 					CustomHPBarList[ playerid ][ i ].color = color;
 					CustomHPBarList[ playerid ][ i ].scalex = xscale;
 					CustomHPBarList[ playerid ][ i ].scaley = yscale;

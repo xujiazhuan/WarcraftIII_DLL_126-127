@@ -33,7 +33,7 @@ class CQuantizer
 {
 	typedef struct tagNode
 	{
-		bool bIsLeaf;
+		BOOL bIsLeaf;
 		unsigned int nPixelCount;
 		unsigned int nRedSum;
 		unsigned int nGreenSum;
@@ -52,14 +52,14 @@ protected:
 	unsigned int m_nOutputMaxColors;
 	unsigned int m_nColorBits;
 	unsigned char m_lastIndex;
-	bool m_needsAlpha;
+	BOOL m_needsAlpha;
 
 public:
 	CQuantizer( unsigned int nMaxColors, unsigned int nColorBits );
 	virtual ~CQuantizer( );
-	bool ProcessImage( unsigned char* image, unsigned long size, unsigned char bytespp, unsigned char alpha );
+	BOOL ProcessImage( unsigned char* image, unsigned long size, unsigned char bytespp, unsigned char alpha );
 	void FloydSteinbergDither( unsigned char* image, long width, long height, unsigned char bytespp, unsigned char* target, BGRAPix* pal );
-	bool NeedsAlphaChannel( );
+	BOOL NeedsAlphaChannel( );
 	unsigned int GetColorCount( );
 	void SetColorTable( BGRAPix* prgb );
 	unsigned char GetNearestIndex( BGRAPix* c, BGRAPix* pal );
@@ -73,7 +73,7 @@ protected:
 	void DeleteTree( Node** ppNode );
 	void GetPaletteColors( Node* pTree, BGRAPix* prgb, unsigned int* pIndex, unsigned int* pSum );
 	unsigned char GetNextBestLeaf( Node** pTree, unsigned int nLevel, BGRAPix* c, BGRAPix* pal );
-	bool ColorsAreEqual( BGRAPix* a, BGRAPix* b );
+	BOOL ColorsAreEqual( BGRAPix* a, BGRAPix* b );
 };
 #endif
 

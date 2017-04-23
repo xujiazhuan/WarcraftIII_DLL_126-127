@@ -203,7 +203,7 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 				OutImage[ i ].G = 0;
 				OutImage[ i ].B = 0;
 			}
-			else if ( true /*OutImage[ i ].A == 0xFF*/ )
+			else if ( TRUE /*OutImage[ i ].A == 0xFF*/ )
 			{
 				if ( OutImage[ i ].R > 0 && OutImage[ i ].R < 250 )
 					OutImage[ i ].R += 5;
@@ -417,7 +417,7 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 		BlackPix.G = 70;
 		BlackPix.B = 70;
 
-		bool FoundTransparentTexture = false;
+		BOOL FoundTransparentTexture = FALSE;
 
 		int id = 0;
 		vector<BGRAPix> BGRAPixList;
@@ -458,7 +458,7 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 				BlackPix.A = OutImage[ x * h + y ].A;
 				if ( BlackPix.A < 0xFF )
 				{
-					FoundTransparentTexture = true;
+					FoundTransparentTexture = TRUE;
 					break;
 				}
 			}
@@ -672,110 +672,7 @@ int __stdcall SetModelScale( const char * mdlpath, float Scale )
 	return 0;
 }
 
-
-
-struct Mdx_Texture        //NrOfTextures = ChunkSize / 268
-{
-	int ReplaceableId;
-	CHAR FileName[ 260 ];
-	unsigned int Flags;                       //#1 - WrapWidth
-									   //#2 - WrapHeight
-};
-
-struct Mdx_FLOAT3
-{
-	float x;
-	float y;
-	float z;
-};
-
-struct Mdx_Sequence      //NrOfSequences = ChunkSize / 132
-{
-	CHAR Name[ 80 ];
-
-	int IntervalStart;
-	int IntervalEnd;
-	FLOAT MoveSpeed;
-	unsigned int Flags;                       //0 - Looping
-									   //1 - NonLooping
-	FLOAT Rarity;
-	unsigned int SyncPoint;
-
-	FLOAT BoundsRadius;
-	Mdx_FLOAT3 MinimumExtent;
-	Mdx_FLOAT3 MaximumExtent;
-};
-
 vector<BYTE> FullPatchData;
-
-struct Mdx_SequenceTime
-{
-	int * IntervalStart;
-	int * IntervalEnd;
-};
-
-
-
-struct Mdx_Track
-{
-	int NrOfTracks;
-	int InterpolationType;             //0 - None
-										 //1 - Linear
-										 //2 - Hermite
-										 //3 - Bezier
-	unsigned int GlobalSequenceId;
-};
-
-struct Mdx_Tracks
-{
-	int NrOfTracks;
-	unsigned int GlobalSequenceId;
-
-};
-struct Mdx_Node
-{
-	unsigned int InclusiveSize;
-
-	CHAR Name[ 80 ];
-
-	unsigned int ObjectId;
-	unsigned int ParentId;
-	unsigned int Flags;                         //0        - Helper
-										 //#1       - DontInheritTranslation
-										 //#2       - DontInheritRotation
-										 //#4       - DontInheritScaling
-										 //#8       - Billboarded
-										 //#16      - BillboardedLockX
-										 //#32      - BillboardedLockY
-										 //#64      - BillboardedLockZ
-										 //#128     - CameraAnchored
-										 //#256     - Bone
-										 //#512     - Light
-										 //#1024    - EventObject
-										 //#2048    - Attachment
-										 //#4096    - ParticleEmitter
-										 //#8192    - CollisionShape
-										 //#16384   - RibbonEmitter
-										 //#32768   - Unshaded / EmitterUsesMdl
-										 //#65536   - SortPrimitivesFarZ / EmitterUsesTga
-										 //#131072  - LineEmitter
-										 //#262144  - Unfogged
-										 //#524288  - ModelSpace
-										 //#1048576 - XYQuad
-};
-
-struct Mdx_GeosetAnimation
-{
-	unsigned int InclusiveSize;
-
-	FLOAT Alpha;
-	unsigned int Flags;                       //#1 - DropShadow
-									   //#2 - Color
-	Mdx_FLOAT3 Color;
-
-	unsigned int GeosetId;
-
-};
 
 void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesForReplace )
 {
@@ -2237,6 +2134,6 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 	int height;
 	Buffer img;
 	Buffer ingamebuffer;
-	bool ingame;
+	BOOL ingame;
 	string filename;
 };*/

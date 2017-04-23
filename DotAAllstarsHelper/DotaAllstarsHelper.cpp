@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "Crc32Dynamic.h"
 
-bool FileExist( const char * name )
+BOOL FileExist( const char * name )
 {
 	ifstream f( name );
 	return f.good( );
@@ -42,7 +42,7 @@ int IsNeedDrawUnit2offsetRetAddress = 0;
 int Wc3ControlClickButton_offset = 0;
 
 BOOL * InGame = 0;
-int IsWindowActive = 0;
+BOOL * IsWindowActive = 0;
 int ChatFound = 0;
 
 int pW3XGlobalClass = 0;
@@ -271,16 +271,24 @@ DrawInterface_p DrawInterface_ptr;
 
 int __fastcall DrawInterface_my( int arg1, int arg2 )
 {
-	DrawOverlayDx8( );
-	DrawOverlayDx9( );
-	DrawOverlayGl( );
-	OverlayDrawed = TRUE;
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	if ( *InGame && *IsWindowActive )
+	{
+		DrawOverlayDx8( );
+		DrawOverlayDx9( );
+		DrawOverlayGl( );
+		OverlayDrawed = TRUE;
+	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( "Draw custom interface:OK", __LINE__ );
+#endif
 	return DrawInterface_ptr( arg1, arg2 );
 }
 
 void InitHook( )
 {
-
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -977,7 +985,7 @@ int __stdcall DrawRegenAllways( BOOL enabled )
 
 int __stdcall SaveStringForHP_MP( int unitaddr )
 {
-	if ( *( BOOL* )IsWindowActive && ( NeedDrawRegen || IsKeyPressed( VK_LMENU ) ) )
+	if ( *IsWindowActive && ( NeedDrawRegen || IsKeyPressed( VK_LMENU ) ) )
 	{
 
 		if ( NeedDrawRegen && IsKeyPressed( VK_LMENU ) )
@@ -1379,15 +1387,8 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 
 
 #pragma region BackupOffsets
-struct offsetdata
-{
-	int offaddr;
-	int offdata;
-	unsigned int FeatureFlag;
-};
 
-
-std::vector<offsetdata> offsetslist;
+std::vector<waroffsetdata> offsetslist;
 int __stdcall AddNewOffset_( int address, int data, unsigned int FeatureFlag = 0 )
 {
 	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
@@ -1398,7 +1399,7 @@ int __stdcall AddNewOffset_( int address, int data, unsigned int FeatureFlag = 0
 		}
 	}
 
-	offsetdata temp;
+	waroffsetdata temp;
 	temp.offaddr = address;
 	temp.offdata = data;
 	temp.FeatureFlag = FeatureFlag;
@@ -1429,7 +1430,7 @@ void __stdcall RestoreFeatureOffsets( unsigned int FeatureFlag )
 	{
 		if ( FeatureFlag & offsetslist[ i ].FeatureFlag )
 		{
-			offsetdata temp = offsetslist[ i ];
+			waroffsetdata temp = offsetslist[ i ];
 			DWORD oldprotect, oldprotect2;
 			if ( VirtualProtect( ( void* )temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
 			{
@@ -1448,7 +1449,7 @@ void __stdcall RestoreAllOffsets( )
 #endif
 	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
 	{
-		offsetdata temp = offsetslist[ i ];
+		waroffsetdata temp = offsetslist[ i ];
 		DWORD oldprotect, oldprotect2;
 		if ( VirtualProtect( ( void* )temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
 		{
@@ -1479,13 +1480,6 @@ void __stdcall RestoreAllOffsets( )
 #define Feature_FPSfix1 0x2000
 #define Feature15 0x4000
 #define Feature16 0x8000
-
-struct FeatureRestorer
-{
-	unsigned int FeatureFlag;
-	int Bytes;
-	int Address;
-};
 
 
 int __stdcall DisableFeatures( unsigned int Flags )
@@ -1670,7 +1664,7 @@ void __stdcall DisableAllHooks( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	}
+}
 
 void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
@@ -1720,10 +1714,10 @@ unsigned long __stdcall RefreshTimer( void * )
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-	}
+		}
 
 		Sleep( 200 );
-}
+	}
 
 	return 0;
 }
@@ -1876,7 +1870,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_Player = ( pPlayer )( GameDll + 0x3BBB30 );
 		GetPlayerName = ( p_GetPlayerName )( GameDll + 0x2F8F90 );
 		_BarVTable = GameDll + 0x93E604;
-		IsWindowActive = GameDll + 0xA9E7A4;
+		IsWindowActive = ( BOOL * )( GameDll + 0xA9E7A4 );
 		ChatFound = GameDll + 0xAD15F0;
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
 		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x3D3F30 );
@@ -2134,7 +2128,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_Player = ( pPlayer )( GameDll + 0x1F1E70 );
 		GetPlayerName = ( p_GetPlayerName )( GameDll + 0x34F730 );
 		_BarVTable = GameDll + 0x98F52C;
-		IsWindowActive = GameDll + 0xB673EC;
+		IsWindowActive = ( BOOL * )( GameDll + 0xB673EC );
 		ChatFound = GameDll + 0xBDAA14;
 		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
 		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x1E0650 );

@@ -146,6 +146,7 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="quantizer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Structures.h" />
     <ClInclude Include="ViewAllySkill.h" />
   </ItemGroup>
   <ItemGroup>

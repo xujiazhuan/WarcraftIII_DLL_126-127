@@ -25,33 +25,6 @@ int ShiftPressed = 0;
 BOOL SkipAllMessages = FALSE;
 
 
-struct DelayedPress
-{
-	DWORD NeedPressMsg;
-	WPARAM NeedPresswParam;
-	LPARAM NeedPresslParam;
-	DWORD TimeOut;
-	BOOL ISNULL;
-
-	BOOL IsNull( )
-	{
-		return ISNULL;
-	}
-
-	void Null( BOOL yes )
-	{
-		ISNULL = yes;
-	}
-
-	DelayedPress( )
-	{
-		ISNULL = NeedPressMsg
-			= NeedPresswParam = NeedPresslParam
-			= TimeOut = 0;
-	}
-};
-
-
 void PressKeyboard( int VK )
 {
 	BOOL PressedKey = FALSE;
@@ -106,7 +79,7 @@ void DelayedPressList_pushback( DelayedPress & d )
 
 unsigned long __stdcall PressKeyWithDelay( LPVOID )
 {
-	while ( true && !PressKeyWithDelayEND )
+	while ( TRUE && !PressKeyWithDelayEND )
 	{
 		Sleep( 20 );
 
@@ -326,7 +299,7 @@ void JustClickMouse( )
 	SendInput( 1, &Input, sizeof( INPUT ) );
 
 }
-int PressMouseAtSelectedHero( bool IsItem )
+int PressMouseAtSelectedHero( BOOL IsItem )
 {
 	int errorvalue = 0;
 	if ( !IsCursorSelectTarget( ) )
@@ -401,17 +374,6 @@ DWORD LastPressedKeysTime[ 256 ];
 vector<int> RegisteredKeyCodes;
 vector<int> BlockedKeyCodes;
 
-struct KeyActionStruct
-{
-	int VK;
-	int btnID;
-	int altbtnID;
-	BOOL IsSkill;
-	BOOL IsShift;
-	BOOL IsCtrl;
-	BOOL IsAlt;
-	BOOL IsRightClick;
-};
 vector<KeyActionStruct> KeyActionList;
 
 
@@ -774,9 +736,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 
-	if ( *( BOOL* )IsWindowActive )
+	if ( *IsWindowActive )
 	{
-		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
+		if ( usedcustomframes && *( int* )ChatFound == 0 && IsGameFrameActive( ) )
 		{
 			*( int* )pCurrentFrameFocusedAddr = 0;
 		}
@@ -1019,7 +981,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_KEYDOWN || Msg == WM_XBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
 				Msg == WM_SYSKEYDOWN )
 			{
-				bool itempressed = false;
+				BOOL itempressed = FALSE;
 
 				if ( _Msg == WM_XBUTTONDOWN )
 				{

@@ -15,7 +15,7 @@ pShowThisFrame ShowThisFrame;
 pDestructThisFrame DestructThisFrame;//Without clean memory
 pGetFrameItemAddress GetFrameItemAddress;
 
-
+BOOL usedcustomframes = FALSE;
 
 char ConfigPath[ MAX_PATH ];
 
@@ -34,6 +34,7 @@ void WriteAllConfig( )
 
 void LoadNewFrameDef( const char * filename )
 {
+	usedcustomframes = TRUE;
 	LoadNewFrameDef_org( filename, LoadFramesVar1, LoadFramesVar2, DefaultCStatus );
 }
 
@@ -159,7 +160,7 @@ BOOL GlyphButtonEnabled = TRUE;
 BOOL GlyphButtonCreated = FALSE;
 int GlyphButtonAddr = 0;
 
-JassString CallBackFuncName;
+RCString CallBackFuncName;
 
 int __stdcall CreateGlyphButton( const char * callbackfunc, BOOL create )
 {

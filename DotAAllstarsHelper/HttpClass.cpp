@@ -43,18 +43,18 @@ int HTTPRequest::GetErrorCode( )
 	return ErrorCode;
 }
 
-bool HTTPRequest::loop_recieve( )
+BOOL HTTPRequest::loop_recieve( )
 {
 	if ( !Response.empty( ) )
 		Response.clear( );
-	while ( true )
+	while ( TRUE )
 	{
 		char recvBuf[ 256 ];
 
 		int nret = recv( Sock, recvBuf, sizeof( recvBuf ), 0 );
 		if ( nret == -1 )
 		{
-			return false;
+			return FALSE;
 		}
 		else if ( nret == 0 )
 		{
@@ -64,12 +64,12 @@ bool HTTPRequest::loop_recieve( )
 		Response.append( recvBuf, ( unsigned int )nret );
 	}
 
-	return true;
+	return TRUE;
 }
 
-bool HTTPRequest::resolve_and_connect( )
+BOOL HTTPRequest::resolve_and_connect( )
 {
-	bool ret = false;
+	BOOL ret = FALSE;
 
 	ADDRINFO hints = { 0 };
 	hints.ai_flags = AI_ALL;
@@ -79,7 +79,7 @@ bool HTTPRequest::resolve_and_connect( )
 	ADDRINFO *pResult = nullptr;
 	if ( getaddrinfo( Host.c_str( ), nullptr, &hints, &pResult ) )
 	{
-		return false;
+		return FALSE;
 	}
 
 	sockaddr_in servAddr = { 0 };
@@ -92,7 +92,7 @@ bool HTTPRequest::resolve_and_connect( )
 
 		if ( connect( Sock, ( sockaddr* )&servAddr, sizeof( servAddr ) ) != SOCKET_ERROR )
 		{
-			ret = true;
+			ret = TRUE;
 			break;
 		}
 	}
@@ -102,10 +102,10 @@ bool HTTPRequest::resolve_and_connect( )
 	return ret;
 }
 
-bool HTTPRequest::get_request( const std::string& path )
+BOOL HTTPRequest::get_request( const std::string& path )
 {
 	if ( !resolve_and_connect( ) )
-		return false;
+		return FALSE;
 
 	std::string request = "GET " + path + " HTTP/1.1" + "\r\n";
 	request += "Host: " + Host + "\r\n";
@@ -117,7 +117,7 @@ bool HTTPRequest::get_request( const std::string& path )
 
 	if ( send( Sock, request.c_str( ), ( int )request.length( ), 0 ) == SOCKET_ERROR )
 	{
-		return false;
+		return FALSE;
 	}
 
 	return loop_recieve( );
@@ -125,10 +125,10 @@ bool HTTPRequest::get_request( const std::string& path )
 
 
 
-bool HTTPRequest::post_request( const std::string& path, const std::string& dat )
+BOOL HTTPRequest::post_request( const std::string& path, const std::string& dat )
 {
 	if ( !resolve_and_connect( ) )
-		return false;
+		return FALSE;
 
 	std::string request = "POST " + path + " HTTP/1.1" + "\r\n";
 	request += "Host: " + Host + "\r\n";
@@ -145,7 +145,7 @@ bool HTTPRequest::post_request( const std::string& path, const std::string& dat 
 
 	if ( send( Sock, request.c_str( ), ( int )request.length( ), 0 ) == SOCKET_ERROR )
 	{
-		return false;
+		return FALSE;
 	}
 
 	return loop_recieve( );

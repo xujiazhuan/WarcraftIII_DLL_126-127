@@ -302,16 +302,16 @@ typedef struct PPix PPix;
 typedef RGBAPix palette[ 256 ];
 
 unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename );
-bool TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
-bool BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
-bool JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
-bool CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );
-bool RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, const char* filename );
-bool CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );
+BOOL TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
+BOOL BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
+BOOL JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename );
+BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );
+BOOL RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, const char* filename );
+BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );
 void textureInvertRBInPlace( RGBAPix *bufsrc, unsigned long srcsize );
 void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH, int bytespp, Buffer &target );
-bool ApplyOverlay( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int maskBpp );
-bool ApplyBorder( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int borderBpp );
+BOOL ApplyOverlay( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int maskBpp );
+BOOL ApplyBorder( unsigned char* rawData, unsigned char* mask, int width, int height, int bytespp, int borderBpp );
 void flip_vertically( unsigned char *pixels, const size_t width, const size_t height, const size_t bytes_per_pixel );
 int ArrayXYtoId( int width, int x, int y );
 #endif

@@ -49,174 +49,50 @@ using namespace std;
 
 #include "fnv.h"
 #pragma endregion
+
+
+
+
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
+
+
+
+enum class RawImageEventType : unsigned int
+{
+	MouseUp = 1U,
+	MouseDown = 2U,
+	MouseClick = 4U,
+	MouseEnter = 8U,
+	MouseLeave = 16U,
+	MouseMove = 32U,
+	ALL = 63U
+};
+
+
+
+
+#include "Structures.h"
+
+
 
 extern BOOL TerminateStarted;
 extern BOOL IsVEHex;
 extern BOOL TestModeActivated;
 
-struct CustomHPBar
-{
-	int unittypeid;
-	unsigned int color;
-	float scalex;
-	float scaley;
-};
-
-struct Matrix1//Matrix 4x4
-{
-	float flt1;//0
-	float flt2;//4
-	float flt3;//8
-	float flt4;//12
-	float flt5;//16
-	float flt6;//20
-	float flt7;//24
-	float flt8;//28
-	float flt9;//32
-	float flt10;//36
-	float flt11;//40
-	float flt12;//44
-	float flt13;//48
-	float flt14;//52
-	float flt15;//56
-	float flt16;//60
-};
 
 
-struct BarStruct
-{
-	int _BarClass;		// 0
-	int _unk1_flag;		// 4
-	int _unk2_flag;		// 8
-	int _unk3_pointer;	// C
-	int _unk4;			// 10
-	int _unk5;			// 14
-	int _unk6;			// 18
-	int _unk7;			// 1c
-	int _unk8;			// 20
-	int _unk9;			// 24
-	int _unk10;			// 28
-	int _unk11;			// 2c
-	int _unk12;			// 30
-	int _unk13;			// 34
-	int _unk14;			// 38
-	int _unk15_pointer;	// 3c
-	int _unk16_pointer;	// 40
-	float offset1;		// 44
-	float offset2;		// 48
-	float offset3;		// 4c
-	float offset4;		// 50
-	int _unk17_flag;	// 54
-	float ScaleX;		// 58
-	float ScaleY;		// 5c
-	float Scale;		// 60
-	int _unk18;			// 64
-	int _unk19_pointer; // 68
-	int _unk20;			// 6C
-	int _unk21;			// 70
-	int _unk22;			// 78
-	int _unk23;			// 7C
-	int _unk24;			// 80
-	int _unk25;			// 84
-	int bartype;		// 88
-	int _unk26;			// 8C
-	int _unk27;			// 90
-	int _unk28;			// 94
-	float offset5;		// 98
-	float offset6;		// 9C
-	float offset7;		// 100
-	float offset8;		// 104
-	float offset9;		// 108
-	int _unk29;			// 10C
-	int _unk30;			// 110
-	int _unk31;			// 114
-	int _unk32;			// 118
-	int _unk33;			// 11C
-	int _unk34;			// 120
-	int _unk35;			// 124
-	int _unk36;			// 128
-	int _unk37;			// 12C
-	int _unk38;			// 130
-	int _unk39;			// 134
-	int _unk40_pointer;	// 138
-	int _unk41_pointer;	// 13C
-	int _unk42;			// 140
-	int _unk43_pointer;	// 144
-	int _unk44_pointer;	// 148
-	int _unk45;			// 14C
-	int _unk46_pointer;	// 150
-	int _unk47_pointer;	// 154
-	int _unk48;			// 158
-	int _unk49_pointer;	// 15C
-	int _unk50_pointer;	// 160
-	int _unk51;			// 164
-	int _unk52_pointer;	// 168
-	int _unk53_pointer;	// 16C
-	int _unk54;			// 170
-	int _unk55_pointer;	// 174
-	int _unk56_pointer;	// 178
-	int _unk57;			// 17C
-	int _unk58_pointer;	// 180
-	int _unk59_pointer;	// 184
-	int _unk60;			// 188
-	float offset10;		// 18C
-	float offset11;		// 190
-	float offset12;		// 194
-	int _unk61_pointer;	// 198
-	int _unk62;			// 19C
-	int _unk63;			// 200
-	int _unk64_pointer;	// 204
-	int _unk65_pointer;	// 208
-	int _unk66;			// 20C
-	int _unk67;			// 210
-	float offset13;		// 214
-	int unitaddr;		// 218
-	int _unk68;			// 21C
-	int _unk69;			// 220
-};
+
 int GetGlobalClassAddr( );
-bool FileExist( const char * name );
+BOOL FileExist( const char * name );
 DWORD GetDllCrc32( );
 //typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
 //extern _TriggerExecute TriggerExecute;
-// Total Size: 32 bytes
-struct RCString
-{
-	int	VTable;
-	int	refCount;
-	int	Field_0008;
-	int	Field_000C;
-	int	Field_0010;
-	int	Field_0014;
-	int	Field_0018;
-	LPSTR	String;
-	RCString( )
-	{
-		VTable = refCount = Field_0008
-			= Field_000C = Field_0010
-			= Field_0014 = Field_0018
-			= 0;
-		String = NULL;
-	}
-};
 
-// Total Size: 16 bytes
-struct JassString
-{
-	int		VTable;
-	int		Field_0004;
-	RCString*	Value;
-	int		Field_000C;
-	JassString( )
-	{
-		VTable = Field_0004 = Field_000C = 0;
-		Value = NULL;
-	}
-};
-typedef void( __cdecl * pExecuteFunc )( JassString * funcname );
+
+
+typedef void( __cdecl * pExecuteFunc )( RCString * funcname );
 extern pExecuteFunc ExecuteFunc;
-typedef void( __thiscall * pConvertStrToJassStr )( JassString * jStr, const char * cStr );
+typedef void( __thiscall * pConvertStrToJassStr )( RCString * jStr, const char * cStr );
 extern pConvertStrToJassStr str2jstr;
 
 
@@ -368,7 +244,7 @@ extern int IsNeedDrawUnitOriginOffset;
 extern int IsNeedDrawUnit2offset;
 extern int IsNeedDrawUnit2offsetRetAddress;
 extern BOOL * InGame;
-extern int IsWindowActive;
+extern BOOL * IsWindowActive;
 extern int ChatFound;
 extern int pW3XGlobalClass;
 extern int pGameClass1;
@@ -427,84 +303,6 @@ extern c_SimpleButtonClickEvent SimpleButtonClickEvent;
 
 
 #pragma region DotaFilesHelper.cpp
-struct ModelCollisionFixStruct
-{
-	string FilePath;
-	float X, Y, Z, Radius;
-	ModelCollisionFixStruct( )
-	{
-		FilePath = string( );
-		X = Y = Z = Radius = 0.0f;
-	}
-};
-struct ModelTextureFixStruct
-{
-	string FilePath;
-	int TextureID;
-	string NewTexturePath;
-	ModelTextureFixStruct( )
-	{
-		FilePath = string( );
-		NewTexturePath = string( );
-		TextureID = 0;
-	}
-};
-struct ModelPatchStruct
-{
-	string FilePath;
-	string patchPath;
-	ModelPatchStruct( )
-	{
-		FilePath = string( );
-		patchPath = string( );
-	}
-};
-struct ModelRemoveTagStruct
-{
-	string FilePath;
-	string TagName;
-	ModelRemoveTagStruct( )
-	{
-		FilePath = string( );
-		TagName = string( );
-	}
-};
-struct ModelSequenceReSpeedStruct
-{
-	string FilePath;
-	string AnimationName;
-	float SpeedUp;
-	ModelSequenceReSpeedStruct( )
-	{
-		FilePath = string( );
-		AnimationName = string( );
-		SpeedUp = 0.0f;
-	}
-};
-struct ModelScaleStruct
-{
-	string FilePath;
-	float Scale;
-	ModelScaleStruct( )
-	{
-		Scale = 0.0f;
-		FilePath = string( );
-	}
-};
-struct ModelSequenceValueStruct
-{
-	string FilePath;
-	string AnimationName;
-	int Indx;
-	float Value;
-	ModelSequenceValueStruct( )
-	{
-		FilePath = string( );
-		AnimationName = string( );
-		Indx = 0;
-		Value = 0.0f;
-	}
-};
 extern vector<ModelCollisionFixStruct> ModelCollisionFixList;
 extern vector<ModelTextureFixStruct> ModelTextureFixList;
 extern vector<ModelPatchStruct> ModelPatchList;
@@ -513,25 +311,8 @@ extern vector<ModelSequenceReSpeedStruct> ModelSequenceReSpeedList;
 extern vector<ModelSequenceValueStruct> ModelSequenceValueList;
 extern vector<ModelScaleStruct> ModelScaleList;
 
-struct ICONMDLCACHE
-{
-	uint64_t _hash;
-	size_t hashlen;
-	char * buf;
-	size_t size;
-};
-
 extern vector<ICONMDLCACHE> ICONMDLCACHELIST;
-struct FileRedirectStruct
-{
-	string NewFilePath;
-	string RealFilePath;
-	FileRedirectStruct( )
-	{
-		NewFilePath = string( );
-		RealFilePath = string( );
-	}
-};
+
 extern vector<FileRedirectStruct> FileRedirectList;
 typedef signed int( __stdcall * Storm_403 )( void *a1, const char * str, int line, int id );
 extern Storm_403 Storm_403_org;
@@ -543,86 +324,12 @@ extern GameGetFile GameGetFile_org, GameGetFile_ptr;
 //extern Storm_279 Storm_279_org;
 //extern Storm_279 Storm_279_ptr;
 void FreeAllIHelpers( );
-struct FakeFileStruct
-{
-	char * filename;
-	BYTE * buffer;
-	size_t size;
-};
 
-
-enum class RawImageEventType : unsigned int
-{
-	MouseUp = 1U,
-	MouseDown = 2U,
-	MouseClick = 4U,
-	MouseEnter = 8U,
-	MouseLeave = 16U,
-	MouseMove = 32U,
-	ALL = 63U
-};
-
-
-struct RawImageCallbackData
-{
-	int RawImage;
-	RawImageEventType EventType;
-	float mousex;
-	float mousey;
-	BOOL IsAltPressed;
-	BOOL IsCtrlPressed;
-	BOOL IsLeftButton;
-	int offsetx;
-	int offsety;
-};
 
 
 
 extern RawImageCallbackData * GlobalRawImageCallbackData;
 BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey );
-
-struct RawImageStruct
-{
-	int RawImage;
-	int width;
-	int height;
-	Buffer img;
-	Buffer ingamebuffer;
-	BOOL ingame;
-	string filename;
-	BOOL used_for_overlay;
-	float overlay_x; // 0.0 1.0
-	float overlay_y; // 0.0 1.0
-	float size_x; // 0.0 1.0
-	float size_y; // 0.0 1.0
-	void * textureaddr;
-	BOOL needResetTexture;
-	BOOL MouseCallback;
-	JassString MouseActionCallback;
-	BOOL IsMouseDown;
-	BOOL IsMouseEntered;
-	unsigned int events;
-
-	RawImageStruct( )
-	{
-		width = 0;
-		height = 0;
-		img = Buffer( );
-		ingamebuffer = Buffer( );
-		ingame = FALSE;
-		filename = string( );
-		used_for_overlay = FALSE;
-		overlay_x = overlay_y = size_x = size_y = 0.0f;
-		textureaddr = NULL;
-		needResetTexture = FALSE;
-		RawImage = 0;
-		events = 0;
-		IsMouseDown = FALSE;
-		IsMouseEntered = FALSE;
-		MouseCallback = FALSE;
-		MouseActionCallback = JassString( );
-	}
-};
 
 extern vector<RawImageStruct> ListOfRawImages;
 
@@ -679,6 +386,7 @@ extern pGameChatSetState GameChatSetState;
 
 
 #pragma region DotaCustomFrames.cpp
+extern BOOL usedcustomframes;
 extern int pCurrentFrameFocusedAddr;
 extern int DefaultCStatus;
 extern int LoadFramesVar1;
