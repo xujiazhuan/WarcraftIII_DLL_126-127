@@ -52,17 +52,6 @@ void PressKeyboard( int VK )
 safevector<DelayedPress> DelayedPressList;
 
 
-void DelayedPressList_erase( int id )
-{
-	for ( unsigned int i = id; i < ( DelayedPressList.size( ) - 1 ); i++ )
-	{
-		DelayedPressList[ i ] = DelayedPressList[ i + 1 ];
-		DelayedPressList[ i ].ISNULL = FALSE;
-	}
-	DelayedPressList[ DelayedPressList.size( ) - 1 ].Null( TRUE );
-}
-
-
 void DelayedPressList_pushback( DelayedPress & d )
 {
 	for ( unsigned int i = 0; i < DelayedPressList.size( ); i++ )
@@ -70,6 +59,8 @@ void DelayedPressList_pushback( DelayedPress & d )
 		if ( DelayedPressList[ i ].IsNull( ) )
 		{
 			DelayedPressList[ i ] = d;
+			DelayedPressList[ i ].ISNULL = FALSE;
+
 			return;
 		}
 	}
@@ -112,7 +103,8 @@ unsigned long __stdcall PressKeyWithDelay( LPVOID )
 					WarcraftRealWNDProc_ptr( Warcraft3Window, DelayedPressList[ i ].NeedPressMsg, DelayedPressList[ i ].NeedPresswParam, DelayedPressList[ i ].NeedPresslParam );
 				}
 
-				DelayedPressList_erase( i );
+				DelayedPressList[ i ].ISNULL = TRUE;
+
 			}
 
 		}

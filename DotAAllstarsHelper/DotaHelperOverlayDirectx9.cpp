@@ -113,10 +113,29 @@ void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture9* texture, float width, f
 	D3DXVECTOR2 spriteCentre = D3DXVECTOR2( width *scalex / 2, height * scaley / 2 );
 
 	D3DXMatrixTransformation2D( &matAll, NULL, 0.0f, &scaling, &spriteCentre, 0.0f, &position );
+
 	pSprite->SetTransform( &matAll );
 	pSprite->Draw( texture, NULL, NULL, NULL, 0xffffffff );
 
 }
+
+//bool dumped = false;
+//void DumpRenderState( )
+//{
+//	if ( !dumped )
+//	{
+//		dumped = true;
+//		FILE * f;
+//		fopen_s( &f, "dumpex.txt", "w" );
+//		for ( int i = 0; i < 175; i++ )
+//		{
+//			DWORD val;
+//			deviceglobal->GetRenderState( ( D3DRENDERSTATETYPE )i, &val );
+//			fprintf_s( f, "%i-%X\n", i, val );
+//		}
+//		fclose( f );
+//	}
+//
 
 void DrawOverlayDx9( )
 {
@@ -126,19 +145,18 @@ void DrawOverlayDx9( )
 		return;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+
 	ID3DXSprite* pSprite;
 	D3D9CreateSprite_org( d, &pSprite );
+
 	pSprite->Begin( D3DXSPRITE_ALPHABLEND );
 	d->SetRenderState( D3DRS_ALPHABLENDENABLE, TRUE );
 	d->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
 	d->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-	/*	d->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_ZERO );
-	d->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_ONE );
-	d->SetRenderState( D3DRS_SRCALPHA, D3DBLEND_ZERO );
-	d->SetRenderState( D3DRS_DESTBLENDALPHA, D3DBLEND_SRCALPHA );
-	d->SetRenderState( D3DRS_SEPARATEALPHABLENDENABLE, TRUE );*/
+
+
 
 	for ( auto & img : ListOfRawImages )
 	{
@@ -171,13 +189,14 @@ void DrawOverlayDx9( )
 		IDirect3DTexture9 * ppTexture = ( IDirect3DTexture9 * )img.textureaddr;
 		if ( !ppTexture )
 		{
-			d->CreateTexture( ( UINT )img.width, ( UINT )img.height, 0, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture, NULL );
+			d->CreateTexture( ( UINT )img.width, ( UINT )img.height, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture, NULL );
+			//D3DXCreateTextureFromFileA( d, "qergqerg.png", &ppTexture );
 			D3DLOCKED_RECT rect;
-
 			ppTexture->LockRect( 0, &rect, 0, 0 );
 			unsigned char* dest = static_cast< unsigned char* >( rect.pBits );
 			memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
 			ppTexture->UnlockRect( 0 );
+			D3DXFilterTexture( ppTexture, NULL, D3DX_DEFAULT, D3DX_DEFAULT );
 			img.textureaddr = ppTexture;
 		}
 		/*	if ( img.size_x > 0.0f && img.size_y > 0.0f )

@@ -1,5 +1,21 @@
 
 #include <pshpack1.h>
+
+
+
+enum class RawImageEventType : unsigned int
+{
+	MouseUp = 1U,
+	MouseDown = 2U,
+	MouseClick = 4U,
+	MouseEnter = 8U,
+	MouseLeave = 16U,
+	MouseMove = 32U,
+	ALL = 63U
+};
+
+
+
 struct CustomHPBar
 {
 	int unittypeid;

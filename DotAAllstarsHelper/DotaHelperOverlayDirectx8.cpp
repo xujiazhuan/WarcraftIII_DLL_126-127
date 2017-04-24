@@ -1,7 +1,7 @@
 #include "Main.h"
 #include <d3d8.h>
 #include <d3dx8.h>
-#pragma comment(lib,"d3dx8.lib")
+//#pragma comment(lib,"d3dx8.lib")
 
 // Thanks ENAleksey(http://xgm.guru/user/ENAleksey) for help 
 
@@ -108,6 +108,7 @@ void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture8* texture, float width, f
 	pSprite->DrawTransform( texture, NULL, &matAll, 0xffffffff );
 }
 
+
 void DrawOverlayDx8( )
 {
 	IDirect3DDevice8 * d = deviceglobal;
@@ -118,6 +119,8 @@ void DrawOverlayDx8( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
+
+
 	ID3DXSprite* pSprite;
 	D3DXCreateSprite( d, &pSprite );
 	pSprite->Begin( );
@@ -164,6 +167,7 @@ void DrawOverlayDx8( )
 			unsigned char* dest = static_cast< unsigned char* >( rect.pBits );
 			memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
 			ppTexture->UnlockRect( 0 );
+			D3DXFilterTexture( ppTexture, NULL, D3DX_DEFAULT, D3DX_DEFAULT );
 			img.textureaddr = ppTexture;
 		}
 
