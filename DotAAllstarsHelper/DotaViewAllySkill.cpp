@@ -103,7 +103,7 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 				if ( IsHero( ( int )UnitAddr ) )
 					( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 			}
-			else if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+			if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
 			{
 				if ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr ) )
 					if ( GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
@@ -132,18 +132,20 @@ int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thi
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-
-	if ( IsEnemy( UnitAddr ) == FALSE )
+	if ( IsNotBadUnit( UnitAddr ) )
 	{
-		if ( IsHero( ( int )UnitAddr ) )
-			return 1;
-	}
-
-	if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
-	{
-		if ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr ) )
-			if ( GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
+		if ( IsEnemy( UnitAddr ) == FALSE )
+		{
+			if ( IsHero( ( int )UnitAddr ) )
 				return 1;
+		}
+
+		if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
+		{
+			if ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr ) )
+				if ( GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
+					return 1;
+		}
 	}
 	//}
 	return IsNeedDrawUnit2ptr( UnitAddr );

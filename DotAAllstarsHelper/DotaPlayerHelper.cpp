@@ -165,13 +165,14 @@ pIsPlayerObs IsPlayerObs;
 
 BOOL IsPlayerObserver( int pid )
 {
+	BOOL retval = FALSE;
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	if ( pid >= 0 && pid <= 15 )
 	{
-		unsigned int player = Player( pid );
-		BOOL retval = IsPlayerObs( player );
+		int player = Player( pid );
+		retval = IsPlayerObs( player );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -180,7 +181,7 @@ BOOL IsPlayerObserver( int pid )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	return FALSE;
+	return retval;
 }
 
 BOOL IsLocalPlayerObserver( )

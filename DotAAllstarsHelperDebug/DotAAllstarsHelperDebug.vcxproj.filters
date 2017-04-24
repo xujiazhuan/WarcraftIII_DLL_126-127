@@ -95,6 +95,9 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaRawImagesDrawApi.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaMemoryHackHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DotAAllstarsHelper\blpaletter.h">

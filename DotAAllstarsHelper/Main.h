@@ -44,7 +44,13 @@ using namespace std;
 #include <winsock2.h>
 #pragma comment (lib, "Ws2_32.lib")
 #include "buffer.h"
+#ifdef DOTA_HELPER_LOG
 
+#define PSAPI_VERSION 1
+#include <Psapi.h>
+#pragma comment(lib,"Psapi.lib")
+
+#endif
 #define MASK_56 (((u_int64_t)1<<56)-1) /* i.e., (u_int64_t)0xffffffffffffff */
 
 #include "fnv.h"
@@ -193,7 +199,7 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 void  __stdcall AddNewLineToJassLog( const char * s );
 void __stdcall  AddNewLineToDotaChatLog( const char * s );
 void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );
-#endif
+void __stdcall  AddNewLineToJassNativesLog( const char * s );
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );
 void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
@@ -221,6 +227,7 @@ typedef void( __cdecl * BlizzardDebug5 )( const char *format, ... );
 extern BlizzardDebug5 BlizzardDebug5_org;
 typedef void( __cdecl * BlizzardDebug6 )( const char *format, ... );
 extern BlizzardDebug6 BlizzardDebug6_org;
+#endif
 #pragma endregion
 
 
@@ -437,6 +444,16 @@ void DrawOverlayGl( );
 
 extern BOOL OverlayDrawed;
 
+#pragma endregion
+
+
+#pragma region MemoryHack
+//Get module from addr
+HMODULE GetModuleFromAddress( int addr );
+typedef int( __cdecl * GetTownUnitCount_p )( int *, int, BOOL );
+int __cdecl Wc3MemoryRW( int * addr, int value, BOOL write );
+extern GetTownUnitCount_p GetTownUnitCount_org;
+extern GetTownUnitCount_p GetTownUnitCount_ptr;
 #pragma endregion
 
 const float DesktopScreen_Width = ( float )GetSystemMetrics( SM_CXSCREEN );

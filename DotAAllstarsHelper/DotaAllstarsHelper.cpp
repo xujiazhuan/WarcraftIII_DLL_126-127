@@ -291,7 +291,7 @@ void InitHook( )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
+
 	StormErrorHandler_org = ( StormErrorHandler )StormErrorHandlerOffset;
 	LookupNative_org = ( LookupNative )JassNativeLookupOffset;
 	LookupJassFunc_org = ( LookupJassFunc )JassFuncLookupOffset;
@@ -302,12 +302,9 @@ void InitHook( )
 	BlizzardDebug4_org = ( BlizzardDebug4 )BlizzardDebug4Offset;
 	BlizzardDebug5_org = ( BlizzardDebug5 )BlizzardDebug5Offset;
 	BlizzardDebug6_org = ( BlizzardDebug6 )BlizzardDebug6Offset;
-#ifdef DOTA_HELPER_LOG
+
 	EnableErrorHandler( 0 );
-#endif
 
-
-#ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	if ( !Warcraft3Window )
@@ -403,6 +400,8 @@ void InitHook( )
 	MH_CreateHook( DrawInterface_org, &DrawInterface_my, reinterpret_cast< void** >( &DrawInterface_ptr ) );
 	MH_EnableHook( DrawInterface_org );
 
+	MH_CreateHook( GetTownUnitCount_org, &Wc3MemoryRW, reinterpret_cast< void** >( &GetTownUnitCount_ptr ) );
+	MH_EnableHook( GetTownUnitCount_org );
 
 
 #ifdef DOTA_HELPER_LOG
@@ -414,9 +413,9 @@ void UninitializeHook( )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	DisableErrorHandler( 0 );
 
+	DisableErrorHandler( 0 );
+#endif
 
 #pragma region Game.dll hook
 
@@ -481,6 +480,11 @@ void UninitializeHook( )
 		DrawInterface_org = NULL;
 	}
 
+	if ( GetTownUnitCount_org )
+	{
+		MH_DisableHook( GetTownUnitCount_org );
+		DrawInterface_org = NULL;
+	}
 
 
 #pragma endregion
@@ -687,7 +691,7 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 			}
 		}
 
-	}
+}
 
 	return retval;
 }
@@ -772,7 +776,7 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 		}
 
 		return ( float )( 100.0 - indmg );
-	}
+}
 
 	return 0.0f;
 }
@@ -804,7 +808,7 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 			PUSH addr;
 			CALL Storm_503;
 		}
-	}
+}
 	return retval;
 }
 
@@ -915,7 +919,7 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 				return itemaddr;
 			}
 		}
-	}
+}
 	sprintf_s( itemstr1, 128, "%%s%%s%%s%%s%%s" );
 	sprintf_s( itemstr2, 128, "%%s%%s%%s" );
 	return itemaddr;
@@ -1030,11 +1034,11 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 			}
 			return unitaddr;
 		}
-	}
+		}
 	sprintf_s( unitstr1, 128, "%%u / %%u" );
 	sprintf_s( unitstr2, 128, "%%u / %%u" );
 	return unitaddr;
-}
+	}
 
 
 
@@ -1630,13 +1634,14 @@ void __stdcall DisableAllHooks( )
 	}
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	bDllLogEnable = TRUE;
 #endif
 	UninitOpenglHook( );
 	Uninitd3d8Hook( );
 	Uninitd3d9Hook( );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
-	bDllLogEnable = TRUE;
+
 	EnableSelectHelper = FALSE;
 	AutoSelectHero = FALSE;
 	BlockKeyAndMouseEmulation = FALSE;
@@ -1664,7 +1669,7 @@ void __stdcall DisableAllHooks( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-}
+	}
 
 void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
@@ -1714,10 +1719,10 @@ unsigned long __stdcall RefreshTimer( void * )
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-		}
+	}
 
 		Sleep( 200 );
-	}
+}
 
 	return 0;
 }
@@ -1885,8 +1890,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		BlizzardDebug5Offset = GameDll + 0x39E970;
 		BlizzardDebug6Offset = GameDll + 0x579C10;
 
-		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x16880 );
-
+	
 		IssueWithoutTargetOrderOffset = 0x339C60;
 		IssueTargetOrPointOrder2Offset = 0x339CC0;
 		sub_6F339D50Offset = 0x339D50;
@@ -1899,6 +1903,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x4C1550;
 
 #ifdef DOTA_HELPER_LOG
+		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x16880 );
+
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
@@ -2075,6 +2081,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x3C9600 );
 
 		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x341740 );
+		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x2DD0C0 );
 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2143,8 +2150,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		BlizzardDebug5Offset = GameDll + 0x1c14f0;
 		BlizzardDebug6Offset = GameDll + 0x2eeb70;
 
-		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x1BB60 );
-
+	
 		IssueWithoutTargetOrderOffset = 0x3AE4E0;
 		IssueTargetOrPointOrder2Offset = 0x3AE540;
 		sub_6F339D50Offset = 0x3AE810;
@@ -2159,6 +2165,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x048C10;
 
 #ifdef DOTA_HELPER_LOG
+		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x1BB60 );
+
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
@@ -2338,6 +2346,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		IsPlayerObs = ( pIsPlayerObs )( GameDll + 0x1E8170 );
 
 		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x3ACCF0 );
+		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x890680 );
 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2489,7 +2498,12 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 	{
 
 		TerminateStarted = TRUE;
+
+
+#ifdef DOTA_HELPER_LOG
 		ResetTopLevelExceptionFilter( );
+#endif
+
 		// Cleanup
 		if ( hRefreshTimer )
 		{
