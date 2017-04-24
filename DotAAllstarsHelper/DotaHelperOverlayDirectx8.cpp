@@ -1,7 +1,7 @@
 #include "Main.h"
 #include <d3d8.h>
 #include <d3dx8.h>
-//#pragma comment(lib,"d3dx8.lib")
+#pragma comment(lib,"d3dx8.lib")
 
 // Thanks ENAleksey(http://xgm.guru/user/ENAleksey) for help 
 
