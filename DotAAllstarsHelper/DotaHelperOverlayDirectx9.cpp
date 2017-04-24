@@ -1,7 +1,7 @@
 #include "Main.h"
 #include <d3d9.h>
 #include <d3dx9.h>
-#pragma comment(lib,"d3dx9.lib")
+//#pragma comment(lib,"d3dx9.lib")
 
 // Thanks ENAleksey(http://xgm.guru/user/ENAleksey) for help 
 
@@ -93,6 +93,16 @@ typedef HRESULT( WINAPI *
 		LPD3DXSPRITE*       ppSprite );
 
 D3DXCreateSprite_p D3D9CreateSprite_org;
+
+
+typedef HRESULT (WINAPI *
+D3DXFilterTexture_p )(
+	LPDIRECT3DBASETEXTURE9    pBaseTexture,
+	CONST PALETTEENTRY*       pPalette,
+	UINT                      SrcLevel,
+	DWORD                     Filter );
+
+D3DXFilterTexture_p D3DXFilterTexture_org;
 
 void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture9* texture, float width, float height, float x, float y )
 {
@@ -196,7 +206,7 @@ void DrawOverlayDx9( )
 			unsigned char* dest = static_cast< unsigned char* >( rect.pBits );
 			memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
 			ppTexture->UnlockRect( 0 );
-			D3DXFilterTexture( ppTexture, NULL, D3DX_DEFAULT, D3DX_DEFAULT );
+			D3DXFilterTexture_org( ppTexture, NULL, D3DX_DEFAULT, D3DX_DEFAULT );
 			img.textureaddr = ppTexture;
 		}
 		/*	if ( img.size_x > 0.0f && img.size_y > 0.0f )
@@ -265,6 +275,11 @@ void Initd3d9Hook( )
 		return;
 	}
 	D3D9CreateSprite_org = ( D3DXCreateSprite_p )GetProcAddress( d3d9_43, "D3DXCreateSprite" );
+	D3DXFilterTexture_org = ( D3DXFilterTexture_p )GetProcAddress( d3d9_43, "D3DXFilterTexture" );
+	if ( !D3D9CreateSprite_org || !D3DXFilterTexture_org )
+	{
+		return;
+	}
 	EndScene_dx9_org = ( EndScene_dx9_p )( GameDll + 0x0ECFF0 );
 	MH_CreateHook( EndScene_dx9_org, &EndScene_dx9_my, reinterpret_cast< void** >( &EndScene_dx9_ptr ) );
 	MH_EnableHook( EndScene_dx9_org );
