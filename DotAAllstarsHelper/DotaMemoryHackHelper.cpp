@@ -78,3 +78,42 @@ HMODULE GetModuleFromAddress( int addr )
 
 	return hModule;
 }
+
+Ordinal590_p Ordinal590_org;
+
+int __stdcall ScanJassStringForErrors( RCString * str )
+{
+	RCString * FirstString = str;
+	StringRep * StrRep = FirstString->stringRep;
+	StringRep * FirstStringRep = StrRep;
+	int stringfound = 0;
+	int maxstr = 500000;
+
+	FILE * f;
+	fopen_s( &f, "dumpbadstrings.txt", "w" );
+
+
+	while ( (int)StrRep > NULL  )
+	{
+		stringfound++;
+		
+		uint32_t strhash = Ordinal590_org( (unsigned char *)StrRep->text );
+		
+		if ( strhash != StrRep->hash )
+		{
+			fprintf_s( f, "Found bad string:%s", StrRep->text );
+		}
+
+		StrRep = StrRep->next;
+
+		if ( StrRep == FirstStringRep )
+			break;
+		if ( maxstr-- < 0 )
+			break;
+	}
+	fclose( f );
+
+
+
+	return stringfound;
+}

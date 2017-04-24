@@ -96,3 +96,4 @@ ShowSkillPanelForAllUnits
 SetAutoSelectHero
 TopLevelExceptionFilter
 DotaVectoredToSehHandler
+ScanJassStringForErrors

@@ -2082,6 +2082,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x341740 );
 		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x2DD0C0 );
+		Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
+
+
 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2347,6 +2350,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		DrawInterface_org = ( DrawInterface_p )( GameDll + 0x3ACCF0 );
 		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x890680 );
+		Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2391,6 +2395,8 @@ int __stdcall SetCustomGameDllandStormDLL( const char * _GameDllName, const char
 
 	Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 	Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
+	Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
+
 	//Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
 
 	return 0;
@@ -2484,9 +2490,6 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		StormDllModule = GetModuleHandleA( StormDllName );
 		StormDll = ( int )StormDllModule;
 
-		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
-		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-		/*Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );*/
 		Warcraft3_Process = GetCurrentProcess( );
 		// NEXT 3 LINES ONLY FOR TEST !!!
 		// TestModeActivated = TRUE;

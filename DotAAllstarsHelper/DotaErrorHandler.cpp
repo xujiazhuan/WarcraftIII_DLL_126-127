@@ -221,7 +221,7 @@ void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line )
 			safevector_erase( DotaHelperLog );
 		}
 		else
-			DotaHelperLog.push_back( s );
+			DotaHelperLog.push_back( ErrorHelperBuffer );
 	}
 }
 
@@ -1356,15 +1356,6 @@ short save_ax, save_cx, save_dx, save_bx, save_bp, save_si, save_di;
 
 
 
-typedef unsigned int( __stdcall * Ordinal590_p )( char *a1 );
-Ordinal590_p Ordinal590_org;
-Ordinal590_p Ordinal590_ptr;
-
-unsigned int __stdcall Ordinal590_my( char *a1 )
-{
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-	return Ordinal590_ptr( a1 );
-}
 
 
 BlizzardDebug1 BlizzardDebug1_org = NULL;
@@ -1618,8 +1609,6 @@ void __stdcall EnableErrorHandler( int )
 		MH_EnableHook( ProcessNetEvents_org );
 	}
 
-
-	Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
 
 
 	StartExtraErrorHandler( 0 );

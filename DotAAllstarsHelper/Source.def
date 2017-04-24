@@ -94,3 +94,4 @@ GetWindowWidth
 GetWindowHeight
 ShowSkillPanelForAllUnits
 SetAutoSelectHero
+ScanJassStringForErrors

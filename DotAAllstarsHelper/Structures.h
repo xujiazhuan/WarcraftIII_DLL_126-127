@@ -140,7 +140,7 @@ struct BarStruct
 struct StringRep {
 	void**				vtable;		//0x0
 	uint32_t			refCount;	//0x4
-	uint32_t			unk_8;		//0x8
+	uint32_t			hash;		//0x8
 	uint32_t			list_C;		//0xC
 	uint32_t			unk_10;		//0x10
 	uint32_t			unk_14;		//0x14

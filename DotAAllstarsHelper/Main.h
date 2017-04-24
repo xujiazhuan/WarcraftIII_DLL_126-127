@@ -441,6 +441,9 @@ typedef int( __cdecl * GetTownUnitCount_p )( int *, int, BOOL );
 int __cdecl Wc3MemoryRW( int * addr, int value, BOOL write );
 extern GetTownUnitCount_p GetTownUnitCount_org;
 extern GetTownUnitCount_p GetTownUnitCount_ptr;
+typedef unsigned int( __stdcall * Ordinal590_p )( unsigned char *a1 );
+extern Ordinal590_p Ordinal590_org;
+
 #pragma endregion
 
 const float DesktopScreen_Width = ( float )GetSystemMetrics( SM_CXSCREEN );
