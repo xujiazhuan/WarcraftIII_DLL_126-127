@@ -81,39 +81,63 @@ HMODULE GetModuleFromAddress( int addr )
 
 Ordinal590_p Ordinal590_org;
 
-int __stdcall ScanJassStringForErrors( RCString * str )
+int __stdcall ScanJassStringForErrors( StringRep * firstStr )
 {
-	RCString * FirstString = str;
-	StringRep * StrRep = FirstString->stringRep;
-	StringRep * FirstStringRep = StrRep;
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+
+	StringRep * currentStr = firstStr;
 	int stringfound = 0;
 	int maxstr = 500000;
 
 	FILE * f;
 	fopen_s( &f, "dumpbadstrings.txt", "w" );
 
-
-	while ( (int)StrRep > NULL  )
+	while ( (int)currentStr > 0 && firstStr != currentStr->next )
 	{
-		stringfound++;
-		
-		uint32_t strhash = Ordinal590_org( (unsigned char *)StrRep->text );
-		
-		if ( strhash != StrRep->hash )
+
+		uint32_t strhash = Ordinal590_org( ( unsigned char * )currentStr->text );
+		if ( strhash != currentStr->hash )
 		{
-			fprintf_s( f, "Found bad string:%s", StrRep->text );
+			fprintf_s( f, "Found bad string:%s", currentStr->text );
+			stringfound++;
 		}
 
-		StrRep = StrRep->next;
-
-		if ( StrRep == FirstStringRep )
-			break;
+		currentStr = currentStr->next;
 		if ( maxstr-- < 0 )
 			break;
 	}
 	fclose( f );
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+
+	return stringfound;
+}
 
 
+
+
+int __stdcall GetJassStringCount( StringRep * firstStr )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	StringRep * currentStr = firstStr;
+	int stringfound = 0;
+	int maxstr = 500000;
+
+	while ( (int)currentStr > 0 && firstStr != currentStr->next )
+	{
+		stringfound++;
+		currentStr = currentStr->next;
+		if ( maxstr-- < 0 )
+			break;
+	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	return stringfound;
 }

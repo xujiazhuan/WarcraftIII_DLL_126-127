@@ -143,7 +143,7 @@ struct StringRep {
 	uint32_t			hash;		//0x8
 	uint32_t			list_C;		//0xC
 	uint32_t			unk_10;		//0x10
-	uint32_t			unk_14;		//0x14
+	void *				nexttxtdata;//0x14
 	StringRep*			next;		//0x18
 	char*				text;		//0x1C
 };//sizeof = 0x20
