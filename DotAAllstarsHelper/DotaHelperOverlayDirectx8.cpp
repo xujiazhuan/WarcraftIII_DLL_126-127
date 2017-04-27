@@ -117,7 +117,7 @@ void DrawOverlayDx8( )
 		return;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 
@@ -203,17 +203,20 @@ HRESULT __fastcall EndScene_my( int GlobalWc3Data )
 }
 
 
-void Uninitd3d8Hook( )
+void Uninitd3d8Hook( BOOL cleartextures )
 {
 	MH_DisableHook( EndScene_org );
-	for ( auto & img : ListOfRawImages )
+	if ( cleartextures )
 	{
-		if ( img.textureaddr )
+		for ( auto & img : ListOfRawImages )
 		{
-			IDirect3DTexture8 * ppTexture = ( IDirect3DTexture8 * )img.textureaddr;
-			ppTexture->Release( );
-			ppTexture = NULL;
-			img.textureaddr = NULL;
+			if ( img.textureaddr )
+			{
+				IDirect3DTexture8 * ppTexture = ( IDirect3DTexture8 * )img.textureaddr;
+				ppTexture->Release( );
+				ppTexture = NULL;
+				img.textureaddr = NULL;
+			}
 		}
 	}
 }

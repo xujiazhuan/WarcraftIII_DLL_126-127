@@ -81,63 +81,143 @@ HMODULE GetModuleFromAddress( int addr )
 
 Ordinal590_p Ordinal590_org;
 
-int __stdcall ScanJassStringForErrors( StringRep * firstStr )
+
+
+int __stdcall ScanJassStringForErrors( BOOL dump )
 {
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
 
-	StringRep * currentStr = firstStr;
-	int stringfound = 0;
-	int maxstr = 500000;
+	int strrepvtable = GameDll + 0x954658;
 
+	if ( GameVersion == 0x27a )
+	{
+		strrepvtable = GameDll + 0x952F30;
+	}
+
+
+	int * firstoffset = ( int * )( StormDll + 0x055370 );
+
+	if ( GameVersion == 0x27a )
+	{
+		firstoffset = ( int * )( StormDll + 0x056F80 );
+	}
+
+	int memsize = 0x100;
+	int i = 0;
+	int stringcount = 0;
 	FILE * f;
-	fopen_s( &f, "dumpbadstrings.txt", "w" );
 
-	while ( (int)currentStr > 0 && firstStr != currentStr->next )
+	if ( dump )
+		fopen_s( &f, "dumpbadstr.txt", "w" );
+
+	for ( i = 0; i < memsize; i++ )
 	{
-
-		uint32_t strhash = Ordinal590_org( ( unsigned char * )currentStr->text );
-		if ( strhash != currentStr->hash )
+		int currentmemoffset = firstoffset[ i ];
+		while ( currentmemoffset > 0 )
 		{
-			fprintf_s( f, "Found bad string:%s", currentStr->text );
-			stringfound++;
+			int currentstrrepoffset = currentmemoffset + 0x8C;
+
+
+			if ( *( int* )( currentstrrepoffset ) == strrepvtable )
+			{
+
+				StringRep * curstr = ( StringRep * )currentstrrepoffset;
+
+				while ( ( int )curstr->prev > 0 && ( int )curstr->prev->vtable == strrepvtable )
+				{
+					curstr = curstr->prev;
+				}
+
+
+				while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
+				{
+					uint32_t strhash = Ordinal590_org( ( unsigned char * )curstr->text );
+					if ( strhash != curstr->hash )
+					{
+						if ( dump )
+							fprintf_s( f, "Found bad string:%s\n", curstr->text );
+						stringcount++;
+					}
+					curstr = curstr->next;
+				}
+
+			}
+			currentmemoffset = *( int* )currentmemoffset;
 		}
-
-		currentStr = currentStr->next;
-		if ( maxstr-- < 0 )
-			break;
 	}
-	fclose( f );
 
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
+	if ( dump )
+		fclose( f );
 
-	return stringfound;
+
+	return stringcount;
 }
 
 
-
-
-int __stdcall GetJassStringCount( StringRep * firstStr )
+int __stdcall GetJassStringCount( BOOL dump )
 {
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	StringRep * currentStr = firstStr;
-	int stringfound = 0;
-	int maxstr = 500000;
 
-	while ( (int)currentStr > 0 && firstStr != currentStr->next )
+	int strrepvtable = GameDll + 0x954658;
+
+	if ( GameVersion == 0x27a )
 	{
-		stringfound++;
-		currentStr = currentStr->next;
-		if ( maxstr-- < 0 )
-			break;
+		strrepvtable = GameDll + 0x952F30;
 	}
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	return stringfound;
+
+
+	int * firstoffset = ( int * )( StormDll + 0x055370 );
+
+	if ( GameVersion == 0x27a )
+	{
+		firstoffset = ( int * )( StormDll + 0x056F80 );
+	}
+
+
+
+	int memsize = 0x100;
+	int i = 0;
+	int stringcount = 0;
+	FILE * f;
+
+	if ( dump )
+		fopen_s( &f, "dumpallstr.txt", "w" );
+
+	for ( i = 0; i < memsize; i++ )
+	{
+		int currentmemoffset = firstoffset[ i ];
+		while ( currentmemoffset > 0 )
+		{
+			int currentstrrepoffset = currentmemoffset + 0x8C;
+
+			if ( *( int* )( currentstrrepoffset ) == strrepvtable )
+			{
+
+				StringRep * curstr = ( StringRep * )currentstrrepoffset;
+
+				while ( ( int )curstr->prev > 0 && ( int )curstr->prev->vtable == strrepvtable )
+				{
+					curstr = curstr->prev;
+				}
+
+
+
+				while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
+				{
+					if ( dump )
+						fprintf_s( f, "%s\n", curstr->text );
+					stringcount++;
+					curstr = curstr->next;
+				}
+
+
+			}
+			currentmemoffset = *( int* )currentmemoffset;
+		}
+	}
+
+	if ( dump )
+		fclose( f );
+
+
+	return stringcount;
 }
+

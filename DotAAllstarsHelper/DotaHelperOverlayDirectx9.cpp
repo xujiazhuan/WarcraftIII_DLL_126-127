@@ -95,12 +95,12 @@ typedef HRESULT( WINAPI *
 D3DXCreateSprite_p D3D9CreateSprite_org;
 
 
-typedef HRESULT (WINAPI *
-D3DXFilterTexture_p )(
-	LPDIRECT3DBASETEXTURE9    pBaseTexture,
-	CONST PALETTEENTRY*       pPalette,
-	UINT                      SrcLevel,
-	DWORD                     Filter );
+typedef HRESULT( WINAPI *
+	D3DXFilterTexture_p )(
+		LPDIRECT3DBASETEXTURE9    pBaseTexture,
+		CONST PALETTEENTRY*       pPalette,
+		UINT                      SrcLevel,
+		DWORD                     Filter );
 
 D3DXFilterTexture_p D3DXFilterTexture_org;
 
@@ -241,19 +241,20 @@ HRESULT __fastcall EndScene_dx9_my( int GlobalWc3Data )
 	return retval;
 }
 
-void Uninitd3d9Hook( )
+void Uninitd3d9Hook( BOOL cleartextures )
 {
 	MH_DisableHook( EndScene_dx9_org );
-	//if ( Reset_dx9_org )
-	//	MH_DisableHook( Reset_dx9_org );
-	for ( auto & img : ListOfRawImages )
+	if ( cleartextures )
 	{
-		if ( img.textureaddr )
+		for ( auto & img : ListOfRawImages )
 		{
-			IDirect3DTexture9 * ppTexture = ( IDirect3DTexture9 * )img.textureaddr;
-			ppTexture->Release( );
-			ppTexture = NULL;
-			img.textureaddr = NULL;
+			if ( img.textureaddr )
+			{
+				IDirect3DTexture9 * ppTexture = ( IDirect3DTexture9 * )img.textureaddr;
+				ppTexture->Release( );
+				ppTexture = NULL;
+				img.textureaddr = NULL;
+			}
 		}
 	}
 }

@@ -217,7 +217,7 @@ void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line )
 		ExternalLog( ErrorHelperBuffer, LogType::DotaHelperLog );
 		if ( DotaHelperLog.size( ) > MAX_LOG_LEN )
 		{
-			DotaHelperLog[ MAX_LOG_LEN ] = s;
+			DotaHelperLog[ MAX_LOG_LEN ] = ErrorHelperBuffer;
 			safevector_erase( DotaHelperLog );
 		}
 		else
@@ -1656,51 +1656,61 @@ void __stdcall DisableErrorHandler( int )
 	if ( StormErrorHandler_org )
 	{
 		MH_DisableHook( StormErrorHandler_org );
+		StormErrorHandler_org = NULL;
 	}
 
 	if ( LookupNative_org )
 	{
 		MH_DisableHook( LookupNative_org );
+		LookupNative_org = NULL;
 	}
 
 	if ( LookupJassFunc_org )
 	{
 		MH_DisableHook( LookupJassFunc_org );
+		LookupJassFunc_org = NULL;
 	}
 
 	if ( ProcessNetEvents_org )
 	{
 		MH_DisableHook( ProcessNetEvents_org );
+		ProcessNetEvents_org = NULL;
 	}
 
 	if ( BlizzardDebug1_org )
 	{
 		MH_DisableHook( BlizzardDebug1_org );
+		BlizzardDebug1_org = NULL;
 	}
 
 	if ( BlizzardDebug2_org )
 	{
 		MH_DisableHook( BlizzardDebug2_org );
+		BlizzardDebug2_org = NULL;
 	}
 
 	if ( BlizzardDebug3_org )
 	{
 		MH_DisableHook( BlizzardDebug3_org );
+		BlizzardDebug3_org = NULL;
 	}
 
 	if ( BlizzardDebug4_org )
 	{
 		MH_DisableHook( BlizzardDebug4_org );
+		BlizzardDebug4_org = NULL;
 	}
 
 	if ( BlizzardDebug5_org )
 	{
 		MH_DisableHook( BlizzardDebug5_org );
+		BlizzardDebug5_org = NULL;
 	}
 
 	if ( BlizzardDebug6_org )
 	{
 		MH_DisableHook( BlizzardDebug6_org );
+		BlizzardDebug6_org = NULL;
 	}
 
 

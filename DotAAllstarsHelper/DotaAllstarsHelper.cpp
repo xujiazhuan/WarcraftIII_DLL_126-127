@@ -413,9 +413,10 @@ void UninitializeHook( )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-
 	DisableErrorHandler( 0 );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+
 
 #pragma region Game.dll hook
 
@@ -451,9 +452,6 @@ void UninitializeHook( )
 		Wc3ControlClickButton_org = 0;
 	}
 
-
-
-
 	if ( SetGameAreaFOV_org )
 	{
 		MH_DisableHook( SetGameAreaFOV_org );
@@ -465,6 +463,10 @@ void UninitializeHook( )
 		MH_DisableHook( GameGetFile_org );
 		GameGetFile_org = 0;
 	}
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 
 
 	//if ( Storm_279_org )
@@ -487,13 +489,15 @@ void UninitializeHook( )
 	}
 
 
+	if ( DrawBarForUnit_org )
+	{
+		MH_DisableHook( DrawBarForUnit_org );
+		DrawBarForUnit_org = NULL;
+	}
+
 #pragma endregion
 
 
-#pragma region Storm.dll hook
-
-
-#pragma endregion
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -691,7 +695,7 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 			}
 		}
 
-}
+	}
 
 	return retval;
 }
@@ -776,7 +780,7 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 		}
 
 		return ( float )( 100.0 - indmg );
-}
+	}
 
 	return 0.0f;
 }
@@ -808,7 +812,7 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 			PUSH addr;
 			CALL Storm_503;
 		}
-}
+	}
 	return retval;
 }
 
@@ -919,7 +923,7 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 				return itemaddr;
 			}
 		}
-}
+	}
 	sprintf_s( itemstr1, 128, "%%s%%s%%s%%s%%s" );
 	sprintf_s( itemstr2, 128, "%%s%%s%%s" );
 	return itemaddr;
@@ -1034,11 +1038,11 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 			}
 			return unitaddr;
 		}
-		}
+	}
 	sprintf_s( unitstr1, 128, "%%u / %%u" );
 	sprintf_s( unitstr2, 128, "%%u / %%u" );
 	return unitaddr;
-	}
+}
 
 
 
@@ -1637,8 +1641,8 @@ void __stdcall DisableAllHooks( )
 	bDllLogEnable = TRUE;
 #endif
 	UninitOpenglHook( );
-	Uninitd3d8Hook( );
-	Uninitd3d9Hook( );
+	Uninitd3d8Hook( TRUE );
+	Uninitd3d9Hook( TRUE );
 	FreeAllIHelpers( );
 	FreeAllVectors( );
 
@@ -1669,7 +1673,7 @@ void __stdcall DisableAllHooks( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	}
+}
 
 void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
@@ -1719,10 +1723,10 @@ unsigned long __stdcall RefreshTimer( void * )
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-	}
+		}
 
 		Sleep( 200 );
-}
+	}
 
 	return 0;
 }
@@ -1890,7 +1894,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		BlizzardDebug5Offset = GameDll + 0x39E970;
 		BlizzardDebug6Offset = GameDll + 0x579C10;
 
-	
+
 		IssueWithoutTargetOrderOffset = 0x339C60;
 		IssueTargetOrPointOrder2Offset = 0x339CC0;
 		sub_6F339D50Offset = 0x339D50;
@@ -2153,7 +2157,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		BlizzardDebug5Offset = GameDll + 0x1c14f0;
 		BlizzardDebug6Offset = GameDll + 0x2eeb70;
 
-	
+
 		IssueWithoutTargetOrderOffset = 0x3AE4E0;
 		IssueTargetOrPointOrder2Offset = 0x3AE540;
 		sub_6F339D50Offset = 0x3AE810;
@@ -2503,10 +2507,6 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		TerminateStarted = TRUE;
 
 
-#ifdef DOTA_HELPER_LOG
-		ResetTopLevelExceptionFilter( );
-#endif
-
 		// Cleanup
 		if ( hRefreshTimer )
 		{
@@ -2514,23 +2514,39 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 			CloseHandle( hRefreshTimer );
 		}
 
-
-		UnloadHWNDHandler( TRUE );
-
-
 		if ( !GetModuleHandleA( GameDllName ) || !GetModuleHandleA( StormDllName ) )
 		{
 			// Unable to cleanup, need just terminate process :(
 			ExitProcess( 0 );
 		}
 
-		UninitOpenglHook( );
-		Uninitd3d8Hook( );
-		Uninitd3d9Hook( );
+
+#ifdef DOTA_HELPER_LOG
+		// Unable to cleanup, need just terminate process :(
+		// I don't know why, but debug version can not be unload witout terminate process...
+		ExitProcess( 0 );
+#endif
+
+
+		UnloadHWNDHandler( TRUE );
+
 		ClearCustomsBars( );
+
 		FreeAllVectors( );
 		FreeAllIHelpers( );
+
+
 		RestoreAllOffsets( );
+
+		Uninitd3d9Hook( FALSE );
+
+		Uninitd3d8Hook( FALSE );
+
+		DrawOverlayGl( );
+
+		UninitializeHook( );
+
+
 		while ( mutedplayers.size( ) )
 		{
 			char * fMemAddr = mutedplayers.back( );
@@ -2538,13 +2554,21 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 				free( fMemAddr );
 			mutedplayers.pop_back( );
 		}
+
+
+
 		if ( !FreeExecutableMemoryList.empty( ) )
 		{
 			for ( LPVOID lpAddr : FreeExecutableMemoryList )
 				VirtualFree( lpAddr, 0, MEM_RELEASE );
 			FreeExecutableMemoryList.clear( );
 		}
+
+
+
 		ManaBarSwitch( FALSE );
+
+
 		MH_Uninitialize( );
 	}
 	return TRUE;

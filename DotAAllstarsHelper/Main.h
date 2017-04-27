@@ -418,11 +418,11 @@ void UninitOpenglHook( );
 void InitOpenglHook( );
 
 // 1.26a
-void Uninitd3d8Hook( );
+void Uninitd3d8Hook( BOOL cleartextures );
 void Initd3d8Hook( );
 
 // 1.27a
-void Uninitd3d9Hook( );
+void Uninitd3d9Hook( BOOL cleartextures );
 void Initd3d9Hook( );
 
 void DrawOverlayDx9( );
