@@ -1852,9 +1852,6 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 #ifdef DOTA_HELPER_LOG
 				AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-#ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
 				*OutDataPointer = ( int )s.ingamebuffer.buf;
 				*OutSize = s.ingamebuffer.length;
 				return TRUE;
@@ -1887,9 +1884,9 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 		else
 		{
 			//ApplyTestFilter( filename, OutDataPointer, OutSize );
-			if ( strstr( filename.c_str( ), "terrainart" ) == filename.c_str( ) ||
+			/*if ( strstr( filename.c_str( ), "terrainart" ) == filename.c_str( ) ||
 				strstr( filename.c_str( ), "replaceabletextures\\cliff" ) == filename.c_str( ) )
-				ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );
+				ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
 		}
 	}
 	else if ( FileExtension == string( ".mdx" ) )
