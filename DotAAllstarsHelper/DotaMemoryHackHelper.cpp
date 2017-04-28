@@ -82,7 +82,6 @@ HMODULE GetModuleFromAddress( int addr )
 Ordinal590_p Ordinal590_org;
 
 
-
 int __stdcall ScanJassStringForErrors( BOOL dump )
 {
 
@@ -101,13 +100,18 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 		firstoffset = ( int * )( StormDll + 0x056F80 );
 	}
 
+
+
 	int memsize = 0x100;
 	int i = 0;
 	int stringcount = 0;
 	FILE * f;
 
 	if ( dump )
-		fopen_s( &f, "dumpbadstr.txt", "w" );
+		fopen_s( &f, "dumpallbadstr.txt", "w" );
+
+
+	std::vector<int> foundoffsets;
 
 	for ( i = 0; i < memsize; i++ )
 	{
@@ -115,31 +119,66 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 		while ( currentmemoffset > 0 )
 		{
 			int currentstrrepoffset = currentmemoffset + 0x8C;
-
-
-			if ( *( int* )( currentstrrepoffset ) == strrepvtable )
+			if ( std::find( foundoffsets.begin( ), foundoffsets.end( ), currentstrrepoffset ) == foundoffsets.end( ) )
 			{
+				foundoffsets.push_back( currentstrrepoffset );
+				const char * currentnameoffset = ( const char * )( currentmemoffset + 0x70 );
 
-				StringRep * curstr = ( StringRep * )currentstrrepoffset;
 
-				while ( ( int )curstr->prev > 0 && ( int )curstr->prev->vtable == strrepvtable )
+				if ( *( int* )( currentstrrepoffset ) == strrepvtable )
 				{
-					curstr = curstr->prev;
-				}
 
+					StringRep * curstr = ( StringRep * )currentstrrepoffset;
 
-				while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
-				{
-					uint32_t strhash = Ordinal590_org( ( unsigned char * )curstr->text );
-					if ( strhash != curstr->hash )
+					while ( ( int )curstr->prev > 0 && ( int )curstr->prev->vtable == strrepvtable )
 					{
-						if ( dump )
-							fprintf_s( f, "Found bad string:%s\n", curstr->text );
-						stringcount++;
+						curstr = curstr->prev;
 					}
-					curstr = curstr->next;
-				}
 
+
+
+					while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
+					{
+						uint32_t strhash = Ordinal590_org( ( unsigned char * )curstr->text );
+						if ( strhash != curstr->hash )
+						{
+							if ( dump && f )
+								fprintf_s( f, "Found bad string[#1-%X]:%s\n", curstr,curstr->text );
+							stringcount++;
+						}
+					
+						curstr = curstr->next;
+					}
+
+
+				}
+				else if ( memcmp( currentnameoffset, "String2H", 8 ) == 0 )
+				{
+					int curstr2hoffset = currentmemoffset + 0x94;
+					String2H * curstr = ( String2H * )curstr2hoffset;
+					String2H * firststr = curstr;
+
+					while ( ( int )curstr > 0 )
+					{
+
+						uint32_t strhash = Ordinal590_org( ( unsigned char * )curstr->text );
+						if ( strhash != curstr->hash )
+						{
+							if ( dump && f )
+								fprintf_s( f, "Found bad string[#2-%X]:%s\n", curstr, curstr->text );
+							stringcount++;
+						}
+
+						if ( ( int )curstr->next <= 0 )
+							break;
+						curstr = curstr->next;
+						if ( firststr == curstr )
+							break;
+
+					}
+
+
+				}
 			}
 			currentmemoffset = *( int* )currentmemoffset;
 		}
@@ -148,9 +187,12 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 	if ( dump )
 		fclose( f );
 
+	foundoffsets.clear( );
 
 	return stringcount;
 }
+
+
 
 
 int __stdcall GetJassStringCount( BOOL dump )
@@ -181,34 +223,67 @@ int __stdcall GetJassStringCount( BOOL dump )
 	if ( dump )
 		fopen_s( &f, "dumpallstr.txt", "w" );
 
+
+	std::vector<int> foundoffsets;
+
 	for ( i = 0; i < memsize; i++ )
 	{
 		int currentmemoffset = firstoffset[ i ];
 		while ( currentmemoffset > 0 )
 		{
 			int currentstrrepoffset = currentmemoffset + 0x8C;
+			const char * currentnameoffset = ( const char * )( currentmemoffset + 0x70 );
 
-			if ( *( int* )( currentstrrepoffset ) == strrepvtable )
+			if ( std::find( foundoffsets.begin( ), foundoffsets.end( ), currentstrrepoffset ) == foundoffsets.end( ) )
 			{
+				foundoffsets.push_back( currentstrrepoffset );
 
-				StringRep * curstr = ( StringRep * )currentstrrepoffset;
-
-				while ( ( int )curstr->prev > 0 && ( int )curstr->prev->vtable == strrepvtable )
+				if ( *( int* )( currentstrrepoffset ) == strrepvtable )
 				{
-					curstr = curstr->prev;
+
+					StringRep * curstr = ( StringRep * )currentstrrepoffset;
+
+					while ( ( int )curstr->prev > 0 && ( int )curstr->prev->vtable == strrepvtable )
+					{
+						curstr = curstr->prev;
+					}
+
+
+
+					while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
+					{
+						if ( dump && f )
+							fprintf_s( f, "%s\n", curstr->text );
+						stringcount++;
+						curstr = curstr->next;
+					}
+
+
 				}
-
-
-
-				while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
+				else if ( memcmp( currentnameoffset, "String2H", 8 ) == 0 )
 				{
-					if ( dump )
-						fprintf_s( f, "%s\n", curstr->text );
-					stringcount++;
-					curstr = curstr->next;
+					int curstr2hoffset = currentmemoffset + 0x94;
+					String2H * curstr = ( String2H * )curstr2hoffset;
+					String2H * firststr = curstr;
+
+					while ( ( int )curstr > 0 )
+					{
+
+						if ( dump && f )
+							fprintf_s( f, "%s\n", curstr->text );
+						stringcount++;
+
+
+						if ( ( int )curstr->next <= 0 )
+							break;
+						curstr = curstr->next;
+						if ( firststr == curstr )
+							break;
+
+					}
+
+
 				}
-
-
 			}
 			currentmemoffset = *( int* )currentmemoffset;
 		}
@@ -217,6 +292,7 @@ int __stdcall GetJassStringCount( BOOL dump )
 	if ( dump )
 		fclose( f );
 
+	foundoffsets.clear( );
 
 	return stringcount;
 }

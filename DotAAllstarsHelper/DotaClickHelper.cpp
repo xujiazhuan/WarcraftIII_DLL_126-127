@@ -728,6 +728,17 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 
+//#ifdef DOTA_HELPER_LOG
+//	if ( Msg == WM_KEYUP && wParam == '0' )
+//	{
+//		ScanJassStringForErrors( 1 );
+//		char tmpst[ 100 ];
+//		sprintf_s( tmpst, "%i strings found", GetJassStringCount( 1 ) );
+//		MessageBoxA( 0, tmpst, tmpst, 0 );
+//	}
+//#endif
+
+
 	if ( *IsWindowActive )
 	{
 		if ( usedcustomframes && *( int* )ChatFound == 0 && IsGameFrameActive( ) )

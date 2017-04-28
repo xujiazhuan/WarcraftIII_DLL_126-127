@@ -143,6 +143,17 @@ struct StrTableNode
 	struct StringRep * curr;
 };
 
+struct String2H
+{
+	uint32_t			hash;//0x0
+	void *				unk1;//0x4
+	void *				unk2;//0x8
+	void *				prev;//0xc
+	String2H *			next;//0x10
+	char *				text;//0x14
+	int					id;//0x18
+};
+
 struct StringRep {
 	void**				vtable;		//0x0
 	uint32_t			refCount;	//0x4
