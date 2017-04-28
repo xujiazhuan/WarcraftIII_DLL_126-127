@@ -1,5 +1,5 @@
-# WarcraftIII_DLL_126-xxx
-## Improvements for Warcraft III 126+, used in new DoTA (d1stats.ru)
+# WarcraftIII_DLL_126-127
+## Improvements for Warcraft III 126a and 127a, used in new DoTA (d1stats.ru)
 
 # Features:
 
