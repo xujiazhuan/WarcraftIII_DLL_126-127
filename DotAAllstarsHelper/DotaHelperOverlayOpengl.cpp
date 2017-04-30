@@ -29,8 +29,13 @@ void DrawAllRawImages( )
 	glMatrixMode( GL_MODELVIEW );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-	float zoomx = ScreenX / DesktopScreen_Width;
-	float zoomy = ScreenY / DesktopScreen_Height;
+	float scalex = ScreenX / DesktopScreen_Width;
+	float scaley = ScreenY / DesktopScreen_Height;
+
+
+	scalex *= DesktopScreen_Width / DefaultSceenWidth;
+	scaley *= DesktopScreen_Height / DefaultSceenHeight;
+
 
 	for ( auto & img : ListOfRawImages )
 	{
@@ -38,27 +43,20 @@ void DrawAllRawImages( )
 			continue;
 
 		glLoadIdentity( );
-	
-	//	glTranslatef( ScreenX *img.overlay_x, ScreenY *img.overlay_y, 0.0f );
 
-		//float AspectRatio = DesktopScreen_Height / DesktopScreen_Width;
-		//float AspectRatio2 = DesktopScreen_Width / DesktopScreen_Height;
-	
-		if ( IsKeyPressed( VK_F1 ) )
-			glPixelZoom( zoomx * 1.25f, -zoomy );
-		else if ( IsKeyPressed( VK_F2 ) )
-			glPixelZoom( zoomx, -zoomy * 1.25f );
-		else if ( IsKeyPressed( VK_F3 ) )
-			glPixelZoom( zoomx * 1.25f, -zoomy  * 1.25f );
-		else 
-			glPixelZoom( zoomx, -zoomy );
+		//	glTranslatef( ScreenX *img.overlay_x, ScreenY *img.overlay_y, 0.0f );
 
-		
-		
+			//float AspectRatio = DesktopScreen_Height / DesktopScreen_Width;
+			//float AspectRatio2 = DesktopScreen_Width / DesktopScreen_Height;
+
+		glPixelZoom( scalex, -scaley );
+
+
+
 
 		Buffer tmpBuf = Buffer( );
 		tmpBuf.Clone( img.img );
-		glRasterPos3f( ScreenX *img.overlay_x, ScreenY *img.overlay_y,0.0f );
+		glRasterPos3f( ScreenX *img.overlay_x, ScreenY *img.overlay_y, 0.0f );
 		flip_vertically( reinterpret_cast< BYTE* >( &tmpBuf[ 0 ] ), img.width, img.height, 4 );
 		glDrawPixels( img.width, img.height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tmpBuf.buf );
 		tmpBuf.Clear( );
@@ -99,7 +97,7 @@ void DrawOverlayGl( )
 		return;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 	if ( !DotaGlobalOverlay_OPENGL )

@@ -143,7 +143,7 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 						if ( strhash != curstr->hash )
 						{
 							if ( dump && f )
-								fprintf_s( f, "Found bad string[#1-%X]:%s\n", curstr,curstr->text );
+								fprintf_s( f, "Found bad string[#1-%X]:%s\n", (unsigned int )curstr,curstr->text );
 							stringcount++;
 						}
 					
@@ -165,7 +165,7 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 						if ( strhash != curstr->hash )
 						{
 							if ( dump && f )
-								fprintf_s( f, "Found bad string[#2-%X]:%s\n", curstr, curstr->text );
+								fprintf_s( f, "Found bad string[#2-%X]:%s\n", ( unsigned int )curstr, curstr->text );
 							stringcount++;
 						}
 

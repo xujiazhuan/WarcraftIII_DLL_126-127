@@ -307,8 +307,7 @@ struct RawImageStruct
 	BOOL used_for_overlay;
 	float overlay_x; // 0.0 1.0
 	float overlay_y; // 0.0 1.0
-	float size_x; // 0.0 1.0
-	float size_y; // 0.0 1.0
+	BOOL button;
 	void * textureaddr;
 	BOOL needResetTexture;
 	BOOL MouseCallback;
@@ -326,7 +325,7 @@ struct RawImageStruct
 		ingame = FALSE;
 		filename = string( );
 		used_for_overlay = FALSE;
-		overlay_x = overlay_y = size_x = size_y = 0.0f;
+		overlay_x = overlay_y = 0.0f;
 		textureaddr = NULL;
 		needResetTexture = FALSE;
 		RawImage = 0;
@@ -335,6 +334,7 @@ struct RawImageStruct
 		IsMouseEntered = FALSE;
 		MouseCallback = FALSE;
 		MouseActionCallback = RCString( );
+		button = FALSE;
 	}
 };
 

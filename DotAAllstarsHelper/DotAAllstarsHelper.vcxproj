@@ -119,6 +119,7 @@
     <ClCompile Include="DotaFilesHelper.cpp" />
     <ClCompile Include="DotaMemoryHackHelper.cpp" />
     <ClCompile Include="DotaRawImagesDrawApi.cpp" />
+    <ClCompile Include="DotaSyncScanner.cpp" />
     <ClCompile Include="DotaWebHelper.cpp" />
     <ClCompile Include="DotaMPBarHelper.cpp" />
     <ClCompile Include="DotaAllstarsHelper.cpp" />

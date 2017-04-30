@@ -98,3 +98,5 @@ TopLevelExceptionFilter
 DotaVectoredToSehHandler
 ScanJassStringForErrors
 GetJassStringCount
+SetDefaultSceenSize
+ReplayDesyncScan

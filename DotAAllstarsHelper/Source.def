@@ -96,3 +96,5 @@ ShowSkillPanelForAllUnits
 SetAutoSelectHero
 ScanJassStringForErrors
 GetJassStringCount
+SetDefaultSceenSize
+ReplayDesyncScan

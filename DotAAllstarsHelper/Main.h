@@ -148,13 +148,22 @@ int __stdcall GetUnitOwnerSlot( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
 BOOL __stdcall IsHero( int unitaddr );
 BOOL __stdcall IsTower( int unitaddr );
-BOOL __stdcall IsNotBadUnit( int unitaddr );
+BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem = FALSE );
 BOOL __stdcall IsUnitInvulnerable( int unitaddr );
-BOOL __stdcall IsNotBadItem( int itemaddr );
+BOOL __stdcall IsNotBadItem( int itemaddr, BOOL extracheck = FALSE );
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 extern pGetHeroInt GetHeroInt;
 int GetSelectedUnitCountBigger( int slot );
 int GetSelectedUnit( int slot );
+void GetItemLocation2D( int itemaddr, float * x, float * y );
+void GetUnitLocation2D( int unitaddr, float * x, float * y );
+int * GetUnitCountAndUnitArray( int ** unitarray );
+int * GetItemCountAndItemArray( int ** itemarray );
+float GetUnitMPregen( int unitaddr );
+float GetUnitHPregen( int unitaddr );
+int GetUnitAddressFloatsRelated( int unitaddr, int step );
+float GetUnitX_real( int unitaddr );
+float GetUnitY_real( int unitaddr );
 #pragma endregion
 
 #pragma region DotaMPBarHelper.cpp
@@ -450,3 +459,11 @@ int __stdcall ScanJassStringForErrors( BOOL dump );
 const float DesktopScreen_Width = ( float )GetSystemMetrics( SM_CXSCREEN );
 const float DesktopScreen_Height = ( float )GetSystemMetrics( SM_CYSCREEN );
 
+extern float DefaultSceenWidth;
+extern float DefaultSceenHeight;
+
+#pragma region DotaDesyncScan
+extern int ScanId;
+
+
+#pragma endregion

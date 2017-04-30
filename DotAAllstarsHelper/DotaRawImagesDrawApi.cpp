@@ -1082,7 +1082,7 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 }
 
 // Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре. 
-int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos, float xsize, float ysize )
+int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1096,8 +1096,7 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	tmpRawImage.used_for_overlay = enabled;
 	tmpRawImage.overlay_x = xpos;
 	tmpRawImage.overlay_y = ypos;
-	tmpRawImage.size_x = xsize;
-	tmpRawImage.size_y = ysize;
+
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -1151,8 +1150,12 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 	float ScreenX = *GetWindowXoffset;
 	float ScreenY = *GetWindowYoffset;
 
-	float zoomx = ScreenX / DesktopScreen_Width;
-	float zoomy = ScreenY / DesktopScreen_Height;
+	float scalex = ScreenX / DesktopScreen_Width;
+	float scaley = ScreenY / DesktopScreen_Height;
+
+
+	scalex *= DesktopScreen_Width / DefaultSceenWidth;
+	scaley *= DesktopScreen_Height / DefaultSceenHeight;
 
 	float mouseposx = mousex / ScreenX;
 	float mouseposy = mousey / ScreenY;
@@ -1161,7 +1164,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 	for ( unsigned int i = ListOfRawImages.size( ) - 1; i > 0; i-- )
 	{
-		BOOL retval = rawimage_skipmouseevent;
+		BOOL NeedSkipEvent = rawimage_skipmouseevent;
 
 		RawImageStruct & img = ListOfRawImages[ i ];
 		RGBAPix* RawImageData = ( RGBAPix* )img.img.buf;
@@ -1173,8 +1176,8 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 			BOOL MouseEnteredInRawImage = FALSE;
 			float posx = ScreenX * img.overlay_x;
 			float posy = ScreenY * img.overlay_y;
-			float sizex = img.width * zoomx;
-			float sizey = img.height * zoomy;
+			float sizex = ( float )img.width * scalex;
+			float sizey = ( float )img.height * scaley;
 			int img_x, img_y;
 			//posy -= sizey;
 			GlobalRawImageCallbackData->RawImage = img.RawImage;
@@ -1200,7 +1203,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				RGBAPix eventpix = RawImageData[ ArrayXYtoId( img.width, img_x, img_y ) ];
 
 				if ( eventpix.A <= 20 )
-					retval = FALSE;
+					NeedSkipEvent = FALSE;
 
 				MouseEnteredInRawImage = TRUE;
 			}
@@ -1222,7 +1225,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 					if ( MouseEnteredInRawImage )
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
-					if ( retval )
+					if ( NeedSkipEvent /*|| img.button*/ )
 						ExecuteFunc( &img.MouseActionCallback );
 					return FALSE;
 				}
@@ -1231,9 +1234,9 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				if ( !img.IsMouseDown && MouseEnteredInRawImage )
 				{
 					img.IsMouseDown = TRUE;
-					if ( retval )
+					if ( NeedSkipEvent /*|| img.button*/ )
 						ExecuteFunc( &img.MouseActionCallback );
-					return retval;
+					return NeedSkipEvent;
 				}
 				break;
 			case RawImageEventType::MouseClick:
@@ -1256,7 +1259,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				{
 					if ( MouseEnteredInRawImage )
 					{
-						if ( retval )
+						if ( NeedSkipEvent /*|| img.button*/ )
 						{
 							img.IsMouseEntered = TRUE;
 							GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;
@@ -1364,4 +1367,16 @@ float __stdcall GetWindowHeight( int )
 	if ( *InGame )
 		return  *GetWindowYoffset;
 	return DesktopScreen_Height;
+}
+
+
+float DefaultSceenWidth = 1440.0f;
+float DefaultSceenHeight = 900.0f;
+
+int __stdcall SetDefaultSceenSize( int w, int h )
+{
+	DefaultSceenWidth = ( float )w;
+	DefaultSceenHeight = ( float )h;
+
+	return 0;
 }

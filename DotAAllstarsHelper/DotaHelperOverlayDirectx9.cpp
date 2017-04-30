@@ -109,6 +109,12 @@ void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture9* texture, float width, f
 	D3DXMATRIX matAll;
 	float scalex = *GetWindowXoffset / DesktopScreen_Width;
 	float scaley = *GetWindowYoffset / DesktopScreen_Height;
+
+
+
+	scalex *= DesktopScreen_Width / DefaultSceenWidth;
+	scaley *= DesktopScreen_Height / DefaultSceenHeight;
+
 	float posx = x;
 	float posy = y + scaley * height;
 

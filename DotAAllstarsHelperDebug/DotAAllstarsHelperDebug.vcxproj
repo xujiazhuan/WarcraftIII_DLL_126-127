@@ -121,6 +121,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaMPBarHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaPlayerHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaRawImagesDrawApi.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaSyncScanner.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaViewAllySkill.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaWebHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp" />

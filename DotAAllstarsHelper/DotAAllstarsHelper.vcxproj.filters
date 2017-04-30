@@ -93,6 +93,9 @@
     <ClCompile Include="DotaMemoryHackHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="DotaSyncScanner.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">

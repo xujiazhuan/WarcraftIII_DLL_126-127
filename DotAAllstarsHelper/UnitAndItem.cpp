@@ -47,7 +47,7 @@ BOOL __stdcall IsUnitInvulnerable( int unitaddr )
 }
 
 // Проверяет юнит или не юнит
-BOOL __stdcall IsNotBadUnit( int unitaddr )
+BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__,__LINE__ );
@@ -65,6 +65,18 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 		else if ( *( BYTE* )( xaddraddr + 3 ) != *( BYTE* )( unitaddr + 3 ) )
 			return FALSE;
 
+		unsigned int x1 = *( unsigned int* )( unitaddr + 0xC );
+		unsigned int y1 = *( unsigned int* )( unitaddr + 0x10 );
+
+		int udata = *(  int* )( unitaddr + 0x28 );
+
+
+		if ( x1 == 0xFFFFFFFF || y1 == 0xFFFFFFFF || udata == 0 )
+			return FALSE;
+
+		if ( onlymem )
+			return TRUE;
+
 		unsigned int unitflag = *( unsigned int* )( unitaddr + 0x20 );
 		unsigned int unitflag2 = *( unsigned int* )( unitaddr + 0x5C );
 
@@ -75,6 +87,9 @@ BOOL __stdcall IsNotBadUnit( int unitaddr )
 			return FALSE;
 
 		if ( unitflag2 & 0x100u )
+			return FALSE;
+
+		if ( unitflag2 == 0x1001u )
 			return FALSE;
 
 		return TRUE;
@@ -137,7 +152,7 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 
 
 // Проверяет предмет или не предмет
-BOOL __stdcall IsNotBadItem( int itemaddr )
+BOOL __stdcall IsNotBadItem( int itemaddr, BOOL extracheck )
 {
 	if ( itemaddr > 0 )
 	{
@@ -151,6 +166,13 @@ BOOL __stdcall IsNotBadItem( int itemaddr )
 			return FALSE;
 		else if ( *( BYTE* )( xaddraddr + 3 ) != *( BYTE* )( itemaddr + 3 ) )
 			return FALSE;
+
+		if ( extracheck )
+		{
+			float hitpoint = *( float * )( itemaddr + 0x58 );
+
+			return hitpoint != 0.0f;
+		}
 
 		return TRUE;
 	}
@@ -332,4 +354,194 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode, int abilb
 	}
 
 	return &ReturnAbils[ 0 ];
+}
+
+
+
+
+
+int * GetItemCountAndItemArray( int ** itemarray )
+{
+	int GlobalClassOffset = *( int* )( pW3XGlobalClass );
+	if ( GlobalClassOffset )
+	{
+		int ItemsOffset1 = *( int* )( GlobalClassOffset + 0x3BC ) + 0x10;
+		if ( ItemsOffset1 )
+		{
+			int * ItemsCount = ( int * )( ItemsOffset1 + 0x604 );
+			if ( *ItemsCount > 0 )
+			{
+				*itemarray = ( int * ) *( int* )( ItemsOffset1 + 0x608 );
+				return ItemsCount;
+			}
+		}
+	}
+
+	*itemarray = 0;
+	return 0;
+}
+
+
+
+int * GetUnitCountAndUnitArray( int ** unitarray )
+{
+	int GlobalClassOffset = *( int* )( pW3XGlobalClass );
+	if ( GlobalClassOffset )
+	{
+		int UnitsOffset1 = *( int* )( GlobalClassOffset + 0x3BC );
+		if ( UnitsOffset1 )
+		{
+			int * UnitsCount = ( int * )( UnitsOffset1 + 0x604 );
+			if ( *UnitsCount > 0 )
+			{
+				*unitarray = ( int * ) *( int* )( UnitsOffset1 + 0x608 );
+				return UnitsCount;
+			}
+		}
+	}
+
+	*unitarray = 0;
+	return 0;
+}
+
+
+
+void GetUnitLocation2D( int unitaddr, float * x, float * y )
+{
+	if ( unitaddr && *( int* )( unitaddr + 0x284 ) != 0 && *( float* )( unitaddr + 0x288 ) != 0 )
+	{
+		*x = *( float* )( unitaddr + 0x284 );
+		*y = *( float* )( unitaddr + 0x288 );
+	}
+	else
+	{
+		*x = 0.0;
+		*y = 0.0;
+	}
+}
+
+
+void GetItemLocation2D( int itemaddr, float * x, float * y )
+{
+	if ( itemaddr )
+	{
+		int iteminfo = *( int * )( itemaddr + 0x28 );
+		if ( iteminfo )
+		{
+			*x = *( float* )( iteminfo + 0x88 );
+			*y = *( float* )( iteminfo + 0x8C );
+		}
+		else
+		{
+			*x = 0.0;
+			*y = 0.0;
+		}
+	}
+	else
+	{
+		*x = 0.0;
+		*y = 0.0;
+	}
+}
+
+
+
+
+int GetUnitAddressFloatsRelated( int unitaddr, int step )
+{
+	if ( unitaddr > 0 )
+	{
+		int offset1 = unitaddr + step;
+		int offset2 = *( int* )pGameClass1;
+
+		if ( *( int* )offset1 &&  offset2 )
+		{
+			offset1 = *( int* )offset1;
+			offset2 = *( int* )( offset2 + 0xC );
+			if ( offset2 )
+			{
+				return *( int* )( ( offset1 * 8 ) + offset2 + 4 );
+			}
+		}
+	}
+	return 0;
+}
+
+
+float GetUnitHPregen( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
+		if ( offset1 )
+		{
+
+			result = *( float* )( offset1 + 0x7C );
+		}
+	}
+	return result;
+}
+
+float GetUnitMPregen( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
+		if ( offset1 )
+		{
+			result = *( float* )( offset1 + 0x7C );
+		}
+	}
+	return result;
+}
+
+
+
+
+float GetUnitX_real( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
+		if ( offset1 > 0 )
+		{
+			unsigned int x1 = *( unsigned int* )( offset1 + 0x14 );
+			unsigned int y1 = *( unsigned int* )( offset1 + 0x18 );
+			if ( x1 != 0xFFFFFFFF && y1 != 0xFFFFFFFF )
+			{
+				offset1 = *( int* )( offset1 + 0x28 );
+				if ( offset1 > 0 )
+				{
+					result = *( float* )( offset1 + 0x54 );
+				}
+			}
+		}
+	}
+	return result;
+}
+
+float GetUnitY_real( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
+		if ( offset1 > 0 )
+		{
+			unsigned int x1 = *( unsigned int* )( offset1 + 0x14 );
+			unsigned int y1 = *( unsigned int* )( offset1 + 0x18 );
+			if ( x1 != 0xFFFFFFFF && y1 != 0xFFFFFFFF )
+			{
+				offset1 = *( int* )( offset1 + 0x28 );
+				if ( offset1 > 0 )
+				{
+					result = *( float* )( offset1 + 0x58 );
+				}
+			}
+		}
+	}
+	return result;
 }

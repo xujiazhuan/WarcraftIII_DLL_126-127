@@ -930,57 +930,6 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 }
 
 
-int GetUnitAddressFloatsRelated( int unitaddr, int step )
-{
-	if ( unitaddr > 0 )
-	{
-		int offset1 = unitaddr + step;
-		int offset2 = *( int* )pGameClass1;
-
-		if ( *( int* )offset1 &&  offset2 )
-		{
-			offset1 = *( int* )offset1;
-			offset2 = *( int* )( offset2 + 0xC );
-			if ( offset2 )
-			{
-				return *( int* )( ( offset1 * 8 ) + offset2 + 4 );
-			}
-		}
-	}
-	return 0;
-}
-
-
-float GetUnitHPregen( int unitaddr )
-{
-	float result = 0.0f;
-	if ( unitaddr > 0 )
-	{
-		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
-		if ( offset1 )
-		{
-
-			result = *( float* )( offset1 + 0x7C );
-		}
-	}
-	return result;
-}
-
-float GetUnitMPregen( int unitaddr )
-{
-	float result = 0.0f;
-	if ( unitaddr > 0 )
-	{
-		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
-		if ( offset1 )
-		{
-			result = *( float* )( offset1 + 0x7C );
-		}
-	}
-	return result;
-}
-
-
 BOOL NeedDrawRegen = FALSE;
 
 
@@ -1669,6 +1618,7 @@ void __stdcall DisableAllHooks( )
 	GlobalRawImageCallbackData = NULL;
 	ShowSkillPanelForObservers = FALSE;
 	ShowSkillPanelOnlyForHeroes = TRUE;
+
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1840,6 +1790,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	FPSfix1Enabled = FALSE;
 	GlobalRawImageCallbackData = NULL;
 	SetCustomFovFix( 1.0f );
+	ScanId = 0;
 
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );
 
