@@ -1150,13 +1150,12 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 	float ScreenX = *GetWindowXoffset;
 	float ScreenY = *GetWindowYoffset;
 
-	float scalex = ScreenX / DesktopScreen_Width;
-	float scaley = ScreenY / DesktopScreen_Height;
+	float scalex = *GetWindowXoffset / DefaultSceenWidth;
+	float scaley = *GetWindowYoffset / DefaultSceenHeight;
 
 
-	scalex *= DesktopScreen_Width / DefaultSceenWidth;
-	scaley *= DesktopScreen_Height / DefaultSceenHeight;
-
+	//scalex *= DesktopScreen_Width / DefaultSceenWidth;
+	//scaley *= DesktopScreen_Height / DefaultSceenHeight;
 	float mouseposx = mousex / ScreenX;
 	float mouseposy = mousey / ScreenY;
 	GlobalRawImageCallbackData->mousex = mouseposx;

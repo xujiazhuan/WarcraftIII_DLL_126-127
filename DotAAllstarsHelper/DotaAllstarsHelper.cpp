@@ -320,7 +320,6 @@ void InitHook( )
 	if ( Warcraft3Window )
 	{
 		WarcraftRealWNDProc_org = ( WarcraftRealWNDProc )Warcraft3WindowProcOffset;
-		hPressKeyWithDelay = CreateThread( 0, 0, PressKeyWithDelay, 0, 0, 0 );
 		MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
 		MH_EnableHook( WarcraftRealWNDProc_org );
 #ifdef DOTA_HELPER_LOG
@@ -1549,11 +1548,6 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 	if ( WarcraftRealWNDProc_org )
 	{
 		SkipAllMessages = TRUE;
-		if ( hPressKeyWithDelay )
-		{
-			TerminateThread( hPressKeyWithDelay, 0 );
-			CloseHandle( hPressKeyWithDelay );
-		}
 		if ( !Force )
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		SkipAllMessages = FALSE;
@@ -1763,6 +1757,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	memset( hpbarscaleHeroY, 0, sizeof( hpbarscaleHeroY ) );
 	memset( hpbarscaleUnitY, 0, sizeof( hpbarscaleUnitY ) );
 	memset( hpbarscaleTowerY, 0, sizeof( hpbarscaleTowerY ) );
+
+	if (Warcraft3Window )
+		KillTimer( Warcraft3Window, 'dota' );
 
 	Warcraft3Window = 0;
 	EnableSelectHelper = FALSE;
@@ -2039,6 +2036,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x2DD0C0 );
 		Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
 
+		if ( Warcraft3Window )
+			SetTimer( Warcraft3Window, 'dota', 20, 0 );
 
 
 #ifdef DOTA_HELPER_LOG
@@ -2307,6 +2306,11 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x890680 );
 		Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
 
+
+		if ( Warcraft3Window )
+			SetTimer( Warcraft3Window, 'dota', 20, 0 );
+
+
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -2321,7 +2325,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		return crc32;
-	}
+}
 
 
 #ifdef DOTA_HELPER_LOG
@@ -2447,13 +2451,16 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 		Warcraft3_Process = GetCurrentProcess( );
 		// NEXT 3 LINES ONLY FOR TEST !!!
-		// TestModeActivated = TRUE;
-		// InitDotaHelper( 0x26a );
-		//	MainFuncWork = TRUE;
+		 //TestModeActivated = TRUE;
+		 //InitDotaHelper( 0x26a );
+		 //DisableFeatures( 0xEFFF );
+			//MainFuncWork = TRUE;
 
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
+		if ( Warcraft3Window )
+			KillTimer( Warcraft3Window, 'dota' );
 
 		TerminateStarted = TRUE;
 

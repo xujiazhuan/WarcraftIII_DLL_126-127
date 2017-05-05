@@ -472,6 +472,10 @@ struct DelayedPress
 	LPARAM NeedPresslParam;
 	DWORD TimeOut;
 	BOOL ISNULL;
+	BOOL IsAlt;
+	BOOL IsCtrl;
+	BOOL IsShift;
+	BOOL IsCustom;
 
 	BOOL IsNull( )
 	{
@@ -487,7 +491,7 @@ struct DelayedPress
 	{
 		ISNULL = NeedPressMsg
 			= NeedPresswParam = NeedPresslParam
-			= TimeOut = 0;
+			= TimeOut = IsAlt = IsCtrl = IsShift = IsCustom = 0;
 	}
 };
 

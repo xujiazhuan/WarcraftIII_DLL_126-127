@@ -89,11 +89,12 @@ D3DXMATRIX* WINAPI D3DXMatrixTransformation2D(
 void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture8* texture, float width, float height, float x, float y )
 {
 	D3DXMATRIX matAll;
-	float scalex = *GetWindowXoffset / DesktopScreen_Width;
-	float scaley = *GetWindowYoffset / DesktopScreen_Height;
+	float scalex = *GetWindowXoffset / DefaultSceenWidth;
+	float scaley = *GetWindowYoffset / DefaultSceenHeight;
 
-	scalex *= DesktopScreen_Width / DefaultSceenWidth;
-	scaley *= DesktopScreen_Height / DefaultSceenHeight;
+
+	//scalex *= DesktopScreen_Width / DefaultSceenWidth;
+	//scaley *= DesktopScreen_Height / DefaultSceenHeight;
 
 	float posx = x;
 	float posy = y + scaley * height;

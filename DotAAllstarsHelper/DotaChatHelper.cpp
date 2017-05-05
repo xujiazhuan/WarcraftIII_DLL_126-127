@@ -38,8 +38,8 @@ LPARAM lpReturnScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey(
 
 
 
-LPARAM lpShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_RSHIFT, 0 ) << 16 ) );
-LPARAM lpShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_RSHIFT, 0 ) << 16 ) );
+LPARAM lpRShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_RSHIFT, 0 ) << 16 ) );
+LPARAM lpRShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_RSHIFT, 0 ) << 16 ) );
 
 pGameChatSetState GameChatSetState;
 
@@ -67,7 +67,7 @@ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 			if ( toAll )
 			{
 				pChatString[ 0 ] = '\0';
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RSHIFT, lpShiftScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RSHIFT, lpRShiftScanKeyDOWN );
 
 				GameChatSetState( GetChatOffset( ), 0, 0 );
 
@@ -81,14 +81,14 @@ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 
 			if ( toAll )
 			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RSHIFT, lpShiftScanKeyUP );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RSHIFT, lpRShiftScanKeyUP );
 			}
 		}
 		else if ( *( int* )ChatFound == 0 && !toAll )
 		{
 			if ( toAll )
 			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RSHIFT, lpShiftScanKeyDOWN );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RSHIFT, lpRShiftScanKeyDOWN );
 			}
 			
 			GameChatSetState( GetChatOffset( ), 0, 1 );
@@ -100,7 +100,7 @@ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 
 			if ( toAll )
 			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RSHIFT, lpShiftScanKeyUP );
+				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RSHIFT, lpRShiftScanKeyUP );
 			}
 		}
 

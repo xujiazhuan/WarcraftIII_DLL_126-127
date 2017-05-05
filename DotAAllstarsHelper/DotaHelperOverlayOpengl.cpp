@@ -29,12 +29,12 @@ void DrawAllRawImages( )
 	glMatrixMode( GL_MODELVIEW );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-	float scalex = ScreenX / DesktopScreen_Width;
-	float scaley = ScreenY / DesktopScreen_Height;
+	float scalex = ScreenX / DefaultSceenWidth;
+	float scaley = ScreenY / DefaultSceenHeight;
 
 
-	scalex *= DesktopScreen_Width / DefaultSceenWidth;
-	scaley *= DesktopScreen_Height / DefaultSceenHeight;
+	//scalex *= DesktopScreen_Width / DefaultSceenWidth;
+	//scaley *= DesktopScreen_Height / DefaultSceenHeight;
 
 
 	for ( auto & img : ListOfRawImages )
