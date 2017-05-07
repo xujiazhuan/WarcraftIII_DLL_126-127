@@ -1266,9 +1266,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 											{
 											//	sprintf_s( keystateprint, 200, "Start emulate #2..." );
 											//	PrintText( keystateprint );
-												PressHeroPanelButton( 0, FALSE );
-												//WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-												//WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+												//PressHeroPanelButton( 0, FALSE );
+												WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+												WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 
 
 												DelayedPress tmpDelayPress = DelayedPress( );
@@ -1420,9 +1420,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								/*sprintf_s( processdoubleclic, "%s", "2" );
 								PrintText( processdoubleclic );*/
 
-								PressHeroPanelButton( 0, FALSE );
-								//	WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-									//WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+								//PressHeroPanelButton( 0, FALSE );
+								WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+								WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 
 
 								if ( NeedSkipThisKey )
@@ -1510,9 +1510,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						( unitowner != GetLocalPlayerId( ) && ( unitowner == 15 || !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) ) )
 						)
 					{
-						PressHeroPanelButton( 0, FALSE );
-						//	WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-							//WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+						//PressHeroPanelButton( 0, FALSE );
+						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+						WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 #ifdef DOTA_HELPER_LOG
 						AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
