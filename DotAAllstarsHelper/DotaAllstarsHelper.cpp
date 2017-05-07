@@ -1612,7 +1612,7 @@ void __stdcall DisableAllHooks( )
 	GlobalRawImageCallbackData = NULL;
 	ShowSkillPanelForObservers = FALSE;
 	ShowSkillPanelOnlyForHeroes = TRUE;
-
+	NeedReleaseUnusedMemory = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1788,7 +1788,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	GlobalRawImageCallbackData = NULL;
 	SetCustomFovFix( 1.0f );
 	ScanId = 0;
-
+	NeedReleaseUnusedMemory = FALSE;
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );
 
 	if ( gameversion == 0x26a )

@@ -159,6 +159,13 @@ BOOL replaceAll( std::string& str, const std::string& from, const std::string& t
 	return Replaced;
 }
 
+BOOL NeedReleaseUnusedMemory = FALSE;
+
+int __stdcall FileHelperReleaseStorm( BOOL enabled )
+{
+	NeedReleaseUnusedMemory = enabled;
+	return enabled;
+}
 
 GameGetFile GameGetFile_org = NULL;
 GameGetFile GameGetFile_ptr;
@@ -242,7 +249,7 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) )
+			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
@@ -362,7 +369,7 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) )
+			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
@@ -500,7 +507,7 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) )
+			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
 				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
@@ -1566,8 +1573,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			ICONMDLCACHELIST.push_back( *tmpih );
 
-
-			Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
+			if ( NeedReleaseUnusedMemory )
+				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 
 			*OutDataPointer = ( int )tmpih->buf;
 			*OutSize = tmpih->size;
@@ -1646,8 +1653,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			ICONMDLCACHELIST.push_back( *tmpih );
 
-
-			Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
+			if ( NeedReleaseUnusedMemory )
+				Storm_403_org( ( void* )*OutDataPointer, "delete", -1, 0 );
 
 
 			*OutDataPointer = ( int )tmpih->buf;
@@ -2066,7 +2073,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	if ( !IsFileExist )
 	{
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
-		}
+	}
 	else
 	{
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2076,7 +2083,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 
 	return IsFileExist;
-	}
+}
 
 
 

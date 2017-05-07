@@ -335,6 +335,7 @@ extern vector<RawImageStruct> ListOfRawImages;
 
 extern vector<FakeFileStruct> FakeFileList;
 void ClearAllRawImages( );
+extern BOOL NeedReleaseUnusedMemory;
 #pragma endregion
 
 

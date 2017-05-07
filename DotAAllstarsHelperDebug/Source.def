@@ -100,3 +100,4 @@ ScanJassStringForErrors
 GetJassStringCount
 SetDefaultSceenSize
 ReplayDesyncScan
+FileHelperReleaseStorm
