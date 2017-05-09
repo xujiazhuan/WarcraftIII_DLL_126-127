@@ -507,6 +507,7 @@ int GetHeroButton( int idx )
 			}
 		}
 	}
+	return 0;
 }
 
 
@@ -1210,6 +1211,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 				if ( !NeedSkipThisKey )
+				{
 					for ( KeyActionStruct & keyAction : KeyActionList )
 					{
 						if ( keyAction.VK == ( int )wParam )
@@ -1264,9 +1266,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 											if ( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
 											{
-											//	sprintf_s( keystateprint, 200, "Start emulate #2..." );
-											//	PrintText( keystateprint );
-												//PressHeroPanelButton( 0, FALSE );
+												//	sprintf_s( keystateprint, 200, "Start emulate #2..." );
+												//	PrintText( keystateprint );
+													//PressHeroPanelButton( 0, FALSE );
 												WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 												WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 
@@ -1315,27 +1317,20 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 										}
 									}
-
 								}
-
-
 							}
 						}
-
 					}
+				}
 
 				if ( !NeedSkipThisKey )
 				{
 					/*	if ( _Msg == WM_XBUTTONDOWN
 							|| _Msg == WM_MBUTTONDOWN )
 						*/
-					Msg = _Msg;
-					wParam = _wParam;
+				
 					//	}
-				}
 
-				if ( !NeedSkipThisKey )
-				{
 					for ( int & keyCode : BlockedKeyCodes )
 					{
 						if ( keyCode == ( int )wParam )
@@ -1345,9 +1340,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #endif
 							return DefWindowProc( hWnd, Msg, wParam, lParam );
 						}
+
 					}
 
-
+					Msg = _Msg;
+					wParam = _wParam;
 
 					for ( int & keyCode : RegisteredKeyCodes )
 					{
@@ -1384,11 +1381,11 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 							return DefWindowProc( hWnd, Msg, wParam, lParam );
+							}
+
 						}
 
 					}
-
-				}
 
 
 				if ( ( wParam >= 0x41 && wParam <= 0x5A ) ||
@@ -1468,20 +1465,20 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 #endif
 									return DefWindowProc( hWnd, Msg, wParam, lParam );
 								}
-								}
-
-
 							}
+
+
+						}
 						else
 							LastPressedKeysTime[ wParam ] = GetTickCount( );
-						}
+					}
 
 
 #ifdef DOTA_HELPER_LOG
 					AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-					}
+				}
 				}
 
 			if ( NeedSkipThisKey )
@@ -1519,9 +1516,9 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 					}
 				}
 			}
-				}
+		}
 
-			}
+	}
 	else
 	{
 
@@ -1541,7 +1538,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
 		}
 	}
-		}
+}
 
 
 #ifdef DOTA_HELPER_LOG

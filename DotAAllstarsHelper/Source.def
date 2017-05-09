@@ -88,6 +88,7 @@ RawImage_Resize
 RawImage_DrawOverlay
 RawImage_AddCallback
 RawImage_SkipMouseClick
+RawImage_IsBtn
 GetScreenWidth
 GetScreenHeight
 GetWindowWidth
@@ -99,3 +100,4 @@ GetJassStringCount
 SetDefaultSceenSize
 ReplayDesyncScan
 FileHelperReleaseStorm
+UpdatePlayerCache

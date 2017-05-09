@@ -3,8 +3,14 @@
 
 int GlobalPlayerOffset = 0;
 int IsPlayerEnemyOffset = 0;
+
 pGetPlayerColor GetPlayerColor;
 pPlayer _Player;
+
+int playercache[ 16 ];
+int player_real_cache[ 16 ];
+BOOL player_observers[ 16 ];
+int player_local_id = 0;
 
 int __stdcall Player( int slotid )
 {
@@ -18,8 +24,22 @@ int __stdcall Player( int slotid )
 #endif
 		return _Player( 0 );
 	}
+	
+	return playercache[ slotid ];
+}
 
-	return _Player( slotid );
+std::map<std::pair<int, int>, BOOL> PlayerEnemyCache;
+
+BOOL IsPlayerEnemy( int hPlayer1, int hPlayer2 )
+{
+	auto tmppair = std::make_pair( hPlayer1, hPlayer2 );
+
+	if ( PlayerEnemyCache.find( tmppair ) != PlayerEnemyCache.end( ) )
+	{
+		return PlayerEnemyCache[ tmppair ];
+	}
+
+	return ( PlayerEnemyCache[ tmppair ] = ( ( ( IsPlayerEnemy_org )( GameDll + IsPlayerEnemyOffset ) )( hPlayer1, hPlayer2 ) ) );
 }
 
 
@@ -29,6 +49,14 @@ int GetGlobalPlayerData( )
 }
 
 int GetPlayerByNumber( int number )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	return player_real_cache[ number ];
+}
+
+int _GetPlayerByNumber( int number )
 {
 	int arg1 = GetGlobalPlayerData( );
 	int result = 0;
@@ -41,7 +69,7 @@ int GetPlayerByNumber( int number )
 		MessageBoxA( 0, "Error, bad player slot!", "FATAL ERROR", 0 );
 		DumpExceptionInfoToFile( 0 );
 #endif
-		return _Player( 0 );
+		return 0;
 	}
 
 	if ( arg1 > NULL )
@@ -62,6 +90,15 @@ int GetPlayerByNumber( int number )
 
 // Получить ID игрока
 int GetLocalPlayerId( )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	return player_local_id;
+}
+
+
+int _GetLocalPlayerId( )
 {
 	int gldata = GetGlobalPlayerData( );
 	if ( gldata > 0 )
@@ -103,7 +140,7 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 			memset( GlobalChatMessageBuffer, 0, 1024 );
 			sprintf_s( GlobalChatMessageBuffer, "%s:%s", playername, message );
 			AddNewLineToDotaChatLog( GlobalChatMessageBuffer );
-		}
+}
 		else
 		{
 			AddNewLineToDotaHelperLog( "Bad message", __LINE__ );
@@ -126,7 +163,7 @@ void __fastcall pOnChatMessage_my( int a1, int unused, int PlayerID, char * mess
 	}
 #endif
 	pOnChatMessage_ptr( a1, unused, PlayerID, message, a4, a5 );
-}
+			}
 
 
 int __stdcall MutePlayer( const char * str )
@@ -164,6 +201,17 @@ int __stdcall UnMutePlayer( const char * str )
 pIsPlayerObs IsPlayerObs;
 
 BOOL IsPlayerObserver( int pid )
+{
+	BOOL retval = FALSE;
+	if ( pid >= 0 && pid <= 15 )
+	{
+		player_observers[ pid ];
+	}
+
+	return retval;
+}
+
+BOOL _IsPlayerObserver( int pid )
 {
 	BOOL retval = FALSE;
 #ifdef DOTA_HELPER_LOG

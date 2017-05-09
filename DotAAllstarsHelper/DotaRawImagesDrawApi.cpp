@@ -1136,6 +1136,18 @@ int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallba
 	return TRUE;
 }
 
+int __stdcall RawImage_IsBtn( int RawImage, BOOL enabled )
+{
+
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+	tmpRawImage.button = enabled;
+	return TRUE;
+}
 
 BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey )
 {
@@ -1186,22 +1198,21 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				img_x = img.width - ( int )( posx + sizex - mousex );
 				img_y = img.height - ( int )( posy + sizey - mousey );
 
-
 				if ( img_x > img.width )
 					img_x = img.width;
 
 				if ( img_y > img.height )
 					img_y = img.height;
 
-				if ( img_x < 0 )
+				if ( img_x < 1 )
 					img_x = 0;
 
-				if ( img_y < 0 )
+				if ( img_y < 1 )
 					img_y = 0;
 
-				RGBAPix eventpix = RawImageData[ ArrayXYtoId( img.width, img_x, img_y ) ];
+				RGBAPix eventpix = RawImageData[ ArrayXYtoId( img.width, img_x, img.height - img_y ) ];
 
-				if ( eventpix.A <= 20 )
+				if ( eventpix.A >= 20 )
 					NeedSkipEvent = FALSE;
 
 				MouseEnteredInRawImage = TRUE;
@@ -1224,18 +1235,18 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 					if ( MouseEnteredInRawImage )
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
-					if ( NeedSkipEvent /*|| img.button*/ )
+					if ( !NeedSkipEvent )
 						ExecuteFunc( &img.MouseActionCallback );
-					return FALSE;
+					return !(( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ));
 				}
 				break;
 			case RawImageEventType::MouseDown:
 				if ( !img.IsMouseDown && MouseEnteredInRawImage )
 				{
 					img.IsMouseDown = TRUE;
-					if ( NeedSkipEvent /*|| img.button*/ )
+					if ( !NeedSkipEvent )
 						ExecuteFunc( &img.MouseActionCallback );
-					return NeedSkipEvent;
+					return !( ( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ) );
 				}
 				break;
 			case RawImageEventType::MouseClick:
@@ -1258,7 +1269,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				{
 					if ( MouseEnteredInRawImage )
 					{
-						if ( NeedSkipEvent /*|| img.button*/ )
+						if ( !NeedSkipEvent )
 						{
 							img.IsMouseEntered = TRUE;
 							GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;

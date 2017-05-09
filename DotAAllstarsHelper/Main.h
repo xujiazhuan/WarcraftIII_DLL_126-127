@@ -110,6 +110,14 @@ extern char MyFpsString[ 512 ];
 
 #pragma region DotaPlayerHelper.cpp
 
+BOOL IsPlayerEnemy( int hPlayer1, int hPlayer2 );
+extern std::map<std::pair<int, int>, BOOL> PlayerEnemyCache;
+
+extern int playercache[ 16 ];
+extern int player_real_cache[ 16 ];
+extern BOOL player_observers[ 16 ];
+extern int player_local_id;
+
 typedef BOOL( __cdecl * pGetPlayerAlliance )( unsigned int hPlayer1, unsigned int hPlayer2, int hAlliancetype );
 extern pGetPlayerAlliance GetPlayerAlliance;
 typedef unsigned int( __cdecl * pGetPlayerColor )( unsigned int whichPlayer );
@@ -122,9 +130,11 @@ extern pIsPlayerObs IsPlayerObs;
 
 
 int GetLocalPlayerId( );
+int _GetLocalPlayerId( );
 int GetPlayerByNumber( int number );
+int _GetPlayerByNumber( int number );
 // Проверить являются ли игроки врагами
-typedef int( __cdecl * IsPlayerEnemy )( unsigned int Player1, unsigned int Player2 );
+typedef int( __cdecl * IsPlayerEnemy_org )( unsigned int Player1, unsigned int Player2 );
 // Получить игрока по ID
 typedef unsigned int( __cdecl * GetPlayerByID )( int PlayerId );
 typedef char *( __fastcall * p_GetPlayerName )( int a1, int a2 );
@@ -137,6 +147,7 @@ extern vector<char *> mutedplayers;
 //sub_6F2FB480
 extern pOnChatMessage pOnChatMessage_org, pOnChatMessage_ptr;
 BOOL IsPlayerObserver( int pid );
+BOOL _IsPlayerObserver( int pid );
 BOOL IsLocalPlayerObserver( );
 extern BOOL ShowSkillPanelForObservers;
 extern BOOL ShowSkillPanelOnlyForHeroes;

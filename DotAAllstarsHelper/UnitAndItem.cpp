@@ -119,8 +119,8 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 
 		if ( unitownerslot <= 15 && unitownerslot >= 0 && GetLocalPlayerId( ) <= 15 && GetLocalPlayerId( ) >= 0 )
 		{
-			unsigned int Player1 = Player( unitownerslot );
-			unsigned int Player2 = Player( GetLocalPlayerId( ) );
+			int Player1 = Player( unitownerslot );
+			int Player2 = Player( GetLocalPlayerId( ) );
 
 			if ( Player1 == Player2 )
 			{
@@ -137,7 +137,7 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 				return FALSE;
 			}
 
-			BOOL retval = ( ( ( IsPlayerEnemy )( GameDll + IsPlayerEnemyOffset ) )( Player1, Player2 ) );
+			BOOL retval = IsPlayerEnemy( Player1, Player2 );
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif

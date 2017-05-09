@@ -1613,6 +1613,8 @@ void __stdcall DisableAllHooks( )
 	ShowSkillPanelForObservers = FALSE;
 	ShowSkillPanelOnlyForHeroes = TRUE;
 	NeedReleaseUnusedMemory = FALSE;
+	PlayerEnemyCache.clear( );
+
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1758,7 +1760,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	memset( hpbarscaleUnitY, 0, sizeof( hpbarscaleUnitY ) );
 	memset( hpbarscaleTowerY, 0, sizeof( hpbarscaleTowerY ) );
 
-	if (Warcraft3Window )
+	if ( Warcraft3Window )
 		KillTimer( Warcraft3Window, 'dota' );
 
 	Warcraft3Window = 0;
@@ -1789,6 +1791,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	SetCustomFovFix( 1.0f );
 	ScanId = 0;
 	NeedReleaseUnusedMemory = FALSE;
+	PlayerEnemyCache.clear( );
+
 	sprintf_s( MyFpsString, 512, "%s", "|nFPS: %.1f / 64.0 " );
 
 	if ( gameversion == 0x26a )
@@ -2044,9 +2048,32 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		InitHook( );
-
 		InitOpenglHook( );
 		Initd3d8Hook( );
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			playercache[ i ] = _Player( i );
+		}
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_real_cache[ i ] = _GetPlayerByNumber( i );
+		}
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_observers[ i ] = _IsPlayerObserver( i );
+		}
+
+		
+
+		player_local_id = _GetLocalPlayerId( );
+
+
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
@@ -2315,9 +2342,31 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		InitHook( );
-
 		InitOpenglHook( );
 		Initd3d9Hook( );
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			playercache[ i ] = _Player( i );
+		}
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_real_cache[ i ] = _GetPlayerByNumber( i );
+		}
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_observers[ i ] = _IsPlayerObserver( i );
+		}
+
+
+
+		player_local_id = _GetLocalPlayerId( );
+
 
 		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
@@ -2334,6 +2383,37 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 	return 0;
 }
+
+int __stdcall UpdatePlayerCache( int )
+{
+	for ( int i = 0; i < 16; i++ )
+	{
+		playercache[ i ] = _Player( i );
+	}
+
+
+	for ( int i = 0; i < 16; i++ )
+	{
+		player_real_cache[ i ] = _GetPlayerByNumber( i );
+	}
+
+
+	for ( int i = 0; i < 16; i++ )
+	{
+		player_observers[ i ] = _IsPlayerObserver( i );
+	}
+
+
+
+	player_local_id = _GetLocalPlayerId( );
+
+
+
+	PlayerEnemyCache.clear( );
+
+	return 0;
+}
+
 
 Storm_403 Storm_403_org = NULL;
 
