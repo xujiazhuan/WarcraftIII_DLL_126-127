@@ -318,8 +318,7 @@ int __stdcall SetUnitForUnlimiteDraw( int unitaddr )
 int __fastcall Wc3DrawObject_my( int a1, int a2 )
 {
 
-
-
+return 0;
 }
 
 void InitHook( )
