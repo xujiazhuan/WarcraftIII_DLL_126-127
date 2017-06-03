@@ -287,6 +287,41 @@ int __fastcall DrawInterface_my( int arg1, int arg2 )
 	return DrawInterface_ptr( arg1, arg2 );
 }
 
+
+
+int RenderStage;
+
+typedef void( __fastcall * Wc3DrawStage )( int arg1, int unused, int RenderStage, int type1, int type2, int arg1_2 );
+Wc3DrawStage Wc3DrawStage_org;
+Wc3DrawStage Wc3DrawStage_ptr;
+
+void __fastcall Wc3DrawStage_my( int arg1, int unused, int _RenderStage, int type1, int type2, int arg1_2 )
+{
+	RenderStage = _RenderStage;
+	Wc3DrawStage_ptr( arg1, unused, _RenderStage, type1, type2, arg1_2 );
+	RenderStage = -_RenderStage;
+}
+
+
+typedef signed int( __fastcall * Wc3DrawObject )( int a1, int a2 );
+Wc3DrawObject Wc3DrawObject_ptr;//sub_6F60FC00
+Wc3DrawObject Wc3DrawObject_org;
+
+int unlimunitaddr = -1;
+
+int __stdcall SetUnitForUnlimiteDraw( int unitaddr )
+{
+	unlimunitaddr = unitaddr;
+	return 0;
+}
+
+int __fastcall Wc3DrawObject_my( int a1, int a2 )
+{
+
+
+
+}
+
 void InitHook( )
 {
 #ifdef DOTA_HELPER_LOG
@@ -403,10 +438,14 @@ void InitHook( )
 	MH_EnableHook( GetTownUnitCount_org );
 
 
+	//MH_CreateHook( Wc3DrawStage_org, &Wc3DrawStage_my, reinterpret_cast< void** >( &Wc3DrawStage_ptr ) );
+	//MH_EnableHook( Wc3DrawStage_org );
+
+
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-}
+	}
 
 void UninitializeHook( )
 {
@@ -494,6 +533,14 @@ void UninitializeHook( )
 		DrawBarForUnit_org = NULL;
 	}
 
+	if ( Wc3DrawStage_org )
+	{
+		Wc3DrawStage_org = NULL;
+		MH_DisableHook( Wc3DrawStage_org );
+	}
+
+
+
 #pragma endregion
 
 
@@ -501,7 +548,7 @@ void UninitializeHook( )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	IssueFixerDisable( );
-}
+	}
 
 
 typedef int( __stdcall * pStorm_503 )( int a1, int a2, int a3 );
@@ -986,11 +1033,11 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 			}
 			return unitaddr;
 		}
-	}
+		}
 	sprintf_s( unitstr1, 128, "%%u / %%u" );
 	sprintf_s( unitstr2, 128, "%%u / %%u" );
 	return unitaddr;
-}
+	}
 
 
 
@@ -1338,10 +1385,6 @@ void __declspec( naked ) HookSetCD_1000s_127a( )
 #pragma endregion
 
 
-
-
-
-
 #pragma region BackupOffsets
 
 std::vector<waroffsetdata> offsetslist;
@@ -1619,7 +1662,7 @@ void __stdcall DisableAllHooks( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-}
+	}
 
 void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
@@ -1669,13 +1712,13 @@ unsigned long __stdcall RefreshTimer( void * )
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-		}
+			}
 
 		Sleep( 200 );
-	}
+		}
 
 	return 0;
-}
+	}
 
 void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 {
@@ -1710,6 +1753,25 @@ void PatchOffsetValue1( void * addr, BYTE value )
 	*( BYTE* )addr = value;
 	VirtualProtect( addr, 1, OldProtect1, &OldProtect2 );
 	FlushInstructionCache( GetCurrentProcess( ), addr, 1 );
+}
+
+
+PBYTE HookVTableFunction( PDWORD* dwVTable, PBYTE dwHook, INT Index )
+{
+	DWORD dwOld = 0;
+	VirtualProtect( ( void* )( ( *dwVTable ) + ( Index * 4 ) ), 4, PAGE_EXECUTE_READWRITE, &dwOld );
+
+	PBYTE pOrig = ( ( PBYTE )( *dwVTable )[ Index ] );
+	( *dwVTable )[ Index ] = ( DWORD )dwHook;
+
+	VirtualProtect( ( void* )( ( *dwVTable ) + ( Index * 4 ) ), 4, dwOld, &dwOld );
+
+	return pOrig;
+}
+
+PBYTE GetVTableFunction( PDWORD* dwVTable, INT Index )
+{
+	return ( ( PBYTE )( *dwVTable )[ Index ] );
 }
 
 DWORD GetDllCrc32( )
@@ -1781,7 +1843,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	ShopHelperEnabled = FALSE;
 	TeleportShiftPress = FALSE;
 	SetWidescreenFixState( FALSE );
-	MainFuncWork = FALSE;
+	MainFuncWork = TRUE;
 	NeedDrawRegen = FALSE;
 	GlyphButtonCreated = FALSE;
 	ShowSkillPanelForObservers = FALSE;
@@ -2040,6 +2102,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x2DD0C0 );
 		Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
 
+
+		Wc3DrawStage_org = ( Wc3DrawStage )( GameDll + 0x395620 );
+
 		if ( Warcraft3Window )
 			SetTimer( Warcraft3Window, 'dota', 20, 0 );
 
@@ -2069,7 +2134,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 			player_observers[ i ] = _IsPlayerObserver( i );
 		}
 
-		
+
 
 		player_local_id = _GetLocalPlayerId( );
 
@@ -2333,6 +2398,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GetTownUnitCount_org = ( GetTownUnitCount_p )( GameDll + 0x890680 );
 		Ordinal590_org = ( Ordinal590_p )( int )GetProcAddress( StormDllModule, ( LPCSTR )590 );
 
+		Wc3DrawStage_org = ( Wc3DrawStage )( GameDll + 0x363020 );
 
 		if ( Warcraft3Window )
 			SetTimer( Warcraft3Window, 'dota', 20, 0 );
@@ -2374,7 +2440,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		return crc32;
-}
+	}
 
 
 #ifdef DOTA_HELPER_LOG
@@ -2382,7 +2448,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 #endif
 
 	return 0;
-}
+	}
 
 int __stdcall UpdatePlayerCache( int )
 {
@@ -2608,9 +2674,9 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 
 		MH_Uninitialize( );
-	}
+		}
 	return TRUE;
-}
+	}
 #pragma endregion
 
 

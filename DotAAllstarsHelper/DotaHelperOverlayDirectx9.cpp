@@ -151,6 +151,102 @@ void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture9* texture, float width, f
 //		fclose( f );
 //	}
 //
+D3DMATERIAL9 oldmat;
+D3DLIGHT9 oldlight2;
+D3DLIGHT9 oldlight[ 256 ];
+
+void SetNewLightDx9( int id )
+{
+	if ( deviceglobal != NULL )
+	{
+		for ( int i = 0; i < 256; i++ )
+		{
+			BOOL enabled = FALSE;
+			deviceglobal->GetLightEnable( i, &enabled );
+			if ( enabled )
+			{
+				D3DLIGHT9 mylight = oldlight[i];
+				deviceglobal->GetLight( i, &oldlight[ i ] );
+				mylight.Diffuse.r *= 5.2f;
+				mylight.Diffuse.g *= 5.2f;
+				mylight.Diffuse.b *= 5.2f;
+
+				mylight.Ambient.r *= 5.2f;
+				mylight.Ambient.g *= 5.2f;
+				mylight.Ambient.b *= 5.2f;
+				deviceglobal->SetLight( i, &mylight );
+			}
+		}
+		/*D3DLIGHT9 mymat;
+
+
+		mymat.Ambient.r *= 1.2;
+		mymat.Ambient.g *= 1.2;
+		mymat.Ambient.b *= 1.2;
+		mymat.Diffuse.r *= 1.2;
+		mymat.Diffuse.g *= 1.2;
+		mymat.Diffuse.b *= 1.2;
+		mymat.Specular.r *= 1.2;
+		mymat.Specular.g *= 1.2;
+		mymat.Specular.b *= 1.2;
+
+		deviceglobal->SetLight( 0, &mymat );
+	*/
+
+	//if ( IsKeyPressed( '2' ) )
+	//	deviceglobal->SetTexture( 0, 0 );
+	/*deviceglobal->GetLight( 0, &oldlight );
+
+
+
+	D3DLIGHT9 mylight = oldlight;
+	mylight.Ambient.r = 0.0;
+	mylight.Ambient.g = 0.0;
+	mylight.Ambient.b = 1.0;
+	mylight.Diffuse.r = 0.0;
+	mylight.Diffuse.g = 0.0;
+	mylight.Diffuse.b = 1.0;
+	mylight.Specular.r = 0.0;
+	mylight.Specular.g = 0.0;
+	mylight.Specular.b = 1.0;
+
+	deviceglobal->SetLight( 0, &mylight );*/
+	}
+}
+
+void SetOldLightDx9( int id )
+{
+	if ( deviceglobal != NULL )
+	{
+		for ( int i = 0; i < 256; i++ )
+		{
+			BOOL enabled = FALSE;
+			deviceglobal->GetLightEnable( i, &enabled );
+			if ( enabled )
+			{
+				deviceglobal->SetLight( i, &oldlight[ i ] );
+			}
+		}
+
+	}
+}
+
+typedef HRESULT( __stdcall *  DrawIndexedPrimitiveDx9p )( LPDIRECT3DDEVICE9 pDevice, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount );
+DrawIndexedPrimitiveDx9p DrawIndexedPrimitiveDx9_org = NULL;
+
+
+HRESULT __stdcall DrawIndexedPrimitiveDx9( LPDIRECT3DDEVICE9 pDevice, D3DPRIMITIVETYPE PrimitiveType, INT BaseVertexIndex, UINT MinVertexIndex, UINT NumVertices, UINT startIndex, UINT primCount )
+{
+	HRESULT retval;
+	if ( IsKeyPressed( '1' ) )
+		SetNewLightDx9( 0 );
+	retval = DrawIndexedPrimitiveDx9_org( pDevice, PrimitiveType, BaseVertexIndex, MinVertexIndex, NumVertices, startIndex, primCount );
+	
+	return retval;
+}
+
+
+
 
 void DrawOverlayDx9( )
 {
@@ -228,19 +324,25 @@ void DrawOverlayDx9( )
 	pSprite->End( );
 	pSprite->Release( );
 	pSprite = NULL;
-}
+	}
 
 
 typedef HRESULT( __fastcall * EndScene_dx9_p )( int GlobalWc3Data );
 EndScene_dx9_p EndScene_dx9_org;
 EndScene_dx9_p EndScene_dx9_ptr;
 
-
-
 HRESULT __fastcall EndScene_dx9_my( int GlobalWc3Data )
 {
-	IDirect3DDevice9 * d = *( IDirect3DDevice9** )( GlobalWc3Data + 1412 );
-	deviceglobal = d;
+	LPDIRECT3DDEVICE9 d = *( IDirect3DDevice9** )( GlobalWc3Data + 1412 );
+
+	if ( d != NULL )
+	{
+		deviceglobal = d;
+		/*if ( GetVTableFunction( ( PDWORD* )d, 82 ) != ( PBYTE )DrawIndexedPrimitiveDx9 )
+		{
+			DrawIndexedPrimitiveDx9_org = ( DrawIndexedPrimitiveDx9p )HookVTableFunction( ( PDWORD* )d, ( PBYTE )DrawIndexedPrimitiveDx9, 82 );
+		}*/
+	}
 	OverlayDrawed = FALSE;
 	HRESULT retval = d->EndScene( );
 	return retval;

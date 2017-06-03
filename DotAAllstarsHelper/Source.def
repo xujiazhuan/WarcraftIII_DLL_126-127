@@ -101,3 +101,5 @@ SetDefaultSceenSize
 ReplayDesyncScan
 FileHelperReleaseStorm
 UpdatePlayerCache
+DumpFilesToDisk
+get_os_string

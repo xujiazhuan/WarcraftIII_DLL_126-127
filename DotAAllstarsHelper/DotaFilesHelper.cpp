@@ -17,8 +17,12 @@ u_int64_t GetBufHash( const char * data, size_t data_len )
 
 vector<ICONMDLCACHE> ICONMDLCACHELIST;
 vector<FileRedirectStruct> FileRedirectList;
-
-
+BOOL NeedDumpFilesToDisk = FALSE;
+int __stdcall DumpFilesToDisk( BOOL enabled )
+{
+	NeedDumpFilesToDisk = enabled;
+	return enabled;
+}
 
 
 BOOL GetFromIconMdlCache( const string filename, ICONMDLCACHE * iconhelperout )
@@ -376,6 +380,29 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+
+			if ( NeedDumpFilesToDisk )
+			{
+				//fs::create_directories( )
+
+				fs::path p(  "DotaAllstars\\" + filename  );
+				fs::path dir = p.parent_path( );
+
+				if ( dir.string( ).length() > 0 )
+				{
+					fs::create_directories( dir.string( ) );
+				}
+
+				FILE * f;
+				fopen_s( &f, ("DotaAllstars\\" + filename).c_str( ), "wb" );
+				if ( f )
+				{
+					fwrite( tmpih.buf, tmpih.size, 1, f );
+
+					fclose( f );
+				}
+
+			}
 		}
 #ifdef DOTA_HELPER_LOG
 		else

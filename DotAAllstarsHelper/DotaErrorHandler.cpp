@@ -1,8 +1,57 @@
+#include "Main.h"
+
+
+std::string ReadRegistryKeyString( const char *registryKey, const char *registryValue )
+{
+	// Open the key
+	HKEY hKey;
+	if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, registryKey, 0, KEY_QUERY_VALUE, &hKey ) != ERROR_SUCCESS )
+		return std::string( );
+
+	char str[ 256 ] = {};
+	DWORD dwLen = 255;
+	LONG ret = RegQueryValueExA( hKey, registryValue, NULL, NULL, ( LPBYTE )str, &dwLen );
+	RegCloseKey( hKey );
+
+	if ( ret == ERROR_SUCCESS )
+		return str;
+	else
+		return std::string( );
+}
+
+std::string LatestOsDisplayString;
+
+std::string GetOSDisplayString( )
+{
+	std::string productName = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "ProductName" );
+	std::string servicePack = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "CSDVersion" );
+	std::string bitness = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "BuildLabEx" );
+
+	if ( productName.length( ) == 0 )
+		productName = "Win98/2000?";
+
+	if ( bitness.find( "amd64" ) != std::string::npos )
+		bitness = "64-bit";
+	else
+		bitness = "32-bit";
+
+	LatestOsDisplayString =  productName + " " + bitness + " " + servicePack;
+	return LatestOsDisplayString;
+}
+
+const char * __stdcall get_os_string( int )
+{
+	GetOSDisplayString( );
+
+	return LatestOsDisplayString.c_str( );
+}
+
+
 #ifdef DOTA_HELPER_LOG
 
 #pragma optimize("",off)
 
-#include "Main.h"
+
 #include <iomanip>
 #include <eh.h>
 
@@ -87,41 +136,6 @@ public:
 
 
 };
-
-std::string ReadRegistryKeyString( const char *registryKey, const char *registryValue )
-{
-	// Open the key
-	HKEY hKey;
-	if ( RegOpenKeyExA( HKEY_LOCAL_MACHINE, registryKey, 0, KEY_QUERY_VALUE, &hKey ) != ERROR_SUCCESS )
-		return std::string( );
-
-	char str[ 256 ] = {};
-	DWORD dwLen = 255;
-	LONG ret = RegQueryValueExA( hKey, registryValue, NULL, NULL, ( LPBYTE )str, &dwLen );
-	RegCloseKey( hKey );
-
-	if ( ret == ERROR_SUCCESS )
-		return str;
-	else
-		return std::string( );
-}
-
-std::string GetOSDisplayString( )
-{
-	std::string productName = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "ProductName" );
-	std::string servicePack = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "CSDVersion" );
-	std::string bitness = ReadRegistryKeyString( "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\", "BuildLabEx" );
-
-	if ( productName.length( ) == 0 )
-		productName = "Win98/2000?";
-
-	if ( bitness.find( "amd64" ) != std::string::npos )
-		bitness = "64-bit";
-	else
-		bitness = "32-bit";
-
-	return productName + " " + bitness + " " + servicePack;
-}
 
 
 void safevector_erase( safevector<string> & s )

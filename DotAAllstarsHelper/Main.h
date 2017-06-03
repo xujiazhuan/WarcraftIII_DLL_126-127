@@ -73,7 +73,7 @@ extern BOOL IsVEHex;
 extern BOOL TestModeActivated;
 
 
-
+extern int RenderStage;
 
 int GetGlobalClassAddr( );
 BOOL FileExist( const char * name );
@@ -182,6 +182,9 @@ float GetUnitY_real( int unitaddr );
 extern BYTE BarVtableClone[ 0x80 ];
 void ManaBarSwitch( BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
+PBYTE HookVTableFunction( PDWORD* dwVTable, PBYTE dwHook, INT Index );
+PBYTE GetVTableFunction( PDWORD* dwVTable, INT Index );
+
 int __stdcall SetColorForUnit( unsigned int  * coloraddr, BarStruct * BarStruct );
 typedef void *( __stdcall * Storm_401 )( size_t Size, const char * srcfile, int line, int val );
 extern Storm_401 Storm_401_org;
@@ -446,6 +449,12 @@ void Initd3d9Hook( );
 void DrawOverlayDx9( );
 void DrawOverlayDx8( );
 void DrawOverlayGl( );
+
+void SetNewLightDx9( int id );
+void SetOldLightDx9( int id );
+
+void SetNewLightDx8( int id );
+void SetOldLightDx8( int id );
 
 extern BOOL OverlayDrawed;
 

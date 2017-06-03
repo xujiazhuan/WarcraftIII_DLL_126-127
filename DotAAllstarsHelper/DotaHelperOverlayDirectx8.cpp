@@ -113,6 +113,51 @@ void DrawImage( ID3DXSprite* pSprite, IDirect3DTexture8* texture, float width, f
 	pSprite->DrawTransform( texture, NULL, &matAll, 0xffffffff );
 }
 
+D3DMATERIAL8 oldmat;
+void SetNewLightDx8( int id )
+{
+	if ( deviceglobal != NULL )
+	{
+		D3DMATERIAL8 mymat;
+
+		mymat.Ambient.r = 1.0;
+		mymat.Ambient.g = 1.0;
+		mymat.Ambient.b = 1.0;
+		mymat.Diffuse.r = 1.0;
+		mymat.Diffuse.g = 1.0;
+		mymat.Diffuse.b = 1.0;
+
+		mymat.Specular.r = 1.0;
+		mymat.Specular.g = 1.0;
+		mymat.Specular.b = 1.0;
+
+		deviceglobal->SetMaterial( &mymat );
+
+	}
+}
+
+void SetOldLightDx8( int id )
+{
+	if ( deviceglobal != NULL )
+	{
+
+	}
+}
+
+
+typedef HRESULT( __stdcall *  DrawIndexedPrimitiveDx8p )( D3DPRIMITIVETYPE PrimitiveType, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount );
+DrawIndexedPrimitiveDx8p DrawIndexedPrimitiveDx8_org;
+
+
+HRESULT DrawIndexedPrimitiveDx8( D3DPRIMITIVETYPE PrimitiveType, UINT MinIndex, UINT NumVertices, UINT StartIndex, UINT PrimitiveCount )
+{
+	HRESULT retval;
+
+	retval = DrawIndexedPrimitiveDx8_org( PrimitiveType, MinIndex, NumVertices, StartIndex, PrimitiveCount );
+
+	return retval;
+}
+
 
 void DrawOverlayDx8( )
 {
@@ -201,7 +246,11 @@ EndScene_p EndScene_ptr;
 HRESULT __fastcall EndScene_my( int GlobalWc3Data )
 {
 	IDirect3DDevice8 * d = *( IDirect3DDevice8** )( GlobalWc3Data + 1412 );
-	deviceglobal = d;
+	if ( d != NULL )
+	{
+		deviceglobal = d;
+
+	}
 	OverlayDrawed = FALSE;
 	HRESULT retval = deviceglobal->EndScene( );
 	return retval;
