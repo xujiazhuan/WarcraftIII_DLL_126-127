@@ -650,6 +650,11 @@ void Unhook( )
 
 }
 
+int __stdcall InitManaBar( int )
+{
+	ManaBarSwitch( TRUE );
+	return 0;
+}
 
 void ManaBarSwitch( BOOL b )
 {

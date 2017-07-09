@@ -71,8 +71,299 @@ inline unsigned char NormalizeComponent( double val )
 	return ( unsigned char )val;
 }
 
+
+static int* g_px1a = NULL;
+static int  g_px1a_w = 0;
+static int* g_px1ab = NULL;
+static int  g_px1ab_w = 0;
+
+
+void Resize_HQ_4ch( unsigned char* src, int w1, int h1,
+	int w2, int h2, Buffer& outdest )
+{
+	unsigned char * dest = new unsigned char[ w2*h2 * 4 ];
+
+	// Both buffers must be in ARGB format, and a scanline should be w*4 bytes.
+
+	// If pQuitFlag is non-NULL, then at the end of each scanline, it will check
+	//    the value at *pQuitFlag; if it's set to 'true', this function will abort.
+	// (This is handy if you're background-loading an image, and decide to cancel.)
+
+	// NOTE: THIS WILL OVERFLOW for really major downsizing (2800x2800 to 1x1 or more) 
+	// (2800 ~ sqrt(2^23)) - for a lazy fix, just call this in two passes.
+
+	/*assert( src );
+	assert( dest );
+	assert( w1 >= 1 );
+	assert( h1 >= 1 );
+	assert( w2 >= 1 );
+	assert( h2 >= 1 );
+*/
+// check for MMX (one time only)
+
+
+	if ( w2 * 2 == w1 && h2 * 2 == h1 )
+	{
+		// perfect 2x2:1 case - faster code
+		// (especially important because this is common for generating low (large) mip levels!)
+		DWORD *dsrc = ( DWORD* )src;
+		DWORD *ddest = ( DWORD* )dest;
+
+
+		DWORD remainder = 0;
+		int i = 0;
+		for ( int y2 = 0; y2 < h2; y2++ )
+		{
+			int y1 = y2 * 2;
+			DWORD* temp_src = &dsrc[ y1*w1 ];
+			for ( int x2 = 0; x2 < w2; x2++ )
+			{
+				DWORD xUL = temp_src[ 0 ];
+				DWORD xUR = temp_src[ 1 ];
+				DWORD xLL = temp_src[ w1 ];
+				DWORD xLR = temp_src[ w1 + 1 ];
+				// note: DWORD packing is 0xAARRGGBB
+
+				DWORD redblue = ( xUL & 0x00FF00FF ) + ( xUR & 0x00FF00FF ) + ( xLL & 0x00FF00FF ) + ( xLR & 0x00FF00FF ) + ( remainder & 0x00FF00FF );
+				DWORD green = ( xUL & 0x0000FF00 ) + ( xUR & 0x0000FF00 ) + ( xLL & 0x0000FF00 ) + ( xLR & 0x0000FF00 ) + ( remainder & 0x0000FF00 );
+				// redblue = 000000rr rrrrrrrr 000000bb bbbbbbbb
+				// green   = xxxxxx00 000000gg gggggggg 00000000
+				remainder = ( redblue & 0x00030003 ) | ( green & 0x00000300 );
+				ddest[ i++ ] = ( ( redblue & 0x03FC03FC ) | ( green & 0x0003FC00 ) ) >> 2;
+
+				temp_src += 2;
+			}
+
+		}
+
+	}
+	else
+	{
+		// arbitrary resize.
+		unsigned int *dsrc = ( unsigned int * )src;
+		unsigned int *ddest = ( unsigned int * )dest;
+
+		bool bUpsampleX = ( w1 < w2 );
+		bool bUpsampleY = ( h1 < h2 );
+
+		// If too many input pixels map to one output pixel, our 32-bit accumulation values
+		// could overflow - so, if we have huge mappings like that, cut down the weights:
+		//    256 max color value
+		//   *256 weight_x
+		//   *256 weight_y
+		//   *256 (16*16) maximum # of input pixels (x,y) - unless we cut the weights down...
+		int weight_shift = 0;
+		float source_texels_per_out_pixel = ( ( w1 / ( float )w2 + 1 )
+			* ( h1 / ( float )h2 + 1 )
+			);
+		float weight_per_pixel = source_texels_per_out_pixel * 256 * 256;  //weight_x * weight_y
+		float accum_per_pixel = weight_per_pixel * 256; //color value is 0-255
+		float weight_div = accum_per_pixel / 4294967000.0f;
+		if ( weight_div > 1 )
+			weight_shift = ( int )ceilf( logf( ( float )weight_div ) / logf( 2.0f ) );
+		weight_shift = min( 15, weight_shift );  // this could go to 15 and still be ok.
+
+		float fh = 256 * h1 / ( float )h2;
+		float fw = 256 * w1 / ( float )w2;
+
+		if ( bUpsampleX && bUpsampleY )
+		{
+			// faster to just do 2x2 bilinear interp here
+
+			// cache x1a, x1b for all the columns:
+			// ...and your OS better have garbage collection on process exit :)
+			if ( g_px1a_w < w2 )
+			{
+				if ( g_px1a ) delete[ ] g_px1a;
+				g_px1a = new int[ w2 * 2 * 1 ];
+				g_px1a_w = w2 * 2;
+			}
+			for ( int x2 = 0; x2 < w2; x2++ )
+			{
+				// find the x-range of input pixels that will contribute:
+				int x1a = ( int )( x2*fw );
+				x1a = min( x1a, 256 * ( w1 - 1 ) - 1 );
+				g_px1a[ x2 ] = x1a;
+			}
+
+			// FOR EVERY OUTPUT PIXEL
+			for ( int y2 = 0; y2 < h2; y2++ )
+			{
+				// find the y-range of input pixels that will contribute:
+				int y1a = ( int )( y2*fh );
+				y1a = min( y1a, 256 * ( h1 - 1 ) - 1 );
+				int y1c = y1a >> 8;
+
+				unsigned int *ddest = &( ( unsigned int * )dest )[ y2*w2 + 0 ];
+
+				for ( int x2 = 0; x2 < w2; x2++ )
+				{
+					// find the x-range of input pixels that will contribute:
+					int x1a = g_px1a[ x2 ];//(int)(x2*fw); 
+					int x1c = x1a >> 8;
+
+					unsigned int *dsrc2 = &dsrc[ y1c*w1 + x1c ];
+
+					// PERFORM BILINEAR INTERPOLATION on 2x2 pixels
+					unsigned int r = 0, g = 0, b = 0, a = 0;
+					unsigned int weight_x = 256 - ( x1a & 0xFF );
+					unsigned int weight_y = 256 - ( y1a & 0xFF );
+					for ( int y = 0; y < 2; y++ )
+					{
+						for ( int x = 0; x < 2; x++ )
+						{
+							unsigned int c = dsrc2[ x + y*w1 ];
+							unsigned int r_src = ( c ) & 0xFF;
+							unsigned int g_src = ( c >> 8 ) & 0xFF;
+							unsigned int b_src = ( c >> 16 ) & 0xFF;
+							unsigned int w = ( weight_x * weight_y ) >> weight_shift;
+							r += r_src * w;
+							g += g_src * w;
+							b += b_src * w;
+							weight_x = 256 - weight_x;
+						}
+						weight_y = 256 - weight_y;
+					}
+
+					unsigned int c = ( ( r >> 16 ) ) | ( ( g >> 8 ) & 0xFF00 ) | ( b & 0xFF0000 );
+					*ddest++ = c;//ddest[y2*w2 + x2] = c;
+				}
+			}
+		}
+		else
+		{
+			// cache x1a, x1b for all the columns:
+			// ...and your OS better have garbage collection on process exit :)
+			if ( g_px1ab_w < w2 )
+			{
+				if ( g_px1ab ) delete[ ] g_px1ab;
+				g_px1ab = new int[ w2 * 2 * 2 ];
+				g_px1ab_w = w2 * 2;
+			}
+			for ( int x2 = 0; x2 < w2; x2++ )
+			{
+				// find the x-range of input pixels that will contribute:
+				int x1a = ( int )( ( x2 )*fw );
+				int x1b = ( int )( ( x2 + 1 )*fw );
+				if ( bUpsampleX ) // map to same pixel -> we want to interpolate between two pixels!
+					x1b = x1a + 256;
+				x1b = min( x1b, 256 * w1 - 1 );
+				g_px1ab[ x2 * 2 + 0 ] = x1a;
+				g_px1ab[ x2 * 2 + 1 ] = x1b;
+			}
+
+			// FOR EVERY OUTPUT PIXEL
+			for ( int y2 = 0; y2 < h2; y2++ )
+			{
+				// find the y-range of input pixels that will contribute:
+				int y1a = ( int )( ( y2 )*fh );
+				int y1b = ( int )( ( y2 + 1 )*fh );
+				if ( bUpsampleY ) // map to same pixel -> we want to interpolate between two pixels!
+					y1b = y1a + 256;
+				y1b = min( y1b, 256 * h1 - 1 );
+				int y1c = y1a >> 8;
+				int y1d = y1b >> 8;
+
+				for ( int x2 = 0; x2 < w2; x2++ )
+				{
+					// find the x-range of input pixels that will contribute:
+					int x1a = g_px1ab[ x2 * 2 + 0 ];    // (computed earlier)
+					int x1b = g_px1ab[ x2 * 2 + 1 ];    // (computed earlier)
+					int x1c = x1a >> 8;
+					int x1d = x1b >> 8;
+
+					// ADD UP ALL INPUT PIXELS CONTRIBUTING TO THIS OUTPUT PIXEL:
+					unsigned int r = 0, g = 0, b = 0, a = 0;
+					for ( int y = y1c; y <= y1d; y++ )
+					{
+						unsigned int weight_y = 256;
+						if ( y1c != y1d )
+						{
+							if ( y == y1c )
+								weight_y = 256 - ( y1a & 0xFF );
+							else if ( y == y1d )
+								weight_y = ( y1b & 0xFF );
+						}
+
+						unsigned int *dsrc2 = &dsrc[ y*w1 + x1c ];
+						for ( int x = x1c; x <= x1d; x++ )
+						{
+							unsigned int weight_x = 256;
+							if ( x1c != x1d )
+							{
+								if ( x == x1c )
+									weight_x = 256 - ( x1a & 0xFF );
+								else if ( x == x1d )
+									weight_x = ( x1b & 0xFF );
+							}
+
+							unsigned int c = *dsrc2++;//dsrc[y*w1 + x];
+							unsigned int r_src = ( c ) & 0xFF;
+							unsigned int g_src = ( c >> 8 ) & 0xFF;
+							unsigned int b_src = ( c >> 16 ) & 0xFF;
+							unsigned int w = ( weight_x * weight_y ) >> weight_shift;
+							r += r_src * w;
+							g += g_src * w;
+							b += b_src * w;
+							a += w;
+						}
+					}
+
+					// write results
+					unsigned int c = ( ( r / a ) ) | ( ( g / a ) << 8 ) | ( ( b / a ) << 16 );
+					*ddest++ = c;//ddest[y2*w2 + x2] = c;
+				}
+
+			}
+		}
+	}
+
+	outdest.buf = ( char* )dest;
+	outdest.length = w2 * h2 * 4;
+}
+
+
+void ScaneImageSimple( unsigned char * data, int oldW, int oldH, int newW, int newH, int bytespp, Buffer & target )
+{
+	unsigned char* newData = new unsigned char[ newW*newH*bytespp ];
+	int maxpixel = oldW*oldH*bytespp - 4;
+
+	double scaleWidth = ( double )newW / ( double )oldW;
+	double scaleHeight = ( double )newH / ( double )oldH;
+
+	int pixel = 0;
+	for ( int cy = 0; cy < newH; cy++ ) {
+		for ( int cx = 0; cx < newW; cx++ ) {
+			int nearestMatch = ( ( int )( cy / scaleHeight )*( oldW * bytespp ) )
+				+ ( ( int )( cx / scaleWidth )*bytespp );
+
+			if ( nearestMatch > maxpixel )
+			{
+				nearestMatch = maxpixel;
+			}
+
+			newData[ pixel ] = data[ nearestMatch ];
+			newData[ pixel + 1 ] = data[ nearestMatch + 1 ];
+			newData[ pixel + 2 ] = data[ nearestMatch + 2 ];
+			if ( bytespp == 4 ) newData[ pixel + 3 ] = data[ nearestMatch + 3 ];
+			pixel += bytespp;
+		}
+	}
+
+	target.length = newW*newH*bytespp;
+	target.buf = ( char * )newData;
+}
+
 void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH, int bytespp, Buffer &target )
 {
+	ScaneImageSimple( rawData, oldW, oldH, newW, newH, bytespp, target );
+	return;
+	/*if ( bytespp == 4 )
+	{
+		Resize_HQ_4ch( rawData, oldW, oldH, newW, newH, target );
+		return;
+	}
+
 	if ( oldW == newW && oldH == newH )
 	{
 		target.length = ( unsigned long )( newW * newH * bytespp );
@@ -148,7 +439,7 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 	for ( unsigned long i = 0; i < target.length; i++ )
 		target.buf[ i ] = ( char )NormalizeComponent( final[ i ] );
 	delete[ ] final;
-	delete[ ] temp;
+	delete[ ] temp;*/
 }
 
 void SubtractColor( unsigned char &pixel, unsigned char &mask )
@@ -650,7 +941,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	if ( input.buf == NULL || input.length == NULL || input.length < sizeof( BLPHeader ) )
 		return 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 	memcpy( &blph, input.buf, sizeof( BLPHeader ) );
@@ -678,13 +969,13 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	pictype = ( int )blph.alphaEncoding;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	if ( blph.compress == 1 )
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		if ( input.length < curpos + 256 * 4 )
 		{
@@ -701,7 +992,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		if ( alphaflag > 0 && ( blph.alphaEncoding == 4 || blph.alphaEncoding == 3 ) )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			if ( input.length < curpos + blph.sizex * blph.sizey * 2 )
 				return 0;
@@ -724,14 +1015,14 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			height = ( int )blph.sizey;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return textureSize;
 		}
 		else if ( alphaflag > 0 && blph.alphaEncoding == 5 )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
@@ -751,14 +1042,14 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			height = ( int )blph.sizey;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return textureSize;
 		}
 		else
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			if ( input.length < curpos + blph.sizex*blph.sizey )
 				return 0;
@@ -778,7 +1069,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 			height = ( int )blph.sizey;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return textureSize;
 		}
@@ -789,7 +1080,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		unsigned long JPEGHeaderSize;
 		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
@@ -806,24 +1097,24 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		curpos = blph.poffs[ 0 ];
 		memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			tempdata.Clear( );
 			width = 0;
 			height = 0;
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return ( 0 );
 		}
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		tempdata.Clear( );
 
@@ -835,13 +1126,13 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		width = ( int )blph.sizex;
 		height = ( int )blph.sizey;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		return textureSize;
 	}
 
 	return 0;
-}
+	}
 
 BOOL JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
 {

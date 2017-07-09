@@ -43,6 +43,8 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 			OID = *( int * )( GETOID + 8 );
 		else
 			OID = 852290;
+		result = 1;
+
 		// Сначала вызвать оригинальную функцию
 		if ( ( ( IsNeedDrawUnitOrigin )( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
@@ -54,16 +56,20 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 			if ( IsEnemy( ( int )UnitAddr ) == FALSE )
 			{
 				if ( IsHero( ( int )UnitAddr ) )
+				{
 					( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+					return result;
+				}
 			}
+
 			if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
 			{
-				if ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr ) )
-					if ( GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
-						( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
+				if ( ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr ) ) &&
+					GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
+					( ( DrawSkillPanel )( GameDll + DrawSkillPanelOffset ) )( UnitAddr, OID );
 			}
 		}
-		result = 1;
+
 	}
 	else
 	{
@@ -90,6 +96,10 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 			OID = *( int * )( GETOID + 8 );
 		else
 			OID = 852290;
+
+		result = 1;
+
+
 		// Сначала вызвать оригинальную функцию
 		if ( ( ( IsNeedDrawUnitOrigin )( GameDll + IsNeedDrawUnitOriginOffset ) )( UnitAddr ) )
 		{
@@ -101,16 +111,19 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 			if ( IsEnemy( ( int )UnitAddr ) == FALSE )
 			{
 				if ( IsHero( ( int )UnitAddr ) )
+				{
 					( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
+					return result;
+				}
 			}
 			if ( ShowSkillPanelForObservers && IsLocalPlayerObserver( ) )
 			{
-				if ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr ) )
-					if ( GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
+				if ( ( !ShowSkillPanelOnlyForHeroes || IsHero( ( int )UnitAddr )) &&
+					GetUnitOwnerSlot( ( int )UnitAddr ) <= 12 )
 						( ( DrawSkillPanelOverlay )( GameDll + DrawSkillPanelOverlayOffset ) )( UnitAddr, OID );
 			}
 		}
-		result = 1;
+	
 	}
 	else
 	{

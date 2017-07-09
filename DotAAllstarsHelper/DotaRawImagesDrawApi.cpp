@@ -13,6 +13,8 @@ double pDistance( int x1, int y1, int x2, int y2 )
 // Создает RawImage (RGBA) с указанным цветом
 int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -43,6 +45,8 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 // Загружает RawImage из filename (tga,blp)
 int __stdcall LoadRawImage( const char * filename )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -127,6 +131,8 @@ enum BlendModes : int
 // Рисует RawImage2 на RawImage
 int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy, int blendmode )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -178,6 +184,8 @@ int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int draw
 // Заполняет выбранный пиксель указанным цветом
 int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//RGBAPix = unsigned int
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -202,6 +210,8 @@ int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//R
 // Рисует прямоугольник с указанным цветом и размером
 int __stdcall RawImage_DrawRect( int RawImage, int drawx, int drawy, int widthsize, int heightsize, RGBAPix color )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -546,6 +556,8 @@ void drawThickLine( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd
 // Рисует линию с указанным цветом и размером
 int __stdcall RawImage_DrawLine( int RawImage, int x1, int y1, int x2, int y2, int size, RGBAPix color )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -559,6 +571,8 @@ int __stdcall RawImage_DrawLine( int RawImage, int x1, int y1, int x2, int y2, i
 // Рисует круг с указанным радиусом и толщиной
 int __stdcall RawImage_DrawCircle( int RawImage, int x, int y, int radius, int size, RGBAPix color )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -595,6 +609,8 @@ int __stdcall RawImage_DrawCircle( int RawImage, int x, int y, int radius, int s
 // Заполняет круг указанным цветом
 int __stdcall RawImage_FillCircle( int RawImage, int x, int y, int radius, RGBAPix color )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -626,6 +642,8 @@ int __stdcall RawImage_FillCircle( int RawImage, int x, int y, int radius, RGBAP
 // Оставляет только круг с указанным радиусом
 int __stdcall RawImage_EraseCircle( int RawImage, int x, int y, int radius, BOOL inverse )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -662,6 +680,8 @@ int __stdcall RawImage_EraseCircle( int RawImage, int x, int y, int radius, BOOL
 // Делает пиксели с цветом color - прозрачными, power от 0 до 255
 int __stdcall RawImage_EraseColor( int RawImage, RGBAPix color, int power )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -710,6 +730,8 @@ unsigned int _flags = 0;
 // Устанавливает настройки шрифта для RawImage_DrawText
 int __stdcall RawImage_LoadFontFromResource( const char * filepath )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	int PatchFileData = 0;
 	size_t PatchFileSize = 0;
 	GameGetFile_ptr( filepath, &PatchFileData, &PatchFileSize, TRUE );
@@ -731,6 +753,8 @@ int __stdcall RawImage_SetFontSettings( const char * fontname, int fontsize, uns
 // Пишет текст в указанных координатах с указанными цветом и настройками шрифта RawImage_SetFontSettings
 int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, RGBAPix color )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -967,6 +991,8 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 // Сохраняет RawImage в blp и делает доступным для использования в игре
 int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL IsTga, BOOL enabled )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -998,6 +1024,8 @@ int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL 
 // Сохраняет RawImage на диск в TGA по выбранному пути
 int __stdcall DumpRawImageToFile( int RawImage, const char * filename )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -1023,6 +1051,8 @@ int __stdcall DumpRawImageToFile( int RawImage, const char * filename )
 // Получает RawImage из списка RawImages по имени файла.
 int __stdcall GetRawImageByFile( const char * filename )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	int id = 0;
 	for ( RawImageStruct & s : ListOfRawImages )
 	{
@@ -1059,6 +1089,8 @@ int __stdcall RawImage_GetHeight( int RawImage )
 // Изменяет размер RawImage
 int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -1084,6 +1116,8 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 // Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре. 
 int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -1103,10 +1137,37 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	return TRUE;
 }
 
+int __stdcall RawImage_MoveTimed( int RawImage, float x2, float y2, unsigned int Time1, unsigned int Time2, unsigned int SleepTime )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+	tmpRawImage.overlay_x0 = tmpRawImage.overlay_x;
+	tmpRawImage.overlay_y0 = tmpRawImage.overlay_y;
+	tmpRawImage.overlay_x2 = x2;
+	tmpRawImage.overlay_y2 = y2;
+	tmpRawImage.MoveTime1 = Time1;
+	tmpRawImage.MoveTime2 = Time2;
+	tmpRawImage.SleepTime = SleepTime;
+	tmpRawImage.StartTimer = GetTickCount( );
+	return TRUE;
+}
+
+
 RawImageCallbackData * GlobalRawImageCallbackData = NULL;
 
 int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	GlobalRawImageCallbackData = callbackdata;
 
 
@@ -1138,6 +1199,8 @@ int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallba
 
 int __stdcall RawImage_IsBtn( int RawImage, BOOL enabled )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{

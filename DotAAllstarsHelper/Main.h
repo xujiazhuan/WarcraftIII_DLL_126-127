@@ -66,7 +66,7 @@ using namespace std;
 
 #include "Structures.h"
 
-
+extern BOOL InitFunctionCalled;
 
 extern BOOL TerminateStarted;
 extern BOOL IsVEHex;

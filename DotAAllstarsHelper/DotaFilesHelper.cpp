@@ -153,6 +153,8 @@ BOOL replaceAll( std::string& str, const std::string& from, const std::string& t
 	BOOL Replaced = FALSE;
 	if ( from.empty( ) )
 		return Replaced;
+	if ( str.empty( ) )
+		return Replaced;
 	size_t start_pos = 0;
 	while ( ( start_pos = str.find( from, start_pos ) ) != std::string::npos )
 	{
@@ -292,7 +294,20 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
+
+
+	try
+	{
+		rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
+	}
+	catch ( ... )
+	{
+		rawImageSize = 0;
+		PrintText( "|cFFFF0000ERROR IN FILE HELPER!|c:BLP can not be converted!", 60.0f );
+		PrintText( ("File path: " + filename).c_str( ), 60.0f );
+	}
+
+
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -385,16 +400,16 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			{
 				//fs::create_directories( )
 
-				fs::path p(  "DotaAllstars\\" + filename  );
+				fs::path p( "DotaAllstars\\" + filename );
 				fs::path dir = p.parent_path( );
 
-				if ( dir.string( ).length() > 0 )
+				if ( dir.string( ).length( ) > 0 )
 				{
 					fs::create_directories( dir.string( ) );
 				}
 
 				FILE * f;
-				fopen_s( &f, ("DotaAllstars\\" + filename).c_str( ), "wb" );
+				fopen_s( &f, ( "DotaAllstars\\" + filename ).c_str( ), "wb" );
 				if ( f )
 				{
 					fwrite( tmpih.buf, tmpih.size, 1, f );
@@ -410,11 +425,11 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 
-		}
+				}
 #endif
-	}
+			}
 
-}
+		}
 
 
 void ApplyIconFrameFilter( string filename, int * OutDataPointer, size_t * OutSize );
@@ -557,8 +572,6 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 		if ( replaceAll( filename, DisabledIconSignature2, "\\" ) )
 		{
 			result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
-			if ( result )
-				CreateDarkIcon = TRUE;
 		}
 	}
 
@@ -571,8 +584,6 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 			if ( replaceAll( filename, DisabledIconSignature, "\\" ) )
 			{
 				result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
-				if ( result )
-					CreateDarkIcon = TRUE;
 			}
 		}
 	}
@@ -585,8 +596,6 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 			if ( replaceAll( filename, CommandButtonsDisabledIconSignature, "PassiveButtons\\" ) )
 			{
 				result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
-				if ( result )
-					CreateDarkIcon = TRUE;
 			}
 		}
 	}
@@ -600,14 +609,12 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 			if ( replaceAll( filename, CommandButtonsDisabledIconSignature, "AutoCastButtons\\" ) )
 			{
 				result = GameGetFile_ptr( filename.c_str( ), OutDataPointer, OutSize, unknown );
-				if ( result )
-					CreateDarkIcon = TRUE;
 			}
 		}
 	}
 
 
-	if ( CreateDarkIcon )
+	if ( result )
 	{
 		ApplyIconFilter( _filename, OutDataPointer, OutSize );
 	}
@@ -795,7 +802,8 @@ BYTE HelperBytesPart2[ ] = { 0xFF,0xFF,0xFF,0xFF,0x00,0x01,0x00,0x00,0x4B,
 							0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 
 BYTE HelperBytesPart3[ ] = { 0xFF,0xFF,0xFF,0xFF,
-							 0xFF,0xFF,0xFF,0xFF };
+							 0xFF,0xFF,0xFF,0xFF
+};
 
 
 void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
@@ -1872,7 +1880,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		return TRUE;
-	}
+}
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -1891,7 +1899,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 				return TRUE;
 			}
 		}
-	}
+			}
 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1942,7 +1950,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 	{
 		if ( filename == DotaRedirectHelp.NewFilePath )
 		{
-			ICONMDLCACHE *tmpih2 = new ICONMDLCACHE( );
+			ICONMDLCACHE tmpih2 = ICONMDLCACHE( );
 
 			IsFileExist = GameGetFile_ptr( DotaRedirectHelp.RealFilePath.c_str( ), OutDataPointer, OutSize, unknown );
 			if ( IsFileExist )
@@ -1956,29 +1964,26 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 
 				memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
 
-				tmpih2->buf = ResultBuffer.buf;
-				tmpih2->size = ResultBuffer.length;
+				tmpih2.buf = ResultBuffer.buf;
+				tmpih2.size = ResultBuffer.length;
 
-				tmpih2->hashlen = DotaRedirectHelp.NewFilePath.length( );
-				tmpih2->_hash = GetBufHash( DotaRedirectHelp.NewFilePath.c_str( ), tmpih2->hashlen );
+				tmpih2.hashlen = DotaRedirectHelp.NewFilePath.length( );
+				tmpih2._hash = GetBufHash( DotaRedirectHelp.NewFilePath.c_str( ), tmpih2.hashlen );
 
-				ICONMDLCACHELIST.push_back( *tmpih2 );
+				ICONMDLCACHELIST.push_back( tmpih2 );
 
-				*OutDataPointer = ( int )tmpih2->buf;
-				*OutSize = tmpih2->size;
+				*OutDataPointer = ( int )tmpih2.buf;
+				*OutSize = tmpih2.size;
 
 				IsFileExist = ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
-				delete tmpih2;
 				return IsFileExist;
 			}
 
-
-			delete tmpih2;
 		}
 	}
 
 	return IsFileExist;
-}
+	}
 
 vector<FakeFileStruct> FakeFileList;
 
@@ -2039,15 +2044,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 	}
 
-	for ( FakeFileStruct & fs : FakeFileList )
-	{
-		if ( _stricmp( filename, fs.filename ) == 0 )
-		{
-			*OutDataPointer = ( int )fs.buffer;
-			*OutSize = fs.size;
-			return TRUE;
-		}
-	}
+
 
 #ifdef DOTA_HELPER_LOG
 	if ( filename && *filename != '\0' )
@@ -2068,19 +2065,30 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 		return IsFileExist;
 	}
 
+	for ( FakeFileStruct & fs : FakeFileList )
+	{
+		if ( _stricmp( filename, fs.filename ) == 0 )
+		{
+			*OutDataPointer = ( int )fs.buffer;
+			*OutSize = fs.size;
+			return TRUE;
+		}
+	}
+
+#ifdef DOTA_HELPER_LOG
 	if ( !IsFileExist )
 	{
-#ifdef DOTA_HELPER_LOG
+
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
+
 	}
 	else
 	{
-#ifdef DOTA_HELPER_LOG
+
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	}
-#ifdef DOTA_HELPER_LOG
+
+		}
+
 	try
 	{
 #endif
@@ -2095,8 +2103,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	{
 		MessageBoxA( 0, "Неизвестная ошибка.", "ProcessFile Перехвачена ошибка! Catch Error!", 0 );
 	}
-#endif
-#ifdef DOTA_HELPER_LOG
+
 	if ( !IsFileExist )
 	{
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2110,7 +2117,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 
 	return IsFileExist;
-}
+	}
 
 
 
@@ -2131,7 +2138,7 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	return TRUE;
-}
+	}
 
 
 

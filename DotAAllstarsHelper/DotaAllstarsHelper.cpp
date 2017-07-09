@@ -139,6 +139,8 @@ pGame_Wc3MessageBox Game_Wc3MessageBox;
 // Question = 2
 int __stdcall Wc3MessageBox( const char * message, int type )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	Game_Wc3MessageBox( type, message, 0, 0, 0, 0, 0 );
 	return TRUE;
 }
@@ -274,7 +276,7 @@ int __fastcall DrawInterface_my( int arg1, int arg2 )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	if ( *InGame && *IsWindowActive )
+	if ( *InGame/* && *IsWindowActive*/ )
 	{
 		DrawOverlayDx8( );
 		DrawOverlayDx9( );
@@ -318,7 +320,7 @@ int __stdcall SetUnitForUnlimiteDraw( int unitaddr )
 int __fastcall Wc3DrawObject_my( int a1, int a2 )
 {
 
-return 0;
+	return 0;
 }
 
 void InitHook( )
@@ -444,7 +446,7 @@ void InitHook( )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	}
+}
 
 void UninitializeHook( )
 {
@@ -547,7 +549,7 @@ void UninitializeHook( )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	IssueFixerDisable( );
-	}
+}
 
 
 typedef int( __stdcall * pStorm_503 )( int a1, int a2, int a3 );
@@ -800,20 +802,17 @@ void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook127a( )
 	}
 }
 
-
-
-float __stdcall GetMagicProtectionForHero( int AmovAddr )
+float __stdcall GetMagicProtectionForHero( int UnitAddr )
 {
-	int addr = *( int* )( AmovAddr + 0x30 );
-
-	if ( addr > 0 )
+	float indmg = 100.0;
+	if ( UnitAddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-		double indmg = 100.0;
+		
 		unsigned int abilscount = 0;
-		int * abils = FindUnitAbils( addr, &abilscount, 0, 'AIdd' );
+		int * abils = FindUnitAbils( UnitAddr, &abilscount, 0, 'AIdd' );
 		for ( unsigned int i = 0; i < abilscount; i++ )
 		{
 			int pData = *( int* )( abils[ i ] + 0x54 );
@@ -824,9 +823,17 @@ float __stdcall GetMagicProtectionForHero( int AmovAddr )
 			}
 		}
 
-		return ( float )( 100.0 - indmg );
 	}
 
+	return ( float )( 100.0 - indmg );
+}
+
+float __stdcall GetMagicProtectionForHero_by_abiladdr( int abil_addr )
+{
+	if ( abil_addr > 0 )
+	{
+		return GetMagicProtectionForHero( *( int* )( abil_addr + 0x30 ) );
+	}
 	return 0.0f;
 }
 
@@ -839,7 +846,7 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-		float MagicProtection = GetMagicProtectionForHero( AmovAddr );
+		float MagicProtection = GetMagicProtectionForHero_by_abiladdr( AmovAddr );
 		bufferaddr = buffer;
 
 		if ( MagicProtection == 0.0f )
@@ -1032,11 +1039,11 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 			}
 			return unitaddr;
 		}
-		}
+	}
 	sprintf_s( unitstr1, 128, "%%u / %%u" );
 	sprintf_s( unitstr2, 128, "%%u / %%u" );
 	return unitaddr;
-	}
+}
 
 
 
@@ -1400,10 +1407,25 @@ int __stdcall AddNewOffset_( int address, int data, unsigned int FeatureFlag = 0
 	waroffsetdata temp;
 	temp.offaddr = address;
 	temp.offdata = data;
+	temp.newdataapp = false;
 	temp.FeatureFlag = FeatureFlag;
 	offsetslist.push_back( temp );
 
 	return 1;
+}
+
+int __stdcall UpdateNewDataOffest( int address )
+{
+	for ( auto & offdata : offsetslist )
+	{
+		if ( offdata.offaddr == address )
+		{
+			offdata.newdataapp = true;
+			offdata.offnewdata = *( int* )address;
+			return 1;
+		}
+	}
+	return 0;
 }
 
 
@@ -1433,6 +1455,24 @@ void __stdcall RestoreFeatureOffsets( unsigned int FeatureFlag )
 			if ( VirtualProtect( ( void* )temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
 			{
 				*( int* )temp.offaddr = temp.offdata;
+				VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
+				FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
+			}
+		}
+	}
+}
+
+void __stdcall EnableFeatureOffsets( unsigned int FeatureFlag )
+{
+	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
+	{
+		if ( FeatureFlag & offsetslist[ i ].FeatureFlag && offsetslist[ i ].newdataapp )
+		{
+			waroffsetdata temp = offsetslist[ i ];
+			DWORD oldprotect, oldprotect2;
+			if ( VirtualProtect( ( void* )temp.offaddr, 4, PAGE_EXECUTE_READWRITE, &oldprotect ) )
+			{
+				*( int* )temp.offaddr = temp.offnewdata;
 				VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
 				FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
 			}
@@ -1482,6 +1522,8 @@ void __stdcall RestoreAllOffsets( )
 
 int __stdcall DisableFeatures( unsigned int Flags )
 {
+	if ( !InitFunctionCalled )
+		return 0;
 	RestoreFeatureOffsets( Flags );
 
 	if ( Flags & Feature_MANABAR )
@@ -1493,10 +1535,6 @@ int __stdcall DisableFeatures( unsigned int Flags )
 		if ( GameGetFile_org )
 		{
 			MH_DisableHook( GameGetFile_org );
-		}
-		if ( Wc3ControlClickButton_org )
-		{
-			MH_DisableHook( Wc3ControlClickButton_org );
 		}
 	}
 	if ( Flags & Feature_Widescreen )
@@ -1536,6 +1574,10 @@ int __stdcall DisableFeatures( unsigned int Flags )
 		{
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		}
+		if ( Wc3ControlClickButton_org )
+		{
+			MH_DisableHook( Wc3ControlClickButton_org );
+		}
 	}
 
 	if ( Flags & Feature_FPSfix1 )
@@ -1543,6 +1585,85 @@ int __stdcall DisableFeatures( unsigned int Flags )
 		if ( DrawBarForUnit_org )
 		{
 			MH_DisableHook( DrawBarForUnit_org );
+		}
+	}
+
+	return 0;
+}
+
+
+int __stdcall InitHpBar( int );
+int __stdcall EnableFeatures( unsigned int Flags )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+
+	EnableFeatureOffsets( Flags );
+
+
+
+	if ( Flags & Feature_HPBAR )
+		InitHpBar( 0 );
+
+	if ( Flags & Feature_MANABAR )
+	{
+		ManaBarSwitch( TRUE );
+	}
+	if ( Flags & Feature_FileHelper )
+	{
+		if ( GameGetFile_org )
+		{
+			MH_EnableHook( GameGetFile_org );
+		}
+	}
+	if ( Flags & Feature_Widescreen )
+	{
+		if ( SetGameAreaFOV_org )
+		{
+			MH_EnableHook( SetGameAreaFOV_org );
+		}
+	}
+	if ( Flags & Feature_MutePlayer )
+	{
+		if ( pOnChatMessage_org )
+		{
+			MH_EnableHook( pOnChatMessage_org );
+		}
+	}
+
+	if ( Flags & Feature_AllySkillViewer )
+	{
+		if ( IsDrawSkillPanel_org )
+		{
+			MH_EnableHook( IsDrawSkillPanel_org );
+		}
+		if ( IsDrawSkillPanelOverlay_org )
+		{
+			MH_EnableHook( IsDrawSkillPanelOverlay_org );
+		}
+		if ( IsNeedDrawUnit2org )
+		{
+			MH_EnableHook( IsNeedDrawUnit2org );
+		}
+	}
+
+	if ( Flags & Feature_ClickHelper )
+	{
+		if ( WarcraftRealWNDProc_org )
+		{
+			MH_EnableHook( WarcraftRealWNDProc_org );
+		}
+		if ( Wc3ControlClickButton_org )
+		{
+			MH_EnableHook( Wc3ControlClickButton_org );
+		}
+	}
+
+	if ( Flags & Feature_FPSfix1 )
+	{
+		if ( DrawBarForUnit_org )
+		{
+			MH_EnableHook( DrawBarForUnit_org );
 		}
 	}
 
@@ -1598,6 +1719,7 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 
 void __stdcall DisableAllHooks( )
 {
+
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -1656,12 +1778,12 @@ void __stdcall DisableAllHooks( )
 	ShowSkillPanelOnlyForHeroes = TRUE;
 	NeedReleaseUnusedMemory = FALSE;
 	PlayerEnemyCache.clear( );
-
+	InitFunctionCalled = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	}
+}
 
 void * hRefreshTimer = 0;
 BOOL RefreshTimerEND = FALSE;
@@ -1711,13 +1833,13 @@ unsigned long __stdcall RefreshTimer( void * )
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-			}
-
-		Sleep( 200 );
 		}
 
-	return 0;
+		Sleep( 200 );
 	}
+
+	return 0;
+}
 
 void PatchOffset( void * addr, void * lpbuffer, unsigned int size )
 {
@@ -1785,6 +1907,49 @@ DWORD GetDllCrc32( )
 	delete pobCrc32Dynamic;
 	return dwCrc32;
 }
+
+
+int __stdcall InitHpBar( int )
+{
+	if ( GameVersion == 0x26a )
+	{
+		int pHPBARHELPER = GameDll + 0x364beb;
+		AddNewOffset_( pHPBARHELPER, *( int* )pHPBARHELPER, Feature_HPBAR );
+		AddNewOffset_( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ), Feature_HPBAR );
+		PlantDetourJMP( ( BYTE* )( pHPBARHELPER ), ( BYTE* )HookHPBarColorHelper126a, 6 );
+		PlantDetourJMP( ( BYTE* )( JumpBackAddr9 ), ( BYTE* )( GameDll + 0x364bf1 ), 5 );
+	}
+	else if ( GameVersion == 0x27a )
+	{
+
+		calladdr1 = GameDll + 0xBFA30;
+		int pHPBARHELPER = GameDll + 0x3bd5b0;
+		AddNewOffset_( pHPBARHELPER, *( int* )pHPBARHELPER, Feature_HPBAR );
+		AddNewOffset_( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ), Feature_HPBAR );
+		AddNewOffset_( pHPBARHELPER + 6, *( int* )( pHPBARHELPER + 6 ), Feature_HPBAR );
+		PlantDetourJMP( ( BYTE* )( pHPBARHELPER ), ( BYTE* )HookHPBarColorHelper127a, 9 );
+		PlantDetourJMP( ( BYTE* )( JumpBackAddr9 ), ( BYTE* )( GameDll + 0x3bd5b9 ), 5 );
+
+	}
+	return 0;
+}
+
+int __stdcall InitOverlay( int )
+{
+	if ( GameVersion == 0x26a )
+	{
+		InitOpenglHook( );
+		Initd3d8Hook( );
+	}
+	else if ( GameVersion == 0x27a )
+	{
+		InitOpenglHook( );
+		Initd3d9Hook( );
+	}
+	return 0;
+}
+BOOL InitFunctionCalled = FALSE;
+
 
 
 
@@ -1944,12 +2109,15 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawAttackSpeed, *( int* )pDrawAttackSpeed, Feature_AttackSpeed );
 		AddNewOffset_( pDrawAttackSpeed + 3, *( int* )( pDrawAttackSpeed + 3 ), Feature_AttackSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawAttackSpeed ), ( BYTE* )PrintAttackSpeedAndOtherInfoHook126a, 5 );
-
+		UpdateNewDataOffest( pDrawAttackSpeed );
+		UpdateNewDataOffest( pDrawAttackSpeed + 3 );
 
 		int pDrawMoveSpeed = GameDll + 0x338FB0;
 		AddNewOffset_( pDrawMoveSpeed, *( int* )pDrawMoveSpeed, Feature_MoveSpeed );
 		AddNewOffset_( pDrawMoveSpeed + 3, *( int* )( pDrawMoveSpeed + 3 ), Feature_MoveSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawMoveSpeed ), ( BYTE* )PrintMoveSpeedHook126a, 5 );
+		UpdateNewDataOffest( pDrawMoveSpeed );
+		UpdateNewDataOffest( pDrawMoveSpeed + 3 );
 
 
 		int pDrawItemText1 = GameDll + 0x369e72;
@@ -1957,6 +2125,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawItemText1 + 3, *( int* )( pDrawItemText1 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText1 ), ( BYTE* )HookPrint1_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr2 ), ( BYTE* )( GameDll + 0x369e83 ), 5 );
+		UpdateNewDataOffest( pDrawItemText1 );
+		UpdateNewDataOffest( pDrawItemText1 + 3 );
 
 
 		int pDrawItemText2 = GameDll + 0x369ee6;
@@ -1964,6 +2134,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawItemText2 + 3, *( int* )( pDrawItemText2 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText2 ), ( BYTE* )HookPrint2_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr3 ), ( BYTE* )( GameDll + 0x369ef7 ), 5 );
+		UpdateNewDataOffest( pDrawItemText2 );
+		UpdateNewDataOffest( pDrawItemText2 + 3 );
 
 
 		int pSaveLatestItem = GameDll + 0x369b3d;
@@ -1971,6 +2143,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pSaveLatestItem + 3, *( int* )( pSaveLatestItem + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestItem ), ( BYTE* )HookItemAddr126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr1 ), ( BYTE* )( GameDll + 0x369b45 ), 5 );
+		UpdateNewDataOffest( pSaveLatestItem );
+		UpdateNewDataOffest( pSaveLatestItem + 3 );
 
 
 		int pSaveLatestUnit = GameDll + 0x3580ad;
@@ -1978,6 +2152,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pSaveLatestUnit + 3, *( int* )( pSaveLatestUnit + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestUnit ), ( BYTE* )HookUnitAddr126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr4 ), ( BYTE* )( GameDll + 0x3580b2 ), 5 );
+		UpdateNewDataOffest( pSaveLatestUnit );
+		UpdateNewDataOffest( pSaveLatestUnit + 3 );
 
 
 		int pDrawUnitText1 = GameDll + 0x358198;
@@ -1985,6 +2161,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawUnitText1 + 3, *( int* )( pDrawUnitText1 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText1 ), ( BYTE* )HookPrint3_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr5 ), ( BYTE* )( GameDll + 0x3581a6 ), 5 );
+		UpdateNewDataOffest( pDrawUnitText1 );
+		UpdateNewDataOffest( pDrawUnitText1 + 3 );
 
 
 		int pDrawUnitText2 = GameDll + 0x3583c2;
@@ -1992,6 +2170,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawUnitText2 + 3, *( int* )( pDrawUnitText2 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText2 ), ( BYTE* )HookPrint4_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr6 ), ( BYTE* )( GameDll + 0x3583d0 ), 5 );
+		UpdateNewDataOffest( pDrawUnitText2 );
+		UpdateNewDataOffest( pDrawUnitText2 + 3 );
 
 
 		int pAlwaysRefresh1 = GameDll + 0x35818c;
@@ -2002,6 +2182,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pAlwaysRefresh2, *( int* )pAlwaysRefresh2, Feature_UnitHP_MP );
 		PatchOffset( ( void* )pAlwaysRefresh1, &JMPBYTE, 1 );
 		PatchOffset( ( void* )pAlwaysRefresh2, &JMPBYTE, 1 );
+		UpdateNewDataOffest( pAlwaysRefresh1 );
+		UpdateNewDataOffest( pAlwaysRefresh2 );
 
 
 		int pSetCooldown = GameDll + 0x37ed3;
@@ -2009,12 +2191,11 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pSetCooldown + 3, *( int* )( pSetCooldown + 3 ), Feature_COOLDOWNFIX );
 		PlantDetourJMP( ( BYTE* )( pSetCooldown ), ( BYTE* )HookSetCD_1000s_126a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr7 ), ( BYTE* )( GameDll + 0x37edf ), 5 );
+		UpdateNewDataOffest( pSetCooldown );
+		UpdateNewDataOffest( pSetCooldown + 3 );
 
-		int pHPBARHELPER = GameDll + 0x364beb;
-		AddNewOffset_( pHPBARHELPER, *( int* )pHPBARHELPER, Feature_HPBAR );
-		AddNewOffset_( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ), Feature_HPBAR );
-		PlantDetourJMP( ( BYTE* )( pHPBARHELPER ), ( BYTE* )HookHPBarColorHelper126a, 6 );
-		PlantDetourJMP( ( BYTE* )( JumpBackAddr9 ), ( BYTE* )( GameDll + 0x364bf1 ), 5 );
+
+		InitHpBar( 0 );
 
 		SimpleButtonClickEvent = ( c_SimpleButtonClickEvent )( GameDll + 0x603440 );
 
@@ -2060,13 +2241,17 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		PatchOffsetValue4( ( void* )PatchMemMB2, 0x90521CC4 );
 		PatchOffsetValue4( ( void* )PatchFPSDraw, ( UINT )( void* )( MyFpsString ) );
 
+		UpdateNewDataOffest( PatchMemMB1 );
+		UpdateNewDataOffest( PatchMemMB2 );
+		UpdateNewDataOffest( PatchFPSDraw );
+
 
 		GameChatSetState = ( pGameChatSetState )( GameDll + 0x341460 );
 
 		_SetMaxFps = ( p_SetMaxFps )( GameDll + 0x383640 );
 		_SetMaxFps( 200 );
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x5C8510 );
-		ManaBarSwitch( TRUE );
+		//ManaBarSwitch( TRUE );
 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2112,37 +2297,37 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		InitHook( );
-		InitOpenglHook( );
-		Initd3d8Hook( );
 
 
-		for ( int i = 0; i < 16; i++ )
-		{
-			playercache[ i ] = _Player( i );
-		}
+			for ( int i = 0; i < 16; i++ )
+			{
+				playercache[ i ] = _Player( i );
+			}
 
 
-		for ( int i = 0; i < 16; i++ )
-		{
-			player_real_cache[ i ] = _GetPlayerByNumber( i );
-		}
+			for ( int i = 0; i < 16; i++ )
+			{
+				player_real_cache[ i ] = _GetPlayerByNumber( i );
+			}
 
 
-		for ( int i = 0; i < 16; i++ )
-		{
-			player_observers[ i ] = _IsPlayerObserver( i );
-		}
+			for ( int i = 0; i < 16; i++ )
+			{
+				player_observers[ i ] = _IsPlayerObserver( i );
+			}
 
 
 
-		player_local_id = _GetLocalPlayerId( );
+
+			player_local_id = _GetLocalPlayerId( );
 
 
-		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+
+		InitFunctionCalled = TRUE;
 		return crc32;
 	}
 	else if ( gameversion == 0x27a )
@@ -2220,8 +2405,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		Storm_401_org = ( Storm_401 )( int )GetProcAddress( StormDllModule, ( LPCSTR )401 );
 		Storm_403_org = ( Storm_403 )( int )GetProcAddress( StormDllModule, ( LPCSTR )403 );
-		/*Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
-*/
+		//Storm_279_org = ( Storm_279 )( int )GetProcAddress( StormDllModule, ( LPCSTR )279 );
+
 		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
 
@@ -2238,12 +2423,17 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawAttackSpeed + 3, *( int* )( pDrawAttackSpeed + 3 ), Feature_AttackSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawAttackSpeed ), ( BYTE* )PrintAttackSpeedAndOtherInfoHook127a, 5 );
 
+		UpdateNewDataOffest( pDrawAttackSpeed );
+		UpdateNewDataOffest( pDrawAttackSpeed + 3 );
+
 
 
 		int pDrawMoveSpeed = GameDll + 0x38D440;
 		AddNewOffset_( pDrawMoveSpeed, *( int* )pDrawMoveSpeed, Feature_MoveSpeed );
 		AddNewOffset_( pDrawMoveSpeed + 3, *( int* )( pDrawMoveSpeed + 3 ), Feature_MoveSpeed );
 		PlantDetourJMP( ( BYTE* )( pDrawMoveSpeed ), ( BYTE* )PrintMoveSpeedHook127a, 5 );
+		UpdateNewDataOffest( pDrawMoveSpeed );
+		UpdateNewDataOffest( pDrawMoveSpeed + 3 );
 
 
 		int pDrawItemText1 = GameDll + 0x3ab720;
@@ -2251,6 +2441,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawItemText1 + 3, *( int* )( pDrawItemText1 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText1 ), ( BYTE* )HookPrint1_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr2 ), ( BYTE* )( GameDll + 0x3ab730 ), 5 );
+		UpdateNewDataOffest( pDrawItemText1 );
+		UpdateNewDataOffest( pDrawItemText1 + 3 );
 
 
 		int pDrawItemText2 = GameDll + 0x3ab791;
@@ -2258,6 +2450,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawItemText2 + 3, *( int* )( pDrawItemText2 + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pDrawItemText2 ), ( BYTE* )HookPrint2_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr3 ), ( BYTE* )( GameDll + 0x3ab7a1 ), 5 );
+		UpdateNewDataOffest( pDrawItemText2 );
+		UpdateNewDataOffest( pDrawItemText2 + 3 );
 
 
 		int pSaveLatestItem = GameDll + 0x3ab39e;
@@ -2265,6 +2459,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pSaveLatestItem + 3, *( int* )( pSaveLatestItem + 3 ), Feature_ItemText );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestItem ), ( BYTE* )HookItemAddr127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr1 ), ( BYTE* )( GameDll + 0x3ab3a6 ), 5 );
+		UpdateNewDataOffest( pSaveLatestItem );
+		UpdateNewDataOffest( pSaveLatestItem + 3 );
+
 
 
 		int pSaveLatestUnit = GameDll + 0x3bb8fd;
@@ -2272,6 +2469,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pSaveLatestUnit + 3, *( int* )( pSaveLatestUnit + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pSaveLatestUnit ), ( BYTE* )HookUnitAddr127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr4 ), ( BYTE* )( GameDll + 0x3bb905 ), 5 );
+		UpdateNewDataOffest( pSaveLatestUnit );
+		UpdateNewDataOffest( pSaveLatestUnit + 3 );
+
 
 
 		int pDrawUnitText1 = GameDll + 0x3bbd5e;
@@ -2279,6 +2479,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawUnitText1 + 3, *( int* )( pDrawUnitText1 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText1 ), ( BYTE* )HookPrint3_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr5 ), ( BYTE* )( GameDll + 0x3bbd68 ), 5 );
+		UpdateNewDataOffest( pDrawUnitText1 );
+		UpdateNewDataOffest( pDrawUnitText1 + 3 );
 
 
 		int pDrawUnitText2 = GameDll + 0x3bbf4a;
@@ -2286,6 +2488,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pDrawUnitText2 + 3, *( int* )( pDrawUnitText2 + 3 ), Feature_UnitHP_MP );
 		PlantDetourJMP( ( BYTE* )( pDrawUnitText2 ), ( BYTE* )HookPrint4_127a, 5 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr6 ), ( BYTE* )( GameDll + 0x3bbf54 ), 5 );
+		UpdateNewDataOffest( pDrawUnitText2 );
+		UpdateNewDataOffest( pDrawUnitText2 + 3 );
 
 
 		int pAlwaysRefresh1 = GameDll + 0x3bbd52;
@@ -2296,6 +2500,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( pAlwaysRefresh2, *( int* )pAlwaysRefresh2, Feature_UnitHP_MP );
 		PatchOffset( ( void* )pAlwaysRefresh1, &JMPBYTE, 1 );
 		PatchOffset( ( void* )pAlwaysRefresh2, &JMPBYTE, 1 );
+		UpdateNewDataOffest( pAlwaysRefresh1 );
+		UpdateNewDataOffest( pAlwaysRefresh2 );
 
 
 		int pSetCooldown = GameDll + 0x3F717F;
@@ -2304,14 +2510,12 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		PlantDetourJMP( ( BYTE* )( pSetCooldown ), ( BYTE* )HookSetCD_1000s_127a, 6 );
 		PlantDetourJMP( ( BYTE* )( JumpBackAddr7 ), ( BYTE* )( GameDll + 0x3F7185 ), 5 );
 
+		UpdateNewDataOffest( pSetCooldown );
+		UpdateNewDataOffest( pSetCooldown + 3 );
 
-		calladdr1 = GameDll + 0xBFA30;
-		int pHPBARHELPER = GameDll + 0x3bd5b0;
-		AddNewOffset_( pHPBARHELPER, *( int* )pHPBARHELPER, Feature_HPBAR );
-		AddNewOffset_( pHPBARHELPER + 3, *( int* )( pHPBARHELPER + 3 ), Feature_HPBAR );
-		AddNewOffset_( pHPBARHELPER + 6, *( int* )( pHPBARHELPER + 6 ), Feature_HPBAR );
-		PlantDetourJMP( ( BYTE* )( pHPBARHELPER ), ( BYTE* )HookHPBarColorHelper127a, 9 );
-		PlantDetourJMP( ( BYTE* )( JumpBackAddr9 ), ( BYTE* )( GameDll + 0x3bd5b9 ), 5 );
+
+
+		InitHpBar( 0 );
 
 
 		SimpleButtonClickEvent = ( c_SimpleButtonClickEvent )( GameDll + 0x0BB560 );
@@ -2354,6 +2558,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewOffset_( PatchMemMB2, *( int* )PatchMemMB2, Feature_CUSTOM_FPS_INFO );
 		AddNewOffset_( PatchFPSDraw, *( int* )PatchFPSDraw, Feature_CUSTOM_FPS_INFO );
 
+		UpdateNewDataOffest( PatchMemMB1 );
+		UpdateNewDataOffest( PatchMemMB2 );
+		UpdateNewDataOffest( PatchFPSDraw );
 
 		PatchOffsetValue4( ( void* )PatchMemMB1, 0x8324148B );
 		PatchOffsetValue4( ( void* )PatchMemMB2, 0x90521CC4 );
@@ -2367,7 +2574,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		LoadFrameDefList = ( pLoadFrameDefList )( GameDll + 0x090B70 );
 
-		ManaBarSwitch( TRUE );
+		//ManaBarSwitch( TRUE );
 
 		DefaultCStatus = GameDll + 0xB662CC;
 		LoadFramesVar1 = GameDll + 0xBB9CAC;
@@ -2407,37 +2614,36 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		InitHook( );
-		InitOpenglHook( );
-		Initd3d9Hook( );
+
+	
+
+			for ( int i = 0; i < 16; i++ )
+			{
+				playercache[ i ] = _Player( i );
+			}
 
 
-		for ( int i = 0; i < 16; i++ )
-		{
-			playercache[ i ] = _Player( i );
-		}
+			for ( int i = 0; i < 16; i++ )
+			{
+				player_real_cache[ i ] = _GetPlayerByNumber( i );
+			}
 
 
-		for ( int i = 0; i < 16; i++ )
-		{
-			player_real_cache[ i ] = _GetPlayerByNumber( i );
-		}
-
-
-		for ( int i = 0; i < 16; i++ )
-		{
-			player_observers[ i ] = _IsPlayerObserver( i );
-		}
+			for ( int i = 0; i < 16; i++ )
+			{
+				player_observers[ i ] = _IsPlayerObserver( i );
+			}
 
 
 
-		player_local_id = _GetLocalPlayerId( );
+			player_local_id = _GetLocalPlayerId( );
+		
 
-
-		/* crc32 simple protection */
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+		InitFunctionCalled = TRUE;
 		return crc32;
 	}
 
@@ -2447,7 +2653,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 #endif
 
 	return 0;
-	}
+}
 
 int __stdcall UpdatePlayerCache( int )
 {
@@ -2597,10 +2803,10 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		Warcraft3_Process = GetCurrentProcess( );
 		// NEXT 3 LINES ONLY FOR TEST !!!
 		 //TestModeActivated = TRUE;
-		 //InitDotaHelper( 0x26a );
-		 //DisableFeatures( 0xEFFF );
-			//MainFuncWork = TRUE;
-
+		 //InitDotaHelper( 0x27a );
+		 ////DisableFeatures( 0xEFFF );
+		 //MainFuncWork = TRUE;
+		// EnableErrorHandler( 0);
 	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
@@ -2636,16 +2842,20 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		ClearCustomsBars( );
 
 		FreeAllVectors( );
-		FreeAllIHelpers( );
 
-
-		RestoreAllOffsets( );
 
 		Uninitd3d9Hook( FALSE );
 
 		Uninitd3d8Hook( FALSE );
 
-		DrawOverlayGl( );
+		UninitOpenglHook( );
+
+		FreeAllIHelpers( );
+
+
+
+		RestoreAllOffsets( );
+
 
 		UninitializeHook( );
 
@@ -2673,9 +2883,9 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 
 		MH_Uninitialize( );
-		}
-	return TRUE;
 	}
+	return TRUE;
+}
 #pragma endregion
 
 

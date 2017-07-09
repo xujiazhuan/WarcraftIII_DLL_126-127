@@ -205,7 +205,7 @@ BOOL IsPlayerObserver( int pid )
 	BOOL retval = FALSE;
 	if ( pid >= 0 && pid <= 15 )
 	{
-		player_observers[ pid ];
+		return player_observers[ pid ];
 	}
 
 	return retval;

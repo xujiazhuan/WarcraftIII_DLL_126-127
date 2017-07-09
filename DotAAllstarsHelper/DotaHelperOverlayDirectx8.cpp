@@ -227,6 +227,85 @@ void DrawOverlayDx8( )
 		}
 		else
 		{*/
+		/*
+		
+		Time1 = за сколько времени нужно 
+		
+		
+		*/
+
+		if ( img.MoveTime1 )
+		{
+			float lenx = abs( img.overlay_x - img.overlay_x2 );
+			float leny = abs( img.overlay_y - img.overlay_y2 );
+
+			if ( lenx > 0.004 )
+			{
+				if ( img.overlay_x > img.overlay_x2 )
+					img.overlay_x -= 0.002;
+				else if ( img.overlay_x < img.overlay_x2 )
+					img.overlay_x += 0.002;
+			}
+
+			if ( leny > 0.004 )
+			{
+				if ( img.overlay_y > img.overlay_y2 )
+					img.overlay_y -= 0.002;
+				else if ( img.overlay_y < img.overlay_y2 )
+					img.overlay_y += 0.002;
+			}
+
+			DWORD newTickImg = GetTickCount( ) - img.StartTimer;
+			if ( newTickImg > img.MoveTime1 )
+				img.MoveTime1 = 0;
+			else
+				img.MoveTime1 -= newTickImg;
+
+			img.StartTimer = GetTickCount( );
+		}
+		else if ( img.SleepTime )
+		{
+			DWORD newTickImg = GetTickCount( ) - img.StartTimer;
+			if ( newTickImg > img.SleepTime )
+				img.SleepTime = 0;
+			else
+				img.SleepTime -= newTickImg;
+
+			img.StartTimer = GetTickCount( );
+		}
+		else if ( img.MoveTime2 )
+		{
+
+			float lenx = abs( img.overlay_x - img.overlay_x0 );
+			float leny = abs( img.overlay_y - img.overlay_y0 );
+
+			if ( lenx > 0.004 )
+			{
+				if ( img.overlay_x > img.overlay_x0 )
+					img.overlay_x -= 0.002;
+				else if ( img.overlay_x < img.overlay_x0 )
+					img.overlay_x += 0.002;
+			}
+
+			if ( leny > 0.004 )
+			{
+				if ( img.overlay_y > img.overlay_y0 )
+					img.overlay_y -= 0.002;
+				else if ( img.overlay_y < img.overlay_y0 )
+					img.overlay_y += 0.002;
+			}
+
+
+
+			DWORD newTickImg = GetTickCount( ) - img.StartTimer;
+			if ( newTickImg > img.MoveTime2 )
+				img.MoveTime2 = 0;
+			else
+				img.MoveTime2 -= newTickImg;
+
+			img.StartTimer = GetTickCount( );
+		}
+
 		DrawImage( pSprite, ppTexture, ( float )img.width, ( float )img.height, *GetWindowXoffset * img.overlay_x, *GetWindowYoffset * img.overlay_y );
 		//}
 	}
@@ -259,17 +338,22 @@ HRESULT __fastcall EndScene_my( int GlobalWc3Data )
 
 void Uninitd3d8Hook( BOOL cleartextures )
 {
-	MH_DisableHook( EndScene_org );
-	if ( cleartextures )
+	if ( EndScene_org )
 	{
-		for ( auto & img : ListOfRawImages )
+		MH_DisableHook( EndScene_org );
+		if ( cleartextures )
 		{
-			if ( img.textureaddr )
+			for ( auto & img : ListOfRawImages )
 			{
-				IDirect3DTexture8 * ppTexture = ( IDirect3DTexture8 * )img.textureaddr;
-				ppTexture->Release( );
-				ppTexture = NULL;
-				img.textureaddr = NULL;
+				if ( img.textureaddr )
+				{
+					IDirect3DTexture8 * ppTexture = ( IDirect3DTexture8 * )img.textureaddr;
+					ppTexture->Release( );
+					ppTexture = NULL;
+					img.textureaddr = NULL;
+					img.ingame = FALSE;
+					img.used_for_overlay = FALSE;
+				}
 			}
 		}
 	}

@@ -56,6 +56,81 @@ void DrawAllRawImages( )
 
 		Buffer tmpBuf = Buffer( );
 		tmpBuf.Clone( img.img );
+
+
+		if ( img.MoveTime1 )
+		{
+			float lenx = abs( img.overlay_x - img.overlay_x2 );
+			float leny = abs( img.overlay_y - img.overlay_y2 );
+
+			if ( lenx > 0.004 )
+			{
+				if ( img.overlay_x > img.overlay_x2 )
+					img.overlay_x -= 0.002;
+				else if ( img.overlay_x < img.overlay_x2 )
+					img.overlay_x += 0.002;
+			}
+
+			if ( leny > 0.004 )
+			{
+				if ( img.overlay_y > img.overlay_y2 )
+					img.overlay_y -= 0.002;
+				else if ( img.overlay_y < img.overlay_y2 )
+					img.overlay_y += 0.002;
+			}
+
+			DWORD newTickImg = GetTickCount( ) - img.StartTimer;
+			if ( newTickImg > img.MoveTime1 )
+				img.MoveTime1 = 0;
+			else
+				img.MoveTime1 -= newTickImg;
+
+			img.StartTimer = GetTickCount( );
+		}
+		else if ( img.SleepTime )
+		{
+			DWORD newTickImg = GetTickCount( ) - img.StartTimer;
+			if ( newTickImg > img.SleepTime )
+				img.SleepTime = 0;
+			else
+				img.SleepTime -= newTickImg;
+
+			img.StartTimer = GetTickCount( );
+		}
+		else if ( img.MoveTime2 )
+		{
+
+			float lenx = abs( img.overlay_x - img.overlay_x0 );
+			float leny = abs( img.overlay_y - img.overlay_y0 );
+
+			if ( lenx > 0.004 )
+			{
+				if ( img.overlay_x > img.overlay_x0 )
+					img.overlay_x -= 0.002;
+				else if ( img.overlay_x < img.overlay_x0 )
+					img.overlay_x += 0.002;
+			}
+
+			if ( leny > 0.004 )
+			{
+				if ( img.overlay_y > img.overlay_y0 )
+					img.overlay_y -= 0.002;
+				else if ( img.overlay_y < img.overlay_y0 )
+					img.overlay_y += 0.002;
+			}
+
+
+
+			DWORD newTickImg = GetTickCount( ) - img.StartTimer;
+			if ( newTickImg > img.MoveTime2 )
+				img.MoveTime2 = 0;
+			else
+				img.MoveTime2 -= newTickImg;
+
+			img.StartTimer = GetTickCount( );
+		}
+
+
 		glRasterPos3f( ScreenX *img.overlay_x, ScreenY *img.overlay_y, 0.0f );
 		flip_vertically( reinterpret_cast< BYTE* >( &tmpBuf[ 0 ] ), img.width, img.height, 4 );
 		glDrawPixels( img.width, img.height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, tmpBuf.buf );

@@ -276,6 +276,7 @@ void __stdcall  AddNewLineToBlizzard1Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard1Log.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard1Log[ MAX_LOG_LEN ] = s;
@@ -291,6 +292,7 @@ void __stdcall  AddNewLineToBlizzard2Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard2Log.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard2Log[ MAX_LOG_LEN ] = s;
@@ -306,6 +308,7 @@ void  __stdcall AddNewLineToBlizzard3Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard3Log.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard3Log[ MAX_LOG_LEN ] = s;
@@ -321,6 +324,7 @@ void __stdcall  AddNewLineToBlizzard4Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard4Log.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard4Log[ MAX_LOG_LEN ] = s;
@@ -335,6 +339,7 @@ void  __stdcall AddNewLineToBlizzard4Log_2( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard4Log_2.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard4Log_2[ MAX_LOG_LEN ] = s;
@@ -351,6 +356,7 @@ void  __stdcall AddNewLineToBlizzard5Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard5Log.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard5Log[ MAX_LOG_LEN ] = s;
@@ -366,6 +372,7 @@ void __stdcall AddNewLineToBlizzard6Log( const char * s )
 {
 	if ( s && s[ 0 ] != '\0' )
 	{
+		ExternalLog( s, LogType::DotaChatLog );
 		if ( Blizzard6Log.size( ) > MAX_LOG_LEN )
 		{
 			Blizzard6Log[ MAX_LOG_LEN ] = s;
@@ -453,17 +460,21 @@ signed int __fastcall LookupJassFunc_my( int global, int unused, const char * fu
 
 	if ( retval == 0 )
 	{
-		if ( funcnamefound )
-			MessageBoxA( 0, "LookupJassFunc want to return 0", funcname, MB_OK );
-		else
-			MessageBoxA( 0, "LookupJassFunc want to return 0", "NULL FUNC", MB_OK );
-
-		AddNewLineToJassNativesLog( "LookupJassFunc want to return 0!" );
-		AddNewLineToJassNativesLog( ( funcname && *funcname != '\0' ) ? funcname : "NULL FUNC" );
-
+		if ( *InGame )
+		{
+			if ( funcnamefound )
+				MessageBoxA( 0, "LookupJassFunc want to return 0", funcname, MB_OK );
+			else
+				MessageBoxA( 0, "LookupJassFunc want to return 0", "NULL FUNC", MB_OK );
 
 
-		DumpExceptionInfoToFile( 0 );
+			AddNewLineToJassNativesLog( "LookupJassFunc want to return 0!" );
+			AddNewLineToJassNativesLog( ( funcname && *funcname != '\0' ) ? funcname : "NULL FUNC" );
+
+
+
+			DumpExceptionInfoToFile( 0 );
+		}
 	}
 
 	return retval;
