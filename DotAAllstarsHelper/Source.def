@@ -103,3 +103,9 @@ FileHelperReleaseStorm
 UpdatePlayerCache
 DumpFilesToDisk
 get_os_string
+InitManaBar
+InitHpBar
+EnableFeatures
+InitOverlay
+RawImage_MoveTimed
+GetMagicProtectionForHero

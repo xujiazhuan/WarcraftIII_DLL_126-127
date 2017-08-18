@@ -810,7 +810,7 @@ float __stdcall GetMagicProtectionForHero( int UnitAddr )
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-		
+
 		unsigned int abilscount = 0;
 		int * abils = FindUnitAbils( UnitAddr, &abilscount, 0, 'AIdd' );
 		for ( unsigned int i = 0; i < abilscount; i++ )
@@ -1334,9 +1334,31 @@ void __declspec( naked ) HookPrint4_127a( )
 
 void __stdcall SetCdForAddr( int cd_addr )
 {
-	if ( cd_addr )
-		if ( *( float* )( cd_addr + 4 ) != 1000.0f )
-			*( float* )( cd_addr + 4 ) = 100.0f;
+	if ( cd_addr > 0xb0 /*eax */ )
+	{
+		int abiladdr = cd_addr - 0xb0;
+		int pData = *( int* )( abiladdr + 0xDC );
+		if ( pData > 0 )
+		{
+			float val1 = *( float* )( pData + 0x4 );
+			int pData2 = *( int* )( pData + 0xC );
+			if ( pData2 > 0 )
+			{
+				float val2 = *( float* )( pData + 0x40 );
+				float val3 = val1 - val2;
+				if ( val3 > 100 )
+					*( float* )( cd_addr + 4 ) = 1000.0f;
+				else if ( val3 < 100 )
+					*( float* )( cd_addr + 4 ) = 100.0f;
+				return;
+			}
+
+		}
+
+	}
+
+	if ( *( float* )( cd_addr + 4 ) != 1000.0f )
+		*( float* )( cd_addr + 4 ) = 100.0f;
 }
 
 void __declspec( naked ) HookSetCD_1000s_126a( )
@@ -1476,8 +1498,8 @@ void __stdcall EnableFeatureOffsets( unsigned int FeatureFlag )
 				VirtualProtect( ( void* )temp.offaddr, 4, oldprotect, &oldprotect2 );
 				FlushInstructionCache( GetCurrentProcess( ), ( void* )temp.offaddr, 4 );
 			}
-		}
 	}
+}
 }
 
 void __stdcall RestoreAllOffsets( )
@@ -1664,8 +1686,8 @@ int __stdcall EnableFeatures( unsigned int Flags )
 		if ( DrawBarForUnit_org )
 		{
 			MH_EnableHook( DrawBarForUnit_org );
-		}
 	}
+}
 
 	return 0;
 }
@@ -1947,7 +1969,7 @@ int __stdcall InitOverlay( int )
 		Initd3d9Hook( );
 	}
 	return 0;
-}
+	}
 BOOL InitFunctionCalled = FALSE;
 
 
@@ -2299,27 +2321,27 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		InitHook( );
 
 
-			for ( int i = 0; i < 16; i++ )
-			{
-				playercache[ i ] = _Player( i );
-			}
+		for ( int i = 0; i < 16; i++ )
+		{
+			playercache[ i ] = _Player( i );
+		}
 
 
-			for ( int i = 0; i < 16; i++ )
-			{
-				player_real_cache[ i ] = _GetPlayerByNumber( i );
-			}
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_real_cache[ i ] = _GetPlayerByNumber( i );
+		}
 
 
-			for ( int i = 0; i < 16; i++ )
-			{
-				player_observers[ i ] = _IsPlayerObserver( i );
-			}
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_observers[ i ] = _IsPlayerObserver( i );
+		}
 
 
 
 
-			player_local_id = _GetLocalPlayerId( );
+		player_local_id = _GetLocalPlayerId( );
 
 
 		DWORD crc32 = GetDllCrc32( );
@@ -2329,7 +2351,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		InitFunctionCalled = TRUE;
 		return crc32;
-	}
+		}
 	else if ( gameversion == 0x27a )
 	{
 #ifdef DOTA_HELPER_LOG
@@ -2615,29 +2637,29 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 #endif
 		InitHook( );
 
-	
-
-			for ( int i = 0; i < 16; i++ )
-			{
-				playercache[ i ] = _Player( i );
-			}
 
 
-			for ( int i = 0; i < 16; i++ )
-			{
-				player_real_cache[ i ] = _GetPlayerByNumber( i );
-			}
+		for ( int i = 0; i < 16; i++ )
+		{
+			playercache[ i ] = _Player( i );
+		}
 
 
-			for ( int i = 0; i < 16; i++ )
-			{
-				player_observers[ i ] = _IsPlayerObserver( i );
-			}
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_real_cache[ i ] = _GetPlayerByNumber( i );
+	}
+
+
+		for ( int i = 0; i < 16; i++ )
+		{
+			player_observers[ i ] = _IsPlayerObserver( i );
+		}
 
 
 
-			player_local_id = _GetLocalPlayerId( );
-		
+		player_local_id = _GetLocalPlayerId( );
+
 
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
@@ -2645,7 +2667,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 #endif
 		InitFunctionCalled = TRUE;
 		return crc32;
-	}
+		}
 
 
 #ifdef DOTA_HELPER_LOG
@@ -2653,7 +2675,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 #endif
 
 	return 0;
-}
+	}
 
 int __stdcall UpdatePlayerCache( int )
 {
