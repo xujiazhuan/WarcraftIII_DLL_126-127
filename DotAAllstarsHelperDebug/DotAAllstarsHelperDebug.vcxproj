@@ -82,7 +82,7 @@
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>version.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>NotSet</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LinkStatus>
@@ -113,6 +113,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaErrorHandler.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFilesHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFOVfix.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaFrameDefHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx8.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx9.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayOpengl.cpp" />
@@ -126,10 +127,11 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaWebHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp" />
-    <ClCompile Include="..\DotAAllstarsHelper\Jpeg.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\SendGamePacket.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\Storm.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DotAAllstarsHelper\blpaletter.h" />
@@ -137,13 +139,16 @@
     <ClInclude Include="..\DotAAllstarsHelper\Common.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Crc32Dynamic.h" />
     <ClInclude Include="..\DotAAllstarsHelper\fnv.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\fp_call.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\FunctionTemplate.h" />
     <ClInclude Include="..\DotAAllstarsHelper\HttpClass.h" />
-    <ClInclude Include="..\DotAAllstarsHelper\Jpeg.h" />
     <ClInclude Include="..\DotAAllstarsHelper\longlong.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
     <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\Storm.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Structures.h" />
     <ClInclude Include="..\DotAAllstarsHelper\ViewAllySkill.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\WarcraftFrameHelper.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

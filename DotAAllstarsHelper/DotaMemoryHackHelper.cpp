@@ -1,4 +1,5 @@
 #include "Main.h"
+#include "Storm.h"
 
 
 GetTownUnitCount_p GetTownUnitCount_org;
@@ -79,8 +80,6 @@ HMODULE GetModuleFromAddress( int addr )
 	return hModule;
 }
 
-Ordinal590_p Ordinal590_org;
-
 
 int __stdcall ScanJassStringForErrors( BOOL dump )
 {
@@ -139,7 +138,7 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 
 					while ( ( int )curstr->vtable == strrepvtable && ( int )curstr->next > 0 )
 					{
-						uint32_t strhash = Ordinal590_org( ( unsigned char * )curstr->text );
+						uint32_t strhash = Storm::StringGetHash( curstr->text );
 						if ( strhash != curstr->hash )
 						{
 							if ( dump && f )
@@ -161,7 +160,7 @@ int __stdcall ScanJassStringForErrors( BOOL dump )
 					while ( ( int )curstr > 0 )
 					{
 
-						uint32_t strhash = Ordinal590_org( ( unsigned char * )curstr->text );
+						uint32_t strhash = Storm::StringGetHash( curstr->text );
 						if ( strhash != curstr->hash )
 						{
 							if ( dump && f )

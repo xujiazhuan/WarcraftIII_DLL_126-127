@@ -75,9 +75,6 @@
     <ClCompile Include="DotaCustomFrames.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="Jpeg.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="DotaHelperOverlayDirectx8.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -94,6 +91,15 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaSyncScanner.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Storm.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaFrameDefHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="WarcraftFrameHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -136,10 +142,19 @@
     <ClInclude Include="HttpClass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Jpeg.h">
+    <ClInclude Include="Structures.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Structures.h">
+    <ClInclude Include="Storm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FunctionTemplate.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="fp_call.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WarcraftFrameHelper.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

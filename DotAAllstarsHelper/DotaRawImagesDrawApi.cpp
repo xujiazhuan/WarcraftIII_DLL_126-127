@@ -24,7 +24,7 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 	height = height + ( height % 2 );
 
 	RawImageStruct tmpRawImage = RawImageStruct( );
-	Buffer tmpRawImageBuffer = Buffer( );
+	StormBuffer tmpRawImageBuffer = StormBuffer( );
 	tmpRawImageBuffer.Resize( width * height * 4 );
 
 	for ( int i = 0; i < width * height; i++ )
@@ -94,8 +94,8 @@ int __stdcall LoadRawImage( const char * filename )
 		int w = 0, h = 0, bpp = 0, mipmaps = 0, alphaflag = 8, compress = 1, alphaenconding = 5;
 		unsigned long rawImageSize = 0;
 
-		Buffer OutBuffer = Buffer( );
-		Buffer InBuffer( ( char * )PatchFileData, PatchFileSize );
+		StormBuffer OutBuffer = StormBuffer( );
+		StormBuffer InBuffer( ( char * )PatchFileData, PatchFileSize );
 
 		if ( !IsBlp )
 			rawImageSize = ( unsigned long )TGA2Raw( InBuffer, OutBuffer, w, h, bpp, filename );
@@ -129,7 +129,7 @@ enum BlendModes : int
 };
 
 // Рисует RawImage2 на RawImage
-int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int drawy, int blendmode )
+int __stdcall RawImage_DrawImg( unsigned int RawImage, unsigned int RawImage2, int drawx, int drawy, int blendmode )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -182,7 +182,7 @@ int __stdcall RawImage_DrawImg( int RawImage, int RawImage2, int drawx, int draw
 }
 
 // Заполняет выбранный пиксель указанным цветом
-int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//RGBAPix = unsigned int
+int __stdcall RawImage_DrawPixel( unsigned int RawImage, int x, int y, RGBAPix color )//RGBAPix = unsigned int
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -208,7 +208,7 @@ int __stdcall RawImage_DrawPixel( int RawImage, int x, int y, RGBAPix color )//R
 }
 
 // Рисует прямоугольник с указанным цветом и размером
-int __stdcall RawImage_DrawRect( int RawImage, int drawx, int drawy, int widthsize, int heightsize, RGBAPix color )
+int __stdcall RawImage_DrawRect( unsigned int RawImage, int drawx, int drawy, int widthsize, int heightsize, RGBAPix color )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -247,7 +247,7 @@ int __stdcall RawImage_DrawRect( int RawImage, int drawx, int drawy, int widthsi
 #define LINE_THICKNESS_DRAW_CLOCKWISE 1         // Start point is on the counter clockwise border line
 #define LINE_THICKNESS_DRAW_COUNTERCLOCKWISE 2  // Start point is on the clockwise border line
 
-void drawLineOverlap( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd, uint8_t aOverlap,
+void drawLineOverlap( unsigned int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd, uint8_t aOverlap,
 	RGBAPix aColor ) {
 	int16_t tDeltaX, tDeltaY, tDeltaXTimes2, tDeltaYTimes2, tError, tStepX, tStepY;
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
@@ -369,7 +369,7 @@ void drawLineOverlap( int RawImage, int aXStart, int aYStart, int aXEnd, int aYE
 * Bresenham with thickness
 * no pixel missed and every pixel only drawn once!
 */
-void drawThickLine( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd, int aThickness,
+void drawThickLine( unsigned int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd, int aThickness,
 	uint8_t aThicknessMode, RGBAPix aColor ) {
 	int16_t i, tDeltaX, tDeltaY, tDeltaXTimes2, tDeltaYTimes2, tError, tStepX, tStepY;
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
@@ -554,7 +554,7 @@ void drawThickLine( int RawImage, int aXStart, int aYStart, int aXEnd, int aYEnd
 #pragma endregion
 
 // Рисует линию с указанным цветом и размером
-int __stdcall RawImage_DrawLine( int RawImage, int x1, int y1, int x2, int y2, int size, RGBAPix color )
+int __stdcall RawImage_DrawLine( unsigned int RawImage, int x1, int y1, int x2, int y2, int size, RGBAPix color )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -569,7 +569,7 @@ int __stdcall RawImage_DrawLine( int RawImage, int x1, int y1, int x2, int y2, i
 }
 
 // Рисует круг с указанным радиусом и толщиной
-int __stdcall RawImage_DrawCircle( int RawImage, int x, int y, int radius, int size, RGBAPix color )
+int __stdcall RawImage_DrawCircle( unsigned int RawImage, int x, int y, int radius, int size, RGBAPix color )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -607,7 +607,7 @@ int __stdcall RawImage_DrawCircle( int RawImage, int x, int y, int radius, int s
 
 
 // Заполняет круг указанным цветом
-int __stdcall RawImage_FillCircle( int RawImage, int x, int y, int radius, RGBAPix color )
+int __stdcall RawImage_FillCircle( unsigned int RawImage, int x, int y, int radius, RGBAPix color )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -640,7 +640,7 @@ int __stdcall RawImage_FillCircle( int RawImage, int x, int y, int radius, RGBAP
 
 
 // Оставляет только круг с указанным радиусом
-int __stdcall RawImage_EraseCircle( int RawImage, int x, int y, int radius, BOOL inverse )
+int __stdcall RawImage_EraseCircle( unsigned int RawImage, int x, int y, int radius, BOOL inverse )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -678,7 +678,7 @@ int __stdcall RawImage_EraseCircle( int RawImage, int x, int y, int radius, BOOL
 }
 
 // Делает пиксели с цветом color - прозрачными, power от 0 до 255
-int __stdcall RawImage_EraseColor( int RawImage, RGBAPix color, int power )
+int __stdcall RawImage_EraseColor( unsigned int RawImage, RGBAPix color, int power )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -751,7 +751,7 @@ int __stdcall RawImage_SetFontSettings( const char * fontname, int fontsize, uns
 }
 
 // Пишет текст в указанных координатах с указанными цветом и настройками шрифта RawImage_SetFontSettings
-int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, RGBAPix color )
+int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x, int y, RGBAPix color )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -935,8 +935,6 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 
 		if ( strfordraw.str( ).length( ) > 0 )
 		{
-			//MessageBoxA( 0, strfordraw.str( ).c_str( ), "Draw:", 0 );
-
 			RECT newsize = { 0,0,0,0 };
 			DrawTextA( hDC, strfordraw.str( ).c_str( ), -1, &newsize, DT_CALCRECT );
 			if ( newline )
@@ -989,7 +987,7 @@ int __stdcall RawImage_DrawText( int RawImage, const char * text, int x, int y, 
 
 
 // Сохраняет RawImage в blp и делает доступным для использования в игре
-int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL IsTga, BOOL enabled )
+int __stdcall SaveRawImageToGameFile( unsigned int RawImage, const char * filename, BOOL IsTga, BOOL enabled )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -1001,8 +999,8 @@ int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL 
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	tmpRawImage.filename = filename;
-	Buffer tmpRawImageBuffer = tmpRawImage.img;
-	Buffer ResultBuffer = Buffer( );
+	StormBuffer tmpRawImageBuffer = tmpRawImage.img;
+	StormBuffer ResultBuffer = StormBuffer( );
 	if ( tmpRawImage.ingamebuffer.buf )
 		tmpRawImage.ingamebuffer.Clear( );
 
@@ -1022,7 +1020,7 @@ int __stdcall SaveRawImageToGameFile( int RawImage, const char * filename, BOOL 
 
 
 // Сохраняет RawImage на диск в TGA по выбранному пути
-int __stdcall DumpRawImageToFile( int RawImage, const char * filename )
+int __stdcall DumpRawImageToFile( unsigned int RawImage, const char * filename )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -1032,8 +1030,8 @@ int __stdcall DumpRawImageToFile( int RawImage, const char * filename )
 	}
 
 	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
-	Buffer outbuffer;
-	Buffer inbuffer = tmpRawImage.img;
+	StormBuffer outbuffer;
+	StormBuffer inbuffer = tmpRawImage.img;
 	RAW2Tga( inbuffer, outbuffer, tmpRawImage.width, tmpRawImage.height, 4, filename );
 	FILE * f;
 	fopen_s( &f, filename, "wb" );
@@ -1041,6 +1039,7 @@ int __stdcall DumpRawImageToFile( int RawImage, const char * filename )
 	{
 		fwrite( outbuffer.buf, outbuffer.length, 1, f );
 		fclose( f );
+		outbuffer.Clear( );
 	}
 
 
@@ -1065,7 +1064,7 @@ int __stdcall GetRawImageByFile( const char * filename )
 }
 
 // Получает ширину RawImage
-int __stdcall RawImage_GetWidth( int RawImage )
+int __stdcall RawImage_GetWidth( unsigned int RawImage )
 {
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -1076,7 +1075,7 @@ int __stdcall RawImage_GetWidth( int RawImage )
 }
 
 // Получает высоту RawImage
-int __stdcall RawImage_GetHeight( int RawImage )
+int __stdcall RawImage_GetHeight( unsigned int RawImage )
 {
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -1087,7 +1086,7 @@ int __stdcall RawImage_GetHeight( int RawImage )
 }
 
 // Изменяет размер RawImage
-int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
+int __stdcall RawImage_Resize( unsigned int RawImage, int newwidth, int newheight )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -1100,8 +1099,8 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 	newheight = newheight + ( newheight % 2 );
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
-	Buffer tmpOldBuffer = tmpRawImage.img;
-	Buffer tmpNewBuffer = Buffer( );
+	StormBuffer tmpOldBuffer = tmpRawImage.img;
+	StormBuffer tmpNewBuffer = StormBuffer( );
 	ScaleImage( ( unsigned char * )tmpOldBuffer.buf, tmpRawImage.width, tmpRawImage.height, newwidth, newheight, 4, tmpNewBuffer );
 	tmpOldBuffer.Clear( );
 	tmpRawImage.img = tmpNewBuffer;
@@ -1113,8 +1112,18 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 	return TRUE;
 }
 
+
+
+int PowerOfTwo( int Value )
+{
+	int InitValue = 1;
+	while ( InitValue < Value )
+		InitValue *= 2;
+	return InitValue;
+}
+
 // Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре. 
-int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos )
+int __stdcall RawImage_DrawOverlay( unsigned int RawImage, BOOL enabled, float xpos, float ypos )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -1127,9 +1136,18 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	}
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+	if ( tmpRawImage.width != PowerOfTwo( tmpRawImage.width) 
+		|| tmpRawImage.height != PowerOfTwo( tmpRawImage.height ) )
+	{
+		RawImage_Resize( RawImage, PowerOfTwo( tmpRawImage.width ), PowerOfTwo( tmpRawImage.height ) );
+		
+	}
 	tmpRawImage.used_for_overlay = enabled;
 	tmpRawImage.overlay_x = xpos;
 	tmpRawImage.overlay_y = ypos;
+
+
 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1137,7 +1155,7 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	return TRUE;
 }
 
-int __stdcall RawImage_MoveTimed( int RawImage, float x2, float y2, unsigned int Time1, unsigned int Time2, unsigned int SleepTime )
+int __stdcall RawImage_MoveTimed( unsigned int RawImage, float x2, float y2, unsigned int Time1, unsigned int Time2, unsigned int SleepTime )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -1164,7 +1182,7 @@ int __stdcall RawImage_MoveTimed( int RawImage, float x2, float y2, unsigned int
 
 RawImageCallbackData * GlobalRawImageCallbackData = NULL;
 
-int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
+int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -1197,7 +1215,7 @@ int __stdcall RawImage_AddCallback( int RawImage, const char * MouseActionCallba
 	return TRUE;
 }
 
-int __stdcall RawImage_IsBtn( int RawImage, BOOL enabled )
+int __stdcall RawImage_IsBtn( unsigned int RawImage, BOOL enabled )
 {
 	if ( !InitFunctionCalled )
 		return 0;

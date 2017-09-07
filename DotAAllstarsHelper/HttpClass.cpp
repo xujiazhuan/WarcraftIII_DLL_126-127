@@ -77,7 +77,7 @@ BOOL HTTPRequest::resolve_and_connect( )
 	hints.ai_protocol = IPPROTO_IPV4;
 
 	ADDRINFO *pResult = nullptr;
-	if ( getaddrinfo( Host.c_str( ), nullptr, &hints, &pResult ) )
+	if ( getaddrinfo( Host.c_str( ), nullptr, &hints, &pResult ) || !pResult )
 	{
 		return FALSE;
 	}
@@ -88,13 +88,18 @@ BOOL HTTPRequest::resolve_and_connect( )
 
 	for ( size_t i = 0; i < pResult->ai_addrlen; i++ )
 	{
-		servAddr.sin_addr.S_un.S_addr = ( ULONG )( ( sockaddr_in* )&pResult->ai_addr[ i ] )->sin_addr.S_un.S_addr;
-
-		if ( connect( Sock, ( sockaddr* )&servAddr, sizeof( servAddr ) ) != SOCKET_ERROR )
+		if ( &pResult->ai_addr[ i ]  )
 		{
-			ret = TRUE;
-			break;
+			servAddr.sin_addr.S_un.S_addr = ( ULONG )( ( sockaddr_in* )&pResult->ai_addr[ i ] )->sin_addr.S_un.S_addr;
+
+			if ( connect( Sock, ( sockaddr* )&servAddr, sizeof( servAddr ) ) != SOCKET_ERROR )
+			{
+				ret = TRUE;
+				break;
+			}
 		}
+		else
+			return FALSE;
 	}
 
 	freeaddrinfo( pResult );

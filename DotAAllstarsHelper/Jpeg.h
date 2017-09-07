@@ -30,7 +30,6 @@ extern "C"
 #include <jpeglib.h>
 }
 
-
 #define _blp_swap_int16(x) (x)
 #define _blp_swap_int32(x) (x)
 

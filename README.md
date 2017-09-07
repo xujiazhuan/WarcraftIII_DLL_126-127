@@ -98,3 +98,64 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 "Example result:"
 ![RawImage Draw API](/Images/DrawRawImageApi.png?raw=true "You can see result of using experimental Draw API")
 
+# CFrame API update: 
+
+# globals 
+
+
+
+	integer pCFrame_GetLastEventId = 0 
+	integer pCFrame_GetTriggerCFrame = 0
+	integer pCFrame_SetCustomValue = 0
+	integer pCFrame_GetCustomValue = 0
+	integer pCFrame_LoadFramesListFile = 0 
+	integer pCFrame_CreateNewFrame = 0 
+	integer pCFrame_LoadFrame = 0 
+	integer pCFrame_SetFrameType = 0 
+	integer pCFrame_SetFrameModel = 0 
+	integer pCFrame_SetFrameTexture = 0 
+	integer pCFrame_SetFrameText = 0 
+	integer pCFrame_SetAbsolutePosition = 0 
+	integer pCFrame_SetRelativePosition = 0 
+	integer pCFrame_Destroy = 0 
+	integer pCFrame_AddCallack = 0 
+	integer pCFrame_Enable = 0
+	integer pCFrame_IsEnabled = 0
+	integer pCFrame_GetFrameAddress = 0
+
+	integer	CFramePosition_TOP_LEFT = 0
+	integer	CFramePosition_TOP_CENTER = 1
+	integer	CFramePosition_TOP_RIGHT = 2
+	integer	CFramePosition_LEFT = 3
+	integer	CFramePosition_CENTER = 4
+	integer	CFramePosition_RIGHT = 5
+	integer	CFramePosition_BOTTOM_LEFT = 6
+	integer	CFramePosition_BOTTOM_CENTER = 7
+	integer	CFramePosition_BOTTOM_RIGHT = 8
+
+	integer	FRAMETYPE_FRAME = 0
+	integer	FRAMETYPE_BACKDROP = 1
+	integer	FRAMETYPE_ITEM = 2
+	integer	FRAMETYPE_POPUPMENU = 3
+	integer	FRAMETYPE_EDITBOX = 4
+	integer	FRAMETYPE_BUTTON = 5
+	integer	FRAMETYPE_TEXTBUTTON = 6
+	integer	FRAMETYPE_SPRITE = 7
+
+
+	integer FRAME_EVENT_TICK = 0x40160064
+	integer FRAME_EVENT_PRESSED = 0x40090064
+	integer FRAME_MOUSE_ENTER = 0x40090068
+	integer FRAME_MOUSE_LEAVE = 0x40090066
+	integer FRAME_MOUSE_UP = 0x4009006A
+	integer FRAME_MOUSE_WHEEL = 0x4009006B
+	integer FRAME_FOCUS_CHANGE = 0x40090068
+	integer FRAME_CHECKBOX_CHECKED_CHANGE = 0x400C0064
+	integer FRAME_EDITBOX_TEXT_CHANGED = 0x400B0065
+
+#endglobals
+
+#code 
+
+
+#endcode

@@ -80,9 +80,6 @@
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="..\DotAAllstarsHelper\Jpeg.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx8.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -99,6 +96,15 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\DotaSyncScanner.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\Storm.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaFrameDefHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -136,10 +142,19 @@
     <ClInclude Include="resource.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\DotAAllstarsHelper\Jpeg.h">
+    <ClInclude Include="..\DotAAllstarsHelper\Structures.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\DotAAllstarsHelper\Structures.h">
+    <ClInclude Include="..\DotAAllstarsHelper\Storm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\FunctionTemplate.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\fp_call.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\WarcraftFrameHelper.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

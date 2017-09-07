@@ -380,7 +380,6 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 	}
 
 	KeyActionStruct tmpstr;
-	KeyActionStruct tmpstr2;
 	tmpstr.VK = KeyCode & 0xFF;
 	tmpstr.btnID = btnID;
 	tmpstr.altbtnID = ( GetAltBtnID( btnID ) );
@@ -400,11 +399,8 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 					curstr.IsCtrl ||
 					curstr.IsShift )
 					continue;
-
-
-				tmpstr2 = curstr;
 				curstr = tmpstr;
-				tmpstr = tmpstr2;
+				return 0;
 			}
 		}
 	}
@@ -823,8 +819,12 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	//	}
 	//	DebugMsgShow = FALSE;
 	//}
-
-
+#ifdef DOTA_HELPER_LOG
+	if ( wParam == '0' && Msg == WM_KEYUP )
+	{
+		Storm::ShowAllLeaks( );
+	}
+#endif
 
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
@@ -882,7 +882,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 		{
 			switch ( wParam )
 			{
-			case 'dota':
+			case 'atod':
 				PressKeyWithDelay_timed( );
 				break;
 			}
@@ -1752,13 +1752,21 @@ void IssueFixerDisable( )
 
 	memset( LastPressedKeysTime, 0, sizeof( LastPressedKeysTime ) );
 
+	if ( IssueWithoutTargetOrderorg )
 	MH_DisableHook( IssueWithoutTargetOrderorg );
+	if ( IssueTargetOrPointOrder2org )
 	MH_DisableHook( IssueTargetOrPointOrder2org );
+	if ( sub_6F339D50org )
 	MH_DisableHook( sub_6F339D50org );
+	if ( IssueTargetOrPointOrderorg )
 	MH_DisableHook( IssueTargetOrPointOrderorg );
+	if ( sub_6F339E60org )
 	MH_DisableHook( sub_6F339E60org );
+	if ( sub_6F339F00org )
 	MH_DisableHook( sub_6F339F00org );
+	if ( sub_6F339F80org )
 	MH_DisableHook( sub_6F339F80org );
+	if ( sub_6F33A010org )
 	MH_DisableHook( sub_6F33A010org );
 
 	if ( !RegisteredKeyCodes.empty( ) )

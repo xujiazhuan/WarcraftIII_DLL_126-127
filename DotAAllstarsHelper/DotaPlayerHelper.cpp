@@ -4,7 +4,7 @@
 int GlobalPlayerOffset = 0;
 int IsPlayerEnemyOffset = 0;
 
-pGetPlayerColor GetPlayerColor;
+pGetPlayerColor GetPlayerColor2;
 pPlayer _Player;
 
 int playercache[ 16 ];

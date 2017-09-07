@@ -1,5 +1,5 @@
 #include "Main.h"
-
+#include "Storm.h"
 #pragma optimize("",off)
 
 #define ADDRESS LPVOID  // data
@@ -11,7 +11,7 @@ GADDRESS sub_6F6061B0;   // 606860 6f606860
 GADDRESS sub_6F605CC0;   // 606370 6f606370
 GADDRESS sub_6F359CC0;   // 35A740 6f35A740
 GADDRESS sub_6F32C880; // 32D300   6f
-Storm_401 Storm_401_org = NULL; //storm 0x191 #401
+
 GADDRESS sub_6F2C74B0;
 
 ADDRESS a16F08C;
@@ -323,12 +323,13 @@ void __declspec( naked ) FillMemoryForMPBar( )
 
 void __declspec( naked ) ReallocateMemoryForMPBar( )
 {
+	
 	__asm {
 		pop     a16F08C;
 		pop     eax;
 		add     eax, eax;
 		push    eax;
-		call    Storm_401_org;
+		call    Storm::AddrMemAlloc;
 		pushad;
 		pusha;
 		mov     a16F004, eax;

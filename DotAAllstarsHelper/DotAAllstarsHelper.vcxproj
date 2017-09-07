@@ -35,7 +35,7 @@
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
     </IgnoreImportLibrary>
-    <GenerateManifest>false</GenerateManifest>
+    <GenerateManifest>true</GenerateManifest>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -82,8 +82,8 @@
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
       <IgnoreSpecificDefaultLibraries>
       </IgnoreSpecificDefaultLibraries>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <TargetMachine>NotSet</TargetMachine>
+      <AdditionalDependencies>version.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <LinkStatus>
       </LinkStatus>
@@ -91,8 +91,8 @@
       <SetChecksum>true</SetChecksum>
       <CLRSupportLastError>
       </CLRSupportLastError>
-      <RandomizedBaseAddress />
-      <DataExecutionPrevention>true</DataExecutionPrevention>
+      <RandomizedBaseAddress>true</RandomizedBaseAddress>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
       <EnableUAC>
       </EnableUAC>
       <IgnoreAllDefaultLibraries>
@@ -102,6 +102,9 @@
       <SectionAlignment>
       </SectionAlignment>
     </Link>
+    <Manifest>
+      <UpdateFileHashes>true</UpdateFileHashes>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="blpaletter.cpp" />
@@ -112,6 +115,7 @@
     <ClCompile Include="DotaChatHelper.cpp" />
     <ClCompile Include="DotaClickHelper.cpp" />
     <ClCompile Include="DotaCustomFrames.cpp" />
+    <ClCompile Include="DotaFrameDefHelper.cpp" />
     <ClCompile Include="DotaHelperOverlayDirectx8.cpp" />
     <ClCompile Include="DotaHelperOverlayDirectx9.cpp" />
     <ClCompile Include="DotaHelperOverlayOpengl.cpp" />
@@ -128,11 +132,12 @@
     <ClCompile Include="DotaFOVfix.cpp" />
     <ClCompile Include="hash_64.cpp" />
     <ClCompile Include="HttpClass.cpp" />
-    <ClCompile Include="Jpeg.cpp" />
     <ClCompile Include="quantizer.cpp" />
     <ClCompile Include="SendGamePacket.cpp" />
+    <ClCompile Include="Storm.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
     <ClCompile Include="DotaViewAllySkill.cpp" />
+    <ClCompile Include="WarcraftFrameHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def" />
@@ -143,14 +148,17 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Crc32Dynamic.h" />
     <ClInclude Include="fnv.h" />
+    <ClInclude Include="fp_call.h" />
+    <ClInclude Include="FunctionTemplate.h" />
     <ClInclude Include="HttpClass.h" />
-    <ClInclude Include="Jpeg.h" />
     <ClInclude Include="longlong.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="quantizer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Storm.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="ViewAllySkill.h" />
+    <ClInclude Include="WarcraftFrameHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DotAAllstarsHelper688.rc" />

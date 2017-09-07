@@ -79,9 +79,9 @@ static int  g_px1ab_w = 0;
 
 
 void Resize_HQ_4ch( unsigned char* src, int w1, int h1,
-	int w2, int h2, Buffer& outdest )
+	int w2, int h2, StormBuffer& outdest )
 {
-	unsigned char * dest = new unsigned char[ w2*h2 * 4 ];
+	unsigned char * dest = ( unsigned char *)Storm::MemAlloc( w2*h2 * 4 );
 
 	// Both buffers must be in ARGB format, and a scanline should be w*4 bytes.
 
@@ -323,9 +323,9 @@ void Resize_HQ_4ch( unsigned char* src, int w1, int h1,
 }
 
 
-void ScaneImageSimple( unsigned char * data, int oldW, int oldH, int newW, int newH, int bytespp, Buffer & target )
+void ScaneImageSimple( unsigned char * data, int oldW, int oldH, int newW, int newH, int bytespp, StormBuffer & target )
 {
-	unsigned char* newData = new unsigned char[ newW*newH*bytespp ];
+	unsigned char* newData =( unsigned char *) Storm::MemAlloc( newW*newH*bytespp );
 	int maxpixel = oldW*oldH*bytespp - 4;
 
 	double scaleWidth = ( double )newW / ( double )oldW;
@@ -354,7 +354,7 @@ void ScaneImageSimple( unsigned char * data, int oldW, int oldH, int newW, int n
 	target.buf = ( char * )newData;
 }
 
-void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH, int bytespp, Buffer &target )
+void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH, int bytespp, StormBuffer &target )
 {
 	ScaneImageSimple( rawData, oldW, oldH, newW, newH, bytespp, target );
 	return;
@@ -367,7 +367,7 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 	if ( oldW == newW && oldH == newH )
 	{
 		target.length = ( unsigned long )( newW * newH * bytespp );
-		target.buf = new char[ target.length ];
+		target.buf = Storm::MemAlloc[ target.length ];
 		memcpy( target.buf, rawData, target.length );
 		return;
 	}
@@ -406,7 +406,7 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 
 	// scale vertically
 	target.length = ( unsigned long )( newW * newH * bytespp );
-	target.buf = new char[ target.length ];
+	target.buf = Storm::MemAlloc[ target.length ];
 	double* final = new double[ target.length ];
 
 
@@ -522,16 +522,159 @@ int GetRequiredMipMaps( int width, int height )
 	return mips;
 }
 
-BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+
+void * ReadImage( int &width,
+	int &height,
+	int &nchannels,
+	const void *buffer,
+	int sizebytes )
 {
-	Buffer target[ 16 ];
-	Buffer scaled[ 16 ];
-	Buffer source;
+	JPEG_CORE_PROPERTIES jcprops;
+
+	if ( ijlInit( &jcprops ) != IJL_OK )
+	{
+		ijlFree( &jcprops );
+		
+		return NULL;
+	}
+
+	jcprops.JPGBytes = ( unsigned char * )buffer;
+	jcprops.JPGSizeBytes = sizebytes;
+	jcprops.jquality = 100;
+
+	if ( ijlRead( &jcprops, IJL_JBUFF_READPARAMS ) != IJL_OK )
+	{
+		ijlFree( &jcprops );
+		
+		return NULL;
+	}
+
+	width = jcprops.JPGWidth;
+	height = jcprops.JPGHeight;
+	IJLIOTYPE mode;
+
+	mode = IJL_JBUFF_READWHOLEIMAGE;
+	nchannels = jcprops.JPGChannels;
+	unsigned char * pixbuff = ( unsigned char *)Storm::MemAlloc( width*height*nchannels );
+	if ( !pixbuff )
+	{
+		ijlFree( &jcprops );
+	
+		return NULL;
+	}
+
+	jcprops.DIBWidth = width;
+	jcprops.DIBHeight = height;
+	jcprops.DIBChannels = nchannels;
+	jcprops.DIBPadBytes = 0;
+	jcprops.DIBBytes = ( unsigned char * )pixbuff;
+
+	if ( jcprops.JPGChannels == 3 )
+	{
+		jcprops.DIBColor = IJL_RGB;
+		jcprops.JPGColor = IJL_YCBCR;
+		jcprops.JPGSubsampling = IJL_411;
+		jcprops.DIBSubsampling = ( IJL_DIBSUBSAMPLING )0;
+	}
+	else
+	{
+		jcprops.DIBColor = IJL_G;
+		jcprops.JPGColor = IJL_G;
+		jcprops.JPGSubsampling = ( IJL_JPGSUBSAMPLING )0;
+		jcprops.DIBSubsampling = ( IJL_DIBSUBSAMPLING )0;
+	}
+
+	if ( ijlRead( &jcprops, mode ) != IJL_OK )
+	{
+		ijlFree( &jcprops );
+		
+		return NULL;
+	}
+
+	if ( ijlFree( &jcprops ) != IJL_OK ) return 0;
+
+	return ( void * )pixbuff;
+}
+
+
+void * Compress( const void *source,
+	int width,
+	int height,
+	int bpp,
+	int &len,
+	int quality )
+{
+	JPEG_CORE_PROPERTIES jcprops;
+
+	if ( ijlInit( &jcprops ) != IJL_OK )
+	{
+		ijlFree( &jcprops );
+		return 0;
+	}
+
+	jcprops.DIBWidth = width;
+	jcprops.DIBHeight = height;
+	jcprops.JPGWidth = width;
+	jcprops.JPGHeight = height;
+	jcprops.DIBBytes = ( unsigned char * )source;
+	jcprops.DIBPadBytes = 0;
+	jcprops.DIBChannels = bpp;
+	jcprops.JPGChannels = bpp;
+
+	if ( bpp == 3 )
+	{
+		jcprops.DIBColor = IJL_RGB;
+		jcprops.JPGColor = IJL_YCBCR;
+		jcprops.JPGSubsampling = IJL_411;
+		jcprops.DIBSubsampling = ( IJL_DIBSUBSAMPLING )0;
+	}
+	else
+	{
+		jcprops.DIBColor = IJL_G;
+		jcprops.JPGColor = IJL_G;
+		jcprops.JPGSubsampling = ( IJL_JPGSUBSAMPLING )0;
+		jcprops.DIBSubsampling = ( IJL_DIBSUBSAMPLING )0;
+	}
+
+	int size = width*height*bpp;
+
+	unsigned char * buffer = (unsigned char * )Storm::MemAlloc(size );
+
+	jcprops.JPGSizeBytes = size;
+	jcprops.JPGBytes = buffer;
+
+	jcprops.jquality = quality;
+
+
+	if ( ijlWrite( &jcprops, IJL_JBUFF_WRITEWHOLEIMAGE ) != IJL_OK )
+	{
+		ijlFree( &jcprops );
+		Storm::MemFree( buffer);
+		return 0;
+	}
+
+
+	if ( ijlFree( &jcprops ) != IJL_OK )
+	{
+		Storm::MemFree( buffer);
+		return 0;
+	}
+
+	len = jcprops.JPGSizeBytes;
+	return buffer;
+}
+
+
+BOOL CreateJpgBLP( StormBuffer rawData, StormBuffer &output, int quality, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+{
+	StormBuffer target[ 16 ];
+	StormBuffer scaled[ 16 ];
+	StormBuffer source;
 	source.buf = rawData.buf;
 	source.length = ( unsigned long )( width * height * 4 );
 	if ( bytespp < 4 )
 	{
-		source.buf = new char[ ( unsigned int )( width * height * 4 ) ];
+		source.buf = ( char * )Storm::MemAlloc( ( unsigned int )( width * height * 4 ));
 		for ( int j = 0; j < width * height; j++ )
 		{
 			memcpy( source.buf + j * 4, rawData.buf + j*bytespp, ( size_t )bytespp );
@@ -563,17 +706,28 @@ BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 			else // generate mipmaps
 				ScaleImage( ( unsigned char* )scaled[ i - 1 ].buf, xdimension * 2, ydimension * 2, xdimension, ydimension, 4, scaled[ i ] );
 			//if ( !ConvertToJpg( scaled[ i ], target[ i ], xdimension, ydimension, 4, quality, TRUE ) )
-			if ( !Jpeg.Write( scaled[ i ], target[ i ], xdimension, ydimension, quality ) )
+			JPEG_CORE_PROPERTIES v17;
+			ijlInit( &v17 );
+
+			void * compressedimage;
+			int imglen = 0;
+			if ( compressedimage = Compress( scaled[ i ].buf, xdimension, ydimension, bytespp, imglen, quality ) )
+			{
+				target[ i ].buf = ( char * )compressedimage;
+				target[ i ].length = imglen;
+			}
+			else 
 			{
 				for ( int j = 0; j <= i; j++ )
 				{ // cleanup
 					if ( bytespp < 4 || j > 0 )
-						delete[ ] scaled[ j ].buf;
+						scaled->Clear( );
 					if ( target[ j ].buf )
-						delete[ ] target[ j ].buf;
+						target[ j ].Clear();
 				}
 				return FALSE;
 			}
+			
 			blpHeader.poffs[ i ] = output.length;
 			blpHeader.psize[ i ] = target[ i ].length;
 			output.length += target[ i ].length;
@@ -599,7 +753,7 @@ BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 	}
 	maxmipmaps = min( truemipmaps, maxmipmaps );
 
-	output.buf = new char[ output.length ];
+	output.buf = ( char * )Storm::MemAlloc( output.length );
 	memcpy( output.buf, &blpHeader, sizeof( BLPHeader ) );
 	memset( output.buf + sizeof( BLPHeader ), 0, 4 );
 	char* blp = output.buf + sizeof( BLPHeader ) + 4;
@@ -609,9 +763,9 @@ BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 		{
 			memcpy( blp, target[ i ].buf, target[ i ].length );
 			if ( bytespp < 4 || i > 0 ) // cleanup
-				delete[ ] scaled[ i ].buf;
+				scaled[ i ].Clear( );
 			if ( target[ i ].buf )
-				delete[ ] target[ i ].buf;
+				target[ i ].Clear( );
 			blp += target[ i ].length;
 		}
 		width = width / 2;
@@ -620,7 +774,7 @@ BOOL CreateJpgBLP( Buffer rawData, Buffer &output, int quality, char const *, in
 	return TRUE;
 }
 
-BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
+BOOL CreatePalettedBLP( StormBuffer rawData, StormBuffer &output, int colors, char const *, int width, int height, int bytespp, int alphaflag, int &maxmipmaps )
 {
 	CQuantizer* q = new CQuantizer( ( unsigned int )colors, 8 );
 	q->ProcessImage( ( unsigned char* )rawData.buf, ( unsigned long )( width * height ), ( unsigned char )bytespp, 0x00 );
@@ -641,7 +795,7 @@ BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *
 		maxmipmaps = truemipmaps;
 
 	output.length = sizeof( BLPHeader ) + sizeof( BGRAPix ) * 256; // header + palette
-	Buffer bufs[ 16 ];
+	StormBuffer bufs[ 16 ];
 	int xdimension = width;
 	int ydimension = height;
 	for ( int i = 0; i < 16; i++ )
@@ -676,7 +830,7 @@ BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *
 		ydimension = ydimension / 2;
 	}
 
-	output.buf = new char[ output.length ];
+	output.buf = ( char * )Storm::MemAlloc(output.length );
 	unsigned char* blpData = ( unsigned char* )output.buf;
 	memcpy( blpData, &blpHeader, sizeof( BLPHeader ) );
 	memset( blpData + sizeof( BLPHeader ), 0, sizeof( BGRAPix ) * 256 );
@@ -704,7 +858,7 @@ BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *
 			}
 
 			if ( i > 0 )
-				delete[ ] bufs[ i ].buf; // cleanup
+				 bufs[ i ].Clear( ); // cleanup
 			blp += width * height * 2; //(q->NeedsAlphaChannel() ? 2 : 1);
 		}
 		width = width / 2;
@@ -715,7 +869,7 @@ BOOL CreatePalettedBLP( Buffer rawData, Buffer &output, int colors, char const *
 	return TRUE;
 }
 
-BOOL TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, const char* filename )
+BOOL TGA2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, const char* filename )
 {
 	TGAHeader* header = ( TGAHeader* )input.buf;
 	if ( header->colorMapType != 0 || header->imageType != 2 || header->width == 0 || header->height == 0 )
@@ -734,13 +888,13 @@ BOOL TGA2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 	height = header->height;
 
 	output.length = ( unsigned long )( width*height*bpp );
-	output.buf = new char[ output.length ];
+	output.buf = ( char * )Storm::MemAlloc( output.length );
 	memcpy( output.buf, input.buf + sizeof( TGAHeader ) + header->imageIDLength, output.length );
 
 	return TRUE;
 }
 
-BOOL RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, const char* filename )
+BOOL RAW2Tga( StormBuffer input, StormBuffer &output, int width, int height, int bpp, const char* filename )
 {
 	TGAHeader header;
 	memset( &header, 0, sizeof( TGAHeader ) );
@@ -751,7 +905,7 @@ BOOL RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, cons
 	header.bpp = bpp * 8;
 	header.imagedescriptor = bpp == 4 ? 8 : 0;
 	output.length = sizeof( TGAHeader ) + width * height * bpp;
-	output.buf = new char[ output.length ];
+	output.buf = ( char * )Storm::MemAlloc( output.length );
 
 	memcpy( output.buf, &header, sizeof( TGAHeader ) );
 	memcpy( output.buf + sizeof( TGAHeader ), input.buf, output.length - sizeof( TGAHeader ) );
@@ -759,7 +913,7 @@ BOOL RAW2Tga( Buffer input, Buffer &output, int width, int height, int bpp, cons
 	return TRUE;
 }
 
-BOOL BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
+BOOL BMP2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, char const *filename )
 {
 	BITMAPFILEHEADER *FileHeader = ( BITMAPFILEHEADER* )input.buf;
 	BITMAPINFOHEADER *InfoHeader = ( BITMAPINFOHEADER* )( FileHeader + 1 );
@@ -779,7 +933,7 @@ BOOL BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 	height = InfoHeader->biHeight;
 
 	output.length = ( unsigned long )( width*height*bpp );
-	output.buf = new char[ output.length ];
+	output.buf = ( char * )Storm::MemAlloc( output.length);
 	memcpy( output.buf, input.buf + FileHeader->bfOffBits, output.length );
 
 	if ( bpp == 4 ) // invert alpha
@@ -787,6 +941,9 @@ BOOL BMP2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, c
 			output.buf[ i*bpp + 3 ] = 0xFF - output.buf[ i*bpp + 3 ];
 	return TRUE;
 }
+#define _blp_swap_int16(x) (x)
+#define _blp_swap_int32(x) (x)
+
 
 void SwapBLPHeader( BLPHeader *header )
 {
@@ -838,7 +995,7 @@ void flip_vertically( unsigned char *pixels, const size_t width, const size_t he
 
 tBGRAPixel * blp1_convert_paletted_separated_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height, BOOL invertAlpha )
 {
-	tBGRAPixel* pBuffer = new tBGRAPixel[ width * height ];
+	tBGRAPixel* pBuffer = ( tBGRAPixel*) Storm::MemAlloc( width * height * sizeof( tBGRAPixel ));
 	tBGRAPixel* pDst = pBuffer;
 
 	uint8_t* pIndices = pSrc;
@@ -875,7 +1032,7 @@ RGBAPix * blp1_convert_paletted_separated_alpha( uint8_t* pSrc, RGBAPix* pInfos,
 
 tBGRAPixel* blp1_convert_paletted_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height )
 {
-	tBGRAPixel* pBuffer = new tBGRAPixel[ width * height ];
+	tBGRAPixel* pBuffer = ( tBGRAPixel* ) Storm::MemAlloc( width * height * sizeof( tBGRAPixel ));
 	tBGRAPixel* pDst = pBuffer;
 
 	uint8_t* pIndices = pSrc;
@@ -903,7 +1060,7 @@ RGBAPix* blp1_convert_paletted_alpha( uint8_t* pSrc, RGBAPix* pInfos, unsigned i
 
 tBGRAPixel* blp1_convert_paletted_no_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height )
 {
-	tBGRAPixel* pBuffer = new tBGRAPixel[ width * height ];
+	tBGRAPixel* pBuffer = ( tBGRAPixel * ) Storm::MemAlloc( width * height * sizeof( tBGRAPixel ) );
 	tBGRAPixel* pDst = pBuffer;
 
 	uint8_t* pIndices = pSrc;
@@ -930,7 +1087,7 @@ RGBAPix* blp1_convert_paletted_no_alpha( uint8_t* pSrc, RGBAPix* pInfos, unsigne
 	return outrgba;
 }
 
-unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename )
+unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename )
 {
 	BLPHeader blph;
 	bpp = 4;
@@ -998,18 +1155,18 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 				return 0;
 
 
-			uint8_t* tdata = new uint8_t[ ( unsigned int )size ];
+			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc( ( unsigned int )size );
 			memcpy( tdata, input.buf + offset, ( size_t )size );
 
 			RGBAPix *pic = blp1_convert_paletted_separated_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey, 0 );
 
-			delete[ ] tdata;
+			Storm::MemFree(tdata);
 
 
 			output.length = textureSize;
-			output.buf = new char[ textureSize ];
+			output.buf = (char *)Storm::MemAlloc( textureSize);
 			memcpy( output.buf, pic, textureSize );
-			delete[ ] pic;
+			Storm::MemFree( pic);
 
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
@@ -1029,15 +1186,15 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 
 
-			uint8_t* tdata = new uint8_t[ ( unsigned int )size ];
+			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc( ( unsigned int )size );
 			memcpy( tdata, input.buf + offset, ( size_t )size );
 			RGBAPix *pic = blp1_convert_paletted_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey );
 
-			delete[ ] tdata;
+			Storm::MemFree( tdata);
 			output.length = textureSize;
-			output.buf = new char[ textureSize ];
+			output.buf = ( char * )Storm::MemAlloc( textureSize );
 			memcpy( output.buf, pic, textureSize );
-			delete[ ] pic;
+			Storm::MemFree( pic);
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
 
@@ -1056,15 +1213,15 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 
 
 
-			uint8_t* tdata = new uint8_t[ ( unsigned int )size ];
+			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc(( unsigned int )size );
 			memcpy( tdata, input.buf + offset, ( size_t )size );
 			RGBAPix *pic = blp1_convert_paletted_no_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey );
 
-			delete[ ] tdata;
+			Storm::MemFree( tdata);
 			output.length = textureSize;
-			output.buf = new char[ textureSize ];
+			output.buf = ( char * )Storm::MemAlloc( textureSize );
 			memcpy( output.buf, pic, textureSize );
-			delete[ ] pic;
+			Storm::MemFree( pic);
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
 
@@ -1086,9 +1243,9 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
 		JPEGHeaderSize = _blp_swap_int32( JPEGHeaderSize );
 
-		Buffer tempdata;
+		StormBuffer tempdata;
 		tempdata.length = blph.psize[ 0 ] + JPEGHeaderSize;
-		tempdata.buf = new char[ blph.psize[ 0 ] + JPEGHeaderSize ];
+		tempdata.buf = ( char * )Storm::MemAlloc( blph.psize[ 0 ] + JPEGHeaderSize );
 		memcpy( tempdata.buf, input.buf + curpos + 4, ( size_t )JPEGHeaderSize );
 
 
@@ -1101,6 +1258,7 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 #endif
 		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
 		{
+		
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -1111,13 +1269,13 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-			return ( 0 );
+			return  0;
 		}
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		tempdata.Clear( );
-
+	
 
 
 		// Output should be RGBA, BLPs use BGRA
@@ -1134,23 +1292,20 @@ unsigned long Blp2Raw( Buffer input, Buffer &output, int &width, int &height, in
 	return 0;
 	}
 
-BOOL JPG2Raw( Buffer input, Buffer &output, int &width, int &height, int &bpp, char const *filename )
+BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, char const *filename )
 {
 	bpp = 4;
-	//if ( !DecompressJpg( input, output, width, height, bpp ) )
-	if ( !Jpeg.Read( input, output, &width, &height ) )
-		return FALSE;
 
-	//if ( !IsPowerOfTwo( width ) || !IsPowerOfTwo( height ) )
-	//{
-	//	delete[ ] output.buf;
-	//	return FALSE;
-	//}
-	//if ( bpp != 4 && bpp != 3 )
-	//{
-	//	delete[ ] output.buf;
-	//	return FALSE;
-	//}
+	void * outdata;
+	if ( (outdata = ReadImage( width, height, bpp, input.buf, input.length )) != NULL )
+	{
+		output.length = width * height * bpp;
+		output.buf = ( char * )outdata;
+		return TRUE;
+	}
+	return FALSE;
+
+
 	return TRUE;
 }
 
