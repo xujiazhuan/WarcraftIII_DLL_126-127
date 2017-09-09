@@ -101,8 +101,8 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 # CFrame API update: 
 
 # globals 
-
-integer testclickcount = 0
+```
+	integer testclickcount = 0
 
 
 	integer pCFrame_GetLastEventId = 0 
@@ -155,13 +155,13 @@ integer testclickcount = 0
 	integer FRAME_CHECKBOX_CHECKED = 7
 	integer FRAME_CHECKBOX_UNCHECKED = 8
 	integer FRAME_EDITBOX_TEXT_CHANGED = 9
-		
+```		
 
 #endglobals
 
 #code 
 
-
+```
 
 function CFrame_GetLastEventId takes nothing returns integer
 	if pCFrame_GetLastEventId == 0 then
@@ -376,5 +376,5 @@ function CFrameTest takes nothing returns nothing
 	call CFrame_SetFrameType(glyphframe,FRAMETYPE_BUTTON)
 	call CFrame_SetFrameText(glyphframe,"Clicked 0 times")
 endfunction
-
+```
 #endcode
