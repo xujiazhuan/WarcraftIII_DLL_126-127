@@ -12,8 +12,72 @@ struct CFrameBuffer
 
 vector<CFrameBuffer> CFrameBufferList;
 
-void FrameDefHelperInitialize(  )
+
+void DotaHelperEventEndCallback( )
 {
+	if ( pCurrentFrameFocusedAddr )
+		*( int* )pCurrentFrameFocusedAddr = 0;
+
+}
+
+
+
+RCString NewCallBackFuncName = RCString( );
+
+int LastEventId = 0;
+
+int __stdcall CFrame_GetLastEventId( int )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	return LastEventId;
+}
+
+
+CWar3Frame * latestcframe = NULL;
+
+CWar3Frame *  __stdcall CFrame_GetTriggerCFrame( int )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	return latestcframe;
+}
+
+int DotaHelperFrameCallback( CWar3Frame*frame, int FrameAddr, unsigned int EventId )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	LastEventId = EventId;
+	latestcframe = frame;
+	//MessageBoxA( 0, frame->FrameName.c_str( ), frame->FrameName.c_str( ), 0 );
+	for ( auto s : CFrameBufferList )
+	{
+		if ( s.frame == frame )
+		{
+			if ( s.callbackfuncname.length( ) > 0 )
+			{
+				str2jstr( &NewCallBackFuncName, s.callbackfuncname.c_str( ) );
+				ExecuteFunc( &NewCallBackFuncName );
+				//MessageBoxA( 0, CWar3Frame::DumpAllFrames( ).c_str( ), " Frames ", 0 );
+			}
+			break;
+		}
+	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+
+
+	return 0;
+}
+
+
+void FrameDefHelperInitialize( )
+{
+	CWar3Frame::SetGlobalEventCallback( DotaHelperEventEndCallback );
 	CWar3Frame::Init( GameVersion, GameDll );
 	CWar3Frame::InitCallbackHook( );
 }
@@ -39,26 +103,6 @@ string GetCallbackFuncName( CWar3Frame * frame )
 	return string( );
 }
 
-int LastEventId = 0;
-
-int __stdcall CFrame_GetLastEventId( int )
-{
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( __func__ );
-#endif
-	return LastEventId;
-}
-
-
-CWar3Frame * latestcframe = NULL;
-
-CWar3Frame *  __stdcall CFrame_GetTriggerCFrame( int )
-{
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( __func__ );
-#endif
-	return latestcframe;
-}
 
 void __stdcall CFrame_SetCustomValue( CWar3Frame*frame, int value )
 {
@@ -82,38 +126,6 @@ int __stdcall CFrame_GetFrameAddress( CWar3Frame*frame )
 	AddNewLineToDotaChatLog( __func__ );
 #endif
 	return frame->FrameAddr;
-}
-
-
-RCString NewCallBackFuncName = RCString( );
-
-int DotaHelperFrameCallback( CWar3Frame*frame, int FrameAddr, unsigned int EventId )
-{
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( __func__ );
-#endif
-	LastEventId = EventId;
-	latestcframe = frame;
-	//MessageBoxA( 0, frame->FrameName.c_str( ), frame->FrameName.c_str( ), 0 );
-	for ( auto s : CFrameBufferList )
-	{
-		if ( s.frame == frame )
-		{
-			if ( s.callbackfuncname.length( ) > 0 )
-			{
-				str2jstr( &NewCallBackFuncName, s.callbackfuncname.c_str( ) );
-				ExecuteFunc( &NewCallBackFuncName );
-			}
-			*( int* )pCurrentFrameFocusedAddr = 0;
-			break;
-		}
-	}
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( __func__ );
-#endif
-
-	
-	return 0;
 }
 
 // Load custom FrameDef.toc file ( .txt file with fdf path list)
@@ -168,7 +180,7 @@ CWar3Frame * __stdcall CFrame_LoadFrame( const char * FrameName, int FrameId )
 void __stdcall CFrame_SetFrameType( CWar3Frame * frame, CFrameType FrameType )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( string( __func__ + string( ":") + std::to_string((int)FrameType)).c_str( ) );
+	AddNewLineToDotaChatLog( string( __func__ + string( ":" ) + std::to_string( ( int )FrameType ) ).c_str( ) );
 #endif
 	if ( !frame )
 		return;
@@ -201,7 +213,7 @@ void __stdcall CFrame_SetFrameTexture( CWar3Frame * frame, const char * texturep
 void __stdcall CFrame_SetFrameText( CWar3Frame * frame, const char * text )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaChatLog( string(__func__ + string(":") + text).c_str( ));
+	AddNewLineToDotaChatLog( string( __func__ + string( ":" ) + text ).c_str( ) );
 #endif
 	if ( !frame )
 		return;

@@ -54,7 +54,7 @@ namespace NWar3Frame
 	unsigned int( __thiscall * SetFrameTexture )( int FrameAddr, const char * texturepath, unsigned char flags/*border?*/, BOOL tiled, const char * borderpath, BOOL flag ) = NULL;
 	void( __fastcall * Wc3ChangeMenu )( int, int ) = NULL;
 	void( __fastcall * Wc3ChangeMenu_ptr )( int, int ) = NULL;
-
+	void( *GlobalEventCallback )( ) = NULL;
 
 	int CStatusDefaultCStatus = 0;
 	int CStatusLoadFramesVar1 = 0;
@@ -121,61 +121,131 @@ namespace NWar3Frame
 		//CONSOLE_Print( "Change menu ok" );
 	}
 
+
+
 	int __fastcall CWar3Frame::FrameEventCallback( int FrameAddr, int dummy, unsigned int EventId )
 	{
+		if ( !FrameAddr )
+			return FrameEventHandler_ptr( FrameAddr, EventId );
 
 		bool FoundCallbackFrame = false;
+		unsigned int EventIdConverted = 0;
+
+		CWar3Frame * callbackframe = NULL;
+
 
 		for ( auto frame : FramesList )
 		{
-			if ( frame && frame->FrameAddr == FrameAddr )
+			if ( frame && frame->FrameAddr == FrameAddr && frame->FrameName.length( ) > 0 )
 			{
-				if ( AvaiabledEvents.size( ) == 0 || AvaiabledEvents.end( ) == find( AvaiabledEvents.begin( ), AvaiabledEvents.end( ), EventId ) )
+
+				// l convert game events to events
+				switch ( EventId )
 				{
+				case CFrameEventsInternal::FRAME_MOUSE_ENTER:
+				case CFrameEventsInternal::FRAME_MOUSE_LEAVE:
+					if ( frame->IsFocused( ) && !frame->Focused )
+					{
+						frame->Focused = true;
+						EventIdConverted = CFrameEvents::FRAME_FOCUS_ENTER;
+					}
+					else if ( !frame->IsFocused( ) && frame->Focused )
+					{
+						frame->Focused = false;
+						EventIdConverted = CFrameEvents::FRAME_FOCUS_LEAVE;
+					}
+					else if ( frame->IsFocused( ) && frame->Focused )
+					{
+						if ( IsKeyPressed( VK_LBUTTON ) && frame->IsPressed( ) && !frame->Pressed )
+						{
+							frame->Pressed = true;
+							EventIdConverted = CFrameEvents::FRAME_MOUSE_DOWN;
+						}
+					}
+					break;
+				case CFrameEventsInternal::FRAME_EVENT_PRESSED:
+					frame->Pressed = true;
+					EventIdConverted = CFrameEvents::FRAME_EVENT_PRESSED;
+					break;
+				case CFrameEventsInternal::FRAME_MOUSE_UP:
+					if ( frame->Pressed && !IsKeyPressed( VK_LBUTTON ) )
+						EventIdConverted = CFrameEvents::FRAME_MOUSE_UP;
+					frame->Pressed = false;
+					break;
+				case CFrameEventsInternal::FRAME_EDITBOX_TEXT_CHANGED:
+					EventIdConverted = CFrameEvents::FRAME_EDITBOX_TEXT_CHANGED;
+					break;
+				case CFrameEventsInternal::FRAME_MOUSE_WHEEL:
+					EventIdConverted = CFrameEvents::FRAME_MOUSE_WHEEL;
+					break;
+				case CFrameEventsInternal::FRAME_CHECKBOX_CHECKED_CHANGE:
+					if ( frame->IsChecked( ) )
+						EventIdConverted = CFrameEvents::FRAME_CHECKBOX_CHECKED;
+					else
+						EventIdConverted = CFrameEvents::FRAME_CHECKBOX_UNCHECKED;
+					break;
+				default:
+					break;
+				}
+
+				callbackframe = frame;
+				FoundCallbackFrame = true;
+				if ( AvaiabledEvents.size( ) == 0 || AvaiabledEvents.end( ) == find( AvaiabledEvents.begin( ), AvaiabledEvents.end( ), EventIdConverted ) )
+				{
+					if ( GlobalEventCallback )
+						GlobalEventCallback( );
 					return 0;
 				}
-				FoundCallbackFrame = true;
 				break;
 			}
 		}
 
-		if ( !FoundCallbackFrame )
-			return FrameEventHandler_ptr( FrameAddr, EventId );
-
-
-		for ( unsigned int i = 0; i < FramesList.size( ); i++ )
+		if ( !callbackframe )
 		{
-			if ( FramesList[ i ] && FramesList[ i ]->FrameName.size( ) > 0 && FramesList[ i ]->SkipOtherEvents && FramesList[ i ]->FrameAddr == FrameAddr && FrameAddr )
-			{
+			return FrameEventHandler_ptr( FrameAddr, EventId );
+		}
 
-				if ( FramesList[ i ]->RegisteredEventId.size( ) > 0 )
+		if ( !EventIdConverted )
+		{
+			return FrameEventHandler_ptr( FrameAddr, EventId );
+		}
+
+
+		if ( callbackframe->SkipOtherEvents )
+		{
+			if ( callbackframe->RegisteredEventId.size( ) > 0 )
+			{
+				if ( callbackframe->FrameCallback )
 				{
-					if ( FramesList[ i ]->FrameCallback )
+
+					bool FoundRegisteredEvent = false;
+					for ( unsigned int i : callbackframe->RegisteredEventId )
+					{
+						if ( i == EventIdConverted )
+						{
+							FoundRegisteredEvent = true;
+						}
+					}
+
+					if ( FoundRegisteredEvent && callbackframe->CheckIsOk( ) )
 					{
 
-						bool FoundRegisteredEvent = false;
-						for ( auto i : FramesList[ i ]->RegisteredEventId )
-						{
-							if ( i == EventId )
-							{
-								FoundRegisteredEvent = true;
-							}
-						}
-
-						if ( FoundRegisteredEvent && FramesList[ i ]->CheckIsOk( ) )
-							FramesList[ i ]->FrameCallback( FramesList[ i ], FramesList[ i ]->FrameAddr, EventId );
-
-
-						return 0;
+						callbackframe->FrameCallback( callbackframe, callbackframe->FrameAddr, EventIdConverted );
 					}
 				}
 			}
+
+
+			if ( GlobalEventCallback )
+				GlobalEventCallback( );
+			return 0;
 		}
+
 
 
 		////CONSOLE_Print( "2" );
 		int retval = FrameEventHandler_ptr( FrameAddr, EventId );
-		//if ( EventId == CFrameEvents::FRAME_EVENT_TICK
+		//if ( EventId == CFrameEventsInternal::FRAME_EVENT_TICK
 		//	return retval;
 		//}
 		////CONSOLE_Print( "Event " );
@@ -188,40 +258,40 @@ namespace NWar3Frame
 		*/
 		//if ( retval )
 		//{
-		for ( unsigned int i = 0; i < FramesList.size( ); i++ )
+
+		if ( callbackframe->RegisteredEventId.size( ) > 0 )
 		{
-			if ( FramesList[ i ] && FramesList[ i ]->FrameName.size( ) > 0 && FramesList[ i ]->FrameAddr == FrameAddr && FrameAddr )
+			if ( callbackframe->FrameCallback )
 			{
-				if ( FramesList[ i ]->RegisteredEventId.size( ) > 0 )
+
+				bool FoundRegisteredEvent = false;
+				for ( unsigned int i : callbackframe->RegisteredEventId )
 				{
-					if ( FramesList[ i ]->FrameCallback )
+					if ( i == EventIdConverted )
 					{
-
-						bool FoundRegisteredEvent = false;
-						for ( auto i : FramesList[ i ]->RegisteredEventId )
-						{
-							if ( i == EventId )
-							{
-								FoundRegisteredEvent = true;
-							}
-						}
-
-						if ( FoundRegisteredEvent && FramesList[ i ]->CheckIsOk( ) )
-							if ( !FramesList[ i ]->FrameCallback( FramesList[ i ], FramesList[ i ]->FrameAddr, EventId ) )
-							{
-								//	//CONSOLE_Print( "4" );
-								return 0;
-							}
+						FoundRegisteredEvent = true;
 					}
 				}
+
+				if ( FoundRegisteredEvent && callbackframe->CheckIsOk( ) )
+					if ( !callbackframe->FrameCallback( callbackframe, callbackframe->FrameAddr, EventIdConverted ) )
+					{
+						//	//CONSOLE_Print( "4" );
+						if ( GlobalEventCallback )
+							GlobalEventCallback( );
+						return 0;
+					}
 			}
 		}
+
 
 
 		////CONSOLE_Print( "4" );
 		/*//CONSOLE_Print( "All callback called" );
 		*/
 		//}
+		if ( GlobalEventCallback )
+			GlobalEventCallback( );
 		return retval;
 	}
 
@@ -453,6 +523,33 @@ namespace NWar3Frame
 		return false;
 	}
 
+
+	bool CWar3Frame::IsFocused( )
+	{
+		//CONSOLE_Print( "IsEnabled " );
+
+		if ( !FrameOk )
+			return false;
+		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
+		{
+			return ( *( UINT* )( FrameAddr + 0x1D4 ) & 0x10 );
+		}
+		return false;
+	}
+
+	bool CWar3Frame::IsPressed( )
+	{
+		//CONSOLE_Print( "IsEnabled " );
+
+		if ( !FrameOk )
+			return false;
+		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
+		{
+			return ( *( UINT* )( FrameAddr + 0x1D4 ) & 0x4 );
+		}
+		return false;
+	}
+
 	bool CWar3Frame::IsChecked( )
 	{
 		//CONSOLE_Print( "IsChecked " );
@@ -542,6 +639,10 @@ namespace NWar3Frame
 		FrameCallback = callback;
 	}
 
+	void CWar3Frame::SetGlobalEventCallback( void( *globalEventCallback )( ) )
+	{
+		GlobalEventCallback = globalEventCallback;
+	}
 	void CWar3Frame::Update( bool force )
 	{
 		//CONSOLE_Print( "Update " );
@@ -632,6 +733,24 @@ namespace NWar3Frame
 		}
 
 		TextFrameSetText( TargetAddr, text );
+	}
+
+	std::string CWar3Frame::DumpAllFrames( )
+	{
+		std::string FramesDmp = "Frames:\n";
+		char dmpbuf[ 512 ];
+
+		for ( auto frame : FramesList )
+		{
+			if ( frame && frame->FrameName.size( ) > 0 )
+			{
+
+				sprintf_s( dmpbuf, "Name: %s. Addr: %X\n", frame->FrameName.c_str( ), frame->FrameAddr );
+				FramesDmp += dmpbuf;
+			}
+		}
+
+		return FramesDmp;
 	}
 
 	void CWar3Frame::SetFrameAbsolutePosition( CFramePosition orginPosition, float absoluteX, float absoluteY, unsigned int flag )
@@ -758,10 +877,10 @@ namespace NWar3Frame
 		//	sprintf_s( tmps, "Uninit Callback Func:%X ", &FrameEventCallback );
 		//	MessageBoxA( 0, tmps, "1", 0 );
 		if ( FrameEventHandler )
-		MH_DisableHook( FrameEventHandler );
+			MH_DisableHook( FrameEventHandler );
 		//	MH_DisableHook( FixFrameHookError1 );
 		if ( Wc3ChangeMenu )
-		MH_DisableHook( Wc3ChangeMenu );
+			MH_DisableHook( Wc3ChangeMenu );
 
 		CFrameCallbackInitialized = false;
 	}
@@ -844,7 +963,8 @@ namespace NWar3Frame
 	CWar3Frame::CWar3Frame( const char * name, int relativeframe, bool show, int id )
 	{
 		//CONSOLE_Print( "CWar3Frame " );
-
+		Focused = false;
+		Pressed = false;
 		CustomValue = 0;
 		SkipOtherEvents = false;
 		FrameOk = false;
@@ -881,7 +1001,8 @@ namespace NWar3Frame
 	CWar3Frame::CWar3Frame( int FrameAddr, bool show )
 	{
 		//CONSOLE_Print( "CWar3Frame 5 " );
-
+		Focused = false;
+		Pressed = false;
 		CustomValue = 0;
 		SkipOtherEvents = false;
 		FrameOk = false;
@@ -916,7 +1037,8 @@ namespace NWar3Frame
 	void CWar3Frame::DestroyThisFrame( )
 	{
 		//CONSOLE_Print( "CWar3Frame 2 " );
-
+		Focused = false;
+		Pressed = false;
 		if ( this )
 		{
 			if ( FrameOk )
@@ -935,7 +1057,8 @@ namespace NWar3Frame
 	CWar3Frame::CWar3Frame( )
 	{
 		//CONSOLE_Print( "CWar3Frame 3 " );
-
+		Focused = false;
+		Pressed = false;
 		CustomValue = 0;
 		FrameOk = false;
 		SkipOtherEvents = false;
@@ -944,7 +1067,8 @@ namespace NWar3Frame
 	CWar3Frame::~CWar3Frame( )
 	{
 		//CONSOLE_Print( "~~~~CWar3Frame " );
-
+		Focused = false;
+		Pressed = false;
 		FrameOk = false;
 		for ( unsigned int i = 0; i < FramesList.size( ); i++ )
 		{

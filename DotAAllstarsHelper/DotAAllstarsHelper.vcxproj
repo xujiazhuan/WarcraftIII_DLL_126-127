@@ -107,7 +107,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="blpaletter.cpp" />
+    <ClCompile Include="BlpReadWrite.cpp" />
     <ClCompile Include="Crc32Dynamic.cpp">
       <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
     </ClCompile>
@@ -143,7 +143,7 @@
     <None Include="Source.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="blpaletter.h" />
+    <ClInclude Include="BlpReadWrite.h" />
     <ClInclude Include="buffer.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="Crc32Dynamic.h" />

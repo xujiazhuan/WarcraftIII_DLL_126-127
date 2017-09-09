@@ -1,5 +1,5 @@
 #include "Main.h"
-#include "blpaletter.h"
+#include "BlpReadWrite.h"
 
 
 vector<RawImageStruct> ListOfRawImages;
@@ -58,29 +58,35 @@ int __stdcall LoadRawImage( const char * filename )
 
 	int PatchFileData = 0;
 	size_t PatchFileSize = 0;
-	GameGetFile_ptr( filename, &PatchFileData, &PatchFileSize, TRUE );
-	if ( !PatchFileData || !PatchFileSize )
+	GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
+	if ( PatchFileData == 0 || PatchFileSize == 0 )
 	{
-		GameGetFile_ptr( ( filename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
-		if ( !PatchFileData || !PatchFileSize )
+		PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
+		//MessageBoxA( 0, ( "RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ), "READ ERROR", 0 );
+		GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
+		if ( PatchFileData == 0 || PatchFileSize == 0 )
 		{
-			GameGetFile_ptr( ( filename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
-			if ( !PatchFileData || !PatchFileSize )
+			GameGetFile_org( ( filename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+			if ( PatchFileData == 0 || PatchFileSize == 0 )
 			{
-				if ( filenamelen >= 4 )
+				GameGetFile_org( ( filename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+				if ( PatchFileData == 0 || PatchFileSize == 0 )
 				{
-					char * tmpfilename = new char[ filenamelen ];
-					memset( tmpfilename, 0, filenamelen );
-					memcpy( tmpfilename, filename, filenamelen - 4 );
-					GameGetFile_ptr( ( tmpfilename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
-					if ( !PatchFileData || !PatchFileSize )
+					if ( filenamelen > 4 )
 					{
-						GameGetFile_ptr( ( tmpfilename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+						char * tmpfilename = new char[ filenamelen ];
+						memset( tmpfilename, 0, filenamelen );
+						memcpy( tmpfilename, filename, filenamelen - 4 );
+						GameGetFile_org( ( tmpfilename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+						if ( PatchFileData == 0 || PatchFileSize == 0 )
+						{
+							GameGetFile_org( ( tmpfilename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+						}
+
+						delete[ ] tmpfilename;
 					}
 
-					delete[ ] tmpfilename;
 				}
-
 			}
 		}
 	}
@@ -88,7 +94,7 @@ int __stdcall LoadRawImage( const char * filename )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 	cout << "LoadRawImage2:" << endl;
 #endif
-	if ( PatchFileData &&  PatchFileSize > 5 )
+	if ( PatchFileData != 0 || PatchFileSize != 0 )
 	{
 		BOOL IsBlp = memcmp( ( LPCVOID )PatchFileData, "BLP1", 4 ) == 0;
 		int w = 0, h = 0, bpp = 0, mipmaps = 0, alphaflag = 8, compress = 1, alphaenconding = 5;
@@ -112,6 +118,31 @@ int __stdcall LoadRawImage( const char * filename )
 			tmpRawImage.RawImage = resultid;
 			ListOfRawImages.push_back( tmpRawImage );
 		}
+		else
+		{
+			PrintText( ( "|cFFFF0000Error load RawImage file:" + string( filename ) + ". DECODE ERROR" ).c_str( ) );
+			IsBlp = !IsBlp;
+			if ( !IsBlp )
+				rawImageSize = ( unsigned long )TGA2Raw( InBuffer, OutBuffer, w, h, bpp, filename );
+			else
+				rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename );
+
+
+			if ( rawImageSize > 0 )
+			{
+				RawImageStruct tmpRawImage = RawImageStruct( );
+				tmpRawImage.img = OutBuffer;
+				tmpRawImage.width = w;
+				tmpRawImage.height = h;
+				tmpRawImage.filename = filename;
+				tmpRawImage.RawImage = resultid;
+				ListOfRawImages.push_back( tmpRawImage );
+
+				PrintText( "FU##! Error filetype :O" );
+		//		MessageBoxA( 0, "FU##! Error filetype :O", "FU##! Error filetype :O", 0 );
+			}
+		}
+
 	}
 	else return 0;
 
@@ -127,6 +158,14 @@ enum BlendModes : int
 	BlendMultiple
 
 };
+
+BOOL AutoFixImagesSize = TRUE;
+
+int __stdcall RawImage_EnableAutoFix( BOOL enable )
+{
+	AutoFixImagesSize = enable;
+	return 0;
+}
 
 // Рисует RawImage2 на RawImage
 int __stdcall RawImage_DrawImg( unsigned int RawImage, unsigned int RawImage2, int drawx, int drawy, int blendmode )
@@ -1137,17 +1176,62 @@ int __stdcall RawImage_DrawOverlay( unsigned int RawImage, BOOL enabled, float x
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 
-	if ( tmpRawImage.width != PowerOfTwo( tmpRawImage.width) 
-		|| tmpRawImage.height != PowerOfTwo( tmpRawImage.height ) )
+	if ( AutoFixImagesSize )
 	{
-		RawImage_Resize( RawImage, PowerOfTwo( tmpRawImage.width ), PowerOfTwo( tmpRawImage.height ) );
-		
+		if ( tmpRawImage.width != PowerOfTwo( tmpRawImage.width )
+			|| tmpRawImage.height != PowerOfTwo( tmpRawImage.height ) )
+		{
+			int oldwidth = tmpRawImage.width;
+			int oldheight = tmpRawImage.height;
+
+			tmpRawImage.width = PowerOfTwo( tmpRawImage.width );
+			tmpRawImage.height = PowerOfTwo( tmpRawImage.height );
+
+			char * newimage = ( char * )Scale_WithoutResize( ( unsigned char * )tmpRawImage.img.buf, oldwidth, oldheight,
+				tmpRawImage.width, tmpRawImage.height, 4 );
+
+			if ( tmpRawImage.img.buf == newimage )
+			{
+				tmpRawImage.width = oldwidth;
+				tmpRawImage.height = oldheight;
+			}
+			else
+			{
+				tmpRawImage.img.buf = newimage;
+				tmpRawImage.img.length = tmpRawImage.width *  tmpRawImage.height * 4;
+			}
+			
+
+			//RawImage_Resize( RawImage, PowerOfTwo( tmpRawImage.width ), PowerOfTwo( tmpRawImage.height ) );
+		}
 	}
 	tmpRawImage.used_for_overlay = enabled;
 	tmpRawImage.overlay_x = xpos;
 	tmpRawImage.overlay_y = ypos;
 
 
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	return TRUE;
+}
+
+int __stdcall RawImage_EnableOverlay( unsigned int RawImage, BOOL enabled )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+	tmpRawImage.used_for_overlay = enabled;
 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1420,6 +1504,7 @@ void ApplyIconFrameFilter( string filename, int * OutDataPointer, size_t * OutSi
 
 void ClearAllRawImages( )
 {
+	AutoFixImagesSize = TRUE;
 	for ( RawImageStruct & s : ListOfRawImages )
 	{
 		s.used_for_overlay = FALSE;

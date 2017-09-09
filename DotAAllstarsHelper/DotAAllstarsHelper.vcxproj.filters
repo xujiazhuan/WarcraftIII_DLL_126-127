@@ -48,9 +48,6 @@
     <ClCompile Include="DotaErrorHandler.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="blpaletter.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="quantizer.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -102,6 +99,9 @@
     <ClCompile Include="WarcraftFrameHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="BlpReadWrite.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">
@@ -122,9 +122,6 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="blpaletter.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="buffer.h">
@@ -155,6 +152,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="WarcraftFrameHelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BlpReadWrite.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

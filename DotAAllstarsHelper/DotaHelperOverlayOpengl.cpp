@@ -1,5 +1,5 @@
 #include "Main.h"
-#include "blpaletter.h"
+#include "BlpReadWrite.h"
 #include <windows.h>
 #include <string>
 #include <tlhelp32.h>

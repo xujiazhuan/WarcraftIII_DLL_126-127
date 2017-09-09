@@ -302,11 +302,11 @@ typedef struct PPix PPix;
 #include <poppack.h>
 
 typedef RGBAPix palette[ 256 ];
-
+unsigned char * Scale_WithoutResize( unsigned char *pixels, const size_t width, const size_t height, const size_t newwidth, const size_t newheight, const size_t bytes_per_pixel );
 unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, int &mipmaps, int & alphaflag, int & compresstype, int & pictype, char const *filename );
 BOOL TGA2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, const char* filename );
 BOOL BMP2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, const char* filename );
-BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, const char* filename );
+BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int width, int height, int &bpp, const char* filename );
 BOOL CreatePalettedBLP( StormBuffer rawData, StormBuffer &output, int colors, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );
 BOOL RAW2Tga( StormBuffer input, StormBuffer &output, int width, int height, int bpp, const char* filename );
 BOOL CreateJpgBLP( StormBuffer rawData, StormBuffer &output, int quality, char const *filename, int width, int height, int bytespp, int  alphaflag, int &maxmipmaps );

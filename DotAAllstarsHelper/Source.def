@@ -127,3 +127,7 @@ CFrame_Destroy
 CFrame_AddCallack
 CFrame_Enable
 CFrame_IsEnabled
+GetFileCrc32
+DeleteFileByName
+RawImage_EnableOverlay
+RawImage_EnableAutoFix

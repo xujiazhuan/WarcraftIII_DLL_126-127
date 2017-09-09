@@ -1956,6 +1956,23 @@ DWORD GetDllCrc32( )
 	return dwCrc32;
 }
 
+DWORD __stdcall GetFileCrc32( char * file )
+{
+	DWORD dwCrc32;
+	CCrc32Dynamic *pobCrc32Dynamic = new CCrc32Dynamic;
+	pobCrc32Dynamic->Init( );
+	pobCrc32Dynamic->FileCrc32Assembly( file, dwCrc32 );
+	pobCrc32Dynamic->Free( );
+	delete pobCrc32Dynamic;
+	return dwCrc32;
+}
+
+BOOL __stdcall DeleteFileByName( char * file )
+{
+	return DeleteFileA( file );
+}
+
+
 
 int __stdcall InitHpBar( int )
 {

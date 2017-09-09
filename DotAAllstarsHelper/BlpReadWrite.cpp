@@ -1,4 +1,4 @@
-#include "blpaletter.h"
+#include "BlpReadWrite.h"
 
 BOOL IsPowerOfTwo( const long i )
 {
@@ -81,7 +81,7 @@ static int  g_px1ab_w = 0;
 void Resize_HQ_4ch( unsigned char* src, int w1, int h1,
 	int w2, int h2, StormBuffer& outdest )
 {
-	unsigned char * dest = ( unsigned char *)Storm::MemAlloc( w2*h2 * 4 );
+	unsigned char * dest = ( unsigned char * )Storm::MemAlloc( w2*h2 * 4 );
 
 	// Both buffers must be in ARGB format, and a scanline should be w*4 bytes.
 
@@ -325,7 +325,7 @@ void Resize_HQ_4ch( unsigned char* src, int w1, int h1,
 
 void ScaneImageSimple( unsigned char * data, int oldW, int oldH, int newW, int newH, int bytespp, StormBuffer & target )
 {
-	unsigned char* newData =( unsigned char *) Storm::MemAlloc( newW*newH*bytespp );
+	unsigned char* newData = ( unsigned char * )Storm::MemAlloc( newW*newH*bytespp );
 	int maxpixel = oldW*oldH*bytespp - 4;
 
 	double scaleWidth = ( double )newW / ( double )oldW;
@@ -529,69 +529,57 @@ void * ReadImage( int &width,
 	const void *buffer,
 	int sizebytes )
 {
-	JPEG_CORE_PROPERTIES jcprops;
+	JPEG_CORE_PROPERTIES jcprops = JPEG_CORE_PROPERTIES( );
 
 	if ( ijlInit( &jcprops ) != IJL_OK )
 	{
 		ijlFree( &jcprops );
-		
 		return NULL;
 	}
 
-	jcprops.JPGBytes = ( unsigned char * )buffer;
-	jcprops.JPGSizeBytes = sizebytes;
-	jcprops.jquality = 100;
+	nchannels = 4;
 
-	if ( ijlRead( &jcprops, IJL_JBUFF_READPARAMS ) != IJL_OK )
-	{
-		ijlFree( &jcprops );
-		
-		return NULL;
-	}
-
-	width = jcprops.JPGWidth;
-	height = jcprops.JPGHeight;
-	IJLIOTYPE mode;
-
-	mode = IJL_JBUFF_READWHOLEIMAGE;
-	nchannels = jcprops.JPGChannels;
-	unsigned char * pixbuff = ( unsigned char *)Storm::MemAlloc( width*height*nchannels );
+	unsigned char * pixbuff = ( unsigned char * )Storm::MemAlloc( width*height*nchannels );
 	if ( !pixbuff )
 	{
 		ijlFree( &jcprops );
-	
 		return NULL;
 	}
 
+	jcprops.UseJPEGPROPERTIES = 0;
+
+	jcprops.DIBBytes = ( unsigned char * )pixbuff;
 	jcprops.DIBWidth = width;
 	jcprops.DIBHeight = height;
-	jcprops.DIBChannels = nchannels;
 	jcprops.DIBPadBytes = 0;
-	jcprops.DIBBytes = ( unsigned char * )pixbuff;
+	jcprops.DIBChannels = nchannels;
+	jcprops.DIBColor = IJL_OTHER;
+	jcprops.DIBSubsampling = IJL_NONE;
 
-	if ( jcprops.JPGChannels == 3 )
-	{
-		jcprops.DIBColor = IJL_RGB;
-		jcprops.JPGColor = IJL_YCBCR;
-		jcprops.JPGSubsampling = IJL_411;
-		jcprops.DIBSubsampling = ( IJL_DIBSUBSAMPLING )0;
-	}
-	else
-	{
-		jcprops.DIBColor = IJL_G;
-		jcprops.JPGColor = IJL_G;
-		jcprops.JPGSubsampling = ( IJL_JPGSUBSAMPLING )0;
-		jcprops.DIBSubsampling = ( IJL_DIBSUBSAMPLING )0;
-	}
+	jcprops.JPGFile = NULL;
+	jcprops.JPGBytes = ( unsigned char * )buffer;
+	jcprops.JPGSizeBytes = sizebytes;
+	jcprops.JPGWidth = width;
+	jcprops.JPGHeight = height;
+	jcprops.JPGChannels = nchannels;
+	jcprops.JPGColor = IJL_OTHER;
+	jcprops.JPGSubsampling = IJL_NONE;
+	jcprops.JPGThumbWidth = 0;
+	jcprops.JPGThumbHeight = 0;
+	jcprops.cconversion_reqd = 1;
+	jcprops.upsampling_reqd = 1;
+	jcprops.jquality = 75;
 
-	if ( ijlRead( &jcprops, mode ) != IJL_OK )
+	if ( ijlRead( &jcprops, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
 	{
 		ijlFree( &jcprops );
-		
 		return NULL;
 	}
 
-	if ( ijlFree( &jcprops ) != IJL_OK ) return 0;
+	if ( ijlFree( &jcprops ) != IJL_OK )
+	{
+		return 0;
+	}
 
 	return ( void * )pixbuff;
 }
@@ -638,7 +626,7 @@ void * Compress( const void *source,
 
 	int size = width*height*bpp;
 
-	unsigned char * buffer = (unsigned char * )Storm::MemAlloc(size );
+	unsigned char * buffer = ( unsigned char * )Storm::MemAlloc( size );
 
 	jcprops.JPGSizeBytes = size;
 	jcprops.JPGBytes = buffer;
@@ -649,14 +637,14 @@ void * Compress( const void *source,
 	if ( ijlWrite( &jcprops, IJL_JBUFF_WRITEWHOLEIMAGE ) != IJL_OK )
 	{
 		ijlFree( &jcprops );
-		Storm::MemFree( buffer);
+		Storm::MemFree( buffer );
 		return 0;
 	}
 
 
 	if ( ijlFree( &jcprops ) != IJL_OK )
 	{
-		Storm::MemFree( buffer);
+		Storm::MemFree( buffer );
 		return 0;
 	}
 
@@ -674,7 +662,7 @@ BOOL CreateJpgBLP( StormBuffer rawData, StormBuffer &output, int quality, char c
 	source.length = ( unsigned long )( width * height * 4 );
 	if ( bytespp < 4 )
 	{
-		source.buf = ( char * )Storm::MemAlloc( ( unsigned int )( width * height * 4 ));
+		source.buf = ( char * )Storm::MemAlloc( ( unsigned int )( width * height * 4 ) );
 		for ( int j = 0; j < width * height; j++ )
 		{
 			memcpy( source.buf + j * 4, rawData.buf + j*bytespp, ( size_t )bytespp );
@@ -716,18 +704,18 @@ BOOL CreateJpgBLP( StormBuffer rawData, StormBuffer &output, int quality, char c
 				target[ i ].buf = ( char * )compressedimage;
 				target[ i ].length = imglen;
 			}
-			else 
+			else
 			{
 				for ( int j = 0; j <= i; j++ )
 				{ // cleanup
 					if ( bytespp < 4 || j > 0 )
 						scaled->Clear( );
 					if ( target[ j ].buf )
-						target[ j ].Clear();
+						target[ j ].Clear( );
 				}
 				return FALSE;
 			}
-			
+
 			blpHeader.poffs[ i ] = output.length;
 			blpHeader.psize[ i ] = target[ i ].length;
 			output.length += target[ i ].length;
@@ -830,7 +818,7 @@ BOOL CreatePalettedBLP( StormBuffer rawData, StormBuffer &output, int colors, ch
 		ydimension = ydimension / 2;
 	}
 
-	output.buf = ( char * )Storm::MemAlloc(output.length );
+	output.buf = ( char * )Storm::MemAlloc( output.length );
 	unsigned char* blpData = ( unsigned char* )output.buf;
 	memcpy( blpData, &blpHeader, sizeof( BLPHeader ) );
 	memset( blpData + sizeof( BLPHeader ), 0, sizeof( BGRAPix ) * 256 );
@@ -858,7 +846,7 @@ BOOL CreatePalettedBLP( StormBuffer rawData, StormBuffer &output, int colors, ch
 			}
 
 			if ( i > 0 )
-				 bufs[ i ].Clear( ); // cleanup
+				bufs[ i ].Clear( ); // cleanup
 			blp += width * height * 2; //(q->NeedsAlphaChannel() ? 2 : 1);
 		}
 		width = width / 2;
@@ -933,7 +921,7 @@ BOOL BMP2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, i
 	height = InfoHeader->biHeight;
 
 	output.length = ( unsigned long )( width*height*bpp );
-	output.buf = ( char * )Storm::MemAlloc( output.length);
+	output.buf = ( char * )Storm::MemAlloc( output.length );
 	memcpy( output.buf, input.buf + FileHeader->bfOffBits, output.length );
 
 	if ( bpp == 4 ) // invert alpha
@@ -993,9 +981,52 @@ void flip_vertically( unsigned char *pixels, const size_t width, const size_t he
 }
 
 
+unsigned char * Scale_WithoutResize( unsigned char *pixels, const size_t width, const size_t height, const size_t newwidth, const size_t newheight, const size_t bytes_per_pixel )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	if ( newwidth < width )
+		return pixels;
+	if ( newheight < height )
+		return pixels;
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	unsigned char * outimage = ( unsigned char * )Storm::MemAlloc( newwidth * newheight * bytes_per_pixel );
+
+	memset( outimage, 0, newwidth * newheight * bytes_per_pixel );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	
+	size_t y = 0;
+
+	for ( ; y < height; y++ )
+	{
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+		unsigned char * offset1 = &pixels[ y * width * bytes_per_pixel];
+		unsigned char * offset2 = &outimage[ y * newwidth * bytes_per_pixel];
+		size_t copysize = width * bytes_per_pixel;
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+		memcpy(  offset2 , offset1, copysize );
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( (__func__ + std::to_string(y)).c_str() , __LINE__ );
+#endif
+	}
+
+	Storm::MemFree( pixels );
+	return outimage;
+}
+
+
 tBGRAPixel * blp1_convert_paletted_separated_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height, BOOL invertAlpha )
 {
-	tBGRAPixel* pBuffer = ( tBGRAPixel*) Storm::MemAlloc( width * height * sizeof( tBGRAPixel ));
+	tBGRAPixel* pBuffer = ( tBGRAPixel* )Storm::MemAlloc( width * height * sizeof( tBGRAPixel ) );
 	tBGRAPixel* pDst = pBuffer;
 
 	uint8_t* pIndices = pSrc;
@@ -1032,7 +1063,7 @@ RGBAPix * blp1_convert_paletted_separated_alpha( uint8_t* pSrc, RGBAPix* pInfos,
 
 tBGRAPixel* blp1_convert_paletted_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height )
 {
-	tBGRAPixel* pBuffer = ( tBGRAPixel* ) Storm::MemAlloc( width * height * sizeof( tBGRAPixel ));
+	tBGRAPixel* pBuffer = ( tBGRAPixel* )Storm::MemAlloc( width * height * sizeof( tBGRAPixel ) );
 	tBGRAPixel* pDst = pBuffer;
 
 	uint8_t* pIndices = pSrc;
@@ -1060,7 +1091,7 @@ RGBAPix* blp1_convert_paletted_alpha( uint8_t* pSrc, RGBAPix* pInfos, unsigned i
 
 tBGRAPixel* blp1_convert_paletted_no_alpha_BGRA( uint8_t* pSrc, tBGRAPixel* pInfos, unsigned int width, unsigned int height )
 {
-	tBGRAPixel* pBuffer = ( tBGRAPixel * ) Storm::MemAlloc( width * height * sizeof( tBGRAPixel ) );
+	tBGRAPixel* pBuffer = ( tBGRAPixel * )Storm::MemAlloc( width * height * sizeof( tBGRAPixel ) );
 	tBGRAPixel* pDst = pBuffer;
 
 	uint8_t* pIndices = pSrc;
@@ -1160,13 +1191,13 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 
 			RGBAPix *pic = blp1_convert_paletted_separated_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey, 0 );
 
-			Storm::MemFree(tdata);
+			Storm::MemFree( tdata );
 
 
 			output.length = textureSize;
-			output.buf = (char *)Storm::MemAlloc( textureSize);
+			output.buf = ( char * )Storm::MemAlloc( textureSize );
 			memcpy( output.buf, pic, textureSize );
-			Storm::MemFree( pic);
+			Storm::MemFree( pic );
 
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
@@ -1175,7 +1206,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return textureSize;
-		}
+}
 		else if ( alphaflag > 0 && blph.alphaEncoding == 5 )
 		{
 #ifdef DOTA_HELPER_LOG
@@ -1190,11 +1221,11 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 			memcpy( tdata, input.buf + offset, ( size_t )size );
 			RGBAPix *pic = blp1_convert_paletted_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey );
 
-			Storm::MemFree( tdata);
+			Storm::MemFree( tdata );
 			output.length = textureSize;
 			output.buf = ( char * )Storm::MemAlloc( textureSize );
 			memcpy( output.buf, pic, textureSize );
-			Storm::MemFree( pic);
+			Storm::MemFree( pic );
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
 
@@ -1212,16 +1243,15 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 				return 0;
 
 
-
-			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc(( unsigned int )size );
+			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc( ( unsigned int )size );
 			memcpy( tdata, input.buf + offset, ( size_t )size );
 			RGBAPix *pic = blp1_convert_paletted_no_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey );
 
-			Storm::MemFree( tdata);
+			Storm::MemFree( tdata );
 			output.length = textureSize;
 			output.buf = ( char * )Storm::MemAlloc( textureSize );
 			memcpy( output.buf, pic, textureSize );
-			Storm::MemFree( pic);
+			Storm::MemFree( pic );
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
 
@@ -1251,6 +1281,9 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 
 
 
+		width = ( int )blph.sizex;
+		height = ( int )blph.sizey;
+
 		curpos = blph.poffs[ 0 ];
 		memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
 #ifdef DOTA_HELPER_LOG
@@ -1258,7 +1291,6 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 #endif
 		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
 		{
-		
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -1275,8 +1307,8 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		tempdata.Clear( );
-	
 
+		flip_vertically( ( unsigned char * )output.buf, width, height, 4 );
 
 		// Output should be RGBA, BLPs use BGRA
 		//textureInvertRBInPlace( ( RGBAPix* )output.buf, output.length );
@@ -1290,23 +1322,20 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 	}
 
 	return 0;
-	}
+}
 
-BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, int &bpp, char const *filename )
+BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int width, int height, int &bpp, char const *filename )
 {
 	bpp = 4;
 
 	void * outdata;
-	if ( (outdata = ReadImage( width, height, bpp, input.buf, input.length )) != NULL )
+	if ( ( outdata = ReadImage( width, height, bpp, input.buf, input.length ) ) != NULL )
 	{
 		output.length = width * height * bpp;
 		output.buf = ( char * )outdata;
 		return TRUE;
 	}
 	return FALSE;
-
-
-	return TRUE;
 }
 
 

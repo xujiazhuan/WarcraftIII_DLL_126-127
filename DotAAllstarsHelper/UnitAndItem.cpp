@@ -46,6 +46,11 @@ BOOL __stdcall IsUnitInvulnerable( int unitaddr )
 	return ( *( unsigned int* )( unitaddr + 0x20 ) & 8 );
 }
 
+BOOL __stdcall IsUnitIllusion( int unitaddr )
+{
+   return ( *( unsigned int* )( unitaddr + 0x5C ) & 0x40000000 );
+}
+
 // Проверяет юнит или не юнит
 BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 {

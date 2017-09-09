@@ -402,6 +402,7 @@ void __declspec( naked ) f00152710( )
 	}
 }
 
+int MpBarCmpVal = 0;
 
 void __declspec( naked ) f001527F0( )
 {
@@ -411,24 +412,37 @@ void __declspec( naked ) f001527F0( )
 		mov     edi, a16F004;
 		cmp     a3000AC, 0;
 		je L093;
+		cmp     edi, 0;
+		je L093;
 		pushad;
 		pusha;
 		push edi;
 		call IsHero;
-		cmp eax, 0;
+		mov MpBarCmpVal, eax;
 		popa;
 		popad;
+		cmp MpBarCmpVal, 0;
 		je L093;
 		pushad;
 		pusha;
 		push edi;
 		call IsEnemy;
-		cmp eax, 1;
+		mov MpBarCmpVal, eax;
 		popa;
 		popad;
+		cmp MpBarCmpVal, 0;
+		jne L093;
+		cmp MpBarCmpVal, -1;
 		je L093;
-		cmp eax, -1;
-		je L093;
+		pushad;
+		pusha;
+		push edi;
+		call IsUnitIllusion;
+		mov MpBarCmpVal, eax;
+		popa;
+		popad;
+		cmp MpBarCmpVal, 0;
+		jne L093;
 		pushad;
 		pusha;
 		push edi;

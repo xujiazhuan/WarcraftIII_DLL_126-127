@@ -8,6 +8,11 @@
 #include <vector>
 #include <string>
 
+
+#define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
+
+
+
 using namespace std;
 namespace NWar3Frame
 {
@@ -271,6 +276,8 @@ namespace NWar3Frame
 #endif // _MSC_VER
 
 
+	extern void( *GlobalEventCallback )( ) ;
+
 	class   CWar3Frame {
 	public:
 		bool FrameOk;
@@ -280,12 +287,15 @@ namespace NWar3Frame
 		int FrameAddr;
 		int FrameId;
 		int CustomValue;
+		bool Focused;
+		bool Pressed;
 		string FrameName;
 		bool SkipOtherEvents;
 		vector<unsigned int> RegisteredEventId;
 		void RegisterEventCallback( unsigned int EventId );
 		static int GetCurrentFrameAddr( );
 		int( *FrameCallback )( CWar3Frame*frame, int FrameAddr, unsigned int EventId );
+		static void SetGlobalEventCallback( void( *)( ) );
 		static int GetFrameItem( const char * name, int id = 0 );
 		static void __fastcall Wc3ChangeMenu_my( int a1, int  a2 );
 		static int __fastcall FrameEventCallback( int FrameAddr, int dummy, unsigned int EventId );
@@ -294,10 +304,13 @@ namespace NWar3Frame
 		static void Init( int GameVersion, int GameDll );
 		void SetModel( const char * modelpath );
 		static void Wc3PlaySound( const char * name );
+		static std::string DumpAllFrames( );
 		const char * GetText( );
 		unsigned int GetTextMaxLength( );
 		void Enable( bool enable );
 		bool IsEnabled( );
+		bool IsFocused( );
+		bool IsPressed( );
 		bool IsChecked( );
 		void SetFrameCustomValue( int value );
 		void SetChecked( bool checked );
@@ -374,7 +387,7 @@ namespace NWar3Frame
 
 	extern vector<string> LoadedFramedefFiles;
 
-	namespace CFrameEvents
+	namespace CFrameEventsInternal
 	{
 		const unsigned int FRAME_EVENT_TICK = 0x40160064;
 		const unsigned int FRAME_EVENT_PRESSED = 0x40090064;
@@ -385,7 +398,21 @@ namespace NWar3Frame
 		const unsigned int FRAME_FOCUS_CHANGE = 0x40090068;
 		const unsigned int FRAME_CHECKBOX_CHECKED_CHANGE = 0x400C0064;
 		const unsigned int FRAME_EDITBOX_TEXT_CHANGED = 0x400B0065;
+	};
 
+	namespace CFrameEvents
+	{
+		const unsigned int FRAME_EVENT_PRESSED = 1;
+		const unsigned int FRAME_MOUSE_ENTER = 2;
+		const unsigned int FRAME_MOUSE_LEAVE = 3;
+		const unsigned int FRAME_MOUSE_UP = 4;
+		const unsigned int FRAME_MOUSE_DOWN = 5;
+		const unsigned int FRAME_MOUSE_WHEEL = 6;
+		const unsigned int FRAME_FOCUS_ENTER = FRAME_MOUSE_ENTER;
+		const unsigned int FRAME_FOCUS_LEAVE = FRAME_MOUSE_LEAVE;
+		const unsigned int FRAME_CHECKBOX_CHECKED = 7;
+		const unsigned int FRAME_CHECKBOX_UNCHECKED = 8;
+		const unsigned int FRAME_EDITBOX_TEXT_CHANGED = 9;
 	};
 
 	extern vector<unsigned int> AvaiabledEvents;
@@ -396,5 +423,5 @@ namespace NWar3Frame
 	/* need research */
 
 	/* Example */
-	void StormTest( );
+	/*void StormTest( );*/
 }

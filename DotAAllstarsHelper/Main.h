@@ -171,6 +171,7 @@ BOOL __stdcall IsHero( int unitaddr );
 BOOL __stdcall IsTower( int unitaddr );
 BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem = FALSE );
 BOOL __stdcall IsUnitInvulnerable( int unitaddr );
+BOOL __stdcall IsUnitIllusion( int unitaddr );
 BOOL __stdcall IsNotBadItem( int itemaddr, BOOL extracheck = FALSE );
 typedef int( __fastcall * pGetHeroInt )( int unitaddr, int unused, BOOL withbonus );
 extern pGetHeroInt GetHeroInt;
