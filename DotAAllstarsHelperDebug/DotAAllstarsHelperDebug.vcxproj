@@ -103,7 +103,7 @@
     <ResourceCompile Include="DotAAllstarsHelper688.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DotAAllstarsHelper\blpaletter.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\BlpReadWrite.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\Crc32Dynamic.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaAllstarsHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaAutoFPSlimit.cpp" />
@@ -134,7 +134,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\DotAAllstarsHelper\blpaletter.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\BlpReadWrite.h" />
     <ClInclude Include="..\DotAAllstarsHelper\buffer.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Common.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Crc32Dynamic.h" />

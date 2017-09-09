@@ -20,9 +20,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\DotAAllstarsHelper\blpaletter.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\Crc32Dynamic.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -107,11 +104,11 @@
     <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\BlpReadWrite.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\DotAAllstarsHelper\blpaletter.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\DotAAllstarsHelper\buffer.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -155,6 +152,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\DotAAllstarsHelper\WarcraftFrameHelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\BlpReadWrite.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
