@@ -7,7 +7,6 @@
 #include "Crc32Dynamic.h"
 #include "Storm.h"
 
-
 BOOL FileExist( const char * name )
 {
 	ifstream f( name );
@@ -420,6 +419,8 @@ void InitHook( )
 	MH_CreateHook( DrawBarForUnit_org, &DrawBarForUnit_my, reinterpret_cast< void** >( &DrawBarForUnit_ptr ) );
 	MH_EnableHook( DrawBarForUnit_org );
 
+	MH_CreateHook( SimpleButtonClickEvent_org, &SimpleButtonClickEvent_my, reinterpret_cast< void** >( &SimpleButtonClickEvent_ptr ) );
+	MH_EnableHook( SimpleButtonClickEvent_org );
 
 
 
@@ -525,6 +526,12 @@ void UninitializeHook( )
 	{
 		MH_DisableHook( DrawBarForUnit_org );
 		DrawBarForUnit_org = NULL;
+	}
+
+	if ( SimpleButtonClickEvent_org )
+	{
+		MH_DisableHook( SimpleButtonClickEvent_org );
+		SimpleButtonClickEvent_org = NULL;
 	}
 
 	if ( Wc3DrawStage_org )
@@ -1830,7 +1837,8 @@ void __stdcall DisableAllHooks( )
 #endif
 
 	FrameDefHelperUninitialize( );
-
+	if ( !ClickPortrainForIdList.empty( ) )
+		ClickPortrainForIdList.clear( );
 }
 
 void * hRefreshTimer = 0;
@@ -2262,7 +2270,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		InitHpBar( 0 );
 
-		SimpleButtonClickEvent = ( c_SimpleButtonClickEvent )( GameDll + 0x603440 );
+		SimpleButtonClickEvent_org = ( c_SimpleButtonClickEvent )( GameDll + 0x603440 );
+		CommandButtonVtable = GameDll + 0x93EBC4;
 
 
 		MapNameOffset1 = GameDll + 0xAAE788;
@@ -2400,7 +2409,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	}
 	else if ( gameversion == 0x27a )
 	{
-		
+
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
@@ -2583,7 +2592,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		InitHpBar( 0 );
 
 
-		SimpleButtonClickEvent = ( c_SimpleButtonClickEvent )( GameDll + 0x0BB560 );
+		SimpleButtonClickEvent_org = ( c_SimpleButtonClickEvent )( GameDll + 0x0BB560 );
+		CommandButtonVtable = GameDll+ 0x98F6A8;
 
 
 		MapNameOffset1 = GameDll + 0xBEE150;
@@ -2871,7 +2881,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		 ////DisableFeatures( 0xEFFF );
 		 //MainFuncWork = TRUE;
 		// EnableErrorHandler( 0);
-}
+	}
 	else if ( reason == DLL_PROCESS_DETACH )
 	{
 		if ( Warcraft3Window )
@@ -2891,7 +2901,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 		{
 			// Unable to cleanup, need just terminate process :(
 			ExitProcess( 0 );
-	}
+		}
 
 
 #ifdef DOTA_HELPER_LOG

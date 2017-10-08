@@ -104,20 +104,25 @@ string GetCallbackFuncName( CWar3Frame * frame )
 }
 
 
-void __stdcall CFrame_SetCustomValue( CWar3Frame*frame, int value )
+void __stdcall CFrame_SetCustomValue( CWar3Frame*frame, int id, int value )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( __func__ );
 #endif
-	frame->SetFrameCustomValue( value );
+	if ( id >= 1 && id <= 10 )
+		frame->SetFrameCustomValue( value, id );
+	else
+		frame->SetFrameCustomValue( value, 1 );
 }
 
-int __stdcall CFrame_GetCustomValue( CWar3Frame*frame )
+int __stdcall CFrame_GetCustomValue( CWar3Frame*frame, int id )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( __func__ );
 #endif
-	return frame->CustomValue;
+	if ( id >= 1 && id <= 10 )
+		return frame->GetFrameCustomValue( id );
+	return frame->GetFrameCustomValue( 1 );
 }
 
 int __stdcall CFrame_GetFrameAddress( CWar3Frame*frame )
@@ -197,6 +202,37 @@ void __stdcall CFrame_SetFrameModel( CWar3Frame * frame, const char * modelpath 
 		return;
 	frame->SetModel( modelpath );
 }
+
+void __stdcall CFrame_StartCustomAnimate( CWar3Frame * frame, int anim_id )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->StartAnimate( anim_id );
+}
+
+void __stdcall CFrame_StopCustomAnimate( CWar3Frame * frame )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->StopAnimate( );
+}
+
+void __stdcall CFrame_SetCustomAnimateOffset( CWar3Frame * frame, float offset )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->anim_offset = offset;
+}
+
 
 // Set texture for frame, now support only SPRITE and some other frametype(USE FRAMETYPE_ITEM FOR TEST)
 void __stdcall CFrame_SetFrameTexture( CWar3Frame * frame, const char * texturepath, const char * borderpath, BOOL tiled )

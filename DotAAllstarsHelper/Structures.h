@@ -14,6 +14,12 @@ enum class RawImageEventType : unsigned int
 };
 
 
+struct ClickPortrainForId
+{
+	int abilid;
+	int keycode;
+};
+
 
 struct CustomHPBar
 {
@@ -81,8 +87,8 @@ struct BarStruct
 	int _unk25;			// 84
 	int bartype;		// 88
 	int _unk26;			// 8C
-	int _unk27;			// 90
-	int _unk28;			// 94
+	int vis1;			// 90
+	int vis2;			// 94
 	float offset5;		// 98
 	float offset6;		// 9C
 	float offset7;		// 100

@@ -1254,8 +1254,8 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	BugReport << std::endl << "[END]";
 
 	string strBugReport = url_encode( BugReport.str( ) );
-	SendHttpPostRequest( "d1stats.ru", "/fatal.php", ( "msg=" + strBugReport ).c_str( ) );
-	//	SendHttpGetRequest( "d1stats.ru", ("/fatal.php?msg=QQGETQQ" + BugReport.str( ) ).c_str( ) );
+	SendHttpPostRequest( "http://d1stats.ru/fatal.php", ( "msg=" + strBugReport ).c_str( ) );
+	//	SendHttpGetRequest( "http://d1stats.ru", ("/fatal.php?msg=QQGETQQ" + BugReport.str( ) ).c_str( ) );
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars CNET events]" );
 	for ( int& EventID : CNetEvents )

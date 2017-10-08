@@ -65,9 +65,6 @@
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp">
       <Filter>Src</Filter>
     </ClCompile>
@@ -105,6 +102,9 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\BlpReadWrite.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHttpHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>

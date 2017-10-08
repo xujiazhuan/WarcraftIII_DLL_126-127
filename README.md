@@ -101,8 +101,8 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 # CFrame API update: 
 
 # globals 
-
-integer testclickcount = 0
+```
+	integer testclickcount = 0
 
 
 	integer pCFrame_GetLastEventId = 0 
@@ -123,6 +123,9 @@ integer testclickcount = 0
 	integer pCFrame_Enable = 0
 	integer pCFrame_IsEnabled = 0
 	integer pCFrame_GetFrameAddress = 0
+	integer pCFrame_StartCustomAnimate = 0
+	integer	pCFrame_SetCustomAnimateOffset = 0
+	integer	pCFrame_StopCustomAnimate = 0
 
 	integer	CFramePosition_TOP_LEFT = 0
 	integer	CFramePosition_TOP_CENTER = 1
@@ -142,7 +145,9 @@ integer testclickcount = 0
 	integer	FRAMETYPE_BUTTON = 5
 	integer	FRAMETYPE_TEXTBUTTON = 6
 	integer	FRAMETYPE_SPRITE = 7
-
+	integer	FRAMETYPE_HIGHLIGHT = 8
+	integer	FRAMETYPE_SCROLLBAR = 9
+	integer	FRAMETYPE_MODEL = 10
 
 	integer FRAME_EVENT_PRESSED = 1
 	integer FRAME_MOUSE_ENTER = 2
@@ -155,13 +160,18 @@ integer testclickcount = 0
 	integer FRAME_CHECKBOX_CHECKED = 7
 	integer FRAME_CHECKBOX_UNCHECKED = 8
 	integer FRAME_EDITBOX_TEXT_CHANGED = 9
-		
+	integer FRAME_POPUPMENU_ITEM_CHANGE_START = 10
+	integer FRAME_POPUPMENU_ITEM_CHANGED = 11
+	integer FRAME_MOUSE_DOUBLECLICK = 12
+	integer FRAME_SPRITE_ANIM_UPDATE = 13
+	
+```		
 
 #endglobals
 
 #code 
 
-
+```
 
 function CFrame_GetLastEventId takes nothing returns integer
 	if pCFrame_GetLastEventId == 0 then
@@ -183,22 +193,22 @@ function CFrame_GetTriggerCFrame takes nothing returns integer
 	return 0
 endfunction
 
-function CFrame_GetCustomValue takes integer pCframe returns integer
+function CFrame_GetCustomValue takes integer pCframe, integer ValueID returns integer
 	if pCFrame_GetCustomValue == 0 then
 		set pCFrame_GetCustomValue = GetModuleProcAddress(EXTRADLLNAME, "CFrame_GetCustomValue")
 	endif
 	if pCFrame_GetCustomValue != 0 then 
-		return CallStdcallWith1Args(pCFrame_GetCustomValue,pCframe)
+		return CallStdcallWith2Args(pCFrame_GetCustomValue,pCframe,ValueID)
 	endif
-	return 0
+	return 0	
 endfunction
 
-function CFrame_SetCustomValue takes integer pCframe, integer customval returns nothing
+function CFrame_SetCustomValue takes integer pCframe, integer ValueID, integer customval returns nothing
 	if pCFrame_SetCustomValue == 0 then
 		set pCFrame_SetCustomValue = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetCustomValue")
 	endif
 	if pCFrame_SetCustomValue != 0 then 
-		call CallStdcallWith2Args(pCFrame_SetCustomValue,pCframe,customval)
+		call CallStdcallWith3Args(pCFrame_SetCustomValue,pCframe,ValueID,customval)
 	endif
 endfunction
 
@@ -237,8 +247,6 @@ function CFrame_SetFrameType takes integer pCframe, integer frametype returns no
 	endif
 	if pCFrame_SetFrameType != 0 then 
 		call CallStdcallWith2Args(pCFrame_SetFrameType,pCframe,frametype)
-	else 
-		call echo("CFrame_SetFrameType not found")
 	endif
 endfunction
 
@@ -266,8 +274,6 @@ function CFrame_SetFrameText takes integer pCframe, string text returns nothing
 	endif
 	if pCFrame_SetFrameText != 0 then 
 		call CallStdcallWith2Args(pCFrame_SetFrameText,pCframe,GetStringAddress(text))
-	else 
-		call echo("CFrame_SetFrameText not found")
 	endif
 endfunction
 
@@ -339,6 +345,33 @@ function CFrame_GetFrameAddress takes integer pCframe returns integer
 endfunction
 
 
+function CFrame_StartCustomAnimate takes integer pCframe returns nothing
+	if pCFrame_StartCustomAnimate == 0 then
+		set pCFrame_StartCustomAnimate = GetModuleProcAddress(EXTRADLLNAME, "CFrame_StartCustomAnimate")
+	endif
+	if pCFrame_StartCustomAnimate != 0 then 
+		call CallStdcallWith2Args(pCFrame_StartCustomAnimate,pCframe,0)//  0 = anim_id ?
+	endif
+endfunction
+
+function CFrame_StopCustomAnimate takes integer pCframe returns nothing
+	if pCFrame_StopCustomAnimate == 0 then
+		set pCFrame_StopCustomAnimate = GetModuleProcAddress(EXTRADLLNAME, "CFrame_StopCustomAnimate")
+	endif
+	if pCFrame_StopCustomAnimate != 0 then 
+		call CallStdcallWith1Args(pCFrame_StopCustomAnimate,pCframe)
+	endif
+endfunction
+
+function CFrame_SetCustomAnimateOffset takes integer pCframe, real anim_offset returns nothing
+	if pCFrame_SetCustomAnimateOffset == 0 then
+		set pCFrame_SetCustomAnimateOffset = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetCustomAnimateOffset")
+	endif
+	if pCFrame_SetCustomAnimateOffset != 0 then 
+		call CallStdcallWith2Args(pCFrame_SetCustomAnimateOffset,pCframe,mR2I(anim_offset))
+	endif
+endfunction
+
 
 function CFrameTestCallback takes nothing returns nothing
 	local integer frameeventid = CFrame_GetLastEventId( )
@@ -351,8 +384,6 @@ function CFrameTestCallback takes nothing returns nothing
 		endif 
 		call echo("Event id:" + Int2Hex(frameeventid) + ". Frame:" + Int2Hex(eventframe) + ". Flags:" +  Int2Hex( RMem( CFrame_GetFrameAddress(eventframe) + 0x1D4) ))
 	endif
-	
-	
 	
 endfunction
 		
@@ -376,5 +407,5 @@ function CFrameTest takes nothing returns nothing
 	call CFrame_SetFrameType(glyphframe,FRAMETYPE_BUTTON)
 	call CFrame_SetFrameText(glyphframe,"Clicked 0 times")
 endfunction
-
+```
 #endcode

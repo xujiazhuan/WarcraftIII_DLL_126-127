@@ -1,45 +1,106 @@
 #include "Main.h"
-#include "HttpClass.h"
+//#include "HttpClass.h"
+
 
 #include <WinInet.h>
 #pragma comment ( lib, "Wininet.lib" ) 
 
+#undef BOOLAPI
+#undef SECURITY_FLAG_IGNORE_CERT_DATE_INVALID
+#undef SECURITY_FLAG_IGNORE_CERT_CN_INVALID
+#define URL_COMPONENTS URL_COMPONENTS_ANOTHER
+#define URL_COMPONENTSA URL_COMPONENTSA_ANOTHER
+#define URL_COMPONENTSW URL_COMPONENTSW_ANOTHER
+#define LPURL_COMPONENTS LPURL_COMPONENTS_ANOTHER
+#define LPURL_COMPONENTSA LPURL_COMPONENTS_ANOTHER
+#define LPURL_COMPONENTSW LPURL_COMPONENTS_ANOTHER
+#define INTERNET_SCHEME INTERNET_SCHEME_ANOTHER
+#define LPINTERNET_SCHEME LPINTERNET_SCHEME_ANOTHER
+#define HTTP_VERSION_INFO HTTP_VERSION_INFO_ANOTHER
+#define LPHTTP_VERSION_INFO LPHTTP_VERSION_INFO_ANOTHER
+#include "WinHttpClient.h"
+#undef URL_COMPONENTS
+#undef URL_COMPONENTSA
+#undef URL_COMPONENTSW
+#undef LPURL_COMPONENTS
+#undef LPURL_COMPONENTSA
+#undef LPURL_COMPONENTSW
+#undef INTERNET_SCHEME
+#undef LPINTERNET_SCHEME
+#undef HTTP_VERSION_INFO
+#undef LPHTTP_VERSION_INFO
+
+
+//
+
 int DownProgress = 0, DownStatus = 0;
 string LatestDownloadedString;
 
-string SendHttpPostRequest( const char * host, const char * path, const char * data )
+
+bool ProgressProc( double progress )
+{
+	wprintf( L"Current progress: %-.1f%%\r\n", progress );
+	return true;
+}
+
+
+string SendHttpPostRequest( const char * ulr, const char * data )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	HTTPRequest req( host, 80 );
-	if ( req.GetErrorCode( ) == 0 )
+	if ( !ulr || ulr[ 0 ] == '\0' || !data )
+		return "";
+
+	string BuildedPath = ulr;
+	WinHttpClient client( StringToWString( BuildedPath.c_str( ) ), ProgressProc );
+	string postdata = data;
+	client.SetAdditionalDataToSend( ( BYTE * )postdata.c_str( ), postdata.size( ) );
+	wchar_t szSize[ 50 ] = L"";
+	swprintf_s( szSize, L"%d", postdata.size( ) );
+	wstring headers = L"Content-Length: ";
+	headers += szSize;
+	headers += L"\r\nContent-Type: application/x-www-form-urlencoded\r\n";
+	client.SetAdditionalRequestHeaders( headers );
+	client.SendHttpRequest( L"POST" );
+	if ( !client.GetLastError( ) )
 	{
-		req.post_request( path, data );
-		LatestDownloadedString = req.get_response( );
+		DownStatus = 1;
+		return WStringToString( client.GetResponseContent( ).c_str( ) );
 	}
-	return LatestDownloadedString;
+	DownStatus = -1;
+	return "";
 }
 
 string SendHttpGetRequest( const char * host, const char * path )
 {
+
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	HTTPRequest req( host, 80 );
-	if ( req.GetErrorCode( ) == 0 )
+	if ( !host || host[ 0 ] == '\0' || !path )
+		return "";
+
+	string BuildedPath = string( host ) + string( path );
+
+	WinHttpClient client( StringToWString( BuildedPath.c_str( ) ) );
+
+	client.SendHttpRequest( );
+
+	if ( !client.GetLastError( ) )
 	{
-		req.get_request( path );
-		LatestDownloadedString = req.get_response( );
+		DownStatus = 1;
+		return  WStringToString( client.GetResponseContent( ).c_str( ) );
 	}
-	return LatestDownloadedString;
+	DownStatus = -1;
+	return "";
 }
 
 
-void DownloadNewMapToFile( char* szUrl, char * filepath )
+void DownloadNewMapToFile( const char* szUrl, const char * filepath )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	DownStatus = 0;
 	HINTERNET hOpen = NULL;
@@ -75,7 +136,7 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 	int code = 0;
 	DWORD codeLen = 4;
 	HttpQueryInfo( hFile, HTTP_QUERY_STATUS_CODE |
-				   HTTP_QUERY_FLAG_NUMBER, &code, &codeLen, 0 );
+		HTTP_QUERY_FLAG_NUMBER, &code, &codeLen, 0 );
 
 	if ( code != HTTP_STATUS_OK )// 200 OK
 	{
@@ -97,11 +158,11 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 	{
 		dataSize += dwBytesRead;
 		if ( sizeBuffer != 0 )
-			DownProgress = ( int ) ( ( dataSize * 100 ) / sizeBuffer );
+			DownProgress = ( int )( ( dataSize * 100 ) / sizeBuffer );
 
 		dwBytesRead = 0;
 		unsigned char buffer[ 2000 ];
-		BOOL isRead = InternetReadFile( hFile, ( LPVOID ) buffer, _countof( buffer ), &dwBytesRead );
+		BOOL isRead = InternetReadFile( hFile, ( LPVOID )buffer, _countof( buffer ), &dwBytesRead );
 		if ( dwBytesRead && isRead )
 		{
 			AllOkay = TRUE;
@@ -110,8 +171,7 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 		}
 		else
 			break;
-	}
-	while ( dwBytesRead );
+	} while ( dwBytesRead );
 
 	if ( DownProgress == 30 )
 	{
@@ -144,36 +204,75 @@ void DownloadNewMapToFile( char* szUrl, char * filepath )
 	return;
 }
 
-char * _addr = 0;
-char * _request = 0;
-char * _filepath = 0;
+std::string _addr = "";
+std::string _request = "";
+std::string _filepath = "";
 
 unsigned long __stdcall SENDGETREQUEST( LPVOID )
 {
-	SendHttpGetRequest( _addr, _request );
+	try
+	{
+		LatestDownloadedString = SendHttpGetRequest( _addr.c_str( ), _request.c_str( ) );
+		_addr = "";
+		_request = "";
+	}
+	catch ( ... )
+	{
+		DownStatus = -1;
+	}
 	return 0;
 }
+
+
+unsigned long __stdcall SENDPOSTREQUEST( LPVOID )
+{
+	try
+	{
+		LatestDownloadedString = SendHttpPostRequest( _addr.c_str( ), _request.c_str( ) );
+		_addr = "";
+		_request = "";
+	}
+	catch ( ... )
+	{
+		DownStatus = -1;
+	}
+	return 0;
+}
+
 
 
 unsigned long __stdcall SENDSAVEFILEREQUEST( LPVOID )
 {
-	DownloadNewMapToFile( _addr, _filepath );
+	DownloadNewMapToFile( _addr.c_str( ), _filepath.c_str( ) );
+	_addr = "";
+	_request = "";
+	_filepath = "";
 	return 0;
 }
 
-int __stdcall SendGetRequest( char * addr, char * request )
+int __stdcall SendGetRequest( const char * url, const  char * request )
 {
 	DownProgress = 0;
-	_addr = addr; _request = request;
+	_addr = url; _request = request;
 	DownStatus = 0;
 	CreateThread( 0, 0, SENDGETREQUEST, 0, 0, 0 );
 	return 0;
 }
 
-int __stdcall SaveNewDotaVersionFromUrl( char * addr, char * filepath )
+
+int __stdcall SendPostRequest( const char * url, const  char * request )
 {
 	DownProgress = 0;
-	_addr = addr; _filepath = filepath;
+	_addr = url ? url : ""; _request = request ? request : "";
+	DownStatus = 0;
+	CreateThread( 0, 0, SENDPOSTREQUEST, 0, 0, 0 );
+	return 0;
+}
+
+int __stdcall SaveNewDotaVersionFromUrl( const  char * addr, const  char * filepath )
+{
+	DownProgress = 0;
+	_addr = addr ? addr : ""; _filepath = filepath ? filepath : "";
 	DownStatus = 0;
 	CreateThread( 0, 0, SENDSAVEFILEREQUEST, 0, 0, 0 );
 	return 0;
@@ -191,5 +290,7 @@ int __stdcall GetDownloadProgress( int )
 
 const char * __stdcall GetLatestDownloadedString( int )
 {
-	return LatestDownloadedString.c_str( );
+	return LatestDownloadedString.length( ) > 1023 ?
+		string( LatestDownloadedString.begin( ), LatestDownloadedString.begin( ) + 1023 ).c_str( )
+		: LatestDownloadedString.c_str( );
 }

@@ -1,6 +1,9 @@
 #include "Main.h"
 
 
+unsigned int( __thiscall  * DestroyUnitHpBar )( int HpBarAddr );
+
+
 BOOL FPS_LIMIT_ENABLED = FALSE;
 
 ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
@@ -135,9 +138,25 @@ void __fastcall DrawBarForUnit_my( int unitaddr )
 	{
 		DrawBarForUnit_ptr( unitaddr );
 	}
-	else if ( FPSfix1Enabled && UnitNeedDrawBar( unitaddr ) )
+	else /*if ( UnitNeedDrawBar( unitaddr ) )*/
 	{
+		BOOL needremove = FALSE;
+		int hpbaraddr = *( int* )( unitaddr + 0x50 );
+		if ( hpbaraddr)
+		{
+			if ( !IsNotBadUnit( unitaddr ) || ( IsTower( unitaddr ) && IsUnitInvulnerable( unitaddr ) ) )
+			{
+				needremove = TRUE;
+				*( int * )( hpbaraddr + 8 ) = 0;
+			}
+		}
+
 		DrawBarForUnit_ptr( unitaddr );
+
+		if ( needremove )
+		{
+			*( int* )( unitaddr + 0x50 ) = 0;
+		}
 	}
 }
 

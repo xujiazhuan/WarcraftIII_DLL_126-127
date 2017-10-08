@@ -534,6 +534,7 @@ void * ReadImage( int &width,
 	if ( ijlInit( &jcprops ) != IJL_OK )
 	{
 		ijlFree( &jcprops );
+		MessageBoxA( 0, "IJL INIT ERROR", " Success ! ", 0 );
 		return NULL;
 	}
 
@@ -543,6 +544,7 @@ void * ReadImage( int &width,
 	if ( !pixbuff )
 	{
 		ijlFree( &jcprops );
+		MessageBoxA( 0, "pixbuff ERROR", " Success ! ", 0 );
 		return NULL;
 	}
 
@@ -573,11 +575,13 @@ void * ReadImage( int &width,
 	if ( ijlRead( &jcprops, IJL_JBUFF_READWHOLEIMAGE ) != IJL_OK )
 	{
 		ijlFree( &jcprops );
+		MessageBoxA( 0, "IJL_JBUFF_READWHOLEIMAGE ERROR", " Success ! ", 0 );
 		return NULL;
 	}
 
 	if ( ijlFree( &jcprops ) != IJL_OK )
 	{
+		MessageBoxA( 0, "ijlFree ERROR", " Success ! ", 0 );
 		return 0;
 	}
 
@@ -964,6 +968,8 @@ void textureInvertRBInPlace( RGBAPix *bufsrc, unsigned long srcsize )
 
 void flip_vertically( unsigned char *pixels, const size_t width, const size_t height, const size_t bytes_per_pixel )
 {
+	if ( !pixels )
+		return;
 	const size_t stride = width * bytes_per_pixel;
 	unsigned char *row = ( unsigned char * )malloc( stride );
 	if ( !row )
@@ -999,7 +1005,7 @@ unsigned char * Scale_WithoutResize( unsigned char *pixels, const size_t width, 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	
+
 	size_t y = 0;
 
 	for ( ; y < height; y++ )
@@ -1007,15 +1013,15 @@ unsigned char * Scale_WithoutResize( unsigned char *pixels, const size_t width, 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-		unsigned char * offset1 = &pixels[ y * width * bytes_per_pixel];
-		unsigned char * offset2 = &outimage[ y * newwidth * bytes_per_pixel];
+		unsigned char * offset1 = &pixels[ y * width * bytes_per_pixel ];
+		unsigned char * offset2 = &outimage[ y * newwidth * bytes_per_pixel ];
 		size_t copysize = width * bytes_per_pixel;
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-		memcpy(  offset2 , offset1, copysize );
+		memcpy( offset2, offset1, copysize );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( (__func__ + std::to_string(y)).c_str() , __LINE__ );
+		AddNewLineToDotaHelperLog( ( __func__ + std::to_string( y ) ).c_str( ), __LINE__ );
 #endif
 	}
 
@@ -1206,7 +1212,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return textureSize;
-}
+		}
 		else if ( alphaflag > 0 && blph.alphaEncoding == 5 )
 		{
 #ifdef DOTA_HELPER_LOG
@@ -1239,7 +1245,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-			if ( input.length < curpos + blph.sizex*blph.sizey )
+			if ( input.length < curpos + blph.sizex * blph.sizey )
 				return 0;
 
 
@@ -1289,11 +1295,15 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-		if ( !JPG2Raw( tempdata, output, width, height, bpp, filename ) )
+
+		StormBuffer tmpout;
+
+		if ( !JPG2Raw( tempdata, tmpout, width, height, bpp, filename ) )
 		{
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+			tmpout.Clear( );
 			tempdata.Clear( );
 			width = 0;
 			height = 0;
@@ -1308,10 +1318,12 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 #endif
 		tempdata.Clear( );
 
-		flip_vertically( ( unsigned char * )output.buf, width, height, 4 );
+
+		flip_vertically( ( unsigned char * )tmpout.buf, width, height, 4 );
 
 		// Output should be RGBA, BLPs use BGRA
 		//textureInvertRBInPlace( ( RGBAPix* )output.buf, output.length );
+		output = tmpout;
 
 		width = ( int )blph.sizex;
 		height = ( int )blph.sizey;
@@ -1324,7 +1336,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 	return 0;
 }
 
-BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int width, int height, int &bpp, char const *filename )
+BOOL JPG2Raw( StormBuffer input, StormBuffer & output, int width, int height, int &bpp, char const *filename )
 {
 	bpp = 4;
 
@@ -1333,8 +1345,10 @@ BOOL JPG2Raw( StormBuffer input, StormBuffer &output, int width, int height, int
 	{
 		output.length = width * height * bpp;
 		output.buf = ( char * )outdata;
+
 		return TRUE;
 	}
+	MessageBoxA( 0, "Convert error 1", " Success ! ", 0 );
 	return FALSE;
 }
 

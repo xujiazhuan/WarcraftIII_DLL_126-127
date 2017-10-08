@@ -5,6 +5,7 @@ AddNewOffset
 MutePlayer
 UnMutePlayer
 SendGetRequest
+SendPostRequest
 SaveNewDotaVersionFromUrl
 GetDownloadStatus
 GetLatestDownloadedString
@@ -50,6 +51,8 @@ SetMaxFps
 TraceEsp_Print
 GetItemPanelButton
 GetSkillPanelButton
+SimpleButtonClick
+AddClickPortrainForId
 DrawRegenAllways
 TeleportHelper
 TeleportWhiteListKey
@@ -131,3 +134,6 @@ GetFileCrc32
 DeleteFileByName
 RawImage_EnableOverlay
 RawImage_EnableAutoFix
+CFrame_StartCustomAnimate
+CFrame_StopCustomAnimate
+CFrame_SetCustomAnimateOffset

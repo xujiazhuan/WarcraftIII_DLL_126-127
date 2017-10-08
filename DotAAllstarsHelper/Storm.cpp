@@ -127,15 +127,20 @@ namespace Storm {
 				break;
 			}
 		}
+	
 #endif
 		
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( (__func__ + (string)". Addr:" + to_string((int)addr)).c_str( ), __LINE__ );
 
 
 		if ( !StormAvailable )
 			MessageBoxA( 0, "Storm not initialized", "Error1", 0 );
 #endif
+
+		if ( !addr )
+			return 0;
+
 		return aero::generic_std_call<void*>(
 			AddrMemFree,
 			addr,

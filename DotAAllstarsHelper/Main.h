@@ -321,7 +321,11 @@ extern int sub_6F33A010Offset;
 void IssueFixerInit( );
 void IssueFixerDisable( );
 typedef int( __fastcall * c_SimpleButtonClickEvent )( int pButton, int unused, int ClickEventType );
-extern c_SimpleButtonClickEvent SimpleButtonClickEvent;
+int __fastcall SimpleButtonClickEvent_my( int pButton, int unused, int ClickEventType );
+extern c_SimpleButtonClickEvent SimpleButtonClickEvent_org;
+extern c_SimpleButtonClickEvent SimpleButtonClickEvent_ptr;
+extern int CommandButtonVtable;
+extern std::vector<ClickPortrainForId> ClickPortrainForIdList;
 #pragma endregion
 
 
@@ -369,7 +373,7 @@ extern SetGameAreaFOV SetGameAreaFOV_org, SetGameAreaFOV_ptr;
 
 
 #pragma region DotaWebHelper.cpp
-string SendHttpPostRequest( const char * host, const char * path, const char * data );
+string SendHttpPostRequest( const char * url, const char * data );
 string SendHttpGetRequest( const char * host, const char * path );
 #pragma endregion 
 
@@ -487,3 +491,21 @@ extern int ScanId;
 
 
 #pragma endregion
+
+
+
+inline std::string WStringToString( LPCWSTR s )
+{
+	if ( !s )
+		return "";
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.to_bytes( s );
+}
+
+inline std::wstring StringToWString( LPCSTR s )
+{
+	if ( !s )
+		return L"";
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.from_bytes( s );
+}

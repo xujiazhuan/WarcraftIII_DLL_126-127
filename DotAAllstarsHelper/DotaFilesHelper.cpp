@@ -20,7 +20,8 @@ vector<FileRedirectStruct> FileRedirectList;
 BOOL NeedDumpFilesToDisk = FALSE;
 int __stdcall DumpFilesToDisk( BOOL enabled )
 {
-	NeedDumpFilesToDisk = enabled;
+	MessageBoxA(0,"ÎØÈÁÊÀ OSHIBKA ERROR"," ",0);
+	//NeedDumpFilesToDisk = enabled;
 	return enabled;
 }
 
@@ -64,23 +65,35 @@ BOOL IsMemInCache( int addr )
 
 void FreeAllIHelpers( )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	if ( !ICONMDLCACHELIST.empty( ) )
 	{
 		for ( ICONMDLCACHE & ih : ICONMDLCACHELIST )
 		{
-			if ( ih.buf )
+			if ( ih.buf && NeedReleaseUnusedMemory )
 				Storm::MemFree( ih.buf );
 		}
 
 		ICONMDLCACHELIST.clear( );
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	if ( !FileRedirectList.empty( ) )
 		FileRedirectList.clear( );
 
 	if ( !FakeFileList.empty( ) )
 		FakeFileList.clear( );
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	ClearAllRawImages( );
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 }
 
 
@@ -239,7 +252,7 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 	try
 	{
 #endif
-		rawImageSize = Blp2Raw( InBuffer, ( StormBuffer )OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
+		rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 #ifdef DOTA_HELPER_LOG
 	}
 	catch ( ... )
@@ -253,9 +266,9 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	if ( rawImageSize > 0 )
+	if ( rawImageSize > 0 && OutBuffer.buf && OutBuffer.length && w == 64 && h == 64 )
 	{
-		MessageBoxA( 0, "CreateFilterImage", " ", 0 );
+		//MessageBoxA( 0, "CreateFilterImage", " ", 0 );
 		BGRAPix * OutImage = ( BGRAPix* )OutBuffer.buf;
 		BGRAPix BlackPix;
 
@@ -365,13 +378,20 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 #ifdef DOTA_HELPER_LOG
 		else
 		{
-
 			AddNewLineToDotaHelperLog( __func__, __LINE__ );
-
 		}
 #endif
 	}
-
+#ifdef DOTA_HELPER_LOG
+	else if ( !rawImageSize )
+		MessageBoxA( 0, "Convert error.", " Success ! ", 0 );
+	else if ( !OutBuffer.buf || !OutBuffer.length )
+		MessageBoxA( 0, "StormBuffer futall error.", " Success ! ", 0 );
+	else if ( w != 64 || h != 64 )
+		MessageBoxA( 0, "Width/Height of image not 64x64.", " Success ! ", 0 );
+	else if ( w != 64 || h != 64 )
+		MessageBoxA( 0, "Width/Height of image not 64x64.", " Success ! ", 0 );
+#endif
 }
 
 
@@ -816,7 +836,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			}
 
 
-			if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+		/*	if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
 			{
 				FILE *f;
 				fopen_s( &f, ".\\Test1234.mdx", "wb" );
@@ -824,7 +844,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				fclose( f );
 				MessageBoxA( 0, "Ok dump", "DUMP", 0 );
 			}
-
+*/
 
 			ModelSequenceValueList.erase( ModelSequenceValueList.begin( ) + ( int )i );
 
@@ -1099,14 +1119,14 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				}
 
 
-				if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+				/*if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
 				{
 					FILE *f;
 					fopen_s( &f, ".\\Test1234.mdx", "wb" );
 					fwrite( ModelBytes, sz, 1, f );
 					fclose( f );
 					MessageBoxA( 0, "Ok dump", "DUMP", 0 );
-				}
+				}*/
 
 			}
 
@@ -1534,14 +1554,14 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			}
 
 
-			if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
-			{
-				FILE *f;
-				fopen_s( &f, ".\\Test1234.mdx", "wb" );
-				fwrite( &FullPatchData[ 0 ], FullPatchData.size( ), 1, f );
-				fclose( f );
-				MessageBoxA( 0, "Ok dump", "DUMP", 0 );
-			}
+			//if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+			//{
+			//	FILE *f;
+			//	fopen_s( &f, ".\\Test1234.mdx", "wb" );
+			//	fwrite( &FullPatchData[ 0 ], FullPatchData.size( ), 1, f );
+			//	fclose( f );
+			//	MessageBoxA( 0, "Ok dump", "DUMP", 0 );
+			//}
 
 
 			ICONMDLCACHE * tmpih = Storm::MemAllocStruct<ICONMDLCACHE>( );

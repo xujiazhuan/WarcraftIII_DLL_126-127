@@ -64,7 +64,7 @@
       <EnableParallelCodeGeneration>
       </EnableParallelCodeGeneration>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;NO_WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -131,7 +131,7 @@
     <ClCompile Include="DotaErrorHandler.cpp" />
     <ClCompile Include="DotaFOVfix.cpp" />
     <ClCompile Include="hash_64.cpp" />
-    <ClCompile Include="HttpClass.cpp" />
+    <ClCompile Include="DotaHttpHelper.cpp" />
     <ClCompile Include="quantizer.cpp" />
     <ClCompile Include="SendGamePacket.cpp" />
     <ClCompile Include="Storm.cpp" />
@@ -159,6 +159,7 @@
     <ClInclude Include="Structures.h" />
     <ClInclude Include="ViewAllySkill.h" />
     <ClInclude Include="WarcraftFrameHelper.h" />
+    <ClInclude Include="WinHttpClient.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DotAAllstarsHelper688.rc" />
