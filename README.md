@@ -100,7 +100,7 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 
 # CFrame API update: 
 
-# globals 
+
 ```
 	integer testclickcount = 0
 
@@ -167,9 +167,6 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	
 ```		
 
-#endglobals
-
-#code 
 
 ```
 
@@ -408,4 +405,3 @@ function CFrameTest takes nothing returns nothing
 	call CFrame_SetFrameText(glyphframe,"Clicked 0 times")
 endfunction
 ```
-#endcode
