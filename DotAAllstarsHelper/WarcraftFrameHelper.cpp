@@ -5,8 +5,6 @@
 
 #include "WarcraftFrameHelper.h"
 #include "Storm.h"
-
-
 using namespace std;
 
 namespace NWar3Frame
@@ -171,6 +169,8 @@ namespace NWar3Frame
 		FrameEventCallback( real_frame, 0, CFrameEvents::FRAME_SPRITE_ANIM_UPDATE );
 	}
 
+
+
 	int __fastcall CWar3Frame::FrameEventCallback( int FrameAddr, int dummy, unsigned int EventId )
 	{
 		if ( !FrameAddr )
@@ -179,17 +179,17 @@ namespace NWar3Frame
 
 
 		/*	if ( IsKeyPressed( VK_LMENU ) )
-		{
-		if ( EventId != CFrameEventsInternal::FRAME_EVENT_TICK )
-		{
-		char checkboxaddr[ 100 ];
-		sprintf_s( checkboxaddr, "1 CB:%X -> EV:%X", FrameAddr, EventId );
-		CONSOLE_Print( checkboxaddr );
-		}
+			{
+				if ( EventId != CFrameEventsInternal::FRAME_EVENT_TICK )
+				{
+					char checkboxaddr[ 100 ];
+					sprintf_s( checkboxaddr, "1 CB:%X -> EV:%X", FrameAddr, EventId );
+					CONSOLE_Print( checkboxaddr );
+				}
 
-		}
+			}
 
-		*/
+	*/
 
 		bool FoundCallbackFrame = false;
 		unsigned int EventIdConverted = EventId;
@@ -298,20 +298,20 @@ namespace NWar3Frame
 
 				// Fix unknown events // need fix me ?
 
-				/*	if ( !EventIdConverted )
+			/*	if ( !EventIdConverted )
 				{
-				if (  IsKeyPressed( VK_LBUTTON ) )
-				{
+					if (  IsKeyPressed( VK_LBUTTON ) )
+					{
 
-				EventIdConverted = CFrameEvents::FRAME_MOUSE_DOWN;
+						EventIdConverted = CFrameEvents::FRAME_MOUSE_DOWN;
+					}
 				}
-				}
-				*/
+*/
 
-				//if ( IsKeyPressed( VK_LMENU ) )
-				//{
-				//	CONSOLE_Print( "^ in list. Converted eventid:" + to_string( EventIdConverted ) );
-				//}
+//if ( IsKeyPressed( VK_LMENU ) )
+//{
+//	CONSOLE_Print( "^ in list. Converted eventid:" + to_string( EventIdConverted ) );
+//}
 
 				if ( availabledEvents.size( ) == 0 || availabledEvents.end( ) == find( availabledEvents.begin( ), availabledEvents.end( ), EventIdConverted ) )
 				{
@@ -370,10 +370,10 @@ namespace NWar3Frame
 				if ( callbackframe->RegisteredEventId.end( ) != find( callbackframe->RegisteredEventId.begin( ), callbackframe->RegisteredEventId.end( ), EventIdConverted ) )
 				{
 					/*		char checkboxaddr[ 100 ];
-					sprintf_s( checkboxaddr, "2 CB:%X -> EV:%X -> FIX:%i", callbackframe->FrameAddr, EventId, EventIdConverted );
-					MessageBox( 0, checkboxaddr, "", 0 );
+							sprintf_s( checkboxaddr, "2 CB:%X -> EV:%X -> FIX:%i", callbackframe->FrameAddr, EventId, EventIdConverted );
+							MessageBox( 0, checkboxaddr, "", 0 );
 
-					*/
+		*/
 					FoundRegisteredEvent = true;
 				}
 
@@ -555,12 +555,12 @@ namespace NWar3Frame
 			EditBoxFrameSetText = ( int( __thiscall * )( int frameaddr, const char * newtext, BOOL unk ) )( GameDll + 0x0B0450 );
 			//settextaddr =
 			PopupMenuAddItem = ( int( __thiscall * /*sub_6F613260*/ )( int FrameAddr, const char *a2, int flag ) )( GameDll + 0x0B3AF0 ); //flag = -2
-																																		  //	FixFrameHookError1 = ( void( __stdcall * )( int a1 ) )( GameDll + 0x5F83F0 );
+		   //	FixFrameHookError1 = ( void( __stdcall * )( int a1 ) )( GameDll + 0x5F83F0 );
 
 			Wc3GetSkinItemPath = ( const char*( __fastcall * )( const char* name, const char* theme ) )( GameDll + 0x324AD0 );
 			ClearPopupMenu = ( int( __thiscall * )( int FrameAddr ) )( GameDll + 0x28CFD0 );
 			/*CFrameSetFocus = ( int( __thiscall * )( int FrameAddr, int flag ) )( GameDll + 0x336C20 );
-			*/
+*/
 			GlobalGlueObj = ( CGlueMgr** )( GameDll + 0xBB9D88 );
 			//pGameGlobalUIaddr = ( GameDll + 0xBE6350 );
 
@@ -660,7 +660,11 @@ namespace NWar3Frame
 	{
 		if ( !this )
 			return;
-		if ( AnimateStarted )
+		if ( !FrameOk )
+			return;
+
+		if ( FrameType == CFrameType::FRAMETYPE_SPRITE
+			|| FrameType == CFrameType::FRAMETYPE_MODEL )
 		{
 			if ( *( int* )( FrameAddr + 372 ) )
 			{
@@ -670,9 +674,8 @@ namespace NWar3Frame
 					StartSpriteModelAnimated( SpriteMdlAddr, 0, 0, 0, 0.0f );
 				}
 			}
-			AnimateStarted = false;
 		}
-
+		AnimateStarted = false;
 	}
 
 	void CWar3Frame::SetModel( const char * modelpath, int MdlType )
@@ -933,6 +936,20 @@ namespace NWar3Frame
 		}
 		if ( SkipCallbackForInternalFunctions )
 			SkipCallback = false;
+	}
+
+	void CWar3Frame::UpdateFlagsV2Addr( int FrameAddr, unsigned int addflag )
+	{
+		int framevtable = *( int * )( FrameAddr );
+		if ( framevtable )
+		{
+			int UpdateFlagsV2Addr = *( int * )( framevtable + 0xF0 );
+			if ( UpdateFlagsV2Addr )
+			{
+				auto UpdateFlagsV2func = ( int( __thiscall * )( int, unsigned int ) )( UpdateFlagsV2Addr );
+				UpdateFlagsV2func( FrameAddr, addflag );
+			}
+		}
 	}
 
 	void CWar3Frame::SetCursor( bool enabled )
@@ -1225,8 +1242,6 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetFrameRelativePosition( CFramePosition orginPosition, int dstFrameAddr, CFramePosition toPosition, float relativeX, float relativeY, unsigned int flag )
 	{
-		//CONSOLE_Print( "SetFrameRelativePosition " );
-
 		if ( !this )
 			return;
 		if ( !FrameOk )
@@ -1273,7 +1288,98 @@ namespace NWar3Frame
 
 	}
 
+	int CWar3Frame::GetFrameBackdropAddress( CFrameBackdropType backtype )
+	{
+		if ( !this )
+			return 0;
+		if ( !FrameOk )
+			return 0;
 
+		int BackdropAddr = FrameAddr;
+
+		switch ( backtype )
+		{
+		case NWar3Frame::CFrameBackdropType::ControlBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1BC );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlPushedBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C0 );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlDisabledBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C4 );
+			break;
+		default:
+			break;
+		}
+
+		return BackdropAddr;
+	}
+
+	void CWar3Frame::FillToParentFrame( CFrameBackdropType backtype, bool fill )
+	{
+		if ( !this )
+			return;
+		if ( !FrameOk )
+			return;
+
+		int BackdropAddr = FrameAddr;
+
+		switch ( backtype )
+		{
+		case NWar3Frame::CFrameBackdropType::ControlBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1BC );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlPushedBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C0 );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlDisabledBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C4 );
+			break;
+		default:
+			break;
+		}
+
+		if ( BackdropAddr )
+		{
+			*( int* )( BackdropAddr + 0x108 ) = fill ? 1 : 0;
+			UpdateFlagsV2( );
+		}
+	}
+
+	void CWar3Frame::SetFrameScale( CFrameBackdropType backtype, float xscale, float yscale )
+	{
+		if ( !this )
+			return;
+		if ( !FrameOk )
+			return;
+
+		int BackdropAddr = FrameAddr;
+
+		switch ( backtype )
+		{
+		case NWar3Frame::CFrameBackdropType::ControlBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1BC );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlPushedBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C0 );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlDisabledBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C4 );
+			break;
+		default:
+			break;
+		}
+
+		if ( BackdropAddr )
+		{
+			*( float* )( BackdropAddr + 0x10C ) = xscale;
+			*( float* )( BackdropAddr + 0x110 ) = yscale;
+			UpdateFlagsV2(  );
+			//UpdatePosition( FrameAddr, 1 );
+			//UpdateFlags( BackdropAddr );
+		}
+
+	}
 
 	void CWar3Frame::InitCallbackHook( )
 	{
@@ -1372,7 +1478,7 @@ namespace NWar3Frame
 		return true;
 	}
 
-	int CWar3Frame::Load( const char * name, int id )
+	int CWar3Frame::Load( const char * name, int id, bool showerror )
 	{
 		//CONSOLE_Print( "Load " );
 		this->~CWar3Frame( );
@@ -1384,7 +1490,7 @@ namespace NWar3Frame
 		FrameId = id;
 		FrameAddr = GetFrameItem( name, id );
 		FrameName = name ? name : "";
-		if ( !FrameAddr )
+		if ( !FrameAddr && showerror )
 		{
 			MessageBoxA( 0, ( FrameName + string( ":" ) + to_string( FrameId ) ).c_str( ), "Invalid frame name:", 0 );
 		}
@@ -1411,7 +1517,7 @@ namespace NWar3Frame
 	}
 
 
-	CWar3Frame::CWar3Frame( const char * name, int relativeframe, bool show, int id )
+	CWar3Frame::CWar3Frame( const char * name, int relativeframe, bool show, int id, bool showerror )
 	{
 		this->~CWar3Frame( );
 
@@ -1443,7 +1549,7 @@ namespace NWar3Frame
 		{
 			Show( true );
 		}
-		else if ( !FrameAddr )
+		else if ( !FrameAddr && showerror )
 		{
 			MessageBoxA( 0, ( FrameName + string( ":" ) + to_string( FrameId ) ).c_str( ), "Invalid frame name:", 0 );
 		}
@@ -1454,7 +1560,7 @@ namespace NWar3Frame
 	}
 
 
-	CWar3Frame::CWar3Frame( int FrameAddr, bool show )
+	CWar3Frame CWar3Frame::CWar3FrameFromAddress( int FrameAddr, bool show, bool showerror )
 	{
 		this->~CWar3Frame( );
 
@@ -1481,9 +1587,9 @@ namespace NWar3Frame
 		{
 			Show( true );
 		}
-		else if ( !FrameAddr )
+		else if ( !FrameAddr && showerror )
 		{
-			MessageBoxA( 0, ( FrameName + string( ":" ) + to_string( FrameId ) ).c_str( ), "Invalid frame name:", 0 );
+			MessageBoxA( 0, ( FrameName + string( ":" ) + to_string( FrameId ) ).c_str( ), "Invalid frame addr:", 0 );
 		}
 
 
@@ -1491,6 +1597,7 @@ namespace NWar3Frame
 
 		FrameDestroyable = false;
 		FramesList.push_back( this );
+		return *this;
 	}
 
 	void CWar3Frame::DestroyThisFrame( )

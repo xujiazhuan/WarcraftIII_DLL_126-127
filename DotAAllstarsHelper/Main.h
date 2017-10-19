@@ -62,6 +62,8 @@ using namespace std;
 
 #include "WarcraftFrameHelper.h"
 
+#include "MegaPacketHandler.h"
+
 #pragma endregion
 
 
@@ -88,8 +90,8 @@ extern int RenderStage;
 int GetGlobalClassAddr( );
 BOOL FileExist( const char * name );
 DWORD GetDllCrc32( );
-//typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
-//extern _TriggerExecute TriggerExecute;
+typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
+extern _TriggerExecute TriggerExecute;
 
 
 
@@ -288,7 +290,7 @@ extern int GetItemInSlotAddr;
 extern float * GetWindowXoffset;
 extern float * GetWindowYoffset;
 extern int GameFrameAtMouseStructOffset;
-//extern int pTriggerExecute;
+extern int pTriggerExecute;
 #pragma endregion
 
 
@@ -376,13 +378,6 @@ extern SetGameAreaFOV SetGameAreaFOV_org, SetGameAreaFOV_ptr;
 string SendHttpPostRequest( const char * url, const char * data );
 string SendHttpGetRequest( const char * host, const char * path );
 #pragma endregion 
-
-
-#pragma region SendGamePacket.cpp
-extern int PacketClassPtr;
-extern int pGAME_SendPacket;
-void SendPacket( BYTE* packetData, DWORD size );
-#pragma endregion
 
 
 #pragma region DotaAutoFPSlimit.cpp

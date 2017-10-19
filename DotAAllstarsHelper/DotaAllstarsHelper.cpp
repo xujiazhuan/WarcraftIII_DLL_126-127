@@ -82,7 +82,7 @@ int BlizzardDebug4Offset = 0;
 int BlizzardDebug5Offset = 0;
 int BlizzardDebug6Offset = 0;
 int GameFrameAtMouseStructOffset = 0;
-//int pTriggerExecute = 0;
+int pTriggerExecute = 0;
 int SetGameAreaFOVoffset = 0;
 int GameGetFileOffset = 0;
 
@@ -200,7 +200,7 @@ BOOL ClickHelper = FALSE;
 HMODULE GetCurrentModule;
 
 
-//_TriggerExecute TriggerExecute;
+_TriggerExecute TriggerExecute;
 pExecuteFunc ExecuteFunc;
 
 char CurrentMapPath[ MAX_PATH ];
@@ -802,7 +802,7 @@ void __declspec( naked )  PrintAttackSpeedAndOtherInfoHook127a( )
 	}
 }
 
-float __stdcall GetMagicProtectionForHero( int UnitAddr )
+float __stdcall GetMagicProtectionForHero_org( int UnitAddr )
 {
 	float indmg = 100.0;
 	if ( UnitAddr > 0 )
@@ -828,11 +828,19 @@ float __stdcall GetMagicProtectionForHero( int UnitAddr )
 	return ( float )( 100.0 - indmg );
 }
 
+
+// Only for game. Int retval = fix missing eax
+int __stdcall GetMagicProtectionForHero( int UnitAddr )
+{
+	float retval = GetMagicProtectionForHero_org( UnitAddr );
+	return *( int* )&retval;
+}
+
 float __stdcall GetMagicProtectionForHero_by_abiladdr( int abil_addr )
 {
 	if ( abil_addr > 0 )
 	{
-		return GetMagicProtectionForHero( *( int* )( abil_addr + 0x30 ) );
+		return GetMagicProtectionForHero_org( *( int* )( abil_addr + 0x30 ) );
 	}
 	return 0.0f;
 }
@@ -1839,6 +1847,8 @@ void __stdcall DisableAllHooks( )
 	FrameDefHelperUninitialize( );
 	if ( !ClickPortrainForIdList.empty( ) )
 		ClickPortrainForIdList.clear( );
+
+	UninitializePacketHandler( );
 }
 
 void * hRefreshTimer = 0;
@@ -2135,7 +2145,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_BarVTable = GameDll + 0x93E604;
 		IsWindowActive = ( BOOL * )( GameDll + 0xA9E7A4 );
 		ChatFound = GameDll + 0xAD15F0;
-		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x3C3F40 );
+		TriggerExecute = ( _TriggerExecute )( GameDll + 0x3C3F40 );
 		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x3D3F30 );
 		StormErrorHandlerOffset = StormDll + 0x28F0;
 		JassNativeLookupOffset = GameDll + 0x45D070;
@@ -2174,9 +2184,6 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
 
-
-		PacketClassPtr = GameDll + 0x932D2C;
-		pGAME_SendPacket = GameDll + 0x54D970;
 
 		int pDrawAttackSpeed = GameDll + 0x339150;
 		AddNewOffset_( pDrawAttackSpeed, *( int* )pDrawAttackSpeed, Feature_AttackSpeed );
@@ -2405,6 +2412,8 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		FrameDefHelperInitialize( );
 
+		InitializePacketHandler( gameversion );
+
 		return crc32;
 	}
 	else if ( gameversion == 0x27a )
@@ -2448,7 +2457,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		_BarVTable = GameDll + 0x98F52C;
 		IsWindowActive = ( BOOL * )( GameDll + 0xB673EC );
 		ChatFound = GameDll + 0xBDAA14;
-		//TriggerExecute = ( _TriggerExecute ) ( GameDll + 0x1F9100 );
+		TriggerExecute = ( _TriggerExecute )( GameDll + 0x1F9100 );
 		ExecuteFunc = ( pExecuteFunc )( GameDll + 0x1E0650 );
 		StormErrorHandlerOffset = StormDll + 0x8230;
 		JassNativeLookupOffset = GameDll + 0x7EF590;
@@ -2483,9 +2492,6 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
-
-		PacketClassPtr = GameDll + 0x973210;
-		pGAME_SendPacket = GameDll + 0x30F1B0;
 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -2593,7 +2599,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 		SimpleButtonClickEvent_org = ( c_SimpleButtonClickEvent )( GameDll + 0x0BB560 );
-		CommandButtonVtable = GameDll+ 0x98F6A8;
+		CommandButtonVtable = GameDll + 0x98F6A8;
 
 
 		MapNameOffset1 = GameDll + 0xBEE150;
@@ -2721,6 +2727,9 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 		FrameDefHelperInitialize( );
+
+		InitializePacketHandler( gameversion );
+
 		return crc32;
 	}
 
@@ -2955,7 +2964,7 @@ BOOL __stdcall DllMain( HINSTANCE Module, unsigned int reason, LPVOID )
 
 		ManaBarSwitch( FALSE );
 
-
+		MH_DisableHook( MH_ALL_HOOKS );
 		MH_Uninitialize( );
 	}
 	return TRUE;

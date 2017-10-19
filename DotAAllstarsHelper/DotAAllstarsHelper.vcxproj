@@ -53,7 +53,7 @@
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <Optimization>Custom</Optimization>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
       <StructMemberAlignment>Default</StructMemberAlignment>
       <SmallerTypeCheck>
       </SmallerTypeCheck>
@@ -121,6 +121,7 @@
     <ClCompile Include="DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
     <ClCompile Include="DotaFilesHelper.cpp" />
+    <ClCompile Include="MegaPacketHandler.cpp" />
     <ClCompile Include="DotaMemoryHackHelper.cpp" />
     <ClCompile Include="DotaRawImagesDrawApi.cpp" />
     <ClCompile Include="DotaSyncScanner.cpp" />
@@ -133,7 +134,6 @@
     <ClCompile Include="hash_64.cpp" />
     <ClCompile Include="DotaHttpHelper.cpp" />
     <ClCompile Include="quantizer.cpp" />
-    <ClCompile Include="SendGamePacket.cpp" />
     <ClCompile Include="Storm.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
     <ClCompile Include="DotaViewAllySkill.cpp" />
@@ -153,6 +153,7 @@
     <ClInclude Include="HttpClass.h" />
     <ClInclude Include="longlong.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="MegaPacketHandler.h" />
     <ClInclude Include="quantizer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Storm.h" />

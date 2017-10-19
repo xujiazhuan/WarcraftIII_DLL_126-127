@@ -530,7 +530,7 @@ int CommandButtonVtable = 0;
 
 BOOL IsCommandButton( int addr )
 {
-	if ( addr )
+	if ( addr > 0 )
 	{
 		if ( CommandButtonVtable )
 		{
@@ -561,7 +561,7 @@ BOOL __stdcall AddClickPortrainForId( int abilid, int keycode )
 
 BOOL CheckBtnForClickPortrain( int pButton )
 {
-	if ( IsCommandButton( pButton ) )
+	if ( pButton && IsCommandButton( pButton ) )
 	{
 		//PrintText( "SimpleButton IsCommandButton" );
 		int CommandButtonData = *( int* )( pButton + 0x190 );
@@ -652,7 +652,7 @@ void PressSkillPanelButton( int idx, BOOL RightClick )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	int button = GetSkillPanelButton( idx );
-	if ( button > 0 && *( int* )button > 0 )
+	if ( button > 0 && IsCommandButton( button ) )
 	{
 		UINT oldflag = *( UINT * )( button + flagsOffset );
 		if ( !( oldflag & 2 ) )
@@ -668,7 +668,7 @@ void PressItemPanelButton( int idx, BOOL RightClick )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	int button = GetItemPanelButton( idx );
-	if ( button > 0 && *( int* )button > 0 )
+	if ( button > 0 && IsCommandButton( button ) )
 	{
 		UINT oldflag = *( UINT * )( button + flagsOffset );
 		if ( !( oldflag & 2 ) )
@@ -684,7 +684,7 @@ void PressHeroPanelButton( int idx, BOOL RightClick )
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	int button = GetHeroButton( idx );
-	if ( button > 0 && *( int* )button > 0 )
+	if ( button > 0 && IsCommandButton( button ) )
 	{
 		UINT oldflag = *( UINT * )( button + flagsOffset );
 		if ( !( oldflag & 2 ) )
@@ -699,7 +699,7 @@ BOOL IsMouseOverWindow( RECT pwi, POINT cursorPos )
 	return PtInRect( &pwi, cursorPos );
 }
 
-vector<unsigned int> SendKeyEvent;
+vector<unsigned char> SendKeyEvent;
 
 auto t_start = std::chrono::high_resolution_clock::now( );
 
@@ -973,12 +973,49 @@ POINTS GlobalMousePos = { 0,0 };
 
 //BOOL DebugMsgShow = FALSE;
 
+bool InitTestValues = false;
+unsigned int TestValues[ 10 ];
+
+
+
+unsigned int __stdcall GetTestValue( int id )
+{
+	if ( id >= 0 && id <= 7 )
+	{
+		return TestValues[ id ];
+	}
+	return 0;
+}
+
+BOOL ForceLvl1 = FALSE;
+BOOL ForceLvl2 = FALSE;
+BOOL ForceLvl3 = FALSE;
+
+void __stdcall SetForceHotkeyProcess( BOOL lvl1, BOOL lvl2, BOOL lvl3 )
+{
+	ForceLvl1 = lvl1;
+	ForceLvl2 = lvl2;
+	ForceLvl3 = lvl3;
+
+}
+
+
+
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
+	if ( !InitTestValues )
+	{
+		InitTestValues = true;
+		memset( TestValues, 0, sizeof( TestValues ) );
+	}
+	TestValues[ 0 ]++;
+
+
 	unsigned int Msg = _Msg;
 	BOOL NeedSkipThisKey = FALSE;
 	BOOL ClickHelperWork = FALSE;
 	WPARAM wParam = _wParam;
+
 
 	// NEXT BLOCK ONLY FOR TEST!!!!
 	//if ( Msg == WM_KEYDOWN && TestModeActivated )
@@ -1013,10 +1050,17 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	if ( !*InGame )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 
+	TestValues[ 1 ]++;
+
+
 	if ( ( lParam & 0x40000000 ) && Msg == WM_KEYDOWN && !*( int* )ChatFound )
 	{
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 	}
+
+
+	TestValues[ 2 ]++;
+
 
 
 #ifdef DOTA_HELPER_LOG
@@ -1065,8 +1109,10 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	//#endif
 
 
-	if ( *IsWindowActive )
+	if ( *IsWindowActive || ForceLvl2 )
 	{
+		TestValues[ 3 ]++;
+
 
 		if ( WM_TIMER )
 		{
@@ -1308,8 +1354,106 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			return DefWindowProc( hWnd, Msg, wParam, lParam );
 		}
 
-		if ( *( int* )ChatFound == 0 && IsGameFrameActive( ) )
+		TestValues[ 4 ]++;
+
+
+
+		if ( ( *( int* )ChatFound == 0 || ForceLvl3 ) && ( IsGameFrameActive( ) || ForceLvl1 ) )
 		{
+			TestValues[ 5 ]++;
+
+			if ( Msg == WM_KEYDOWN || Msg == WM_KEYUP || Msg == WM_RBUTTONDOWN || Msg == WM_RBUTTONUP )
+			{
+				for ( int & keyCode : RegisteredKeyCodes )
+				{
+					if ( keyCode == ( int )wParam )
+					{
+
+						if ( Msg == WM_KEYDOWN /*&& !( lParam & 0x40000000 )*/ )
+						{
+
+#ifdef DOTA_HELPER_LOG
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+							//BytesToSend.push_back( 0x50 );
+							//// packet header
+							//BytesToSend.push_back( 0xFF );
+							//// packet size
+							//BytesToSend.push_back( 0 );
+							//BytesToSend.push_back( 0 );
+							//BytesToSend.push_back( 0 );
+							//BytesToSend.push_back( 0 );
+							SendKeyEvent.push_back( 0x50 );
+							// header custom packets
+							SendKeyEvent.push_back( 0xFF );
+							// size custom packets 
+							SendKeyEvent.push_back( 0 );
+							SendKeyEvent.push_back( 0 );
+							SendKeyEvent.push_back( 0 );
+							SendKeyEvent.push_back( 0 );
+							// packet type
+							int packettype = 'IKEY';
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&packettype, ( ( unsigned char * )&packettype ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							// data
+							int locpid = GetLocalPlayerId( );
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&locpid, ( ( unsigned char * )&locpid ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&Msg, ( ( unsigned char * )&Msg ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&wParam, ( ( unsigned char * )&wParam ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
+							SendKeyEvent.clear( );
+#ifdef DOTA_HELPER_LOG
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+							//*KeyboardAddrForKey = ( int ) wParam;
+							//*KeyboardAddrForKeyEvent = ( int ) Msg;
+							//	TriggerExecute( KeyboardTriggerHandle );
+						}
+						else if ( Msg == WM_KEYUP )
+						{
+#ifdef DOTA_HELPER_LOG
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+							SendKeyEvent.push_back( 0x50 );
+							// header custom packets
+							SendKeyEvent.push_back( 0xFF );
+							// size custom packets 
+							SendKeyEvent.push_back( 0 );
+							SendKeyEvent.push_back( 0 );
+							SendKeyEvent.push_back( 0 );
+							SendKeyEvent.push_back( 0 );
+							// packet type
+							int packettype = 'IKEY';
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&packettype, ( ( unsigned char * )&packettype ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							// data
+							int locpid = GetLocalPlayerId( );
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&locpid, ( ( unsigned char * )&locpid ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&Msg, ( ( unsigned char * )&Msg ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&wParam, ( ( unsigned char * )&wParam ) + 4 );
+							*( int* )&SendKeyEvent[ 2 ] += 4;
+							SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
+							SendKeyEvent.clear( );
+#ifdef DOTA_HELPER_LOG
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+							//*KeyboardAddrForKey = ( int ) wParam;
+							//*KeyboardAddrForKeyEvent = ( int ) Msg;
+							//TriggerExecute( KeyboardTriggerHandle );
+						}
+#ifdef DOTA_HELPER_LOG
+						AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+						return DefWindowProc( hWnd, Msg, wParam, lParam );
+					}
+
+				}
+			}
 			//char keystateprint[ 200 ];
 			if ( Msg == WM_KEYDOWN ||/* Msg == WM_KEYUP || */Msg == WM_RBUTTONDOWN )
 			{
@@ -1466,10 +1610,14 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 				if ( !NeedSkipThisKey )
 				{
+					TestValues[ 7 ] = KeyActionList.size( );
+
+
 					for ( KeyActionStruct & keyAction : KeyActionList )
 					{
 						if ( keyAction.VK == ( int )wParam )
 						{
+							TestValues[ 6 ]++;
 							if ( Msg == WM_SYSKEYDOWN )
 								Msg = WM_KEYDOWN;
 
@@ -1600,44 +1748,6 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 					Msg = _Msg;
 					wParam = _wParam;
 
-					for ( int & keyCode : RegisteredKeyCodes )
-					{
-						if ( keyCode == ( int )wParam )
-						{
-
-							if ( Msg == WM_KEYDOWN /*&& !( lParam & 0x40000000 )*/ )
-							{
-
-								SendKeyEvent.push_back( 0x85 );
-								SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
-								SendKeyEvent.push_back( Msg );
-								SendKeyEvent.push_back( wParam );
-								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
-								SendKeyEvent.clear( );
-								//*KeyboardAddrForKey = ( int ) wParam;
-								//*KeyboardAddrForKeyEvent = ( int ) Msg;
-							//	TriggerExecute( KeyboardTriggerHandle );
-							}
-							else if ( Msg == WM_KEYUP )
-							{
-
-								SendKeyEvent.push_back( 0x85 );
-								SendKeyEvent.push_back( ( unsigned int )GetLocalPlayerId( ) );
-								SendKeyEvent.push_back( Msg );
-								SendKeyEvent.push_back( wParam );
-								SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) * 4 );
-								SendKeyEvent.clear( );
-								//*KeyboardAddrForKey = ( int ) wParam;
-								//*KeyboardAddrForKeyEvent = ( int ) Msg;
-								//TriggerExecute( KeyboardTriggerHandle );
-							}
-#ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-							return DefWindowProc( hWnd, Msg, wParam, lParam );
-						}
-
-					}
 
 				}
 

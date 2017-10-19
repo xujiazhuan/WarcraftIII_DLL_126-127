@@ -61,7 +61,7 @@ int __stdcall LoadRawImage( const char * filename )
 	GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
 	if ( PatchFileData == 0 || PatchFileSize == 0 )
 	{
-		PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
+		//PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
 		//MessageBoxA( 0, ( "RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ), "READ ERROR", 0 );
 		GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
 		if ( PatchFileData == 0 || PatchFileSize == 0 )
@@ -81,6 +81,10 @@ int __stdcall LoadRawImage( const char * filename )
 						if ( PatchFileData == 0 || PatchFileSize == 0 )
 						{
 							GameGetFile_org( ( tmpfilename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+							if ( PatchFileData == 0 || PatchFileSize == 0 )
+							{
+								PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
+							}
 						}
 
 						delete[ ] tmpfilename;
@@ -139,7 +143,7 @@ int __stdcall LoadRawImage( const char * filename )
 				ListOfRawImages.push_back( tmpRawImage );
 
 				PrintText( "FU##! Error filetype :O" );
-		//		MessageBoxA( 0, "FU##! Error filetype :O", "FU##! Error filetype :O", 0 );
+				//		MessageBoxA( 0, "FU##! Error filetype :O", "FU##! Error filetype :O", 0 );
 			}
 		}
 
@@ -1200,7 +1204,7 @@ int __stdcall RawImage_DrawOverlay( unsigned int RawImage, BOOL enabled, float x
 				tmpRawImage.img.buf = newimage;
 				tmpRawImage.img.length = tmpRawImage.width *  tmpRawImage.height * 4;
 			}
-			
+
 
 			//RawImage_Resize( RawImage, PowerOfTwo( tmpRawImage.width ), PowerOfTwo( tmpRawImage.height ) );
 		}
@@ -1266,6 +1270,31 @@ int __stdcall RawImage_MoveTimed( unsigned int RawImage, float x2, float y2, uns
 
 RawImageCallbackData * GlobalRawImageCallbackData = NULL;
 
+
+
+
+int __stdcall RawImage_SetPacketCallback( unsigned int RawImage, BOOL enable, unsigned int events )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+
+
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+
+	tmpRawImage.PacketCallback = enable;
+	tmpRawImage.events = events;
+	tmpRawImage.IsMouseDown = FALSE;
+	tmpRawImage.IsMouseEntered = FALSE;
+
+	return 0;
+}
+
 int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
 {
 	if ( !InitFunctionCalled )
@@ -1284,12 +1313,14 @@ int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseAct
 	{
 		tmpRawImage.MouseCallback = FALSE;
 		tmpRawImage.MouseActionCallback = RCString( );
+		tmpRawImage.MouserExecuteFuncCallback = FALSE;
 	}
 	else
 	{
 		tmpRawImage.MouseActionCallback = RCString( );
 		str2jstr( &tmpRawImage.MouseActionCallback, MouseActionCallback );
 		tmpRawImage.MouseCallback = TRUE;
+		tmpRawImage.MouserExecuteFuncCallback = TRUE;
 	}
 
 	tmpRawImage.events = events;
@@ -1314,6 +1345,32 @@ int __stdcall RawImage_IsBtn( unsigned int RawImage, BOOL enabled )
 	return TRUE;
 }
 
+void SendRawImagePacket( RawImageCallbackData* callbackdata )
+{
+	std::vector<unsigned char>SendKeyEvent;
+	SendKeyEvent.push_back( 0x50 );
+	// header custom packets
+	SendKeyEvent.push_back( 0xFF );
+	// size custom packets 
+	SendKeyEvent.push_back( 0 );
+	SendKeyEvent.push_back( 0 );
+	SendKeyEvent.push_back( 0 );
+	SendKeyEvent.push_back( 0 );
+	// packet type
+	int packettype = 'IIMG';
+	SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&packettype, ( ( unsigned char * )&packettype ) + 4 );
+	*( int* )&SendKeyEvent[ 2 ] += 4;
+	// data
+	int locpid = GetLocalPlayerId( );
+	SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&locpid, ( ( unsigned char * )&locpid ) + 4 );
+	*( int* )&SendKeyEvent[ 2 ] += 4;
+	SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )callbackdata, ( ( unsigned char * )callbackdata ) + sizeof( RawImageCallbackData ) );
+	*( int* )&SendKeyEvent[ 2 ] += sizeof( RawImageCallbackData );
+
+	SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
+	SendKeyEvent.clear( );
+}
+
 BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey )
 {
 	if ( !GlobalRawImageCallbackData )
@@ -1324,6 +1381,8 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 	GlobalRawImageCallbackData->IsAltPressed = IsKeyPressed( VK_MENU );
 	GlobalRawImageCallbackData->IsCtrlPressed = IsKeyPressed( VK_CONTROL );
 	GlobalRawImageCallbackData->EventType = callbacktype;
+
+
 	float ScreenX = *GetWindowXoffset;
 	float ScreenY = *GetWindowYoffset;
 
@@ -1357,6 +1416,7 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 			int img_x, img_y;
 			//posy -= sizey;
 			GlobalRawImageCallbackData->RawImage = img.RawImage;
+			GlobalRawImageCallbackData->RawImageCustomId = img.RawImageCustomId;
 
 			if ( mousex > posx && mousex < posx + sizex && mousey > posy && mousey < posy + sizey )
 			{
@@ -1400,17 +1460,21 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 
 					if ( MouseEnteredInRawImage )
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
-					if ( !NeedSkipEvent )
+					if ( !NeedSkipEvent && img.MouserExecuteFuncCallback )
 						ExecuteFunc( &img.MouseActionCallback );
-					return !(( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ));
+					if ( !NeedSkipEvent && img.PacketCallback )
+						SendRawImagePacket( GlobalRawImageCallbackData );
+					return !( ( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ) );
 				}
 				break;
 			case RawImageEventType::MouseDown:
 				if ( !img.IsMouseDown && MouseEnteredInRawImage )
 				{
 					img.IsMouseDown = TRUE;
-					if ( !NeedSkipEvent )
+					if ( !NeedSkipEvent && img.MouserExecuteFuncCallback )
 						ExecuteFunc( &img.MouseActionCallback );
+					if ( !NeedSkipEvent && img.PacketCallback )
+						SendRawImagePacket( GlobalRawImageCallbackData );
 					return !( ( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ) );
 				}
 				break;
@@ -1427,7 +1491,10 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 					{
 						img.IsMouseEntered = FALSE;
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseLeave;
-						ExecuteFunc( &img.MouseActionCallback );
+						if ( img.MouserExecuteFuncCallback )
+							ExecuteFunc( &img.MouseActionCallback );
+						if ( img.PacketCallback )
+							SendRawImagePacket( GlobalRawImageCallbackData );
 					}
 				}
 				else
@@ -1438,7 +1505,10 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 						{
 							img.IsMouseEntered = TRUE;
 							GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;
-							ExecuteFunc( &img.MouseActionCallback );
+							if ( img.MouserExecuteFuncCallback )
+								ExecuteFunc( &img.MouseActionCallback );
+							if ( img.PacketCallback )
+								SendRawImagePacket( GlobalRawImageCallbackData );
 						}
 					}
 				}
@@ -1448,13 +1518,19 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				{
 					img.IsMouseDown = FALSE;
 					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseUp;
-					ExecuteFunc( &img.MouseActionCallback );
+					if ( img.MouserExecuteFuncCallback )
+						ExecuteFunc( &img.MouseActionCallback );
+					if ( img.PacketCallback )
+						SendRawImagePacket( GlobalRawImageCallbackData );
 				}
 				if ( img.IsMouseEntered )
 				{
 					img.IsMouseEntered = FALSE;
 					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseLeave;
-					ExecuteFunc( &img.MouseActionCallback );
+					if ( img.MouserExecuteFuncCallback )
+						ExecuteFunc( &img.MouseActionCallback );
+					if ( img.PacketCallback )
+						SendRawImagePacket( GlobalRawImageCallbackData );
 				}
 				break;
 			default:
@@ -1523,28 +1599,29 @@ void ClearAllRawImages( )
 }
 
 
-float __stdcall GetScreenWidth( int )
+/* Only for game. int return = fix missing eax */
+int __stdcall GetScreenWidth( int )
 {
-	return DesktopScreen_Width;
+	return *( int* )&DesktopScreen_Width;
 }
-float __stdcall GetScreenHeight( int )
+int __stdcall GetScreenHeight( int )
 {
-	return DesktopScreen_Height;
-}
-
-float __stdcall GetWindowWidth( int )
-{
-	if ( *InGame )
-		return  *GetWindowXoffset;
-	return DesktopScreen_Width;
-}
-float __stdcall GetWindowHeight( int )
-{
-	if ( *InGame )
-		return  *GetWindowYoffset;
-	return DesktopScreen_Height;
+	return  *( int* )&DesktopScreen_Height;
 }
 
+int __stdcall GetWindowWidth( int )
+{
+	if ( *InGame )
+		return   *( int* )GetWindowXoffset;
+	return *( int* )&DesktopScreen_Width;
+}
+int __stdcall GetWindowHeight( int )
+{
+	if ( *InGame )
+		return   *( int* )GetWindowYoffset;
+	return *( int* )&DesktopScreen_Height;
+}
+/* end */
 
 float DefaultSceenWidth = 1440.0f;
 float DefaultSceenHeight = 900.0f;

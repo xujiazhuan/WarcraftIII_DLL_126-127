@@ -1,5 +1,5 @@
-#include "Main.h"
 
+#include "Main.h"
 #include "WarcraftFrameHelper.h"
 
 using namespace NWar3Frame;
@@ -8,6 +8,9 @@ struct CFrameBuffer
 {
 	CWar3Frame * frame;
 	string callbackfuncname;
+	bool packetcallback;
+	unsigned int callbackeventid;
+	int FrameCode;
 };
 
 vector<CFrameBuffer> CFrameBufferList;
@@ -23,6 +26,10 @@ void DotaHelperEventEndCallback( )
 
 
 RCString NewCallBackFuncName = RCString( );
+
+int NewCallBackTriggerHandle = 0;
+
+
 
 int LastEventId = 0;
 
@@ -55,13 +62,39 @@ int DotaHelperFrameCallback( CWar3Frame*frame, int FrameAddr, unsigned int Event
 	//MessageBoxA( 0, frame->FrameName.c_str( ), frame->FrameName.c_str( ), 0 );
 	for ( auto s : CFrameBufferList )
 	{
-		if ( s.frame == frame )
+		if ( s.frame == frame && s.callbackeventid == EventId )
 		{
 			if ( s.callbackfuncname.length( ) > 0 )
 			{
 				str2jstr( &NewCallBackFuncName, s.callbackfuncname.c_str( ) );
 				ExecuteFunc( &NewCallBackFuncName );
 				//MessageBoxA( 0, CWar3Frame::DumpAllFrames( ).c_str( ), " Frames ", 0 );
+			}
+			else if ( s.packetcallback  )
+			{
+				std::vector<unsigned char> SendKeyEvent;
+				SendKeyEvent.push_back( 0x50 );
+				// header custom packets
+				SendKeyEvent.push_back( 0xFF );
+				// size custom packets 
+				SendKeyEvent.push_back( 0 );
+				SendKeyEvent.push_back( 0 );
+				SendKeyEvent.push_back( 0 );
+				SendKeyEvent.push_back( 0 );
+				// packet type
+				int packettype = 'FRAM';
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&packettype, ( ( unsigned char * )&packettype ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				// data
+				int locpid = GetLocalPlayerId( );
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&locpid, ( ( unsigned char * )&locpid ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&s.FrameCode, ( ( unsigned char * )&s.FrameCode ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&LastEventId, ( ( unsigned char * )&LastEventId ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
+				SendKeyEvent.clear( );
 			}
 			break;
 		}
@@ -80,6 +113,8 @@ void FrameDefHelperInitialize( )
 	CWar3Frame::SetGlobalEventCallback( DotaHelperEventEndCallback );
 	CWar3Frame::Init( GameVersion, GameDll );
 	CWar3Frame::InitCallbackHook( );
+	NewCallBackFuncName = RCString( );
+	NewCallBackTriggerHandle = 0;
 }
 
 void FrameDefHelperUninitialize( )
@@ -87,6 +122,8 @@ void FrameDefHelperUninitialize( )
 	CFrameBufferList.clear( );
 	CWar3Frame::UninitializeAllFrames( TRUE );
 	CWar3Frame::UninitializeCallbackHook( );
+	NewCallBackFuncName = RCString( );
+	NewCallBackTriggerHandle = 0;
 }
 
 string GetCallbackFuncName( CWar3Frame * frame )
@@ -294,7 +331,10 @@ void __stdcall CFrame_Destroy( CWar3Frame * frame )
 		if ( CFrameBufferList[ i ].frame == frame )
 		{
 			CFrameBufferList.erase( CFrameBufferList.begin( ) + i );
-			break;
+			if ( i > 0 )
+				i--;
+			else
+				break;
 		}
 	}
 
@@ -313,6 +353,27 @@ void __stdcall CFrame_AddCallack( CWar3Frame * frame, const char * callbackfuncn
 	CFrameBuffer tmpFrameBuf = CFrameBuffer( );
 	tmpFrameBuf.frame = frame;
 	tmpFrameBuf.callbackfuncname = callbackfuncname;
+	tmpFrameBuf.packetcallback = false;
+	tmpFrameBuf.callbackeventid = callbackeventid;
+	tmpFrameBuf.FrameCode = 0;
+	CFrameBufferList.push_back( tmpFrameBuf );
+	frame->RegisterEventCallback( callbackeventid );
+	//frame->SkipOtherEvents = skipothercallback;
+}
+
+void __stdcall CFrame_AddCallackPacket( CWar3Frame * frame, int FrameCode,  unsigned int callbackeventid, BOOL skipothercallback )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	CFrameBuffer tmpFrameBuf = CFrameBuffer( );
+	tmpFrameBuf.frame = frame;
+	tmpFrameBuf.callbackfuncname = "";
+	tmpFrameBuf.packetcallback = true;
+	tmpFrameBuf.callbackeventid = callbackeventid;
+	tmpFrameBuf.FrameCode = FrameCode;
 	CFrameBufferList.push_back( tmpFrameBuf );
 	frame->RegisterEventCallback( callbackeventid );
 	//frame->SkipOtherEvents = skipothercallback;
@@ -337,4 +398,12 @@ BOOL __stdcall CFrame_IsEnabled( CWar3Frame * frame )
 	if ( !frame )
 		return FALSE;
 	return frame->IsEnabled( );
+}
+
+void __stdcall CFrame_SetScale( CWar3Frame * frame, CFrameBackdropType backtype, BOOL FillToFrame, float scalex, float scaley )
+{
+	if ( !frame )
+		return;
+	frame->FillToParentFrame( backtype, FillToFrame );
+	frame->SetFrameScale( backtype, scalex, scaley );
 }

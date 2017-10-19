@@ -274,6 +274,14 @@ namespace NWar3Frame
 		FRAMETYPE_MODEL = 10
 	};
 
+	enum class CFrameBackdropType : unsigned int
+	{
+		ControlFrame = 0,
+		ControlBackdrop = 1,
+		ControlPushedBackdrop = 2,
+		ControlDisabledBackdrop = 3
+	};
+
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif // _MSC_VER
@@ -339,13 +347,14 @@ namespace NWar3Frame
 		static void UninitializeCallbackHook( );
 		static void LoadFrameDefFiles( const char * filename, bool force = false );
 		bool CheckIsOk( );
-		int Load( const char * name, int id = 0 );
+		int Load( const char * name, int id = 0, bool showerror = false );
 		void SetFrameType( CFrameType newframetype );
-		CWar3Frame( const char * name, int relativeframe = NULL, bool show = false, int id = 0 );
-		CWar3Frame( int FrameAddr, bool show = false );
+		CWar3Frame( const char * name, int relativeframe = NULL, bool show = false, int id = 0, bool showerror = false );
+		CWar3Frame CWar3FrameFromAddress( int FrameAddr, bool show = false, bool showerror = false );
 		void DestroyThisFrame( );
 		void SetFocus( bool focused = true );
 		void UpdateFlagsV2( unsigned int addflag = 0 );
+		static void UpdateFlagsV2Addr( int FrameAddr, unsigned int addflag = 0 );
 		void SetCursor( bool enabled = true );
 		void Click( );
 		void SetScrollBarValuesCount( int count, int current = 0 );
@@ -358,6 +367,9 @@ namespace NWar3Frame
 		void SetFrameFocused( );
 		void StartAnimate( int anim_id = 0 );
 		void StopAnimate( );
+		int GetFrameBackdropAddress( CFrameBackdropType backtype );
+		void FillToParentFrame( CFrameBackdropType backtype, bool fill );
+		void SetFrameScale( CFrameBackdropType backtype, float xscale, float yscale );
 		CWar3Frame( );
 		~CWar3Frame( );
 	};
@@ -454,6 +466,8 @@ namespace NWar3Frame
 		const unsigned int FRAME_MOUSE_DOUBLECLICK = 12;
 		const unsigned int FRAME_SPRITE_ANIM_UPDATE = 13;
 	};
+
+
 
 	extern vector<unsigned int> AvaiabledEvents;
 

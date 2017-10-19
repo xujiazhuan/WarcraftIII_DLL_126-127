@@ -139,3 +139,16 @@ RawImage_EnableAutoFix
 CFrame_StartCustomAnimate
 CFrame_StopCustomAnimate
 CFrame_SetCustomAnimateOffset
+SetForceHotkeyProcess
+GetTestValue
+CFrame_SetScale
+Packet_Clear
+Packet_Initialize
+Packet_PushInteger
+Packet_PopInteger
+Packet_PushReal
+Packet_PopReal
+Packet_Send
+Packet_GetTriggerPlayerId
+CFrame_AddCallackPacket
+RawImage_SetPacketCallback

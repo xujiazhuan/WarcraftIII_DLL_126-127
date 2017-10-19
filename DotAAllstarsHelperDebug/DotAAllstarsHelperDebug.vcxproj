@@ -127,8 +127,8 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaViewAllySkill.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaWebHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\MegaPacketHandler.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp" />
-    <ClCompile Include="..\DotAAllstarsHelper\SendGamePacket.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\Storm.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp" />
@@ -144,6 +144,7 @@
     <ClInclude Include="..\DotAAllstarsHelper\HttpClass.h" />
     <ClInclude Include="..\DotAAllstarsHelper\longlong.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\MegaPacketHandler.h" />
     <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Storm.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Structures.h" />

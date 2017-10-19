@@ -298,6 +298,7 @@ struct RawImageCallbackData
 	BOOL IsLeftButton;
 	int offsetx;
 	int offsety;
+	int RawImageCustomId;
 };
 
 struct RawImageStruct
@@ -315,8 +316,14 @@ struct RawImageStruct
 	BOOL button; // 0x28 
 	void * textureaddr;// 0x2C
 	BOOL needResetTexture;// 0x30
+
 	BOOL MouseCallback; // 0x34
+
+	BOOL	MouserExecuteFuncCallback;
+	BOOL	PacketCallback;
 	RCString MouseActionCallback; // 0x38
+
+
 	BOOL IsMouseDown; // 0x3C
 	BOOL IsMouseEntered; // 0x40
 	unsigned int events;// 0x44
@@ -329,10 +336,13 @@ struct RawImageStruct
 	DWORD SleepTime;
 	DWORD StartTimer;
 
+	int RawImageCustomId;
+
 	RawImageStruct( )
 	{
 		width = 0;
 		height = 0;
+		RawImageCustomId = 0;
 		img = StormBuffer( );
 		ingamebuffer = StormBuffer( );
 		ingame = FALSE;
@@ -347,6 +357,8 @@ struct RawImageStruct
 		IsMouseEntered = FALSE;
 		MouseCallback = FALSE;
 		MouseActionCallback = RCString( );
+		MouserExecuteFuncCallback = FALSE;
+		PacketCallback = FALSE;
 		button = FALSE;
 		MoveTime1 = 0;
 		MoveTime2 = 0;
