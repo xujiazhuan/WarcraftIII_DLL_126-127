@@ -186,6 +186,7 @@ int __stdcall RawImage_IsBtn( unsigned int RawImage, BOOL enabled )
 
 ```
 
+
 function CFrame_GetLastEventId takes nothing returns integer
 	if pCFrame_GetLastEventId == 0 then
 		set pCFrame_GetLastEventId = GetModuleProcAddress(EXTRADLLNAME, "CFrame_GetLastEventId")
@@ -425,19 +426,28 @@ function CFrameTest takes nothing returns nothing
 	call CFrame_SetAbsolutePosition(glyphframe, CFramePosition_BOTTOM_LEFT, 0.155, 0.006  )
 	set glyphframe = CFrame_LoadFrame("GlyphItemButton",0)
 	
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EVENT_PRESSED)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_ENTER)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_LEAVE)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_UP)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_DOWN)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_WHEEL)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_CHECKED)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_UNCHECKED)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EDITBOX_TEXT_CHANGED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EVENT_PRESSED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_ENTER)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_LEAVE)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_UP)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_DOWN)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_WHEEL)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_CHECKED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_UNCHECKED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EDITBOX_TEXT_CHANGED)
+	
+	
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_EVENT_PRESSED)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_UP)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_DOWN)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_ENTER)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_LEAVE)
+	
 	
 	call CFrame_SetFrameType(glyphframe,FRAMETYPE_BUTTON)
 	call CFrame_SetFrameText(glyphframe,"Clicked 0 times")
 endfunction
+
 ```
 #endcode
 
@@ -571,7 +581,7 @@ function Packet_TestRecv2 takes nothing returns nothing
 		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". Frame code:" + I2S(Packet_PopInteger( ))+ ". Event:" + I2S(Packet_PopInteger( )))
 	endif 
 	if (PacketType == Packet_RawImageCode) then 
-		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". RawImageId:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". mouse x/y:" + I2S(Packet_PopReal( )) + "/" + I2S(Packet_PopReal( ))+ ". Alt:" + I2S(Packet_PopInteger( ))+ ". Ctrl:" + I2S(Packet_PopInteger( ))+ ". LeftBtn:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". OffsetX:" + I2S(Packet_PopInteger( ))+ ". OffsetY:" + I2S(Packet_PopInteger( ))+ ". ImageID:" + I2S(Packet_PopInteger( )))
+		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". RawImageId:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". mouse x/y:" + R2S(Packet_PopReal( )) + "/" + R2S(Packet_PopReal( ))+ ". Alt:" + I2S(Packet_PopInteger( ))+ ". Ctrl:" + I2S(Packet_PopInteger( ))+ ". LeftBtn:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". OffsetX:" + I2S(Packet_PopInteger( ))+ ". OffsetY:" + I2S(Packet_PopInteger( ))+ ". ImageID:" + I2S(Packet_PopInteger( )))
 	endif 
 endfunction
 
@@ -608,7 +618,10 @@ function Packet_TestInitialize takes nothing returns nothing
 	// local send
 	//call Packet_TestSend( )
 	call FuncTriggerRegisterPlayerKeyboardEvent('0')
-	
+	call CFrameTest( )
 endfunction
+
+
+
 ```
 # endcode 
