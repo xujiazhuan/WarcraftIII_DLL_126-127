@@ -17,7 +17,7 @@ int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 		return 0;
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	cout << "CreateRawImage:" << endl;
 #endif
 	width = width + ( width % 2 );
@@ -49,7 +49,7 @@ int __stdcall LoadRawImage( const char * filename )
 		return 0;
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	cout << "LoadRawImage:" << endl;
 #endif
 
@@ -95,7 +95,7 @@ int __stdcall LoadRawImage( const char * filename )
 		}
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	cout << "LoadRawImage2:" << endl;
 #endif
 	if ( PatchFileData != 0 || PatchFileSize != 0 )
@@ -799,7 +799,7 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 	if ( !InitFunctionCalled )
 		return 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -809,7 +809,7 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	HDC hDC = CreateCompatibleDC( NULL );
 	char* pSrcData = 0;
@@ -821,7 +821,7 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 		return FALSE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	RECT rect = RECT( );
 	rect.left = x;
@@ -833,7 +833,7 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 	HFONT NewFont = CreateFontA( _fontsize, 0, 0, 0, 0, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _fontname );
 	HFONT TempFont = NULL;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	UINT textcolor = color.ToUINT( );
 	UINT oldcolor = color.ToUINT( );
@@ -849,7 +849,7 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 	SetTextColor( hDC, color.ToUINT( ) );
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 	int len = strlen( text );
@@ -1022,7 +1022,7 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 		tmpRawImage.needResetTexture = TRUE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 	return TRUE;
@@ -1171,7 +1171,7 @@ int __stdcall RawImage_DrawOverlay( unsigned int RawImage, BOOL enabled, float x
 	if ( !InitFunctionCalled )
 		return 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -1216,7 +1216,7 @@ int __stdcall RawImage_DrawOverlay( unsigned int RawImage, BOOL enabled, float x
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	return TRUE;
 }
@@ -1226,7 +1226,7 @@ int __stdcall RawImage_EnableOverlay( unsigned int RawImage, BOOL enabled )
 	if ( !InitFunctionCalled )
 		return 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
@@ -1238,7 +1238,7 @@ int __stdcall RawImage_EnableOverlay( unsigned int RawImage, BOOL enabled )
 	tmpRawImage.used_for_overlay = enabled;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	return TRUE;
 }
@@ -1248,7 +1248,7 @@ int __stdcall RawImage_MoveTimed( unsigned int RawImage, float x2, float y2, uns
 	if ( !InitFunctionCalled )
 		return 0;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{

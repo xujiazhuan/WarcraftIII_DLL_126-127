@@ -121,6 +121,8 @@
     <ClCompile Include="DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
     <ClCompile Include="DotaFilesHelper.cpp" />
+    <ClCompile Include="DotaMinimapHelper.cpp" />
+    <ClCompile Include="DoteNewDebugSystem.cpp" />
     <ClCompile Include="MegaPacketHandler.cpp" />
     <ClCompile Include="DotaMemoryHackHelper.cpp" />
     <ClCompile Include="DotaRawImagesDrawApi.cpp" />

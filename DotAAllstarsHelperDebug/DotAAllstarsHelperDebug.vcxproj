@@ -120,6 +120,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaHPBarHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHttpHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaMemoryHackHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaMinimapHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaMPBarHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaPlayerHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaRawImagesDrawApi.cpp" />

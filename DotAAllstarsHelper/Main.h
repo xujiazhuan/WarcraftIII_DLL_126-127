@@ -8,7 +8,7 @@
 #define WIN32_LEAN_AND_MEAN
 //#define PSAPI_VERSION 1
 
-
+//#define DOTA_HELPER_LOG_NEW
 
 #pragma region Includes
 
@@ -93,7 +93,7 @@ DWORD GetDllCrc32( );
 typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
 extern _TriggerExecute TriggerExecute;
 
-
+int __stdcall SendMessageToChat( const char * msg, BOOL toAll );
 
 typedef void( __cdecl * pExecuteFunc )( RCString * funcname );
 extern pExecuteFunc ExecuteFunc;
@@ -185,13 +185,16 @@ int * GetUnitCountAndUnitArray( int ** unitarray );
 int * GetItemCountAndItemArray( int ** itemarray );
 float GetUnitMPregen( int unitaddr );
 float GetUnitHPregen( int unitaddr );
+float GetUnitMP( int unitaddr );
+float GetUnitHP( int unitaddr );
 int GetUnitAddressFloatsRelated( int unitaddr, int step );
 float GetUnitX_real( int unitaddr );
 float GetUnitY_real( int unitaddr );
 #pragma endregion
 
 #pragma region DotaMPBarHelper.cpp
-
+typedef float *( __thiscall * _GetUnitFloatStat )( int unitaddr, float *a2, int a3 );
+extern _GetUnitFloatStat GetUnitFloatState;
 extern BYTE BarVtableClone[ 0x80 ];
 void ManaBarSwitch( BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
@@ -216,24 +219,33 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 #pragma endregion
 
 #pragma region ErrorHandler.cpp
-#ifdef DOTA_HELPER_LOG
+
 void  __stdcall AddNewLineToJassLog( const char * s );
 void __stdcall  AddNewLineToDotaChatLog( const char * s );
-void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );
+void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );//( const char * s, int line );
 void __stdcall  AddNewLineToJassNativesLog( const char * s );
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );
-void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
 
-extern void ResetTopLevelExceptionFilter( );
-extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
-extern BOOL bDllLogEnable;
-typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
-extern StormErrorHandler StormErrorHandler_org;
+
 typedef int( __fastcall *LookupNative )( int global, int unused, const char * name );
 extern LookupNative LookupNative_org;
 typedef signed int( __fastcall * LookupJassFunc )( int global, int unused, const char * funcname );
 extern LookupJassFunc LookupJassFunc_org;
+
+extern BOOL bDllLogEnable;
+
+#ifndef DOTA_HELPER_LOG_NEW
+#ifdef DOTA_HELPER_LOG
+
+void __cdecl DumpExceptionInfoToFile( _EXCEPTION_POINTERS * ExceptionInfo );
+
+extern void ResetTopLevelExceptionFilter( );
+extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
+
+typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
+extern StormErrorHandler StormErrorHandler_org;
+
 typedef void( __fastcall * ProcessNetEvents )( void * data, int unused_, int Event );
 extern ProcessNetEvents ProcessNetEvents_org;
 typedef void( __fastcall * BlizzardDebug1 ) ( const char*str );
@@ -248,6 +260,7 @@ typedef void( __cdecl * BlizzardDebug5 )( const char *format, ... );
 extern BlizzardDebug5 BlizzardDebug5_org;
 typedef void( __cdecl * BlizzardDebug6 )( const char *format, ... );
 extern BlizzardDebug6 BlizzardDebug6_org;
+#endif
 #endif
 #pragma endregion
 
@@ -296,6 +309,9 @@ extern int pTriggerExecute;
 
 
 #pragma region DotaClickHelper.cpp
+extern int ChatEditBoxVtable;
+BOOL IsChatActive( );
+BOOL IsGameFrameActive( );
 extern vector<int> doubleclickSkillIDs;
 extern vector<int> WhiteListForTeleport;
 extern BOOL ShopHelperEnabled;
@@ -328,6 +344,17 @@ extern c_SimpleButtonClickEvent SimpleButtonClickEvent_org;
 extern c_SimpleButtonClickEvent SimpleButtonClickEvent_ptr;
 extern int CommandButtonVtable;
 extern std::vector<ClickPortrainForId> ClickPortrainForIdList;
+
+typedef int( __fastcall * pSimpleButtonPreClickEvent )( int pButton, int unused, int a2 );
+int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 );
+extern pSimpleButtonPreClickEvent SimpleButtonPreClickEvent_org;
+extern pSimpleButtonPreClickEvent SimpleButtonPreClickEvent_ptr;
+
+extern std::vector<ObjInfoAction> IgnoreObjInfo;
+
+extern std::vector< int > InfoWhitelistedObj;
+
+
 #pragma endregion
 
 
@@ -350,6 +377,8 @@ extern GameGetFile GameGetFile_org, GameGetFile_ptr;
 void FreeAllIHelpers( );
 
 
+typedef int( __fastcall * p_GetTypeInfo )( int unit_item_code, int unused );
+extern p_GetTypeInfo GetTypeInfo;
 
 
 extern RawImageCallbackData * GlobalRawImageCallbackData;

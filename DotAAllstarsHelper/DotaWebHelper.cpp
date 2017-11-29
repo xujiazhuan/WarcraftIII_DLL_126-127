@@ -47,7 +47,7 @@ bool ProgressProc( double progress )
 string SendHttpPostRequest( const char * ulr, const char * data )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( !ulr || ulr[ 0 ] == '\0' || !data )
 		return "";
@@ -76,7 +76,7 @@ string SendHttpGetRequest( const char * host, const char * path )
 {
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( !host || host[ 0 ] == '\0' || !path )
 		return "";
@@ -100,7 +100,7 @@ string SendHttpGetRequest( const char * host, const char * path )
 void DownloadNewMapToFile( const char* szUrl, const char * filepath )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	DownStatus = 0;
 	HINTERNET hOpen = NULL;

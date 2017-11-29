@@ -210,7 +210,7 @@ char NewMapPath[ MAX_PATH ];
 void SaveCurrentMapPath( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	memset( CurrentMapPath, 0, MAX_PATH );
 	int offset1 = *( int* )MapNameOffset1;
@@ -225,7 +225,7 @@ void SaveCurrentMapPath( )
 void BuildFilePath( char * fname )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	SaveCurrentMapPath( );
 
@@ -275,7 +275,7 @@ DrawInterface_p DrawInterface_ptr;
 int __fastcall DrawInterface_my( int arg1, int arg2 )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( *InGame/* && *IsWindowActive*/ )
 	{
@@ -285,7 +285,7 @@ int __fastcall DrawInterface_my( int arg1, int arg2 )
 		OverlayDrawed = TRUE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( "Draw custom interface:OK", __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( "Draw custom interface:OK", __LINE__ );
 #endif
 	return DrawInterface_ptr( arg1, arg2 );
 }
@@ -324,14 +324,16 @@ int __fastcall Wc3DrawObject_my( int a1, int a2 )
 	return 0;
 }
 
+
+
 void InitHook( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 
-	StormErrorHandler_org = ( StormErrorHandler )StormErrorHandlerOffset;
 	LookupNative_org = ( LookupNative )JassNativeLookupOffset;
 	LookupJassFunc_org = ( LookupJassFunc )JassFuncLookupOffset;
+#ifndef DOTA_HELPER_LOG_NEW
 	ProcessNetEvents_org = ( ProcessNetEvents )ProcessNetEventsOffset;
 	BlizzardDebug1_org = ( BlizzardDebug1 )BlizzardDebug1Offset;
 	BlizzardDebug2_org = ( BlizzardDebug2 )BlizzardDebug2Offset;
@@ -340,14 +342,16 @@ void InitHook( )
 	BlizzardDebug5_org = ( BlizzardDebug5 )BlizzardDebug5Offset;
 	BlizzardDebug6_org = ( BlizzardDebug6 )BlizzardDebug6Offset;
 
+	StormErrorHandler_org = ( StormErrorHandler )StormErrorHandlerOffset;
+#endif
 	EnableErrorHandler( 0 );
 
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( !Warcraft3Window )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		Warcraft3Window = FindWindowA( "Warcraft III", 0 );
 		if ( !Warcraft3Window )
@@ -360,12 +364,12 @@ void InitHook( )
 		MH_CreateHook( WarcraftRealWNDProc_org, &BeforeWarcraftWNDProc, reinterpret_cast< void** >( &WarcraftRealWNDProc_ptr ) );
 		MH_EnableHook( WarcraftRealWNDProc_org );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	}
 #ifdef DOTA_HELPER_LOG
 	else
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 	SetGameAreaFOV_org = ( SetGameAreaFOV )( SetGameAreaFOVoffset + GameDll );
@@ -444,16 +448,16 @@ void InitHook( )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 }
 
 void UninitializeHook( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	DisableErrorHandler( 0 );
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 
@@ -504,7 +508,7 @@ void UninitializeHook( )
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 
@@ -536,17 +540,21 @@ void UninitializeHook( )
 
 	if ( Wc3DrawStage_org )
 	{
-		Wc3DrawStage_org = NULL;
 		MH_DisableHook( Wc3DrawStage_org );
+		Wc3DrawStage_org = NULL;
 	}
 
-
+	if ( SimpleButtonPreClickEvent_org )
+	{
+		MH_EnableHook( SimpleButtonPreClickEvent_org );
+		SimpleButtonPreClickEvent_org = NULL;
+	}
 
 #pragma endregion
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	IssueFixerDisable( );
 }
@@ -558,7 +566,7 @@ pStorm_503 Storm_503;
 BOOL PlantDetourJMP( BYTE* source, const BYTE* destination, size_t length )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	DWORD oldProtection;
 	BOOL bRet = VirtualProtect( source, length, PAGE_EXECUTE_READWRITE, &oldProtection );
@@ -618,7 +626,7 @@ pGetItemTypeId GetItemTypeId;
 int __cdecl GetItemTypeInSlot( int unitaddr, int slotid )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	int itemhandle = 0;
 
@@ -662,7 +670,7 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 	if ( unitaddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		if ( IsNotBadUnit( *unitaddr ) && IsHero( *unitaddr ) )
 		{
@@ -808,7 +816,7 @@ float __stdcall GetMagicProtectionForHero_org( int UnitAddr )
 	if ( UnitAddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		unsigned int abilscount = 0;
@@ -852,7 +860,7 @@ int __stdcall PrintMoveSpeed( int addr, float * movespeed, int AmovAddr )
 	if ( AmovAddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		float MagicProtection = GetMagicProtectionForHero_by_abiladdr( AmovAddr );
 		bufferaddr = buffer;
@@ -971,7 +979,7 @@ int __stdcall SaveStringsForPrintItem( int itemaddr )
 	if ( itemaddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		if ( IsNotBadItem( itemaddr ) )
 		{
@@ -1013,7 +1021,7 @@ int __stdcall SaveStringForHP_MP( int unitaddr )
 		}
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		if ( IsNotBadUnit( unitaddr ) )
 		{
@@ -1513,7 +1521,7 @@ void __stdcall EnableFeatureOffsets( unsigned int FeatureFlag )
 void __stdcall RestoreAllOffsets( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	for ( unsigned int i = 0; i < offsetslist.size( ); i++ )
 	{
@@ -1708,7 +1716,7 @@ int __stdcall EnableFeatures( unsigned int Flags )
 void __stdcall ClearCustomsBars( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	for ( int i = 0; i < 20; i++ )
 	{
@@ -1720,7 +1728,7 @@ void __stdcall ClearCustomsBars( )
 void __stdcall FreeAllVectors( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( !ModelCollisionFixList.empty( ) )
 		ModelCollisionFixList.clear( );
@@ -1751,7 +1759,7 @@ void __stdcall DisableAllHooks( )
 {
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	// Вернуть стандартное ограничение FPS
 	//_SetMaxFps( 200 );
@@ -1774,32 +1782,32 @@ void __stdcall DisableAllHooks( )
 		FreeExecutableMemoryList.clear( );
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	UninitOpenglHook( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	Uninitd3d8Hook( TRUE );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	Uninitd3d9Hook( TRUE );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	FreeAllIHelpers( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	FreeAllVectors( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	EnableSelectHelper = FALSE;
@@ -1810,7 +1818,7 @@ void __stdcall DisableAllHooks( )
 	BlockKeyboardAndMouseWhenTeleport = FALSE;
 	rawimage_skipmouseevent = TRUE;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	if ( !WhiteListForTeleport.empty( ) )
@@ -1820,7 +1828,7 @@ void __stdcall DisableAllHooks( )
 	//	if ( !NeedDrawBarForUnit.empty( ) )
 	//		NeedDrawBarForUnit.clear( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	ShopHelperEnabled = FALSE;
@@ -1835,18 +1843,24 @@ void __stdcall DisableAllHooks( )
 	NeedReleaseUnusedMemory = FALSE;
 	PlayerEnemyCache.clear( );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 	bDllLogEnable = TRUE;
 #endif
 	InitFunctionCalled = FALSE;
 	SetCustomFovFix( 1.0f );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 	FrameDefHelperUninitialize( );
 	if ( !ClickPortrainForIdList.empty( ) )
 		ClickPortrainForIdList.clear( );
+
+	if ( !IgnoreObjInfo.empty( ) )
+		IgnoreObjInfo.clear( );
+
+	if ( !InfoWhitelistedObj.empty( ) )
+		InfoWhitelistedObj.clear( );
 
 	UninitializePacketHandler( );
 }
@@ -1863,7 +1877,7 @@ unsigned long __stdcall RefreshTimer( void * )
 		if ( InGame != 0 )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 			// Ждать входа в игру
 			while ( !( *InGame ) )
@@ -1896,7 +1910,7 @@ unsigned long __stdcall RefreshTimer( void * )
 
 			DisableAllHooks( );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		}
@@ -2034,13 +2048,13 @@ int __stdcall InitOverlay( int )
 BOOL InitFunctionCalled = FALSE;
 
 
-
+p_GetTypeInfo GetTypeInfo = NULL;
 
 unsigned int __stdcall InitDotaHelper( int gameversion )
 {
 #ifdef DOTA_HELPER_LOG
 	std::cout << "InitDotaHelper" << endl;
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	InitThreadCpuUsage( );
 	if ( hRefreshTimer )
@@ -2110,13 +2124,13 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	if ( gameversion == 0x26a )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		UninitializeHook( );
 		FreeAllIHelpers( );
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		pOnChatMessage_offset = 0x2FB480;
 		IsNeedDrawUnit2offset = 0x28E1D0;
@@ -2171,15 +2185,17 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x4C1550;
 
 #ifdef DOTA_HELPER_LOG
-		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x16880 );
+#ifndef DOTA_HELPER_LOG_NEW
 
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x16880 );
+#endif
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		GameFrameAtMouseStructOffset = GameDll + 0xA9A444;
@@ -2309,7 +2325,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int PatchMemMB2 = GameDll + 0x33ba0e;
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 
@@ -2335,7 +2351,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		//ManaBarSwitch( TRUE );
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		DefaultCStatus = GameDll + 0xA8C804;
@@ -2369,12 +2385,23 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		Wc3DrawStage_org = ( Wc3DrawStage )( GameDll + 0x395620 );
 
+		GetTypeInfo = ( p_GetTypeInfo )( GameDll + 0x32C880 ); // 127a 0x327020
+
+		GetUnitFloatState = ( _GetUnitFloatStat )(GameDll + 0x27AE90);  // 6F27B9B0 
+
+
+		SimpleButtonPreClickEvent_org = ( pSimpleButtonPreClickEvent )( GameDll + 0x6033A0 );//1.27a  0x0BB560
+		MH_CreateHook( SimpleButtonPreClickEvent_org, &SimpleButtonPreClickEvent_my, reinterpret_cast< void** >( &SimpleButtonPreClickEvent_ptr ) );
+		MH_EnableHook( SimpleButtonPreClickEvent_org );
+
+		ChatEditBoxVtable = 0x93A7A4;
+
 		if ( Warcraft3Window )
 			SetTimer( Warcraft3Window, 'atod', 20, 0 );
 
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		InitHook( );
 
@@ -2404,7 +2431,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		InitFunctionCalled = TRUE;
@@ -2420,14 +2447,14 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		UninitializeHook( );
 
 		FreeAllIHelpers( );
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		pOnChatMessage_offset = 0x355CF0;
@@ -2485,16 +2512,18 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		GameGetFileOffset = 0x048C10;
 
 #ifdef DOTA_HELPER_LOG
-		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x1BB60 );
+#ifndef DOTA_HELPER_LOG_NEW
 
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		OriginFilter = ( LPTOP_LEVEL_EXCEPTION_FILTER )( StormDll + 0x1BB60 );
+#endif
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		GameFrameAtMouseStructOffset = GameDll + 0xB66318;
 
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 
@@ -2632,7 +2661,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 		int PatchMemMB2 = GameDll + 0x3b19f1;
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 		AddNewOffset_( PatchMemMB1, *( int* )PatchMemMB1, Feature_CUSTOM_FPS_INFO );
@@ -2686,12 +2715,24 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		Wc3DrawStage_org = ( Wc3DrawStage )( GameDll + 0x363020 );
 
+		GetTypeInfo = ( p_GetTypeInfo )( GameDll + 0x327020 ); // 126a 0x32C880
+
+		GetUnitFloatState = ( _GetUnitFloatStat )( GameDll + 0x669B40 ); // 669B40
+
+
+		SimpleButtonPreClickEvent_org = ( pSimpleButtonPreClickEvent )( GameDll + 0x0BB760 );//1.27a  0x0BB760
+		MH_CreateHook( SimpleButtonPreClickEvent_org, &SimpleButtonPreClickEvent_my, reinterpret_cast< void** >( &SimpleButtonPreClickEvent_ptr ) );
+		MH_EnableHook( SimpleButtonPreClickEvent_org );
+
+		ChatEditBoxVtable = 0x98FB7C;
+
 		if ( Warcraft3Window )
 			SetTimer( Warcraft3Window, 'atod', 20, 0 );
 
 
+
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		InitHook( );
 
@@ -2721,7 +2762,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 		DWORD crc32 = GetDllCrc32( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		InitFunctionCalled = TRUE;
 
@@ -2735,7 +2776,7 @@ unsigned int __stdcall InitDotaHelper( int gameversion )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 
 	return 0;

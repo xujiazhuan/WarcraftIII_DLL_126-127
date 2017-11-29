@@ -102,6 +102,12 @@
     <ClCompile Include="MegaPacketHandler.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="DoteNewDebugSystem.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaMinimapHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">

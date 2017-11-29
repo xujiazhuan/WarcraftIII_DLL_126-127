@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DotAAllstarsHelper688f", "DotAAllstarsHelper\DotAAllstarsHelper.vcxproj", "{4B94B582-A36C-43FF-AB86-D01CF1299739}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DotAAllstarsHelper688j", "DotAAllstarsHelper\DotAAllstarsHelper.vcxproj", "{4B94B582-A36C-43FF-AB86-D01CF1299739}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A291E0B5-2482-4C9A-AE19-160E26F73B1C} = {A291E0B5-2482-4C9A-AE19-160E26F73B1C}
 	EndProjectSection
@@ -15,10 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotaAllstarsExErrorHandler"
 		{D89981A7-1DB5-43F9-9C0D-185750FCC7EB} = {D89981A7-1DB5-43F9-9C0D-185750FCC7EB}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DotAAllstarsHelper688f_debug", "DotAAllstarsHelperDebug\DotAAllstarsHelperDebug.vcxproj", "{D89981A7-1DB5-43F9-9C0D-185750FCC7EB}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4B94B582-A36C-43FF-AB86-D01CF1299739} = {4B94B582-A36C-43FF-AB86-D01CF1299739}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DotAAllstarsHelper688j_debug", "DotAAllstarsHelperDebug\DotAAllstarsHelperDebug.vcxproj", "{D89981A7-1DB5-43F9-9C0D-185750FCC7EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +33,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4BC26B2-E489-4BF6-9086-D996A06AA2C7}
 	EndGlobalSection
 EndGlobal

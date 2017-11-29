@@ -18,9 +18,8 @@ vector<CFrameBuffer> CFrameBufferList;
 
 void DotaHelperEventEndCallback( )
 {
-	if ( pCurrentFrameFocusedAddr )
+	if ( IsGameFrameActive( ) && pCurrentFrameFocusedAddr && *( int* )pCurrentFrameFocusedAddr )
 		*( int* )pCurrentFrameFocusedAddr = 0;
-
 }
 
 
@@ -32,6 +31,8 @@ int NewCallBackTriggerHandle = 0;
 
 
 int LastEventId = 0;
+
+
 
 int __stdcall CFrame_GetLastEventId( int )
 {
@@ -93,6 +94,25 @@ int DotaHelperFrameCallback( CWar3Frame*frame, int FrameAddr, unsigned int Event
 				*( int* )&SendKeyEvent[ 2 ] += 4;
 				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&LastEventId, ( ( unsigned char * )&LastEventId ) + 4 );
 				*( int* )&SendKeyEvent[ 2 ] += 4;
+
+				int IsCtrlPressed = IsKeyPressed( VK_CONTROL );
+				int IsAltPressed = IsKeyPressed( VK_MENU );
+				int IsLeftMousePressed = IsKeyPressed( 1 );
+				int IsRightMousePressed = IsKeyPressed( 2 );
+				int IsMiddleMousePressed = IsKeyPressed( 3 );
+
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsCtrlPressed, ( ( unsigned char * )&IsCtrlPressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsAltPressed, ( ( unsigned char * )&IsAltPressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsLeftMousePressed, ( ( unsigned char * )&IsLeftMousePressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsRightMousePressed, ( ( unsigned char * )&IsRightMousePressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsMiddleMousePressed, ( ( unsigned char * )&IsMiddleMousePressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+
+				
 				SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
 				SendKeyEvent.clear( );
 			}
@@ -191,7 +211,7 @@ CWar3Frame * __stdcall CFrame_CreateNewFrame( const char * FrameName, int relati
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( __func__ );
 #endif
-	CWar3Frame * returnframe = new CWar3Frame( FrameName, relativeframeaddr, show, FrameId );
+	CWar3Frame * returnframe = new CWar3Frame( FrameName, FrameId, show, relativeframeaddr );
 
 	if ( !returnframe->CheckIsOk( ) )
 	{
@@ -238,6 +258,16 @@ void __stdcall CFrame_SetFrameModel( CWar3Frame * frame, const char * modelpath 
 	if ( !frame )
 		return;
 	frame->SetModel( modelpath );
+}
+
+void __stdcall CFrame_SetFrameModelEx( CWar3Frame * frame, const char * modelpath, int MdlType, int Flags )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->SetModel( modelpath, MdlType, Flags );
 }
 
 void __stdcall CFrame_StartCustomAnimate( CWar3Frame * frame, int anim_id )
@@ -404,6 +434,43 @@ void __stdcall CFrame_SetScale( CWar3Frame * frame, CFrameBackdropType backtype,
 {
 	if ( !frame )
 		return;
-	frame->FillToParentFrame( backtype, FillToFrame );
+	//frame->FillToParentFrame( backtype, FillToFrame );
 	frame->SetFrameScale( backtype, scalex, scaley );
 }
+
+void __stdcall CFrame_SetTextWidth( CWar3Frame * frame, float scalex )
+{
+	if ( !frame )
+		return;
+	frame->SetTextFrameFontWidth(scalex );
+}
+
+void __stdcall CFrame_SetTextHeight( CWar3Frame * frame, float scaley )
+{
+	if ( !frame )
+		return;
+	frame->SetTextFrameFontHeight( scaley );
+}
+
+
+void __stdcall CFrame_SetTextFont( CWar3Frame * frame, const char * font, float scale, int flag )
+{
+	if ( !frame )
+		return;
+	SetTextFrameFont( frame->FrameAddr, font, scale, flag );
+}
+
+void __stdcall CFrame_Update( CWar3Frame * frame )
+{
+	if ( !frame )
+		return;
+	frame->UpdateFlagsV2( );
+}
+
+void __stdcall CFrame_Show( CWar3Frame * frame, BOOL show )
+{
+	if ( !frame )
+		return;
+	frame->Show( show );
+}
+

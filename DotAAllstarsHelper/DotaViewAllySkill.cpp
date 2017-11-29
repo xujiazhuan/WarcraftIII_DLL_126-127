@@ -34,7 +34,7 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 	int GETOID;
 	int OID;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( addr1 )
 	{
@@ -76,7 +76,7 @@ signed int __fastcall  IsDrawSkillPanel_my( void *UnitAddr, int addr1 )
 		result = 0;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	return result;
 }
@@ -87,7 +87,7 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 	int GETOID; // eax@3
 	int OID; // esi@4
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( addr1 )
 	{
@@ -130,10 +130,11 @@ signed int __fastcall  IsDrawSkillPanelOverlay_my( void *UnitAddr, int addr1 )
 		result = 0;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	return result;
 }
+
 
 int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thiscall to fastcall*/ )
 {
@@ -143,7 +144,7 @@ int __fastcall IsNeedDrawUnit2_my( int UnitAddr, int unused/* converted from thi
 	if ( retaddr + 2000 < IsNeedDrawUnit2offsetRetAddress && retaddr > IsNeedDrawUnit2offsetRetAddress )
 	{*/
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( IsNotBadUnit( UnitAddr ) )
 	{

@@ -37,10 +37,14 @@ namespace NWar3Frame
 
 	// int( __fastcall * CreateTexture )( const char * path, int *unkdata, int oldval, BOOL visibled );
 	int( __fastcall * LoadFrameDefFile )( const char * filename, int var1, int var2, int cstatus ) = NULL;
-	int( __fastcall * CreateNewCFrame ) ( const char * FrameName, int rframeaddr, int unk1, int unk2, int unk3 ) = NULL;
+	int( __fastcall * CreateNewCFrame ) ( const char * FrameName, int rframeaddr, int UnkIdx, int UnkValue, int id )= NULL;
 	int( __fastcall * GetFrameItemAddr )( const char * name, int id ) = NULL;
 	int( __thiscall * PopupMenuAddItem )( int FrameAddr, const char *a2, int flag ) = NULL; //flag = -2
-	int( __thiscall * ClearPopupMenu )( int FrameAddr );
+	int( __thiscall * ClearPopupMenu )( int FrameAddr ) = NULL;
+	void( __thiscall * UpdateFrameScale )( int FrameAddr ) = NULL;
+	 void( __thiscall * SetFrameWidth/*sub_6F605D90*/ )( int FrameAddr, float x ) = NULL;
+	 void( __thiscall * SetFrameHeight/*sub_6F605DB0*/ )( int FrameAddr, float y ) = NULL;
+
 	int( __thiscall *  EditboxSetMaxLen /* sub_6F616250*/ )( int FrameAddr, unsigned int maxlen ) = NULL;
 	int( __thiscall * TextFrameSetText )( int FrameAddr, const char * text ) = NULL;
 	int( __thiscall * EditBoxFrameSetText )( int frameaddr, const char * newtext, BOOL unk ) = NULL;
@@ -56,8 +60,9 @@ namespace NWar3Frame
 	int( __thiscall *  Wc3SimulateClickEvent )( int btnaddr, int unk ) = NULL;
 	int( __fastcall  * StartSpriteModelAnimated )( int spritemodel, int unknown_or_anim_id, void( __fastcall * SetAnimOffset )( int real_frame, float *a2, float unk_val ), int real_frame, float unk_or_start_off ) = NULL;
 	//	int( __thiscall * CFrameSetFocus)( int FrameAddr, int flag );
-	const char*( __fastcall * Wc3GetSkinItemPath )( const char* name, const char* theme );
-	const char*( __fastcall * Wc3GetSkinItemPath_ptr )( const char* name, const char* theme );
+	const char*( __fastcall * Wc3GetSkinItemPath )( const char* name, const char* theme ) = NULL;
+	const char*( __fastcall * Wc3GetSkinItemPath_ptr )( const char* name, const char* theme ) = NULL;
+	int( __thiscall * SetTextFrameFont )( int FrameAddr, const char * font, float scale, int flag ) = NULL;
 	std::string Wc3SelectedSkinTheme = "";
 	const char* __fastcall  Wc3GetSkinItemPath_my( const char* name, const char* theme )
 	{
@@ -71,7 +76,7 @@ namespace NWar3Frame
 		return Wc3GetSkinItemPath_ptr( name, theme );
 
 	}
-	void Wc3SetDefaultSkinTheme( std::string theme )
+	void Wc3SetDefaultSkinTheme(  const std::string & theme )
 	{
 		Wc3SelectedSkinTheme = theme;
 	}
@@ -100,8 +105,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::RegisterEventCallback( unsigned int EventId )
 	{
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 
@@ -402,8 +406,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetScrollBarValuesCount( int count, int current )
 	{
-		if ( !this )
-			return;
+
 		if ( !FrameOk )
 			return;
 		if ( FrameType == CFrameType::FRAMETYPE_SCROLLBAR )
@@ -437,8 +440,7 @@ namespace NWar3Frame
 
 	int CWar3Frame::GetScrollBarValue( )
 	{
-		if ( !this )
-			return 0;
+
 		if ( !FrameOk )
 			return 0;
 		if ( FrameType == CFrameType::FRAMETYPE_SCROLLBAR )
@@ -452,8 +454,7 @@ namespace NWar3Frame
 
 	int CWar3Frame::GetScrollBarMaxValue( )
 	{
-		if ( !this )
-			return 0;
+
 		if ( !FrameOk )
 			return 0;
 		if ( FrameType == CFrameType::FRAMETYPE_SCROLLBAR )
@@ -503,7 +504,7 @@ namespace NWar3Frame
 			CStatusLoadFramesVar2 = GameDll + 0xACD264;
 			FrameEventHandler = ( int( __thiscall * )( int frameaddr, unsigned int eventid ) )( GameDll + 0x62A580 );
 			LoadFrameDefFile = ( int( __fastcall * )( const char * filename, int var1, int var2, int cstatus ) ) ( GameDll + 0x5D8DE0 );
-			CreateNewCFrame = ( int( __fastcall * ) ( const char * FrameName, int rframeaddr, int unk1, int unk2, int id ) )( GameDll + 0x5C9560 );
+			CreateNewCFrame = ( int( __fastcall * ) ( const char * FrameName, int rframeaddr, int UnkIdx, int UnkValue, int id ))( GameDll + 0x5C9560 );
 			SimulateFrameEvent = ( int( __thiscall * )( int FrameAddr, CFrameEventStruct * EventId ) )( GameDll + 0x370710 );
 			SetAbsolutePosition = ( void( __thiscall * )( int FrameAddr180, CFramePosition orginPosition, float absoluteX, float absoluteY, unsigned int flag ) )( GameDll + 0x6061B0 );
 			SetRelativePosition = ( void( __thiscall * )( int SrcFrameAddr, CFramePosition orginPosition, int DstFrameAddr, CFramePosition toPosition, float relativeX, float relativeY, unsigned int flag ) )( GameDll + 0x606770 );
@@ -528,7 +529,10 @@ namespace NWar3Frame
 			GetCursorAddr = ( int( __thiscall * )( int num ) )( GameDll + 0x4D9830 );
 			Wc3SimulateClickEvent = ( int( __thiscall * )( int btnaddr, int unk ) ) ( GameDll + 0x601F20 );
 			StartSpriteModelAnimated = ( int( __fastcall  * )( int spritemodel, int unknown_or_anim_id, void( __fastcall * SetAnimOffset )( int real_frame, float *a2, float unk_val ), int real_frame, float unk_or_start_off ) )( GameDll + 0x4E8720 );
-
+			UpdateFrameScale = ( void( __thiscall * )( int FrameAddr ) )( GameDll + 0x605700 );
+			SetFrameWidth = ( void( __thiscall * /*sub_6F605D90*/ )( int FrameAddr, float x ) )( GameDll + 0x605DB0 );
+			SetFrameHeight = (void( __thiscall * /*sub_6F605DB0*/ )( int FrameAddr, float y )) ( GameDll + 0x605D90 );
+			SetTextFrameFont = (int( __thiscall * )( int FrameAddr, const char * font, float scale, int flag ))(  GameDll + 0x5FB960 );
 			CurrentFrameFocusedAddr = GameDll + 0xACE67C;
 			CFrameInitialized = true;
 		}
@@ -539,7 +543,7 @@ namespace NWar3Frame
 			CStatusLoadFramesVar2 = GameDll + 0xBB9CFC;
 			FrameEventHandler = ( int( __thiscall * )( int frameaddr, unsigned int eventid ) )( GameDll + 0x0566D0 );
 			LoadFrameDefFile = ( int( __fastcall * )( const char * filename, int var1, int var2, int cstatus ) ) ( GameDll + 0x066590 );
-			CreateNewCFrame = ( int( __fastcall * ) ( const char * FrameName, int rframeaddr, int unk1, int unk2, int id ) )( GameDll + 0x0909C0 );
+			CreateNewCFrame = ( int( __fastcall * ) ( const char * FrameName, int rframeaddr, int UnkIdx, int UnkValue, int id ) )( GameDll + 0x0909C0 );
 			SimulateFrameEvent = ( int( __thiscall * )( int FrameAddr, CFrameEventStruct * EventId ) )( GameDll + 0x39FD80 );
 			SetAbsolutePosition = ( void( __thiscall * )( int FrameAddr180, CFramePosition orginPosition, float absoluteX, float absoluteY, unsigned int flag ) )( GameDll + 0x0BD830 );
 			SetRelativePosition = ( void( __thiscall * )( int SrcFrameAddr, CFramePosition orginPosition, int DstFrameAddr, CFramePosition toPosition, float relativeX, float relativeY, unsigned int flag ) )( GameDll + 0x0BD8A0 );
@@ -568,7 +572,12 @@ namespace NWar3Frame
 			Wc3SimulateClickEvent = ( int( __thiscall * )( int btnaddr, int unk ) ) ( GameDll + 0xBE3A0 );
 
 			StartSpriteModelAnimated = ( int( __fastcall  * )( int spritemodel, int unknown_or_anim_id, void( __fastcall * SetAnimOffset )( int real_frame, float *a2, float unk_val ), int real_frame, float unk_or_start_off ) )( GameDll + 0x18ED70 );
+			UpdateFrameScale = ( void( __thiscall * )( int FrameAddr ) )( GameDll + 0x0A3260 );
 
+			SetFrameWidth = ( void( __thiscall * /*sub_6F605D90*/ )( int FrameAddr, float x ) )( GameDll + 0x0BD7C0 );
+			SetFrameHeight = ( void( __thiscall * /*sub_6F605DB0*/ )( int FrameAddr, float y ) ) ( GameDll + 0x0BD960 );
+
+			SetTextFrameFont = ( int( __thiscall * )( int FrameAddr, const char * font, float scale, int flag ) )( GameDll + 0x09CE60 );
 			CurrentFrameFocusedAddr = GameDll + 0xBB9D98;
 			CFrameInitialized = true;
 		}
@@ -578,8 +587,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetFlag( uint32_t flag )
 	{
-		if ( !this )
-			return;
+
 		if ( !FrameOk )
 			return;
 
@@ -591,8 +599,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetFrameFocused( )
 	{
-		if ( !this )
-			return;
+
 		if ( !FrameOk )
 			return;
 
@@ -606,13 +613,13 @@ namespace NWar3Frame
 
 	void CWar3Frame::FocusFrame( int pFrameAddr )
 	{
+		if ( CurrentFrameFocusedAddr )
 		*( int* )CurrentFrameFocusedAddr = pFrameAddr;
 	}
 
 	void CWar3Frame::ClearMenuItems( )
 	{
-		if ( !this )
-			return;
+
 		if ( !FrameOk )
 			return;
 
@@ -624,8 +631,6 @@ namespace NWar3Frame
 
 	void CWar3Frame::Click( )
 	{
-		if ( !this )
-			return;
 		if ( !FrameOk )
 			return;
 		Wc3SimulateClickEvent( this->FrameAddr, 1 );
@@ -634,8 +639,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::StartAnimate( int anim_id )
 	{
-		if ( !this )
-			return;
+
 		if ( !FrameOk )
 			return;
 		if ( AnimateStarted )
@@ -658,8 +662,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::StopAnimate( )
 	{
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 
@@ -678,10 +681,9 @@ namespace NWar3Frame
 		AnimateStarted = false;
 	}
 
-	void CWar3Frame::SetModel( const char * modelpath, int MdlType )
+	void CWar3Frame::SetModel( const char * modelpath, int MdlType, int Flags )
 	{
-		if ( !this )
-			return;
+
 		if ( !FrameOk )
 			return;
 		//CONSOLE_Print( "SetModel " );
@@ -696,7 +698,7 @@ namespace NWar3Frame
 				{
 					auto SetSpriteFrameModel = ( void( __thiscall * )( int FrameAddr, const char * modelpath, int MdlType, unsigned int flag ) )( SetSpriteFrameModel_addr );
 					if ( SetSpriteFrameModel )
-						SetSpriteFrameModel( FrameAddr, modelpath, MdlType, 0 );
+						SetSpriteFrameModel( FrameAddr, modelpath, MdlType, Flags );
 				}
 
 			}
@@ -711,8 +713,8 @@ namespace NWar3Frame
 				{
 
 					auto SetSpriteFrameModel = ( void( __thiscall * )( int FrameAddr, const char * modelpath, unsigned int flag ) )( SetSpriteFrameModel_addr );
-					if ( SetSpriteFrameModel )
-						SetSpriteFrameModel( FrameAddr, modelpath, 0 );
+					
+						SetSpriteFrameModel( FrameAddr, modelpath, Flags );
 				}
 
 			}
@@ -731,8 +733,7 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "GetText " );
 
-		if ( !this )
-			return "";
+
 		if ( !FrameOk )
 			return "";
 
@@ -745,7 +746,7 @@ namespace NWar3Frame
 		case CFrameType::FRAMETYPE_BACKDROP:
 			break;
 		case CFrameType::FRAMETYPE_ITEM:
-			break;
+			return *( const char ** )( FrameAddr + 0x1E8 ) ? *( const char ** )( FrameAddr + 0x1E8 ) : "";
 		case CFrameType::FRAMETYPE_POPUPMENU: // Title
 			textaddr = *( int* )( FrameAddr + 484 ); // sizeof CControl // + 684 for ? // + 392 for ?
 			if ( !textaddr )
@@ -770,8 +771,7 @@ namespace NWar3Frame
 	void CWar3Frame::SetText( const char * text, unsigned int len )
 	{
 		//CONSOLE_Print( "SetText " );
-		if ( !this )
-			return;
+		
 		if ( !FrameOk )
 			return;
 
@@ -837,8 +837,6 @@ namespace NWar3Frame
 
 	unsigned int CWar3Frame::GetTextMaxLength( )
 	{
-		if ( !this )
-			return 0;
 		if ( !FrameOk )
 			return 0;
 
@@ -866,8 +864,6 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "Enable " );
 
-		if ( !this )
-			return;
 		if ( !FrameOk )
 			return;
 		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
@@ -892,8 +888,6 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "IsEnabled " );
 
-		if ( !this )
-			return false;
 		if ( !FrameOk )
 			return false;
 
@@ -909,8 +903,7 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "IsEnabled " );
 
-		if ( !this )
-			return false;
+
 		if ( !FrameOk )
 			return false;
 		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
@@ -954,8 +947,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetCursor( bool enabled )
 	{
-		if ( !this )
-			return;
+		
 		if ( !FrameOk )
 			return;
 		if ( FrameType == CFrameType::FRAMETYPE_EDITBOX )
@@ -969,8 +961,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetFocus( bool focused )
 	{
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 		//sub_6F336C20
@@ -998,8 +989,7 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "IsEnabled " );
 
-		if ( !this )
-			return false;
+		
 		if ( !FrameOk )
 			return false;
 		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
@@ -1015,8 +1005,7 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "IsChecked " );
 
-		if ( !this )
-			return false;
+		
 		if ( !FrameOk )
 			return false;
 		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
@@ -1030,8 +1019,7 @@ namespace NWar3Frame
 
 	int CWar3Frame::GetFrameCustomValue( int id )
 	{
-		if ( !this )
-			return 0;
+	
 		if ( !FrameOk )
 			return 0;
 
@@ -1048,8 +1036,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetFrameCustomValue( int value, int id )
 	{
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 
@@ -1068,8 +1055,7 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "SetChecked " );
 
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
@@ -1089,12 +1075,20 @@ namespace NWar3Frame
 		}
 	}
 
+	bool CWar3Frame::IsVisibled( )
+	{
+
+	
+		if ( !FrameOk )
+			return true;
+
+		return Visibled;
+	}
+
 	void CWar3Frame::Show( bool enable )
 	{
 		//CONSOLE_Print( "Show " );
 
-		if ( !this )
-			return;
 		if ( !FrameOk )
 			return;
 
@@ -1107,6 +1101,7 @@ namespace NWar3Frame
 				//*( int * )( FrameAddr + 0x168 ) = enable ? 2 : 1;
 				gEvent.Event = CFrameEvent_ShowFrame;
 				SimulateFrameEvent( FrameAddr, &gEvent );
+				*( int * )( FrameAddr + 0xb0 ) = 44;
 			}
 			else
 			{
@@ -1117,6 +1112,8 @@ namespace NWar3Frame
 		default:
 			break;
 		}
+
+		Visibled = enable;
 
 		/*	if ( enable )
 		{
@@ -1135,8 +1132,6 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "SetCallbackFunc " );
 
-		if ( !this )
-			return;
 		if ( !FrameOk )
 			return;
 		FrameCallback = callback;
@@ -1155,8 +1150,7 @@ namespace NWar3Frame
 	void CWar3Frame::Update( bool force )
 	{
 		//CONSOLE_Print( "Update " );
-		if ( !this )
-			return;
+		
 		if ( !FrameOk )
 			return;
 		switch ( FrameType )
@@ -1176,8 +1170,7 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "AddItem " );
 
-		if ( !this )
-			return;
+		
 		if ( !FrameOk )
 			return;
 		if ( FrameType == CFrameType::FRAMETYPE_POPUPMENU )
@@ -1190,8 +1183,6 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "SetMaxLen " );
 
-		if ( !this )
-			return;
 		if ( !FrameOk )
 			return;
 		if ( FrameType != CFrameType::FRAMETYPE_FRAME )
@@ -1222,8 +1213,7 @@ namespace NWar3Frame
 	void CWar3Frame::SetFrameAbsolutePosition( CFramePosition orginPosition, float absoluteX, float absoluteY, unsigned int flag )
 	{
 		//CONSOLE_Print( "SetFrameAbsolutePosition " );
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 		switch ( FrameType )
@@ -1242,8 +1232,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetFrameRelativePosition( CFramePosition orginPosition, int dstFrameAddr, CFramePosition toPosition, float relativeX, float relativeY, unsigned int flag )
 	{
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
 		switch ( FrameType )
@@ -1260,27 +1249,47 @@ namespace NWar3Frame
 
 	}
 
-	void CWar3Frame::SetTexture( const char * path, const char * border, bool tiled )
+	void CWar3Frame::SetTexture( const char * path, const char * border, bool tiled, CFrameBackdropType backgtype )
 	{
 		//CONSOLE_Print( "SetTexture " );
 
-		if ( !this )
-			return;
+	
 		if ( !FrameOk )
 			return;
+
+		int BackdropAddr = FrameAddr;
+
+		switch ( backgtype )
+		{
+		case NWar3Frame::CFrameBackdropType::ControlBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1BC );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlPushedBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C0 );
+			break;
+		case NWar3Frame::CFrameBackdropType::ControlDisabledBackdrop:
+			BackdropAddr = *( int* )( BackdropAddr + 0x1C4 );
+			break;
+		default:
+			break;
+		}
+
+
+
 		switch ( FrameType )
 		{
 		case CFrameType::FRAMETYPE_FRAME:
 			break;
 		case CFrameType::FRAMETYPE_BACKDROP:
-			if ( *( int* )( FrameAddr + 0x44 ) )
-				SetFrameTexture( *( int* )( FrameAddr + 0x44 ), path, 0, tiled ? 1 : 0, border, 1 );
-			else if ( *( int* )( FrameAddr + 0x68 ) )
-				SetFrameTexture( *( int* )( FrameAddr + 0x68 ), path, 0, tiled ? 1 : 0, border, 1 );
+			if ( *( int* )( BackdropAddr + 0x44 ) )
+				SetFrameTexture( *( int* )( BackdropAddr + 0x44 ), path, 0, tiled ? 1 : 0, border, 1 );
+			else if ( *( int* )( BackdropAddr + 0x68 ) )
+				SetFrameTexture( *( int* )( BackdropAddr + 0x68 ), path, 0, tiled ? 1 : 0, border, 1 );
 			break;
 		case CFrameType::FRAMETYPE_ITEM:
-			if ( *( int* )( FrameAddr + 0x20 ) )
-				SetFrameTexture( *( int* )( FrameAddr + 0x20 ), path, 0, tiled ? 1 : 0, border, 1 );
+		
+			if ( *( int* )( BackdropAddr + 0x20 ) )
+				SetFrameTexture( *( int* )( BackdropAddr + 0x20 ), path, 0, tiled ? 1 : 0, border, 1 );
 			break;
 		default:
 			break;
@@ -1290,8 +1299,7 @@ namespace NWar3Frame
 
 	int CWar3Frame::GetFrameBackdropAddress( CFrameBackdropType backtype )
 	{
-		if ( !this )
-			return 0;
+	
 		if ( !FrameOk )
 			return 0;
 
@@ -1317,8 +1325,7 @@ namespace NWar3Frame
 
 	void CWar3Frame::FillToParentFrame( CFrameBackdropType backtype, bool fill )
 	{
-		if ( !this )
-			return;
+		
 		if ( !FrameOk )
 			return;
 
@@ -1346,10 +1353,19 @@ namespace NWar3Frame
 		}
 	}
 
+	void CWar3Frame::UpdateScale( )
+	{
+		if ( !FrameOk )
+			return;
+
+		//int UpdateLayerAddr = FrameAddr + 0xB4;
+		//UpdateFrameScale( UpdateLayerAddr );
+	}
+
 	void CWar3Frame::SetFrameScale( CFrameBackdropType backtype, float xscale, float yscale )
 	{
-		if ( !this )
-			return;
+		// FrameAddr + 0xB4 UpdateScale
+		// 
 		if ( !FrameOk )
 			return;
 
@@ -1372,10 +1388,13 @@ namespace NWar3Frame
 
 		if ( BackdropAddr )
 		{
-			*( float* )( BackdropAddr + 0x10C ) = xscale;
-			*( float* )( BackdropAddr + 0x110 ) = yscale;
-			UpdateFlagsV2(  );
-			//UpdatePosition( FrameAddr, 1 );
+
+			SetFrameWidth( BackdropAddr, xscale );
+			SetFrameHeight( BackdropAddr, yscale );
+			UpdateFlagsV2( );
+
+			//UpdateFrameScale( BackdropAddr + 0xB4);
+			//UpdatePosition( FrameAddr, 0 );
 			//UpdateFlags( BackdropAddr );
 		}
 
@@ -1466,8 +1485,6 @@ namespace NWar3Frame
 	{
 		//CONSOLE_Print( "CheckIsOk " );
 
-		if ( !this )
-			return false;
 
 		if ( !GetFrameItem( FrameName.c_str( ), FrameId ) )
 		{
@@ -1516,9 +1533,10 @@ namespace NWar3Frame
 		FrameType = newframetype;
 	}
 
-
-	CWar3Frame::CWar3Frame( const char * name, int relativeframe, bool show, int id, bool showerror )
+	// Были внесены изменения!
+	CWar3Frame::CWar3Frame( const char * name, int id, bool show, int relativeframe, bool showerror )
 	{
+		//CONSOLE_Print( "Create Frame 3" );
 		this->~CWar3Frame( );
 
 		//CONSOLE_Print( "CWar3Frame " );
@@ -1527,6 +1545,7 @@ namespace NWar3Frame
 		memset( CustomValue, 0, 4 * 10 );
 		SkipOtherEvents = false;
 		FrameOk = false;
+		Visibled = true;
 		FramesCount++;
 		FrameId = id;
 		//char debug[ 220 ];
@@ -1560,13 +1579,14 @@ namespace NWar3Frame
 	}
 
 
-	CWar3Frame CWar3Frame::CWar3FrameFromAddress( int FrameAddr, bool show, bool showerror )
+	int CWar3Frame::CWar3FrameFromAddress( int FrameAddr, bool show, bool showerror )
 	{
 		this->~CWar3Frame( );
 
 		//CONSOLE_Print( "CWar3Frame 5 " );
 		Focused = false;
 		Pressed = false;
+		Visibled = true;
 		memset( CustomValue, 0, 4 * 10 );
 		SkipOtherEvents = false;
 		FrameOk = false;
@@ -1597,7 +1617,7 @@ namespace NWar3Frame
 
 		FrameDestroyable = false;
 		FramesList.push_back( this );
-		return *this;
+		return FrameAddr;
 	}
 
 	void CWar3Frame::DestroyThisFrame( )
@@ -1628,6 +1648,7 @@ namespace NWar3Frame
 		SkipCallback = false;
 		//CONSOLE_Print( "CWar3Frame 3 " );
 		Focused = false;
+		Visibled = false;
 		Pressed = false;
 		memset( CustomValue, 0, 4 * 10 );
 		FrameOk = false;
@@ -1638,13 +1659,41 @@ namespace NWar3Frame
 
 	void CWar3Frame::SetAnimOffset( float off )
 	{
-		if ( !this )
+		if ( !FrameOk )
 			return;
 		anim_offset = off;
 	}
 
+	void CWar3Frame::SetTextFrameFontHeight( float y )
+	{
+		if ( !FrameOk )
+			return;
+		if ( FrameType == CFrameType::FRAMETYPE_ITEM )
+		{
+			*( float* )( FrameAddr + 0x210 ) = y;
+			UpdateFlagsV2( );
+		}
+
+	}
+
+	void CWar3Frame::SetTextFrameFontWidth( float x )
+	{
+		if ( !FrameOk )
+			return;
+		if ( FrameType == CFrameType::FRAMETYPE_ITEM )
+		{
+			*( float* )( FrameAddr + 0x214 ) = x;
+			UpdateFlagsV2( );
+		}
+
+	}
+
 	CWar3Frame::~CWar3Frame( )
 	{
+		if ( CurrentFrameFocusedAddr && *( int* )CurrentFrameFocusedAddr == this->FrameAddr )
+		{
+			*( int* )CurrentFrameFocusedAddr = 0;
+		}
 		anim_offset = 0.0f;
 		AnimateStarted = false;
 		SkipCallbackForInternalFunctions = false;
@@ -1652,12 +1701,16 @@ namespace NWar3Frame
 		//CONSOLE_Print( "~~~~CWar3Frame " );
 		RegisteredEventId.clear( );
 		Focused = false;
+		Visibled = false;
 		Pressed = false;
 		FrameOk = false;
-		for ( unsigned int i = 0; i < FramesList.size( ); i++ )
+		for ( unsigned int i = 0; i < FramesList.size( ) && i >= 0; i++ )
 		{
 			if ( this == FramesList[ i ] )
+			{
 				FramesList.erase( FramesList.begin( ) + i );
+				i--;
+			}
 		}
 	}
 

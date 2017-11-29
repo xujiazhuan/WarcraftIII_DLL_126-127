@@ -47,14 +47,14 @@ pGameChatSetState GameChatSetState;
 int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( !GetChatOffset( ) )
 	{
 		return FALSE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	if ( !GetChatString( ) )
 	{
@@ -69,7 +69,7 @@ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	char * pChatString = GetChatString( );
 	if ( msg > 0 && pChatString > 0 && Warcraft3Window > 0 )
@@ -118,7 +118,7 @@ int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	SetKeyboardState( tmpbuf );
 

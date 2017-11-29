@@ -33,7 +33,7 @@ int __fastcall CNetCommandTeamChangeAlliance_my( int a1, int a2, CDataStore * pa
 		if ( PacketInitialized )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 			int recvbytes = Handle_Jass_Packet( packetraw + packetdata->recvbytes - 1, packetdata->sizePacket - packetdata->recvbytes + 1, pid );
 
@@ -46,7 +46,7 @@ int __fastcall CNetCommandTeamChangeAlliance_my( int a1, int a2, CDataStore * pa
 
 			packetdata->recvbytes -= 1;
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 		}
 
@@ -74,7 +74,7 @@ GAME_SendPacket_p GAME_SendPacket = NULL;
 void SendPacket( unsigned char * packetData, unsigned int  size )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 	// @warning: this function thread-unsafe, do not use it in other thread.
 	// note: this is very useful function, in fact this function
@@ -94,7 +94,7 @@ void SendPacket( unsigned char * packetData, unsigned int  size )
 		GAME_SendPacket = ( GAME_SendPacket_p )( pGAME_SendPacket );
 	GAME_SendPacket( &packet, 0 );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
 #endif
 }
 

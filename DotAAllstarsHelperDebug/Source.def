@@ -98,8 +98,6 @@ GetWindowWidth
 GetWindowHeight
 ShowSkillPanelForAllUnits
 SetAutoSelectHero
-TopLevelExceptionFilter
-DotaVectoredToSehHandler
 ScanJassStringForErrors
 GetJassStringCount
 SetDefaultSceenSize
@@ -152,3 +150,14 @@ Packet_Send
 Packet_GetTriggerPlayerId
 CFrame_AddCallackPacket
 RawImage_SetPacketCallback
+CFrame_SetTextHeight
+CFrame_SetTextWidth
+CFrame_Update
+CFrame_SetFrameModelEx
+SetInfoObjDebug
+AddInfoObjCodeCustomAction
+AddInfoWhiteListedObj
+ShowMinimap
+CFrame_Show
+CFrame_SetTextFont
+AddClickPortrainForIdEx

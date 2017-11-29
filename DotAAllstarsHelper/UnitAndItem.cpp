@@ -16,7 +16,7 @@ int __stdcall GetUnitOwnerSlot( int unitaddr )
 BOOL __stdcall IsHero( int unitaddr )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	if ( unitaddr > 0 )
 	{
@@ -55,7 +55,7 @@ BOOL __stdcall IsUnitIllusion( int unitaddr )
 BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	if ( unitaddr > 0 )
 	{
@@ -108,7 +108,7 @@ BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 BOOL __stdcall IsEnemy( int UnitAddr )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	if ( UnitAddr > 0 && IsNotBadUnit( UnitAddr ) )
 	{
@@ -117,7 +117,7 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 		if ( GetLocalPlayerId( ) == unitownerslot )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 			return FALSE;
 		}
@@ -130,27 +130,27 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 			if ( Player1 == Player2 )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__,__LINE__ );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 				return FALSE;
 			}
 			if ( Player1 == 0 || Player2 == 0 )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__,__LINE__ );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 				return FALSE;
 			}
 
 			BOOL retval = IsPlayerEnemy( Player1, Player2 );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 			return retval;
 		}
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	return FALSE;
 }
@@ -192,7 +192,7 @@ BOOL __stdcall IsNotBadItem( int itemaddr, BOOL extracheck )
 int GetSelectedUnitCountBigger( int slot )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	int plr = GetPlayerByNumber( slot );
 	if ( plr > 0 )
@@ -217,7 +217,7 @@ int GetSelectedUnitCountBigger( int slot )
 int GetSelectedUnit( int slot )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	if ( slot >= 0 && slot <= 15 )
 	{
@@ -314,20 +314,27 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode, int abilb
 	if ( unitaddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 		int pAddr1 = unitaddr + 0x1DC;
 		int pAddr2 = unitaddr + 0x1E0;
 
 		if ( ( int )( *( unsigned int * )( pAddr1 ) & *( unsigned int * )( pAddr2 ) ) != -1 )
 		{
+			//PrintText( "Found abils ... 1" );
 			int pData = GetObjectDataAddr( pAddr1 );
-
+		
 			while ( pData > 0 )
 			{
+			//	PrintText( "Found abils ... 2" );
 				int pData2 = *( int* )( pData + 0x54 );
 				if ( pData2 > 0 )
 				{
+				/*	char foundabil3[ 100 ];
+					sprintf_s( foundabil3, "%s:%X:%X", "Found new abil:", *( int* )( pData2 + 0x30 ), *( int* )( pData2 + 0x34 ) );
+
+					PrintText(foundabil3 );*/
+
 					if ( abilcode != 0 && *( int* )( pData2 + 0x34 ) == abilcode )
 					{
 						if ( abilbasecode != 0 && *( int* )( pData2 + 0x30 ) == abilbasecode )
@@ -483,6 +490,41 @@ float GetUnitHPregen( int unitaddr )
 		{
 
 			result = *( float* )( offset1 + 0x7C );
+		}
+	}
+	return result;
+}
+
+float GetUnitHP( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
+		if ( offset1 )
+		{
+
+			result = *( float* )( offset1 + 0x80 );
+		}
+	}
+	return result;
+}
+
+_GetUnitFloatStat GetUnitFloatState = NULL;
+
+
+float GetUnitMP( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
+		if ( offset1 )
+		{
+			char test[ 100 ];
+			sprintf_s( test, 100, "Unit MP struct: %X", offset1 );
+			PrintText( test );
+			result = *( float* )( offset1 + 0x80 );
 		}
 	}
 	return result;

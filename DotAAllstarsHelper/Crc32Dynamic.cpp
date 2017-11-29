@@ -349,8 +349,8 @@ DWORD CCrc32Dynamic::FileCrc32Assembly( char * szFilename, DWORD &dwCrc32 ) cons
 				//		eax - CRC32 value
 				//		ebx - a lot of things
 				//		ecx - CRC32 value
-				//		edx - address of end of buffer
-				//		esi - address of start of buffer
+				//		edx - Address of end of buffer
+				//		esi - Address of start of buffer
 				//		edi - CRC32 table
 				__asm
 				{

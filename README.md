@@ -578,7 +578,7 @@ function Packet_TestRecv2 takes nothing returns nothing
 		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". Message:" + I2S(Packet_PopInteger( ))+ ". KeyCode:" + I2S(Packet_PopInteger( )))
 	endif 
 	if (PacketType == Packet_CFrameEventCode) then 
-		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". Frame code:" + I2S(Packet_PopInteger( ))+ ". Event:" + I2S(Packet_PopInteger( )))
+		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". Frame code:" + I2S(Packet_PopInteger( ))+ ". Event:" + I2S(Packet_PopInteger( )) + ". CTRL:" + I2S(Packet_PopInteger( )) + ". ALT:" + I2S(Packet_PopInteger( )) + ". LEFT MOUSE:" + I2S(Packet_PopInteger( )) + ". RIGHT MOUSE:" + I2S(Packet_PopInteger( )) + ". MIDLE MOUSE:" + I2S(Packet_PopInteger( )))
 	endif 
 	if (PacketType == Packet_RawImageCode) then 
 		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". RawImageId:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". mouse x/y:" + R2S(Packet_PopReal( )) + "/" + R2S(Packet_PopReal( ))+ ". Alt:" + I2S(Packet_PopInteger( ))+ ". Ctrl:" + I2S(Packet_PopInteger( ))+ ". LeftBtn:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". OffsetX:" + I2S(Packet_PopInteger( ))+ ". OffsetY:" + I2S(Packet_PopInteger( ))+ ". ImageID:" + I2S(Packet_PopInteger( )))

@@ -18,7 +18,25 @@ struct ClickPortrainForId
 {
 	int abilid;
 	int keycode;
+	BOOL checkforcd;
 };
+
+
+struct ObjInfoAction
+{
+	int ObjId;
+	int ObjId2;
+	int Action;
+	std::string CustomMessage;
+	ObjInfoAction( int _ObjId, int _ObjId2, int _Action, std::string _CustomMessage )
+	{
+		ObjId = _ObjId;
+		ObjId2 = _ObjId2;
+		Action = _Action;
+		CustomMessage = _CustomMessage;
+	}
+};
+
 
 
 struct CustomHPBar

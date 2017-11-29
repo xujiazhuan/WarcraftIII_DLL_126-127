@@ -292,6 +292,7 @@ namespace NWar3Frame
 	class   CWar3Frame {
 	public:
 		bool FrameOk;
+		bool Visibled;
 		CFrameType FrameType;
 		bool FrameDestroyable;
 		bool AnimateStarted;
@@ -321,7 +322,7 @@ namespace NWar3Frame
 		void SetSkipAnotherCallback( bool skip = true );
 		static void UninitializeAllFrames( bool freeframes = false );
 		static void Init( int GameVersion, int GameDll );
-		void SetModel( const char * modelpath, int MdlType = 1 /* -1 */ );
+		void SetModel( const char * modelpath, int MdlType = 1 /* -1 */, int Flags = 0 );
 		static void Wc3PlaySound( const char * name );
 		static std::string DumpAllFrames( );
 		const char * GetText( );
@@ -330,6 +331,8 @@ namespace NWar3Frame
 		bool IsEnabled( );
 		bool IsFocused( );
 		bool IsPressed( );
+		void SetTextFrameFontHeight( float y );
+		void SetTextFrameFontWidth( float x );
 		bool IsChecked( );
 		void SetFrameCustomValue( int value, int id = 1 );
 		int GetFrameCustomValue( int id = 1 );
@@ -342,15 +345,17 @@ namespace NWar3Frame
 		void SetText( const char * text, unsigned int len = 0 );
 		void SetFrameAbsolutePosition( CFramePosition orginPosition, float absoluteX, float absoluteY, unsigned int flag = 1 );
 		void SetFrameRelativePosition( CFramePosition orginPosition, int dstFrameAddr, CFramePosition toPosition, float relativeX, float relativeY, unsigned int flag = 1 );
-		void SetTexture( const char * path, const char * border = NULL, bool tiled = false );
+		void SetTexture( const char * path, const char * border = NULL, bool tiled = false, CFrameBackdropType backgtype = CFrameBackdropType::ControlFrame );
 		static void InitCallbackHook( );
 		static void UninitializeCallbackHook( );
 		static void LoadFrameDefFiles( const char * filename, bool force = false );
 		bool CheckIsOk( );
+		bool IsVisibled( );
 		int Load( const char * name, int id = 0, bool showerror = false );
 		void SetFrameType( CFrameType newframetype );
-		CWar3Frame( const char * name, int relativeframe = NULL, bool show = false, int id = 0, bool showerror = false );
-		CWar3Frame CWar3FrameFromAddress( int FrameAddr, bool show = false, bool showerror = false );
+		CWar3Frame( const char * name, int id = 0, bool show = false, int relativeframe = NULL, bool showerror = false );
+		//CWar3Frame( const char * name, int relativeframe = NULL, bool show = false, int id = 0, bool showerror = false );
+		int CWar3FrameFromAddress( int FrameAddr, bool show = false, bool showerror = false );
 		void DestroyThisFrame( );
 		void SetFocus( bool focused = true );
 		void UpdateFlagsV2( unsigned int addflag = 0 );
@@ -370,6 +375,7 @@ namespace NWar3Frame
 		int GetFrameBackdropAddress( CFrameBackdropType backtype );
 		void FillToParentFrame( CFrameBackdropType backtype, bool fill );
 		void SetFrameScale( CFrameBackdropType backtype, float xscale, float yscale );
+		void UpdateScale( );
 		CWar3Frame( );
 		~CWar3Frame( );
 	};
@@ -397,11 +403,11 @@ namespace NWar3Frame
 	//	FixFrameHookError1_ptr( a1 );
 	//}
 	extern CFrameEventStruct gEvent;
-
+	extern int( __thiscall * SetTextFrameFont )( int FrameAddr, const char * font, float scale, int flag );
 	//extern int( __fastcall * CreateTexture )( const char * path, int *unkdata, int oldval, BOOL visibled );
 	extern int( __thiscall * GetCursorAddr )( int num );
 	extern int( __fastcall * LoadFrameDefFile )( const char * filename, int var1, int var2, int cstatus );
-	extern int( __fastcall * CreateNewCFrame ) ( const char * FrameName, int rframeaddr, int unk1, int unk2, int unk3 );
+	extern int( __fastcall * CreateNewCFrame ) ( const char * FrameName, int rframeaddr, int UnkIdx, int UnkValue, int id );
 	extern int( __fastcall * GetFrameItemAddr )( const char * name, int id );
 	extern int( __thiscall * PopupMenuAddItem )( int FrameAddr, const char *a2, int flag ); //flag = -2
 	extern int( __thiscall * ClearPopupMenu )( int FrameAddr );
@@ -418,10 +424,15 @@ namespace NWar3Frame
 	extern unsigned int( __thiscall * SetFrameTexture )( int FrameAddr, const char * texturepath, unsigned char flags/*border?*/, BOOL tiled, const char * borderpath, BOOL flag );
 	extern void( __fastcall * Wc3ChangeMenu )( int, int );
 	extern void( __fastcall * Wc3ChangeMenu_ptr )( int, int );
+	extern void( __thiscall * UpdateFrameScale )( int FrameAddr );
 	extern int( __thiscall *  Wc3SimulateClickEvent )( int btnaddr, int unk );
+
+	extern void( __thiscall * SetFrameWidth/*sub_6F605D90*/ )( int FrameAddr, float x );
+	extern void( __thiscall * SetFrameHeight/*sub_6F605DB0*/ )( int FrameAddr, float y );
+
 	extern const char*( __fastcall * Wc3GetSkinItemPath )( const char* name, const char* theme );
 	extern const char*( __fastcall * Wc3GetSkinItemPath2 )( const char* name, const char* theme );
-	extern void Wc3SetDefaultSkinTheme( std::string theme );
+	extern void Wc3SetDefaultSkinTheme( const std::string &  theme );
 	extern std::string Wc3SelectedSkinTheme;
 	extern int CStatusDefaultCStatus;
 	extern int CStatusLoadFramesVar1;
