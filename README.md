@@ -134,6 +134,7 @@ int __stdcall RawImage_IsBtn( unsigned int RawImage, BOOL enabled )
 	integer	pCFrame_SetCustomAnimateOffset = 0
 	integer	pCFrame_StopCustomAnimate = 0
 	integer pCFrame_SetScale = 0
+	integer pCFrame_Show = 0
 	
 	integer CFrameBackType_ControlFrame = 0
 	integer CFrameBackType_ControlBackdrop = 1
@@ -400,6 +401,16 @@ function CFrame_SetScale takes integer pCframe, integer backtype, boolean fillto
 	endif
 	if pCFrame_SetScale != 0 then 
 		call CallStdCallWith5Args(pCFrame_SetScale,pCframe,backtype, B2I(filltoparentframe),mR2I(scalex),mR2I(scaley) )
+	endif
+endfunction
+
+
+function CFrame_Show takes integer pCframe,boolean show returns nothing
+	if ( pCFrame_Show == 0 ) then
+		set pCFrame_Show = GetModuleProcAddress(EXTRADLLNAME, "CFrame_Show")
+	endif
+	if ( pCFrame_Show != 0 ) then
+		call CallStdCallWith2Args(pCFrame_Show , pCframe , B2I(show))
 	endif
 endfunction
 
