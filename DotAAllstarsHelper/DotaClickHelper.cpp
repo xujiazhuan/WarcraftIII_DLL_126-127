@@ -17,9 +17,6 @@ WarcraftRealWNDProc WarcraftRealWNDProc_ptr;
 LPARAM lpF1ScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_F1, 0 ) << 16 ) );
 LPARAM lpF1ScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_F1, 0 ) << 16 ) );
 
-LPARAM lpShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_SHIFT, 0 ) << 16 ) );
-LPARAM lpShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_SHIFT, 0 ) << 16 ) );
-
 LPARAM lpAltScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_MENU, 0 ) << 16 ) );
 LPARAM lpAltScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_MENU, 0 ) << 16 ) );
 
@@ -157,42 +154,49 @@ void SetHeroFrameXY_old( )
 
 void MouseClickX( int toX, int toY )
 {
-	POINT cursorPos;
-	GetCursorPos( &cursorPos );
+	Sleep( 5 );
+	POINT point;
+	GetCursorPos( &point );
+	PostMessage( Warcraft3Window, WM_LBUTTONDOWN, MK_LBUTTON, MAKELONG( point.x, point.y ) );
+	PostMessage( Warcraft3Window, WM_LBUTTONUP, MK_LBUTTON, MAKELONG( point.x, point.y ) );
 
-	double dx = toX*( 65535.0f / DesktopScreen_Width );
-	double dy = toY*( 65535.0f / DesktopScreen_Height );
-	INPUT Input = { 0 };
+	/*
+		POINT cursorPos;
+		GetCursorPos( &cursorPos );
 
-	Input.type = INPUT_MOUSE;
-	Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
-	Input.mi.dx = LONG( dx );
-	Input.mi.dy = LONG( dy );
-	SendInput( 1, &Input, sizeof( INPUT ) );
-	SetHeroFrameXY( );
+		double dx = toX * ( 65535.0f / DesktopScreen_Width );
+		double dy = toY * ( 65535.0f / DesktopScreen_Height );
+		INPUT Input = { 0 };
 
-	SendInput( 1, &Input, sizeof( INPUT ) );
-	SetHeroFrameXY( );
+		Input.type = INPUT_MOUSE;
+		Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+		Input.mi.dx = LONG( dx );
+		Input.mi.dy = LONG( dy );
+		SendInput( 1, &Input, sizeof( INPUT ) );
+		SetHeroFrameXY( );
 
-	Input.type = INPUT_MOUSE;
-	Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-	SendInput( 1, &Input, sizeof( INPUT ) );
-	SetHeroFrameXY( );
+		SendInput( 1, &Input, sizeof( INPUT ) );
+		SetHeroFrameXY( );
 
-	Input.type = INPUT_MOUSE;
-	Input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-	SendInput( 1, &Input, sizeof( INPUT ) );
-	SetHeroFrameXY( );
+		Input.type = INPUT_MOUSE;
+		Input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+		SendInput( 1, &Input, sizeof( INPUT ) );
+		SetHeroFrameXY( );
 
-	dx = cursorPos.x*( 65535.0f / DesktopScreen_Width );
-	dy = cursorPos.y*( 65535.0f / DesktopScreen_Height );
+		Input.type = INPUT_MOUSE;
+		Input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+		SendInput( 1, &Input, sizeof( INPUT ) );
+		SetHeroFrameXY( );
 
-	Input.type = INPUT_MOUSE;
-	Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
-	Input.mi.dx = LONG( dx );
-	Input.mi.dy = LONG( dy );
-	SendInput( 1, &Input, sizeof( INPUT ) );
-	SetHeroFrameXY( );
+		dx = cursorPos.x*( 65535.0f / DesktopScreen_Width );
+		dy = cursorPos.y*( 65535.0f / DesktopScreen_Height );
+
+		Input.type = INPUT_MOUSE;
+		Input.mi.dwFlags = MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE;
+		Input.mi.dx = LONG( dx );
+		Input.mi.dy = LONG( dy );
+		SendInput( 1, &Input, sizeof( INPUT ) );
+		SetHeroFrameXY( );*/
 }
 
 
@@ -394,6 +398,186 @@ int GetAltBtnID( int btnID )
 	return -1;
 }
 
+BOOL EnabledReplaceHotkeyFlag = TRUE;
+
+void __stdcall EnableReplaceHotkeyFlag( BOOL enabled )
+{
+	EnabledReplaceHotkeyFlag = enabled;
+}
+
+std::vector<KeySelectActionStruct> KeySelectActionList;
+
+int __stdcall AddKeySelectAction( int KeyCode, int GroupHandle )
+{
+	if ( !KeyCode )
+	{
+		if ( !KeySelectActionList.empty( ) )
+			KeySelectActionList.clear( );
+		return 0;
+	}
+
+	KeySelectActionStruct tmpstr;
+	tmpstr.VK = KeyCode & 0xFF;
+	tmpstr.IsAlt = KeyCode & 0x10000;
+	tmpstr.IsCtrl = KeyCode & 0x20000;
+	tmpstr.IsShift = KeyCode & 0x40000;
+	tmpstr.GroupHandle = GroupHandle;
+	tmpstr.units = GetUnitsFromGroup( GroupHandle );
+	//reverse( tmpstr.units.begin( ), tmpstr.units.end( ) );
+
+
+	if ( !EnabledReplaceHotkeyFlag || KeyCode & 0x100000 )
+	{
+		for ( KeySelectActionStruct & curstr : KeySelectActionList )
+		{
+			if ( curstr.VK == tmpstr.VK )
+			{
+				if ( curstr.GroupHandle == tmpstr.GroupHandle ||
+					( ( ( !curstr.IsAlt && !curstr.IsCtrl && !curstr.IsShift )
+						&&
+						( !tmpstr.IsAlt && !tmpstr.IsCtrl && !tmpstr.IsShift ) )
+
+						|| ( curstr.IsAlt && tmpstr.IsAlt )
+
+						|| ( curstr.IsCtrl && tmpstr.IsCtrl )
+
+						|| ( curstr.IsShift && tmpstr.IsShift ) ) )
+				{
+					if ( SetInfoObjDebugVal )
+					{
+						PrintText( "Replace old selection hotkey." );
+					}
+
+					curstr = tmpstr;
+					return 0;
+				}
+			}
+		}
+	}
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( "Add new selection hotkey." );
+	}
+
+	KeySelectActionList.push_back( tmpstr );
+	return 0;
+}
+
+
+std::vector<KeyChatActionStruct> KeyChatActionList;
+
+int __stdcall AddKeyChatAction( int KeyCode, const char * str )
+{
+	if ( !KeyCode )
+	{
+		if ( !KeyChatActionList.empty( ) )
+			KeyChatActionList.clear( );
+		return 0;
+	}
+
+	KeyChatActionStruct tmpstr;
+	tmpstr.VK = KeyCode & 0xFF;
+	tmpstr.IsAlt = KeyCode & 0x10000;
+	tmpstr.IsCtrl = KeyCode & 0x20000;
+	tmpstr.IsShift = KeyCode & 0x40000;
+	tmpstr.Message = str && strlen( str ) < 127 ? str : "Bad message length";
+
+	if ( !EnabledReplaceHotkeyFlag || KeyCode & 0x100000 )
+	{
+		for ( KeyChatActionStruct & curstr : KeyChatActionList )
+		{
+			if ( curstr.VK == tmpstr.VK )
+			{
+				if ( ( ( !curstr.IsAlt && !curstr.IsCtrl && !curstr.IsShift ) &&
+					( !tmpstr.IsAlt && !tmpstr.IsCtrl && !tmpstr.IsShift ) )
+					|| ( curstr.IsAlt && tmpstr.IsAlt )
+					|| ( curstr.IsCtrl && tmpstr.IsCtrl )
+					|| ( curstr.IsShift && tmpstr.IsShift )
+					)
+				{
+					if ( SetInfoObjDebugVal )
+					{
+						PrintText( "Replace old chat hotkey." );
+					}
+					curstr = tmpstr;
+					return 0;
+				}
+			}
+		}
+	}
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( "Add new chat hotkey." );
+	}
+	KeyChatActionList.push_back( tmpstr );
+
+	return 0;
+}
+
+std::vector<KeyCalbackActionStruct> KeyCalbackActionList;
+
+int __stdcall AddKeyCalbackAction( int KeyCode, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8 )
+{
+	if ( !KeyCode )
+	{
+		if ( !KeyCalbackActionList.empty( ) )
+			KeyCalbackActionList.clear( );
+		return 0;
+	}
+
+	KeyCalbackActionStruct tmpstr;
+	tmpstr.VK = KeyCode & 0xFF;
+	tmpstr.IsAlt = KeyCode & 0x10000;
+	tmpstr.IsCtrl = KeyCode & 0x20000;
+	tmpstr.IsShift = KeyCode & 0x40000;
+	// save args safe
+	tmpstr.args[ 0 ] = arg2;
+	tmpstr.args[ 1 ] = arg3;
+	tmpstr.args[ 2 ] = arg4;
+	tmpstr.args[ 3 ] = arg5;
+	tmpstr.args[ 4 ] = arg6;
+	tmpstr.args[ 5 ] = arg7;
+	tmpstr.args[ 6 ] = arg8;
+
+	if ( !EnabledReplaceHotkeyFlag || KeyCode & 0x100000 )
+	{
+		for ( KeyCalbackActionStruct & curstr : KeyCalbackActionList )
+		{
+			if ( curstr.VK == tmpstr.VK )
+			{
+				if (
+
+					( ( !curstr.IsAlt && !curstr.IsCtrl && !curstr.IsShift ) &&
+					( !tmpstr.IsAlt && !tmpstr.IsCtrl && !tmpstr.IsShift ) )
+
+
+					|| ( curstr.IsAlt && tmpstr.IsAlt )
+					|| ( curstr.IsCtrl && tmpstr.IsCtrl )
+					|| ( curstr.IsShift && tmpstr.IsShift )
+					)
+				{
+					if ( SetInfoObjDebugVal )
+					{
+						PrintText( "Replace old callback hotkey." );
+					}
+					curstr = tmpstr;
+					return 0;
+				}
+			}
+		}
+	}
+
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( "Add new callback hotkey." );
+	}
+
+	KeyCalbackActionList.push_back( tmpstr );
+
+	return 0;
+}
+
+
 int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 {
 	if ( !KeyCode )
@@ -407,6 +591,7 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 	tmpstr.VK = KeyCode & 0xFF;
 	tmpstr.btnID = btnID;
 	tmpstr.IsSkill = IsSkill;
+
 	if ( IsSkill )
 		tmpstr.altbtnID = ( GetAltBtnID( btnID ) );
 	else
@@ -416,13 +601,9 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 	tmpstr.IsCtrl = KeyCode & 0x20000;
 	tmpstr.IsShift = KeyCode & 0x40000;
 	tmpstr.IsRightClick = KeyCode & 0x80000;
-	if ( SetInfoObjDebugVal )
-	{
-		char addedhotkeys[ 100 ];
-		sprintf_s( addedhotkeys, "KeyCode:%X btnID:%X(ALT:%X) IsSkill:%s", KeyCode, btnID, GetAltBtnID( btnID ), IsSkill ? "Yes" : "No" );
-		PrintText( addedhotkeys );
-	}
-	if ( KeyCode & 0xF0000 )
+	tmpstr.IsQuickCast = KeyCode & 0x200000;
+
+	if ( !EnabledReplaceHotkeyFlag || KeyCode & 0x100000 )
 	{
 		for ( KeyActionStruct & curstr : KeyActionList )
 		{
@@ -431,13 +612,13 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 				if ( ( ( !curstr.IsAlt && !curstr.IsCtrl && !curstr.IsShift ) &&
 					( !tmpstr.IsAlt && !tmpstr.IsCtrl && !tmpstr.IsShift ) )
 					|| ( curstr.IsAlt && tmpstr.IsAlt )
-					|| ( curstr.IsCtrl && tmpstr.IsAlt )
-					|| ( curstr.IsShift && tmpstr.IsAlt )
+					|| ( curstr.IsCtrl && tmpstr.IsCtrl )
+					|| ( curstr.IsShift && tmpstr.IsShift )
 					)
 				{
 					if ( SetInfoObjDebugVal )
 					{
-						PrintText( "Replaced hotkey" );
+						PrintText( "Replace hotkey" );
 					}
 					curstr = tmpstr;
 					return 0;
@@ -447,7 +628,16 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 	}
 	if ( SetInfoObjDebugVal )
 	{
-		PrintText( "added new hotkey" );
+		char debugtext[ 512 ];
+		sprintf_s( debugtext, "%s:%X %s:%s %s:%s %s:%s %s:%s %s:%s",
+			"added new hotkey", KeyCode,
+			"IsAlt", GetBoolStr( tmpstr.IsAlt ),
+			"IsCtrl", GetBoolStr( tmpstr.IsCtrl ),
+			"IsShift", GetBoolStr( tmpstr.IsShift ),
+			"IsRightClick", GetBoolStr( tmpstr.IsRightClick ),
+			"IsQuickCast", GetBoolStr( tmpstr.IsQuickCast ) );
+		PrintText( debugtext );
+
 	}
 	KeyActionList.push_back( tmpstr );
 
@@ -477,7 +667,7 @@ BOOL IsNULLButtonFound( int pButton )
 int __stdcall GetSkillPanelButton( int idx )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 	if ( GetSelectedUnit( GetLocalPlayerId( ) ) )
@@ -510,7 +700,7 @@ int __stdcall GetItemPanelButton( int idx )
 	if ( GetSelectedUnit( GetLocalPlayerId( ) ) )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		int pclass = GetGlobalClassAddr( );
 		if ( pclass > 0 )
@@ -715,7 +905,7 @@ void __stdcall SimpleButtonClick( int simplebtnaddr, BOOL LeftMouse )
 void PressSkillPanelButton( int idx, BOOL RightClick )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	int button = GetSkillPanelButton( idx );
 	if ( button > 0 && IsCommandButton( button ) )
@@ -731,7 +921,7 @@ void PressSkillPanelButton( int idx, BOOL RightClick )
 void PressItemPanelButton( int idx, BOOL RightClick )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	int button = GetItemPanelButton( idx );
 	if ( button > 0 && IsCommandButton( button ) )
@@ -747,7 +937,7 @@ void PressItemPanelButton( int idx, BOOL RightClick )
 void PressHeroPanelButton( int idx, BOOL RightClick )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	int button = GetHeroButton( idx );
 	if ( button > 0 && IsCommandButton( button ) )
@@ -830,7 +1020,7 @@ BOOL IsChatActive( )
 BOOL IsGameFrameActive( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 	if ( *( int* )pCurrentFrameFocusedAddr == 0 )
@@ -852,13 +1042,13 @@ BOOL IsGameFrameActive( )
 		{
 			pGlAddr = *( int* )( pGlAddr + 0x164 );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 			return pGlAddr > 0;
 		}
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	return FALSE;
 }
@@ -903,7 +1093,7 @@ void DelayedPressList_pushback( DelayedPress & d )
 
 void PressKeyWithDelay_timed( )
 {
-	if ( *InGame && *IsWindowActive )
+	if ( IsGame( ) && *IsWindowActive )
 	{
 		for ( unsigned int i = 0; i < DelayedPressList.size( ); i++ )
 		{
@@ -955,6 +1145,7 @@ void PressKeyWithDelay_timed( )
 									int unitowner = GetUnitOwnerSlot( selectedunit );
 									if ( unitowner != 15 )
 									{
+										BOOL PressedButton = FALSE;
 
 										if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
 										{
@@ -966,7 +1157,7 @@ void PressKeyWithDelay_timed( )
 														PressSkillPanelButton( keyAction.altbtnID, keyAction.IsRightClick );
 													else
 														PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
-													break;
+													PressedButton = TRUE;
 												}
 
 											}
@@ -979,10 +1170,56 @@ void PressKeyWithDelay_timed( )
 													PressSkillPanelButton( keyAction.btnID, keyAction.IsRightClick );
 												else
 													PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
-												break;
+												PressedButton = TRUE;
 											}
 
 										}
+
+
+										if ( keyAction.IsQuickCast && PressedButton )
+										{
+											if ( SetInfoObjDebugVal )
+											{
+												PrintText( "IsQuickCast && ButtonPressed!" );
+											}
+
+
+											int x = ( int )( *GetWindowXoffset );
+											int y = ( int )( *GetWindowYoffset );
+
+											POINT cursorhwnd;
+											GetCursorPos( &cursorhwnd );
+											ScreenToClient( Warcraft3Window, &cursorhwnd );
+											POINT cursor;
+											GetCursorPos( &cursor );
+
+											x = x - cursorhwnd.x;
+											y = y - cursorhwnd.y;
+
+											cursor.x = cursor.x + x;
+											cursor.y = cursor.y + y;
+											//( toXX, toYY );
+
+											MouseClick( cursor.x, cursor.y );
+										}
+										else if ( !keyAction.IsQuickCast )
+										{
+											if ( SetInfoObjDebugVal )
+											{
+												PrintText( "Skip quick cast: no flag!" );
+											}
+										}
+										else if ( !PressedButton )
+										{
+											if ( SetInfoObjDebugVal )
+											{
+												PrintText( "Skip quick cast: Button not pressed!" );
+											}
+										}
+
+
+										if ( PressedButton )
+											break;
 									}
 
 								}
@@ -1110,6 +1347,7 @@ std::string ReturnStringWithoutWarcraftTags( std::string str )
 	replaceAll( str, "|n", "" );
 	replaceAll( str, "|r", "" );
 	replaceAll( str, "|", "" );
+	replaceAll( str, "- [Level ", "[" );
 	return str;
 }
 
@@ -1167,7 +1405,7 @@ std::string GetObjectNameByID( int clid )
 	return "Default String";
 }
 
-std::string IsCooldownMessage = "%s > In cooldown ( %02i:%02i Remaining ).";
+std::string IsCooldownMessage = "%s > On cooldown ( %02i:%02i ).";
 std::string IsReadyMessage = "%s > is ready.";
 std::string WantToLearnMessage = "I want to %s";
 std::string WantToPickMessage = "I want to pick > %s";
@@ -1178,14 +1416,57 @@ std::string WantToBuyMessage = "I want to buy > %s";
 std::string NeedToBuyMessage = "We need to buy > %s";
 
 
-std::string ItemAbiltPlayerHasItem = "Player %s has a > %s";
-std::string NeedMoreMana = "Need %i mana for a > %s";
+std::string ItemAbiltPlayerHasItem = "%s has > %s";
+std::string NeedMoreMana = "Need %i mana for > %s";
 std::string IgotSilence = "Can't use %s while silenced";
 
 
 int ignorelist[ ] = { 1,2,3 };
 
 std::vector<ObjInfoAction> IgnoreObjInfo;
+
+void __stdcall SetCustomDefaultMessage( int id, const char * message )
+{
+	if ( id < 1 || id > 10 || message == NULL )
+		return;
+
+	switch ( id )
+	{
+	case 1:
+		IsCooldownMessage = message;
+		break;
+	case 2:
+		IsReadyMessage = message;
+		break;
+	case 3:
+		WantToLearnMessage = message;
+		break;
+	case 4:
+		WantToPickMessage = message;
+		break;
+	case 5:
+		NeedToChooseMessage = message;
+		break;
+	case 6:
+		WantToBuyMessage = message;
+		break;
+	case 7:
+		NeedToBuyMessage = message;
+		break;
+	case 8:
+		ItemAbiltPlayerHasItem = message;
+		break;
+	case 9:
+		NeedMoreMana = message;
+		break;
+	case 10:
+		IgotSilence = message;
+		break;
+	default:
+		break;
+	}
+
+}
 
 /*
  action
@@ -1284,7 +1565,8 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 	/*__try
 	{*/
 	int selectedunit = 0;
-	char PrintAbilState[ 4096 ];
+	char PrintAbilState[ 2048 ];
+	PrintAbilState[ 0 ] = '\0';
 	if ( pButton && ( IsKeyPressed( VK_LMENU ) || ( IsKeyPressed( VK_LMENU ) && IsKeyPressed( VK_LCONTROL ) ) ) && IsCommandButton( pButton ) && ( selectedunit = GetSelectedUnit( GetLocalPlayerId( ) ) ) )
 	{
 		int CommandButtonData = *( int* )( pButton + 0x190 );
@@ -1349,7 +1631,7 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 
 			if ( *( unsigned int * )( pButton + 0x140 ) & 16 || ( std::find( InfoWhitelistedObj.begin( ), InfoWhitelistedObj.end( ), pObjId ) != InfoWhitelistedObj.end( ) ) )
 			{
-				if ( pObjId != 'AHer' && pObjId != 'Asel'&& pObjId != 'Asud'&& pObjId != 'Asid'
+				if ( pObjId != 'AHer' && pObjId != 'Asel'&& pObjId != 'Asud'&& pObjId != 'Asid' && pObjId != 'Aneu'
 					&& pObjId != 0x77123477 && pObjId != 0x07123407 && pObjId != 0x77000077 )
 				{
 					if ( pAbil || pObjId )
@@ -1362,7 +1644,7 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 								pObjId = *( int* )( pObjId + 0x34 );
 							}
 							if ( ( std::find( InfoWhitelistedObj.begin( ), InfoWhitelistedObj.end( ), pObjId ) != InfoWhitelistedObj.end( ) )
-								|| ( pObjId != 'AHer' && pObjId != 'Asel'&& pObjId != 'Asud'&& pObjId != 'Asid' ) )
+								|| ( pObjId != 'AHer' && pObjId != 'Asel'&& pObjId != 'Asud'&& pObjId != 'Asid'&& pObjId != 'Aneu' ) )
 							{
 
 								unsigned int abilscount = 0;
@@ -1451,21 +1733,17 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 			}
 
 
-			if ( ( pBtnFlag != 2 && ( pObjId != 'AHer' || pObjId_1 != 0 ) ) && ( pAbil || pObjId || ( pAbilTitle[ 0 ] != '\0' && localplayeridslot != unitownerslot ) ) )
+			if ( pItemUnitID == 0xD0142 ||
+				( ( pBtnFlag != 2 && ( pObjId != 'AHer' || pObjId_1 != 0 ) ) && ( pAbil || pObjId || ( pAbilTitle[ 0 ] != '\0' && localplayeridslot != unitownerslot ) ) )
+				|| ( std::find( InfoWhitelistedObj.begin( ), InfoWhitelistedObj.end( ), pObjId ) != InfoWhitelistedObj.end( ) ) )
 			{
 				if ( SetInfoObjDebugVal )
 				{
 					PrintText( "Click Button 1" );
 				}
 
-				if ( AbilManacost > UnitMana )
-				{
-					sprintf_s( PrintAbilState, NeedMoreMana.c_str( ), ( AbilManacost - UnitMana ), AbilName.c_str( ) );
-					SendMessageToChat( PrintAbilState, 0 );
-					return 0;
-				}
 
-				if ( unitownerslot != localplayeridslot )
+				if ( unitownerslot != localplayeridslot && unitownerslot != 15 )
 				{
 					sprintf_s( PrintAbilState, ItemAbiltPlayerHasItem.c_str( ), GetPlayerName( unitownerslot, 1 ), AbilName.c_str( ) );
 				}
@@ -1508,6 +1786,13 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 					}
 
 
+					if ( AbilManacost > UnitMana )
+					{
+						sprintf_s( PrintAbilState, NeedMoreMana.c_str( ), ( AbilManacost - UnitMana ), AbilName.c_str( ) );
+						/*SendMessageToChat( PrintAbilState, 0 );
+						return 0;*/
+					}
+
 					SendMessageToChat( PrintAbilState, 0 );
 					return 0;
 				}
@@ -1515,53 +1800,70 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 
 				if ( pAbil && unitownerslot == localplayeridslot )
 				{
-					//CONSOLE_Print( "Click Button owner ability!" );
+					//CONSOLE_Print( 
+					if ( SetInfoObjDebugVal )
+					{
+						PrintText( "Click Button owner ability!" );
+					}
 
 					int pAbilId = *( int* )( pAbil + 0x34 );
-					if ( pAbilId &&  *( unsigned int * )( pButton + 0x140 ) & 16 )
+					if ( pAbilId && ( *( unsigned int * )( pButton + 0x140 ) & 16 || ( std::find( InfoWhitelistedObj.begin( ), InfoWhitelistedObj.end( ), pObjId ) != InfoWhitelistedObj.end( ) ) ) )
 					{
-
-						//if ( !pObjId )
-						//	AbilName = ReturnStringBeforeFirstChar( ReturnStringWithoutWarcraftTags( pAbilTitle ), '(' );
-						//else
-
-
-						int pAbilData = *( int* )( pAbil + 0xDC );
-						if ( pAbilData )
+						if ( pObjId != 'AHer' && pObjId != 'Asel'&& pObjId != 'Asud'&& pObjId != 'Asid' && pObjId != 'Aneu' )
 						{
-							float pAbilDataVal1 = *( float* )( pAbilData + 0x4 );
-							int pAbilDataVal2tmp = *( int* )( pAbilData + 0xC );
-							if ( pAbilDataVal1 > 0.0f && pAbilDataVal2tmp )
-							{
-								float pAbilDataVal2 = *( float* )( pAbilDataVal2tmp + 0x40 );
-								float AbilCooldown = pAbilDataVal1 - pAbilDataVal2;
-								int AbilCooldownMinutes = ( int )( AbilCooldown / 60.0f );
-								int AbilCooldownSeconds = ( int )( ( int )AbilCooldown % 60 );
+							//if ( !pObjId )
+							//	AbilName = ReturnStringBeforeFirstChar( ReturnStringWithoutWarcraftTags( pAbilTitle ), '(' );
+							//else
 
-								sprintf_s( PrintAbilState, IsCooldownMessage.c_str( ), AbilName.c_str( ), AbilCooldownMinutes, AbilCooldownSeconds );
+
+							if ( SetInfoObjDebugVal )
+							{
+								PrintText( "Search cooldown " );
+							}
+
+
+							int pAbilData = *( int* )( pAbil + 0xDC );
+							if ( pAbilData )
+							{
 								if ( SetInfoObjDebugVal )
 								{
-									PrintText( "No cooldown Button 1" );
+									PrintText( "Found 1" );
+								}
+
+								float pAbilDataVal1 = *( float* )( pAbilData + 0x4 );
+								int pAbilDataVal2tmp = *( int* )( pAbilData + 0xC );
+								if ( pAbilDataVal1 > 0.0f && pAbilDataVal2tmp )
+								{
+									if ( SetInfoObjDebugVal )
+									{
+										PrintText( "Found 2" );
+									}
+									float pAbilDataVal2 = *( float* )( pAbilDataVal2tmp + 0x40 );
+									float AbilCooldown = pAbilDataVal1 - pAbilDataVal2;
+									int AbilCooldownMinutes = ( int )( AbilCooldown / 60.0f );
+									int AbilCooldownSeconds = ( int )( ( int )AbilCooldown % 60 );
+
+									sprintf_s( PrintAbilState, IsCooldownMessage.c_str( ), AbilName.c_str( ), AbilCooldownMinutes, AbilCooldownSeconds );
+									SendMessageToChat( PrintAbilState, 0 );
+								}
+								else
+								{
+									if ( SetInfoObjDebugVal )
+									{
+										PrintText( "No cooldown Button 1.1" );
+									}
+									sprintf_s( PrintAbilState, IsReadyMessage.c_str( ), AbilName.c_str( ) );
 								}
 							}
 							else
 							{
 								if ( SetInfoObjDebugVal )
 								{
-									PrintText( "Possible cooldown Button 1" );
+									PrintText( "No cooldown Button 1.2" );
 								}
 								sprintf_s( PrintAbilState, IsReadyMessage.c_str( ), AbilName.c_str( ) );
 							}
 						}
-						else
-						{
-							if ( SetInfoObjDebugVal )
-							{
-								PrintText( "No cooldown Button 1" );
-							}
-							sprintf_s( PrintAbilState, IsReadyMessage.c_str( ), AbilName.c_str( ) );
-						}
-
 					}
 					if ( *( int* )( pAbil + 0x3C ) > 0 )
 					{
@@ -1571,9 +1873,6 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 					}
 
 				}
-
-
-
 				if ( AbilManacost > UnitMana )
 				{
 					sprintf_s( PrintAbilState, NeedMoreMana.c_str( ), ( AbilManacost - UnitMana ), AbilName.c_str( ) );
@@ -1609,6 +1908,42 @@ int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 )
 	return SimpleButtonPreClickEvent_ptr( pButton, unused, a2 );
 }
 
+
+
+typedef float( __fastcall * pGetCameraHeight/*sub_6F3019A0*/ )( unsigned int a1 );
+pGetCameraHeight GetCameraHeight_org;
+pGetCameraHeight GetCameraHeight_ptr;
+
+float cameraoffset = 0;
+
+
+void IncreaseCameraOffset( float offset = 50 )
+{
+	if ( cameraoffset > 3000 )
+		return;
+	cameraoffset += offset;
+}
+
+void DecreaseCameraOffset( float offset = 50 )
+{
+	if ( cameraoffset < -1000 )
+		return;
+	cameraoffset -= offset;
+}
+
+void ResetCameraOffset( )
+{
+	cameraoffset = 0;
+}
+
+float __fastcall GetCameraHeight_my( unsigned int a1 )
+{
+	return GetCameraHeight_ptr( a1 ) + cameraoffset;
+}
+
+
+DWORD GroupSelectLastTime = GetTickCount( );
+int LastSelectedGroupHandle = 0;
 
 LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _wParam, LPARAM lParam )
 {
@@ -1656,11 +1991,46 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 	}
 #endif
 
-	if ( !*InGame )
+	if ( !( IsGame( ) ) )
 		return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
+
+
+
+
+
 
 	TestValues[ 1 ]++;
 
+	if ( GameVersion == 0x26a )
+	{
+		if ( _Msg == WM_MOUSEWHEEL && IsKeyPressed( VK_LCONTROL ) )
+		{
+			short wheeltarg = HIWORD( _wParam );
+			if ( wheeltarg > 0 )
+			{
+				IncreaseCameraOffset( );
+			}
+			else
+			{
+				DecreaseCameraOffset( );
+			}
+
+			WarcraftRealWNDProc_ptr( hWnd, WM_SYSKEYDOWN, VK_PRIOR, NULL );
+			WarcraftRealWNDProc_ptr( hWnd, WM_SYSKEYDOWN, VK_NEXT, NULL );
+
+			return DefWindowProc( hWnd, Msg, wParam, lParam );
+		}
+
+		if ( _Msg == WM_MBUTTONDOWN && IsKeyPressed( VK_LCONTROL ) )
+		{
+			ResetCameraOffset( );
+
+			WarcraftRealWNDProc_ptr( hWnd, WM_SYSKEYDOWN, VK_PRIOR, NULL );
+			WarcraftRealWNDProc_ptr( hWnd, WM_SYSKEYDOWN, VK_NEXT, NULL );
+
+			return DefWindowProc( hWnd, Msg, wParam, lParam );
+		}
+	}
 
 	if ( ( lParam & 0x40000000 ) && Msg == WM_KEYDOWN && !*( int* )ChatFound )
 	{
@@ -1673,7 +2043,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 
@@ -1982,7 +2352,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						{
 
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 							//BytesToSend.push_back( 0x50 );
 							//// packet header
@@ -2015,7 +2385,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
 							SendKeyEvent.clear( );
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 							//*KeyboardAddrForKey = ( int ) wParam;
 							//*KeyboardAddrForKeyEvent = ( int ) Msg;
@@ -2024,7 +2394,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						else if ( Msg == WM_KEYUP )
 						{
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 							SendKeyEvent.push_back( 0x50 );
 							// header custom packets
@@ -2049,20 +2419,20 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 							SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
 							SendKeyEvent.clear( );
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 							//*KeyboardAddrForKey = ( int ) wParam;
 							//*KeyboardAddrForKeyEvent = ( int ) Msg;
 							//TriggerExecute( KeyboardTriggerHandle );
 						}
 #ifdef DOTA_HELPER_LOG
-						AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+						AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 						return DefWindowProc( hWnd, Msg, wParam, lParam );
 					}
 
+					}
 				}
-			}
 			//char keystateprint[ 200 ];
 			if ( Msg == WM_KEYDOWN ||/* Msg == WM_KEYUP || */Msg == WM_RBUTTONDOWN )
 			{
@@ -2223,142 +2593,218 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 					for ( int lol = 0; lol < 2; lol++ )
 					{
-						for ( KeyActionStruct & keyAction : KeyActionList )
+						//if ( !NeedSkipThisKey )
 						{
-							if ( keyAction.VK == ( int )wParam )
+							for ( KeyActionStruct & keyAction : KeyActionList )
 							{
-								if ( SetInfoObjDebugVal )
-								{
-									PrintText( "Hotkey vk code found." );
-								}
-								TestValues[ 6 ]++;
-								if ( Msg == WM_SYSKEYDOWN )
-									Msg = WM_KEYDOWN;
-
-								/*if ( Msg == WM_SYSKEYUP )
-									Msg = WM_KEYUP;*/
-
-
-
-								if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift && lol == 1 )
-									|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
-									|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
-									|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
-									)
+								if ( keyAction.VK == ( int )wParam )
 								{
 									if ( SetInfoObjDebugVal )
 									{
-										PrintText( "Hotkey availabled!" );
+										PrintText( "Hotkey vk code found." );
 									}
-									itempressed = !keyAction.IsSkill;
+									TestValues[ 6 ]++;
+									if ( Msg == WM_SYSKEYDOWN )
+										Msg = WM_KEYDOWN;
 
-								
-									int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+									/*if ( Msg == WM_SYSKEYUP )
+										Msg = WM_KEYUP;*/
 
-									int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
-									if ( selectedunit > 0 && selectedunitcout > 0 )
+
+
+									if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift && lol == 1 )
+										|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+										|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+										|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+										)
 									{
-										int unitowner = GetUnitOwnerSlot( selectedunit );
-										if ( !keyAction.IsSkill && ClickHelper && unitowner != 15 )
+
+										lol++;
+										if ( SetInfoObjDebugVal )
 										{
-											if ( wParam == LatestPressedKey )
-											{
-												if ( IsCursorSelectTarget( ) )
-												{
-													if ( SetInfoObjDebugVal )
-													{
-														PrintText( "Select hero!" );
-													}
-													if ( PressMouseAtSelectedHero( itempressed ) == 0 )
-													{
-														ClickHelperWork = TRUE;
-														NeedSkipThisKey = TRUE;
-
-
-													}
-												}
-											}
+											PrintText( "Hotkey availabled!" );
 										}
+										itempressed = !keyAction.IsSkill;
 
-										LatestPressedKey = wParam;
 
+										int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
 
-										if ( unitowner != 15 &&  !ClickHelperWork )
+										int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+										if ( selectedunit > 0 && selectedunitcout > 0 )
 										{
-											NeedSkipThisKey = TRUE;
-
-
-
-											if ( EnableSelectHelper )
+											int unitowner = GetUnitOwnerSlot( selectedunit );
+											if ( !keyAction.IsSkill && ClickHelper && unitowner != 15 )
 											{
-
-												if ( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
+												if ( wParam == LatestPressedKey )
 												{
-													//	sprintf_s( keystateprint, 200, "Start emulate #2..." );
-													//	PrintText( keystateprint );
-														//PressHeroPanelButton( 0, FALSE );
-													WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
-													WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
-													if ( SetInfoObjDebugVal )
+													if ( IsCursorSelectTarget( ) )
 													{
-														PrintText( "Hotkey delay press start!!" );
+														if ( SetInfoObjDebugVal )
+														{
+															PrintText( "Select hero!" );
+														}
+														if ( PressMouseAtSelectedHero( itempressed ) == 0 )
+														{
+															ClickHelperWork = TRUE;
+															NeedSkipThisKey = TRUE;
+
+
+														}
 													}
-
-													DelayedPress tmpDelayPress = DelayedPress( );
-													tmpDelayPress.IsCustom = TRUE;
-													tmpDelayPress.IsAlt = IsKeyPressed( VK_MENU );
-													tmpDelayPress.IsCtrl = IsKeyPressed( VK_CONTROL );
-													tmpDelayPress.IsShift = IsKeyPressed( VK_SHIFT );
-													tmpDelayPress.NeedPresslParam = lParam;
-													tmpDelayPress.NeedPresswParam = wParam;
-													tmpDelayPress.NeedPressMsg = Msg;
-													tmpDelayPress.TimeOut = 140;
-													DelayedPressList_pushback( tmpDelayPress );
-
-													lol++;
-													return DefWindowProc( hWnd, Msg, wParam, lParam );
 												}
 											}
 
+											LatestPressedKey = wParam;
 
-											if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
+
+											if ( unitowner != 15 && !ClickHelperWork )
 											{
-												if ( keyAction.altbtnID >= 0 )
-												{
-													if ( SetInfoObjDebugVal )
-													{
-														PrintText( "OK. Now press panel button." );
-													}
-													//if ( !( lParam & 0x40000000 ) )
-												//	{
-													if ( keyAction.IsSkill )
-														PressSkillPanelButton( keyAction.altbtnID, keyAction.IsRightClick );
-													else
-														PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
-													//	}
+												NeedSkipThisKey = TRUE;
 
+
+
+												if ( EnableSelectHelper )
+												{
+
+													if ( unitowner != GetLocalPlayerId( ) && !GetPlayerAlliance( Player( unitowner ), Player( GetLocalPlayerId( ) ), 6 ) )
+													{
+														//	sprintf_s( keystateprint, 200, "Start emulate #2..." );
+														//	PrintText( keystateprint );
+															//PressHeroPanelButton( 0, FALSE );
+														WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
+														WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
+														if ( SetInfoObjDebugVal )
+														{
+															PrintText( "Hotkey delay press start!!" );
+														}
+
+														DelayedPress tmpDelayPress = DelayedPress( );
+														tmpDelayPress.IsCustom = TRUE;
+														tmpDelayPress.IsAlt = IsKeyPressed( VK_MENU );
+														tmpDelayPress.IsCtrl = IsKeyPressed( VK_CONTROL );
+														tmpDelayPress.IsShift = IsKeyPressed( VK_SHIFT );
+														tmpDelayPress.NeedPresslParam = lParam;
+														tmpDelayPress.NeedPresswParam = wParam;
+														tmpDelayPress.NeedPressMsg = Msg;
+														tmpDelayPress.TimeOut = 140;
+														DelayedPressList_pushback( tmpDelayPress );
+
+														//lol++;
+														return DefWindowProc( hWnd, Msg, wParam, lParam );
+													}
+												}
+
+												BOOL PressedButton = FALSE;
+
+												if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
+												{
+													if ( keyAction.altbtnID >= 0 )
+													{
+														if ( keyAction.IsSkill )
+															PressSkillPanelButton( keyAction.altbtnID, keyAction.IsRightClick );
+														else
+															PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
+														PressedButton = TRUE;
+													}
 												}
 												else
 												{
+													if ( keyAction.IsSkill )
+														PressSkillPanelButton( keyAction.btnID, keyAction.IsRightClick );
+													else
+														PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
+													PressedButton = TRUE;
+												}
+
+
+												if ( keyAction.IsQuickCast && PressedButton )
+												{
 													if ( SetInfoObjDebugVal )
 													{
-														PrintText( "ERROR. NO ACTION FOUND!" );
+														PrintText( "IsQuickCast && ButtonPressed!" );
+													}
+													int x = ( int )( *GetWindowXoffset );
+													int y = ( int )( *GetWindowYoffset );
+
+													POINT cursorhwnd;
+													GetCursorPos( &cursorhwnd );
+													ScreenToClient( Warcraft3Window, &cursorhwnd );
+													POINT cursor;
+													GetCursorPos( &cursor );
+
+													x = x - cursorhwnd.x;
+													y = y - cursorhwnd.y;
+
+													cursor.x = cursor.x + x;
+													cursor.y = cursor.y + y;
+													//( toXX, toYY );
+
+													MouseClick( cursor.x, cursor.y );
+
+													//SetCursorPos( cursor.x, cursor.y );
+												}
+												else if ( !keyAction.IsQuickCast )
+												{
+													if ( SetInfoObjDebugVal )
+													{
+														PrintText( "Skip quick cast: no flag!" );
 													}
 												}
+												else if ( !PressedButton )
+												{
+													if ( SetInfoObjDebugVal )
+													{
+														PrintText( "Skip quick cast: Button not pressed!" );
+													}
+												}
+
+												//if ( IsNULLButtonFound( GetSkillPanelButton( 11 ) ) )
+												//{
+												//	if ( keyAction.altbtnID >= 0 )
+												//	{
+												//		if ( SetInfoObjDebugVal )
+												//		{
+												//			PrintText( "OK. Now press panel button." );
+												//		}
+												//		//if ( !( lParam & 0x40000000 ) )
+												//	//	{
+												//		if ( keyAction.IsSkill )
+												//			PressSkillPanelButton( keyAction.altbtnID, keyAction.IsRightClick );
+												//		else
+												//			PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
+												//		//	}
+
+												//	}
+												//	else
+												//	{
+												//		if ( SetInfoObjDebugVal )
+												//		{
+												//			PrintText( "ERROR. NO ACTION FOUND!" );
+												//		}
+												//	}
+												//}
+												//else
+												//{
+												//	if ( SetInfoObjDebugVal )
+												//	{
+												//		PrintText( "OK. Now press panel button." );
+												//	}
+												//	//if ( !( lParam & 0x40000000 ) )
+												////	{
+												//	if ( keyAction.IsSkill )
+												//		PressSkillPanelButton( keyAction.btnID, keyAction.IsRightClick );
+												//	else
+												//		PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
+												//	//	}
+
+												//}
 											}
 											else
 											{
 												if ( SetInfoObjDebugVal )
 												{
-													PrintText( "OK. Now press panel button." );
+													PrintText( "Bad selected unit( player 15 ) or hotkey disabled." );
 												}
-												//if ( !( lParam & 0x40000000 ) )
-											//	{
-												if ( keyAction.IsSkill )
-													PressSkillPanelButton( keyAction.btnID, keyAction.IsRightClick );
-												else
-													PressItemPanelButton( keyAction.btnID, keyAction.IsRightClick );
-												//	}
 
 											}
 										}
@@ -2366,38 +2812,226 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 										{
 											if ( SetInfoObjDebugVal )
 											{
-												PrintText( "Bad selected unit( player 15 ) or hotkey disabled." );
+												PrintText( "No selected unit!" );
 											}
 
 										}
+
+										//lol++;
+										break;
 									}
 									else
 									{
 										if ( SetInfoObjDebugVal )
 										{
-											PrintText( "No selected unit!" );
+											PrintText( "Hotkey not equal skip..." );
 										}
 
 									}
-
-									lol++;
-									break;
 								}
-								else
+							}
+						}
+
+					}
+					for ( int lol = 0; lol < 2; lol++ )
+					{
+						//if ( !NeedSkipThisKey )
+						{
+
+
+							for ( auto keyAction : KeyChatActionList )
+							{
+								if ( keyAction.VK == ( int )wParam )
 								{
-									if ( SetInfoObjDebugVal )
+
+									if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift && lol == 1 )
+										|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+										|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+										|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+										)
 									{
-										PrintText( "Hotkey not equal skip..." );
+
+										lol++;
+										NeedSkipThisKey = TRUE;
+										if ( ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+											|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+											|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+											)
+										{
+											if ( Msg == WM_SYSKEYDOWN )
+												Msg = WM_KEYDOWN;
+										}
+										else
+										{
+											if ( IsKeyPressed( VK_MENU )
+												|| IsKeyPressed( VK_CONTROL ) )
+											{
+												NeedSkipThisKey = FALSE;
+											}
+										}
+
+
+										SendMessageToChat( keyAction.Message.c_str( ), FALSE );
+									}
+								}
+							}
+
+						}
+					}
+					for ( int lol = 0; lol < 2; lol++ )
+					{
+						//if ( !NeedSkipThisKey )
+						{
+							int selectedunitcout = GetSelectedUnitCountBigger( GetLocalPlayerId( ) );
+
+							int selectedunit = GetSelectedUnit( GetLocalPlayerId( ) );
+							if ( selectedunit > 0 && selectedunitcout > 0 )
+							{
+								int unitowner = GetUnitOwnerSlot( selectedunit );
+								if ( unitowner != 15 )
+								{
+									for ( auto keyAction : KeyCalbackActionList )
+									{
+										if ( keyAction.VK == ( int )wParam )
+										{
+
+											if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift && lol == 1 )
+												|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+												|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+												|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+												)
+											{
+
+												lol++;
+												NeedSkipThisKey = TRUE;
+												if ( ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+													|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+													|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+													)
+												{
+													if ( Msg == WM_SYSKEYDOWN )
+														Msg = WM_KEYDOWN;
+												}
+												else
+												{
+													if ( IsKeyPressed( VK_MENU )
+														|| IsKeyPressed( VK_CONTROL ) )
+													{
+														NeedSkipThisKey = FALSE;
+													}
+												}
+
+												( ( int( __thiscall * )( int, int, int, int, int, int, int ) )( GameDll + 0x37C420 ) )
+													( keyAction.args[ 0 ], keyAction.args[ 1 ], keyAction.args[ 2 ],
+														keyAction.args[ 3 ], keyAction.args[ 4 ], keyAction.args[ 5 ], keyAction.args[ 6 ] );
+											}
+										}
 									}
 
 								}
 							}
 						}
 					}
+					for ( int lol = 0; lol < 2; lol++ )
+					{
+						//if ( !NeedSkipThisKey )
+						{
+							for ( auto keyAction : KeySelectActionList )
+							{
+								if ( keyAction.VK == ( int )wParam )
+								{
+
+									if ( ( !keyAction.IsAlt && !keyAction.IsCtrl && !keyAction.IsShift && lol == 1 )
+										|| ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+										|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+										|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+										)
+									{
+
+										lol++;
+										NeedSkipThisKey = TRUE;
+										if ( ( keyAction.IsAlt && IsKeyPressed( VK_MENU ) )
+											|| ( keyAction.IsCtrl && IsKeyPressed( VK_CONTROL ) )
+											|| ( keyAction.IsShift && IsKeyPressed( VK_SHIFT ) )
+											)
+										{
+											if ( Msg == WM_SYSKEYDOWN )
+												Msg = WM_KEYDOWN;
+										}
+										else
+										{
+											if ( IsKeyPressed( VK_MENU )
+												|| IsKeyPressed( VK_CONTROL ) )
+											{
+												NeedSkipThisKey = FALSE;
+											}
+										}
+
+										if ( SetInfoObjDebugVal )
+										{
+											PrintText( "Clear selection" );
+										}
+
+										vector<int> units = GetUnitsFromGroup( keyAction.GroupHandle );
+										//reverse( units.begin( ), units.end( ) );
+
+
+										if ( SetInfoObjDebugVal )
+										{
+											PrintText( ( "Select units:" + uint_to_hex( units.size( ) ) ).c_str( ) );
+										}
+
+
+										if ( units.size( ) > 0 )
+										{
+											ClearSelection( );
+
+											for ( int unit : units )
+											{
+												if ( SetInfoObjDebugVal )
+												{
+													PrintText( ( "Select unit:" + uint_to_hex( unit ) ).c_str( ) );
+												}
+												SelectUnit( unit );
+											}
+
+
+											if ( GetTickCount( ) - GroupSelectLastTime < 450 &&
+												LastSelectedGroupHandle == keyAction.GroupHandle )
+											{
+												int PortraitButtonAddr = GetGlobalClassAddr( );
+												if ( PortraitButtonAddr > 0 )
+												{
+													PortraitButtonAddr = *( int* )( PortraitButtonAddr + 0x3F4 );
+												}
+												if ( PortraitButtonAddr > 0 )
+												{
+													if ( SetInfoObjDebugVal )
+													{
+														PrintText( "double click to portrain." );
+													}
+													Wc3ControlClickButton_org( PortraitButtonAddr, 1 );
+													Wc3ControlClickButton_org( PortraitButtonAddr, 1 );
+												}
+											}
+
+
+										}
+
+										LastSelectedGroupHandle = keyAction.GroupHandle;
+										GroupSelectLastTime = GetTickCount( );
+									}
+								}
+							}
+
+						}
+					}
 				}
 
 				if ( !NeedSkipThisKey )
 				{
+
+
 					/*	if ( _Msg == WM_XBUTTONDOWN
 							|| _Msg == WM_MBUTTONDOWN )
 						*/
@@ -2409,7 +3043,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						if ( keyCode == ( int )wParam )
 						{
 #ifdef DOTA_HELPER_LOG
-							AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+							AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 							return DefWindowProc( hWnd, Msg, wParam, lParam );
 						}
@@ -2432,7 +3066,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 #ifdef DOTA_HELPER_LOG
-					AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+					AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 
@@ -2469,14 +3103,14 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 								DelayedPressList_pushback( tmpDelayPress );
 
 #ifdef DOTA_HELPER_LOG
-								AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+								AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 
 								return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
 							}
 						}
-					}
+				}
 
 
 					if ( !ClickHelperWork && ClickHelper )
@@ -2496,7 +3130,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 									{
 										LastPressedKeysTime[ wParam ] = 0;
 #ifdef DOTA_HELPER_LOG
-										AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+										AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 										return DefWindowProc( hWnd, Msg, wParam, lParam );
 									}
@@ -2511,16 +3145,16 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 #ifdef DOTA_HELPER_LOG
-					AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+					AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
-				}
 			}
+		}
 
 			if ( NeedSkipThisKey )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+				AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
@@ -2547,14 +3181,14 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYDOWN, VK_F1, lpF1ScanKeyDOWN );
 						WarcraftRealWNDProc_ptr( hWnd, WM_KEYUP, VK_F1, lpF1ScanKeyUP );
 #ifdef DOTA_HELPER_LOG
-						AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+						AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 					}
 				}
 			}
-		}
-
 	}
+
+}
 	else
 	{
 
@@ -2569,7 +3203,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 			if ( Msg == WM_RBUTTONDOWN || Msg == WM_KEYDOWN || Msg == WM_KEYUP )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+				AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 				return DefWindowProc( hWnd, Msg, wParam, lParam );
 			}
@@ -2578,7 +3212,7 @@ LRESULT __fastcall BeforeWarcraftWNDProc( HWND hWnd, unsigned int _Msg, WPARAM _
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 	return WarcraftRealWNDProc_ptr( hWnd, Msg, wParam, lParam );
@@ -2735,7 +3369,7 @@ int sub_6F33A010Offset = 0;
 void IssueFixerInit( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 
@@ -2774,8 +3408,16 @@ void IssueFixerInit( )
 	MH_EnableHook( sub_6F339F80org );
 	MH_EnableHook( sub_6F33A010org );
 
+	if ( GameVersion == 0x26a )
+	{
+		GetCameraHeight_org = pGetCameraHeight( GameDll + 0x3019A0 );
+		MH_CreateHook( GetCameraHeight_org, &GetCameraHeight_my, reinterpret_cast< void** >( &GetCameraHeight_ptr ) );
+		MH_EnableHook( GetCameraHeight_org );
+	}
+
+
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 }
 
@@ -2783,34 +3425,75 @@ void IssueFixerInit( )
 void IssueFixerDisable( )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 
 	memset( LastPressedKeysTime, 0, sizeof( LastPressedKeysTime ) );
 
 	if ( IssueWithoutTargetOrderorg )
+	{
 		MH_DisableHook( IssueWithoutTargetOrderorg );
+		IssueWithoutTargetOrderorg = NULL;
+	}
 	if ( IssueTargetOrPointOrder2org )
+	{
 		MH_DisableHook( IssueTargetOrPointOrder2org );
+		IssueTargetOrPointOrder2org = NULL;
+	}
 	if ( sub_6F339D50org )
+	{
 		MH_DisableHook( sub_6F339D50org );
+		sub_6F339D50org = NULL;
+	}
 	if ( IssueTargetOrPointOrderorg )
+	{
 		MH_DisableHook( IssueTargetOrPointOrderorg );
+		IssueTargetOrPointOrderorg = NULL;
+	}
 	if ( sub_6F339E60org )
+	{
 		MH_DisableHook( sub_6F339E60org );
+		sub_6F339E60org = NULL;
+	}
 	if ( sub_6F339F00org )
+	{
 		MH_DisableHook( sub_6F339F00org );
+		sub_6F339F00org = NULL;
+	}
 	if ( sub_6F339F80org )
+	{
 		MH_DisableHook( sub_6F339F80org );
+		sub_6F339F80org = NULL;
+	}
 	if ( sub_6F33A010org )
+	{
 		MH_DisableHook( sub_6F33A010org );
+		sub_6F33A010org = NULL;
+	}
+
+	if ( GetCameraHeight_org )
+	{
+		MH_DisableHook( GetCameraHeight_org );
+		GetCameraHeight_org = NULL;
+	}
 
 	if ( !RegisteredKeyCodes.empty( ) )
 		RegisteredKeyCodes.clear( );
+
 	if ( !BlockedKeyCodes.empty( ) )
 		BlockedKeyCodes.clear( );
+
 	if ( !KeyActionList.empty( ) )
 		KeyActionList.clear( );
 
+	if ( !KeyChatActionList.empty( ) )
+		KeyChatActionList.clear( );
+
+	if ( !KeySelectActionList.empty( ) )
+		KeySelectActionList.clear( );
+
+	if ( !KeyCalbackActionList.empty( ) )
+		KeyCalbackActionList.clear( );
+
 	SkipAllMessages = FALSE;
-}
+	}

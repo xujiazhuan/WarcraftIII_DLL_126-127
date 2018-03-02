@@ -30,7 +30,7 @@ public:
 	StormBuffer( )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		buf = 0;
 		length = 0;
@@ -38,7 +38,7 @@ public:
 	StormBuffer( unsigned long l )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		//	memoryleakcheck++;
 		length = l;
@@ -48,7 +48,7 @@ public:
 	StormBuffer( char* b, unsigned long l )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		buf = b;
 		length = l;
@@ -56,25 +56,28 @@ public:
 	void Resize( unsigned long l )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		Clear( );
 		buf = ( char * )Storm::MemAlloc( l + 1 );
 		buf[ l ] = '\0';
 		length = l;
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	}
 
 	char * GetData( )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return buf;
 	}
 	char * GetData( int offset )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return buf + offset;
 	}
@@ -82,7 +85,7 @@ public:
 	unsigned long GetSize( )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return length;
 	}
@@ -90,18 +93,21 @@ public:
 	void Clear( )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		//	memoryleakcheck--;
 		length = 0;
-		Storm::MemFree( buf );
+		if ( buf != NULL )
+		{
+			Storm::MemFree( buf );
+		}
 		buf = NULL;
 	}
 
 	StormBuffer&  Clone( StormBuffer& CopyObject )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		Resize( CopyObject.length );
 		std::memcpy( buf, CopyObject.GetData( ), length );
@@ -111,7 +117,7 @@ public:
 	StormBuffer& operator =( StormBuffer& CopyObject )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		/*Resize( CopyObject.length );
 		std::memcpy( buf, CopyObject.GetData( ), length );*/
@@ -122,7 +128,7 @@ public:
 	StormBuffer& operator =( std::string& CopyString )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		Resize( static_cast< INT >( CopyString.size( ) ) );
 		std::memcpy( buf, CopyString.c_str( ), length );
@@ -131,9 +137,9 @@ public:
 
 	CHAR& operator []( INT Index )
 	{
-#ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
-#endif
+//#ifdef DOTA_HELPER_LOG
+//		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+//#endif
 		return buf[ Index ];
 	}
 
@@ -147,7 +153,7 @@ typedef struct StormBufferList
 	StormBufferList( )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		buf = 0;
 		length = 0;
@@ -155,7 +161,7 @@ typedef struct StormBufferList
 	StormBufferList( unsigned long l )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		buf = ( char** )Storm::MemAlloc( l );
 		length = l;
@@ -163,7 +169,7 @@ typedef struct StormBufferList
 	StormBufferList( char** b, unsigned long l )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		buf = b;
 		length = l;

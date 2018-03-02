@@ -10,7 +10,7 @@
     <ProjectGuid>{D89981A7-1DB5-43F9-9C0D-185750FCC7EB}</ProjectGuid>
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
     <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
-    <ProjectName>DotAAllstarsHelper688j_debug</ProjectName>
+    <ProjectName>DotAAllstarsHelper688v_debug</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -110,6 +110,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaChatHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaClickHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaCustomFrames.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaDebugHelpers.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaErrorHandler.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFilesHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFOVfix.cpp" />

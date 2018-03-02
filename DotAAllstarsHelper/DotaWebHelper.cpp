@@ -47,7 +47,7 @@ bool ProgressProc( double progress )
 string SendHttpPostRequest( const char * ulr, const char * data )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( !ulr || ulr[ 0 ] == '\0' || !data )
 		return "";
@@ -76,7 +76,7 @@ string SendHttpGetRequest( const char * host, const char * path )
 {
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	if ( !host || host[ 0 ] == '\0' || !path )
 		return "";
@@ -100,7 +100,7 @@ string SendHttpGetRequest( const char * host, const char * path )
 void DownloadNewMapToFile( const char* szUrl, const char * filepath )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	DownStatus = 0;
 	HINTERNET hOpen = NULL;
@@ -255,7 +255,7 @@ int __stdcall SendGetRequest( const char * url, const  char * request )
 	DownProgress = 0;
 	_addr = url; _request = request;
 	DownStatus = 0;
-	CreateThread( 0, 0, SENDGETREQUEST, 0, 0, 0 );
+	CloseHandle(CreateThread( 0, 0, SENDGETREQUEST, 0, 0, 0 ));
 	return 0;
 }
 
@@ -265,7 +265,7 @@ int __stdcall SendPostRequest( const char * url, const  char * request )
 	DownProgress = 0;
 	_addr = url ? url : ""; _request = request ? request : "";
 	DownStatus = 0;
-	CreateThread( 0, 0, SENDPOSTREQUEST, 0, 0, 0 );
+	CloseHandle(CreateThread( 0, 0, SENDPOSTREQUEST, 0, 0, 0 ));
 	return 0;
 }
 
@@ -274,7 +274,7 @@ int __stdcall SaveNewDotaVersionFromUrl( const  char * addr, const  char * filep
 	DownProgress = 0;
 	_addr = addr ? addr : ""; _filepath = filepath ? filepath : "";
 	DownStatus = 0;
-	CreateThread( 0, 0, SENDSAVEFILEREQUEST, 0, 0, 0 );
+	CloseHandle(CreateThread( 0, 0, SENDSAVEFILEREQUEST, 0, 0, 0 ));
 	return 0;
 }
 

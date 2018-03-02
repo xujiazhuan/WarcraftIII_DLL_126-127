@@ -110,6 +110,9 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaMinimapHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaDebugHelpers.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\DotAAllstarsHelper\buffer.h">

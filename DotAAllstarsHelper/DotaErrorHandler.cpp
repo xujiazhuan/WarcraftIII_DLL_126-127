@@ -107,7 +107,7 @@ signed int __fastcall LookupJassFunc_my( int global, int unused, const char * fu
 
 	if ( retval == 0 )
 	{
-		if ( *InGame )
+		if ( IsGame( ) )
 		{
 #ifndef DOTA_HELPER_LOG_NEW
 
@@ -525,7 +525,7 @@ void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line )
 
 void __stdcall  AddNewLineToJassNativesLog( const char * s )
 {
-	if ( s && s[ 0 ] != '\0' )
+	if ( bDllLogEnable && s && s[ 0 ] != '\0' )
 	{
 #ifdef DOTA_HELPER_LOG_NEW
 		AddLogFunctionCall( s, 0, 1 );
@@ -692,11 +692,12 @@ void AddNewCNetEventLog( int EventID, void * data, int addr2, int EventByte2 )
 		if ( MessageBoxA( Warcraft3Window, "Warning desync detected. Start force crash for detect problem?", "DESYNC, CRASH, YES OR NO?", MB_YESNO | MB_ICONWARNING ) == IDYES )
 		{
 
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 
 			//ShowWindow( Warcraft3Window, SW_HIDE );
 			//MessageBoxA( Warcraft3Window, "Warning desync detected. Start force crash for detect problem", "Desync detected!", 0 );
 			throw logic_error( "Warning desync detected. Start force crash for detect problem" );
+
 		}
 	}
 }
@@ -814,7 +815,7 @@ ProcessNetEvents ProcessNetEvents_ptr;
 void __fastcall ProcessNetEvents_my( void *data, int unused, int Event )
 {
 
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 
 	/*if ( Event > 0 )
 	{*/
@@ -1007,13 +1008,18 @@ void __cdecl DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo )
 	}
 	catch ( ... )
 	{
+
+		bDllLogEnable = FALSE;
 		MessageBoxA( 0, "SUPER FATAL ERROR!", " UNREAL FATAL ERROR ", 0 );
+
 	}
 }
 
 LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 {
 	DumpExceptionInfoToFile( ExceptionInfo );
+
+	bDllLogEnable = FALSE;
 	if ( MessageBoxA( 0, "Fatal error\nDota helper handler v1.0\nSave fatal info(YES) or exit(NO)?", "Fatal error detected![SEH]", MB_YESNO ) == IDYES )
 	{
 		int retval = ( int )OriginFilter( ExceptionInfo );
@@ -1092,7 +1098,7 @@ LONG __stdcall DotaVectoredToSehHandler( _EXCEPTION_POINTERS *ExceptionInfo )
 	{
 		sprintf_s( continueablecode, 200, "%s:%X:%s", "Test: [VEH]ExceptionContinueExecution", ex->ExceptionCode, to_string( ex->ExceptionFlags & EXCEPTION_NONCONTINUABLE ).c_str( ) );
 		AddNewLineToDotaChatLog( continueablecode );
-		if ( *InGame )
+		if ( IsGame( ) )
 		{
 			dumperrorid--;
 			TopLevelExceptionFilter( ExceptionInfo );
@@ -1141,7 +1147,6 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	char EspDump[ 16 ]{ 0 };
 	DWORD EspDumpBytes = 0;
 
-	bDllLogEnable = FALSE;
 	LONG result = NULL;
 
 	PrintErrorLog( a3, "%s", "[Dota Allstars Error Handler v1.1]" );
@@ -1157,7 +1162,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 
 	sprintf_s( lasterror, 20, "%X", ( unsigned int )GetLastError( ) );
 
-	BugReport << ( const char * )( *InGame ? "InGame" : "NotInGame" ) << std::endl;
+	BugReport << ( const char * )( IsGame( ) ? "InGame" : "NotInGame" ) << std::endl;
 
 
 	sprintf_s( dllcrc32, 20, "%X", ( unsigned int )GetDllCrc32( ) );
@@ -1179,7 +1184,7 @@ LONG __fastcall  StormErrorHandler_my( int a1, void( *PrintErrorLog )( int, cons
 	PrintErrorLog( a3, "\n%s\n", "Process ingame end" );
 
 
-	if ( *InGame )
+	if ( IsGame( ) )
 	{
 		const char * currentplayername = GetPlayerName( GetLocalPlayerId( ), 1 );
 		if ( currentplayername && *currentplayername != '\0' )

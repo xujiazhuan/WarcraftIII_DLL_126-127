@@ -39,6 +39,38 @@ struct ObjInfoAction
 
 
 
+struct KeyChatActionStruct
+{
+	int VK;
+	BOOL IsShift;
+	BOOL IsCtrl;
+	BOOL IsAlt;
+	std::string Message;
+};
+
+
+struct KeySelectActionStruct
+{
+	int VK;
+	BOOL IsShift;
+	BOOL IsCtrl;
+	BOOL IsAlt;
+	int GroupHandle;
+	std::vector<int> units;
+};
+
+struct KeyCalbackActionStruct
+{
+	int VK;
+	BOOL IsShift;
+	BOOL IsCtrl;
+	BOOL IsAlt;
+	int args[8];
+};
+
+
+
+
 struct CustomHPBar
 {
 	int unittypeid;
@@ -356,8 +388,15 @@ struct RawImageStruct
 
 	int RawImageCustomId;
 
+	char * backup_img;
+	int backup_width;
+	int backup_height;
+
 	RawImageStruct( )
 	{
+		backup_img = 0;
+		backup_width = 0;
+		backup_height = 0;
 		width = 0;
 		height = 0;
 		RawImageCustomId = 0;
@@ -554,6 +593,7 @@ struct KeyActionStruct
 	BOOL IsCtrl;
 	BOOL IsAlt;
 	BOOL IsRightClick;
+	BOOL IsQuickCast;
 };
 
 

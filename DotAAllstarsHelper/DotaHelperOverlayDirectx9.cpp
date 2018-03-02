@@ -257,7 +257,7 @@ void DrawOverlayDx9( )
 		return;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	ID3DXSprite* pSprite;
@@ -265,7 +265,7 @@ void DrawOverlayDx9( )
 	if ( !pSprite || rv != S_OK )
 		return;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	pSprite->Begin( D3DXSPRITE_ALPHABLEND );
@@ -275,12 +275,12 @@ void DrawOverlayDx9( )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	for ( auto & img : ListOfRawImages )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( !img.used_for_overlay )
 		{
@@ -295,7 +295,7 @@ void DrawOverlayDx9( )
 			continue;
 		}
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( img.needResetTexture )
 		{
@@ -309,27 +309,27 @@ void DrawOverlayDx9( )
 			}
 		}
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		IDirect3DTexture9 * ppTexture = NULL;
 		if ( img.textureaddr )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			ppTexture = ( IDirect3DTexture9 * )img.textureaddr;
 		}
 		else 
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			rv = d->CreateTexture( ( UINT )img.width, ( UINT )img.height, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture, NULL );
 			if ( ppTexture && rv == S_OK )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 				//D3DXCreateTextureFromFileA( d, "qergqerg.png", &ppTexture );
 				D3DLOCKED_RECT rect;
@@ -345,7 +345,7 @@ void DrawOverlayDx9( )
 			}
 		}
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		/*	if ( img.size_x > 0.0f && img.size_y > 0.0f )
 			{
@@ -425,7 +425,7 @@ void DrawOverlayDx9( )
 			img.StartTimer = GetTickCount( );
 		}
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( ppTexture && rv == S_OK )
 		{
@@ -434,7 +434,7 @@ void DrawOverlayDx9( )
 		//}
 		//ppTexture->Release( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	}
 	pSprite->End( );

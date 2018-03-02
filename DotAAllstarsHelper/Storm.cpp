@@ -33,7 +33,7 @@ namespace Storm {
 
 	void Init( HMODULE module ) {
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( !module )
 			return;
@@ -53,7 +53,7 @@ namespace Storm {
 		AddrFileGetLocale = ( void* )GetProcAddress( module, ( LPCSTR )294 );
 		StormAvailable = true;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	}
 
@@ -65,7 +65,7 @@ namespace Storm {
 	//294	SFileGetLocale() 
 	LANGID FileGetLocale( ) {
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 
 		if ( !StormAvailable )
@@ -109,16 +109,20 @@ namespace Storm {
 	
 		for ( auto s : LeakHelperList )
 		{
-			sprintf_s( tmps, "%X:%X\r\n", s.retaddr, s.mem );
+			sprintf_s( tmps, "%X:%X\r\n", (unsigned int)s.retaddr, ( unsigned int )s.mem );
 			outleaks = outleaks + tmps;
 		}
 		MessageBoxA( 0, outleaks.c_str( ), "Leaks:", 0 );
 	}
 
 	void* MemFree( void* addr ) {
+
+		if ( !addr )
+			return 0;
+
 		AllocationCount--;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 		for ( unsigned int  i = 0; i < LeakHelperList.size( ); i++ )
 		{
 			if ( LeakHelperList[ i ].mem == addr )
@@ -151,8 +155,11 @@ namespace Storm {
 	}
 
 	int MemGetSize( void* addr ) {
+		if ( !addr )
+			return 0;
+
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 
 		if ( !StormAvailable )
@@ -167,8 +174,11 @@ namespace Storm {
 	}
 
 	void* MemReAlloc( void* addr, uint32_t size ) {
+		if ( !addr || !size)
+			return 0;
+
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 
 		if ( !StormAvailable )
@@ -186,7 +196,7 @@ namespace Storm {
 
 	HANDLE FileOpenFileEx( HANDLE hMpq, const char *szFileName, uint32_t dwSearchScope, HANDLE *phFile ) {
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 
 		if ( !StormAvailable )
@@ -203,7 +213,7 @@ namespace Storm {
 
 	uint32_t FileGetFileSize( HANDLE hFile, uint32_t *pdwFileSizeHigh ) {
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 		if ( !StormAvailable )
 			MessageBoxA( 0, "Storm not initialized", "Error1", 0 );
@@ -217,7 +227,7 @@ namespace Storm {
 
 	bool FileReadFile( HANDLE hFile, void* lpBuffer, uint32_t dwToRead, uint32_t* pdwRead, LPOVERLAPPED lpOverlapped ) {
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return aero::generic_std_call<bool>(
 			AddrFileReadFile,
@@ -231,7 +241,7 @@ namespace Storm {
 
 	bool FileCloseFile( HANDLE hFile ) {
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return aero::generic_std_call<bool>(
 			AddrFileCloseFile,

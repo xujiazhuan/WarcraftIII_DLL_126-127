@@ -33,8 +33,11 @@ int __fastcall CNetCommandTeamChangeAlliance_my( int a1, int a2, CDataStore * pa
 		if ( PacketInitialized )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
+
+
+
 			int recvbytes = Handle_Jass_Packet( packetraw + packetdata->recvbytes - 1, packetdata->sizePacket - packetdata->recvbytes + 1, pid );
 
 			while ( recvbytes > 0 )
@@ -45,8 +48,11 @@ int __fastcall CNetCommandTeamChangeAlliance_my( int a1, int a2, CDataStore * pa
 			}
 
 			packetdata->recvbytes -= 1;
+
+
+
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 		}
 
@@ -74,7 +80,7 @@ GAME_SendPacket_p GAME_SendPacket = NULL;
 void SendPacket( unsigned char * packetData, unsigned int  size )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 	// @warning: this function thread-unsafe, do not use it in other thread.
 	// note: this is very useful function, in fact this function
@@ -84,7 +90,7 @@ void SendPacket( unsigned char * packetData, unsigned int  size )
 
 	CDataStore packet;
 	memset( &packet, 0, sizeof( CDataStore ) );
-	packet.vtable = (void **) PacketClassPtr; // Packet Class
+	packet.vtable = ( void ** )PacketClassPtr; // Packet Class
 	packet.packet = packetData;
 	packet.sizePacket = size;
 	packet.unk_8 = 0;
@@ -94,7 +100,7 @@ void SendPacket( unsigned char * packetData, unsigned int  size )
 		GAME_SendPacket = ( GAME_SendPacket_p )( pGAME_SendPacket );
 	GAME_SendPacket( &packet, 0 );
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
 }
 
@@ -194,25 +200,70 @@ int __stdcall Packet_GetTriggerPlayerId( int unused )
 
 int Handle_Jass_Packet( unsigned char * packetraw, size_t packetsize, int pid )
 {
+	int readdata = 0;
 	PacketTriggerPlayerId = pid;
 	BytesToRecv.clear( );
 	BytesToRecv.assign( packetraw, packetraw + packetsize );
+	//PrintText( "Handle_Jass_Packet!" );
 
-
-	if ( BytesToRecv.size( ) >= 6 ) 
+	if ( BytesToRecv.size( ) >= 6 && *( unsigned short* )&BytesToRecv[ 0 ] == 0xFF50 )
 	{
+		unsigned short header = *( unsigned short* )&BytesToRecv[ 0 ];
+
 		BytesToRecv.erase( BytesToRecv.begin( ), BytesToRecv.begin( ) + 2 );
 
 		int packetsize = *( int* )&BytesToRecv[ 0 ];
 
 		BytesToRecv.erase( BytesToRecv.begin( ), BytesToRecv.begin( ) + 4 );
 
+
+		/*if ( packetsize >= 4 && BytesToRecv.size( ) >= packetsize )
+		{
+			readdata += packetsize + 4 + 2;
+
+			//PrintText( "Get id!" );
+			int packetid = *( int* )&BytesToRecv[ 0 ];
+
+			if ( packetid == 0xA1A2A3A0 && packetsize >= 8 )
+			{
+				int packetid2 = *( int* )&BytesToRecv[ 4 ];
+
+				if ( packetid2 == 0xA1A2A3A0 || packetid == 0xA1A2A3A1 )
+				{
+					BytesToRecv.erase( BytesToRecv.begin( ), BytesToRecv.begin( ) + 4 );
+					BytesToRecv.erase( BytesToRecv.begin( ), BytesToRecv.begin( ) + 4 );
+					packetsize -= 8;
+
+
+					//FILE * f;
+					//fopen_s( &f, "packetin.txt", "a+" );
+
+					//fprintf_s( f, "Recv packets %i (real : %i) size. Header: %04X:\n", BytesToRecv.size( ), packetsize, header );
+					//for ( int i = 0; i < packetsize; i++ )
+					//{
+					//	fprintf_s( f, "%02X", BytesToRecv[ i ] );
+					//}
+					//fprintf_s( f, "%s", "\n" );
+					//fclose( f );
+
+
+//					AddNewPaTestData( BytesToRecv, pid, packetsize, packetid == 0xA1A2A3A1 );
+
+
+				}
+			}
+
+			*/
 		if ( CallbackTrigger )
 			TriggerExecute( CallbackTrigger );
 
-		return packetsize + 6;
+		BytesToRecv.erase( BytesToRecv.begin( ), BytesToRecv.begin( ) + packetsize );
+		//}
+		/*else
+			break;
+*/
 	}
-	return 1;
+	return readdata;
 }
 
 
@@ -242,7 +293,7 @@ void InitializePacketHandler( int GameVersion )
 }
 
 
-void  UninitializePacketHandler(  )
+void  UninitializePacketHandler( )
 {
 	if ( CNetCommandTeamChangeAlliance_org )
 		MH_DisableHook( CNetCommandTeamChangeAlliance_org );

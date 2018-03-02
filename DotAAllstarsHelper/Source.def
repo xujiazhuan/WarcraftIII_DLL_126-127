@@ -82,6 +82,7 @@ RawImage_EraseColor
 RawImage_LoadFontFromResource
 RawImage_SetFontSettings
 RawImage_DrawText
+RawImage_FillRectangle
 SaveRawImageToGameFile
 DumpRawImageToFile
 GetRawImageByFile
@@ -92,6 +93,9 @@ RawImage_DrawOverlay
 RawImage_AddCallback
 RawImage_SkipMouseClick
 RawImage_IsBtn
+RestoreRawImage
+BackupRawImage
+ClearRawImage
 GetScreenWidth
 GetScreenHeight
 GetWindowWidth
@@ -161,3 +165,11 @@ ShowMinimap
 CFrame_Show
 CFrame_SetTextFont
 AddClickPortrainForIdEx
+SetAntiSpamLimits
+AddKeyChatAction
+SetCustomDefaultMessage
+AddKeyCalbackAction
+AddKeySelectAction
+EnableReplaceHotkeyFlag
+StartTimer
+StopTimer

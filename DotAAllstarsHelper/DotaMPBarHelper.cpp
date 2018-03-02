@@ -448,6 +448,8 @@ void __declspec( naked ) f001527F0( )
 		mov     eax, dword ptr[ edi + 0x50 ];
 		test    eax, eax;
 		je L093;
+		cmp    dword ptr[ eax + 0xC ], 0;
+		je L093;
 		push    ebx;
 		mov     ebx, dword ptr[ eax + 0xC ];
 		mov aHPBAR, ebx;

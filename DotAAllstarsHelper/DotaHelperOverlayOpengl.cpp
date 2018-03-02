@@ -146,7 +146,7 @@ HDC GlobalDc = NULL;
 
 BOOL __stdcall wglSwapLayerBuffers_my( HDC dc, UINT b )
 {
-	if ( !dc || !*InGame ) {
+	if ( !dc || !(IsGame( )) ) {
 		return	wglSwapLayerBuffers_ptr( dc, b );
 	}
 
@@ -168,11 +168,11 @@ BOOL __stdcall wglSwapLayerBuffers_my( HDC dc, UINT b )
 
 void DrawOverlayGl( )
 {
-	if ( !GlobalDc || !*InGame ) {
+	if ( !GlobalDc || !(IsGame( )) ) {
 		return;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );//( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	if ( !DotaGlobalOverlay_OPENGL )
@@ -204,7 +204,7 @@ void UninitOpenglHook( )
 //
 //int __fastcall  DrawWc3UI_my( int a1 )
 //{
-//	if ( !GlobalDC || !*InGame ) {
+//	if ( !GlobalDC || !(IsGame( )) ) {
 //		return DrawWc3UI_ptr( a1 );
 //	}
 //

@@ -12,6 +12,7 @@
 
 #pragma region Includes
 
+
 #pragma comment(lib,"legacy_stdio_definitions.lib")
 #include <stdint.h>
 #include <cstdio>
@@ -21,6 +22,8 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+
+#include "fp_call.h"
 
 #include <concurrent_vector.h>
 #define safevector concurrency::concurrent_vector
@@ -64,6 +67,16 @@ using namespace std;
 
 #include "MegaPacketHandler.h"
 
+
+#include <stdlib.h>
+
+/*
+#include <portaudio.h>
+#pragma comment(lib,"portaudio.lib")
+*/
+
+
+
 #pragma endregion
 
 
@@ -72,8 +85,9 @@ using namespace std;
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
 
 
+BOOL IsGame( );
 
-
+extern int ConvertHandle( int handle );
 
 extern BOOL InitFunctionCalled;
 
@@ -100,6 +114,7 @@ extern pExecuteFunc ExecuteFunc;
 typedef void( __thiscall * pConvertStrToJassStr )( RCString * jStr, const char * cStr );
 extern pConvertStrToJassStr str2jstr;
 
+std::string uint_to_hex( unsigned int i );
 
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
@@ -166,6 +181,11 @@ extern BOOL ShowSkillPanelOnlyForHeroes;
 #pragma endregion
 
 #pragma region UnitAndItem.cpp
+extern void( __thiscall * SelectUnitReal )( int pPlayerSelectData, int pUnit, int id, int unk1, int unk2, int unk3 );
+extern void( __thiscall * UpdatePlayerSelection )( int pPlayerSelectData, int unk );
+extern int( __cdecl * ClearSelection )( void );
+void SelectUnit( int unit );
+std::vector<int> GetUnitsFromGroup( int groupid );
 int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int abilbasecode = 0 );
 int __stdcall GetUnitOwnerSlot( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
@@ -275,7 +295,7 @@ extern int GameVersion;
 extern HWND Warcraft3Window;
 
 #pragma region All Offsets Here
-extern int GlobalPlayerOffset;
+extern int GlobalGameStateOffset;
 extern int IsPlayerEnemyOffset;
 extern int DrawSkillPanelOffset;
 extern int DrawSkillPanelOverlayOffset;
@@ -284,7 +304,9 @@ extern int IsDrawSkillPanelOverlayOffset;
 extern int IsNeedDrawUnitOriginOffset;
 extern int IsNeedDrawUnit2offset;
 extern int IsNeedDrawUnit2offsetRetAddress;
-extern BOOL * InGame;
+extern int _GlobalGlueObj;
+extern int _GameUI;
+extern int * InGame;
 extern BOOL * IsWindowActive;
 extern int ChatFound;
 extern int pW3XGlobalClass;
@@ -293,7 +315,9 @@ extern int pWar3GlobalData1;
 extern int UnitVtable;
 extern int ItemVtable;
 extern int pPrintText2;
+extern const char * GetBoolStr( BOOL val );
 extern void PrintText( const char * text, float staytime = 10.0f );
+extern void PrintText( std::string text, float staytime = 10.0f );
 extern int MapNameOffset1;
 extern int MapNameOffset2;
 extern int pOnChatMessage_offset;
@@ -309,6 +333,7 @@ extern int pTriggerExecute;
 
 
 #pragma region DotaClickHelper.cpp
+extern BOOL SetInfoObjDebugVal;
 extern int ChatEditBoxVtable;
 BOOL IsChatActive( );
 BOOL IsGameFrameActive( );
@@ -406,6 +431,7 @@ extern SetGameAreaFOV SetGameAreaFOV_org, SetGameAreaFOV_ptr;
 #pragma region DotaWebHelper.cpp
 string SendHttpPostRequest( const char * url, const char * data );
 string SendHttpGetRequest( const char * host, const char * path );
+extern string LatestDownloadedString;
 #pragma endregion 
 
 
@@ -429,6 +455,23 @@ extern BOOL FPSfix1Enabled;
 #pragma region DotaChatHelper.cpp
 typedef int( __fastcall * pGameChatSetState )( int chat, int unused, BOOL IsOpened );
 extern pGameChatSetState GameChatSetState;
+
+typedef int( __fastcall * pSetChatTargetUsers/*sub_6F3412F0*/ )( int chataddr, int ecx, int valtype );
+extern pSetChatTargetUsers pSetChatTargetUsers_org;
+extern pSetChatTargetUsers pSetChatTargetUsers_ptr;
+int __fastcall SetChatTargetUsers_my( int chataddr, int ecx, int valtype );
+
+extern LPARAM lpRShiftScanKeyUP;
+extern LPARAM lpRShiftScanKeyDOWN;
+
+extern LPARAM lpShiftScanKeyUP;
+extern LPARAM lpShiftScanKeyDOWN;
+
+extern LPARAM lpLShiftScanKeyUP;
+extern LPARAM lpLShiftScanKeyDOWN;
+
+extern int _EventVtable;
+extern int _ChatSendEvent;
 #pragma endregion
 
 
@@ -533,3 +576,13 @@ inline std::wstring StringToWString( LPCSTR s )
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 	return converter.from_bytes( s );
 }
+
+
+void SetTlsForMe( );
+void __stdcall Packet_Initialize( int TriggerHandle );
+/* Voice chat. Works only in a single player game :( 
+In the local game or on the Internet there is a limit on sending data size, so the voice is recorded no more than one second! It is necessary to find and destroy the sending limit.
+void UninitializeVoiceClient( );
+void InitVoiceClientThread( );
+void AddNewPaTestData( std::vector<unsigned char> _samples, int playerid, int packetsize, bool compressed );
+*/

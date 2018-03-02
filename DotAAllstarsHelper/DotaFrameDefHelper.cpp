@@ -259,7 +259,7 @@ void __stdcall CFrame_SetFrameModel( CWar3Frame * frame, const char * modelpath 
 		return;
 	frame->SetModel( modelpath );
 }
-
+// Experimenal version of CFrame_SetFrameModel with more flags
 void __stdcall CFrame_SetFrameModelEx( CWar3Frame * frame, const char * modelpath, int MdlType, int Flags )
 {
 #ifdef DOTA_HELPER_LOG
@@ -269,7 +269,7 @@ void __stdcall CFrame_SetFrameModelEx( CWar3Frame * frame, const char * modelpat
 		return;
 	frame->SetModel( modelpath, MdlType, Flags );
 }
-
+// Start animate with ID (ID or just flag?)
 void __stdcall CFrame_StartCustomAnimate( CWar3Frame * frame, int anim_id )
 {
 #ifdef DOTA_HELPER_LOG
@@ -279,7 +279,7 @@ void __stdcall CFrame_StartCustomAnimate( CWar3Frame * frame, int anim_id )
 		return;
 	frame->StartAnimate( anim_id );
 }
-
+// Stop animate frame
 void __stdcall CFrame_StopCustomAnimate( CWar3Frame * frame )
 {
 #ifdef DOTA_HELPER_LOG
@@ -290,6 +290,7 @@ void __stdcall CFrame_StopCustomAnimate( CWar3Frame * frame )
 	frame->StopAnimate( );
 }
 
+// Set custom animation offset. For example start=0.0 end=1.0 , set 0.5 = middle of animation.
 void __stdcall CFrame_SetCustomAnimateOffset( CWar3Frame * frame, float offset )
 {
 #ifdef DOTA_HELPER_LOG

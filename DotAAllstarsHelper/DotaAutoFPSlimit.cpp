@@ -75,7 +75,7 @@ void UpdateFPS( )
 		if ( CurrentFps > MIN_WAR3_FPS )
 		{
 			CurrentFps -= 4;
-			if ( *InGame )
+			if ( IsGame( ) )
 				_SetMaxFps( CurrentFps );
 			sprintf_s( MyFpsString, 512, "%s%i.0 CPU:%.1f", "|nFPS: %.1f/", CurrentFps, currentcpuusage );
 		}
@@ -85,7 +85,7 @@ void UpdateFPS( )
 		if ( CurrentFps < MAX_WAR3_FPS )
 		{
 			CurrentFps += 4;
-			if ( *InGame )
+			if ( IsGame( ) )
 				_SetMaxFps( CurrentFps );
 			sprintf_s( MyFpsString, 512, "%s%i.0 CPU:%.1f", "|nFPS: %.1f/", CurrentFps, currentcpuusage );
 		}
