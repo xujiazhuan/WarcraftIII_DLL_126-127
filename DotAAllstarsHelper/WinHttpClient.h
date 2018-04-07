@@ -584,10 +584,10 @@ bool WinHttpClient::SendHttpRequest( const wstring &httpVerb, bool disableAutoRe
 												}
 												iMaxBufferSize *= 2;
 												memset( m_pResponse, 0, iMaxBufferSize );
-												memcpy( m_pResponse, pOldBuffer, iCurrentBufferSize );
+												std::memcpy( m_pResponse, pOldBuffer, iCurrentBufferSize );
 												delete[ ] pOldBuffer;
 											}
-											memcpy( m_pResponse + iCurrentBufferSize, pResponse, dwRead );
+											std::memcpy( m_pResponse + iCurrentBufferSize, pResponse, dwRead );
 											iCurrentBufferSize += dwRead;
 										}
 										delete[ ] pResponse;
@@ -762,7 +762,7 @@ bool WinHttpClient::SetAdditionalDataToSend( BYTE *data, unsigned int dataSize )
 	m_pDataToSend = new BYTE[ dataSize ];
 	if ( m_pDataToSend != NULL )
 	{
-		memcpy( m_pDataToSend, data, dataSize );
+		std::memcpy( m_pDataToSend, data, dataSize );
 		m_dataToSendSize = dataSize;
 		return true;
 	}

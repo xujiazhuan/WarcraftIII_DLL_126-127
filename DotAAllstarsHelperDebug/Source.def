@@ -93,6 +93,7 @@ RawImage_DrawOverlay
 RawImage_AddCallback
 RawImage_SkipMouseClick
 RawImage_IsBtn
+RawImage_UseImageCoords
 RestoreRawImage
 BackupRawImage
 ClearRawImage
@@ -173,3 +174,4 @@ AddKeySelectAction
 EnableReplaceHotkeyFlag
 StartTimer
 StopTimer
+SendLatestError

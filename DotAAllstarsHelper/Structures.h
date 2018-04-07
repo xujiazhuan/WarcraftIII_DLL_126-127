@@ -1,17 +1,7 @@
+#pragma once
 
 #pragma pack(push,1)
 
-
-enum class RawImageEventType : unsigned int
-{
-	MouseUp = 1U,
-	MouseDown = 2U,
-	MouseClick = 4U,
-	MouseEnter = 8U,
-	MouseLeave = 16U,
-	MouseMove = 32U,
-	ALL = 63U
-};
 
 
 struct ClickPortrainForId
@@ -45,6 +35,7 @@ struct KeyChatActionStruct
 	BOOL IsShift;
 	BOOL IsCtrl;
 	BOOL IsAlt;
+	BOOL SendToAll;
 	std::string Message;
 };
 
@@ -334,94 +325,6 @@ struct FakeFileStruct
 	char * filename;
 	BYTE * buffer;
 	size_t size;
-};
-
-
-struct RawImageCallbackData
-{
-	int RawImage;
-	RawImageEventType EventType;
-	float mousex;
-	float mousey;
-	BOOL IsAltPressed;
-	BOOL IsCtrlPressed;
-	BOOL IsLeftButton;
-	int offsetx;
-	int offsety;
-	int RawImageCustomId;
-};
-
-struct RawImageStruct
-{
-	int RawImage; // 0x0
-	int width;// 0x4
-	int height;// 0x8
-	StormBuffer img;// 0xc
-	StormBuffer ingamebuffer;// 0x10
-	BOOL ingame;// 0x14
-	string filename;// 0x18
-	BOOL used_for_overlay;// 0x1c
-	float overlay_x; // 0.0 1.0 // 0x20
-	float overlay_y; // 0.0 1.0 // 0x24
-	BOOL button; // 0x28 
-	void * textureaddr;// 0x2C
-	BOOL needResetTexture;// 0x30
-
-	BOOL MouseCallback; // 0x34
-
-	BOOL	MouserExecuteFuncCallback;
-	BOOL	PacketCallback;
-	RCString MouseActionCallback; // 0x38
-
-
-	BOOL IsMouseDown; // 0x3C
-	BOOL IsMouseEntered; // 0x40
-	unsigned int events;// 0x44
-	float overlay_x2; // 0x48
-	float overlay_y2;
-	float overlay_x0;
-	float overlay_y0;
-	DWORD MoveTime1;
-	DWORD MoveTime2;
-	DWORD SleepTime;
-	DWORD StartTimer;
-
-	int RawImageCustomId;
-
-	char * backup_img;
-	int backup_width;
-	int backup_height;
-
-	RawImageStruct( )
-	{
-		backup_img = 0;
-		backup_width = 0;
-		backup_height = 0;
-		width = 0;
-		height = 0;
-		RawImageCustomId = 0;
-		img = StormBuffer( );
-		ingamebuffer = StormBuffer( );
-		ingame = FALSE;
-		filename = string( );
-		used_for_overlay = FALSE;
-		overlay_x = overlay_y = overlay_x0 = overlay_y0 = overlay_y2 = overlay_x2 = 0.0f;
-		textureaddr = NULL;
-		needResetTexture = FALSE;
-		RawImage = 0;
-		events = 0;
-		IsMouseDown = FALSE;
-		IsMouseEntered = FALSE;
-		MouseCallback = FALSE;
-		MouseActionCallback = RCString( );
-		MouserExecuteFuncCallback = FALSE;
-		PacketCallback = FALSE;
-		button = FALSE;
-		MoveTime1 = 0;
-		MoveTime2 = 0;
-		SleepTime = 0;
-		StartTimer = 0;
-	}
 };
 
 

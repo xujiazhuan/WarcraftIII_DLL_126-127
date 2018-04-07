@@ -823,9 +823,9 @@ int __stdcall PrintAttackSpeedAndOtherInfo( int addr, float * attackspeed, float
 			float AttackSpeedBonus = realattackspeed * 100.0f - 100.0f;
 
 			if ( magicampbonus )
-				sprintf_s( buffer, sizeof( buffer ), "%.1f/sec (Reload: %.2f sec)|nAttack speed bonus: %.0f|nMagic amplification: %i%% (|cFF20FF20+%i%%|r)|n", AttacksPerSec, AttackReload, AttackSpeedBonus, magicamp, magicampbonus );
+				sprintf_s( buffer, sizeof( buffer ), "%.1f/sec (Reload: %.2f sec)|nAttack speed bonus: %.0f|nSpell Damage: %i%% (|cFF20FF20+%i%%|r)|n", AttacksPerSec, AttackReload, AttackSpeedBonus, magicamp, magicampbonus );
 			else
-				sprintf_s( buffer, sizeof( buffer ), "%.1f/sec (Reload: %.2f sec)|nAttack speed bonus: %.0f|nMagic amplification: %i%% (0%%)|n", AttacksPerSec, AttackReload, AttackSpeedBonus, magicamp );
+				sprintf_s( buffer, sizeof( buffer ), "%.1f/sec (Reload: %.2f sec)|nAttack speed bonus: %.0f|nSpell Damage: %i%% (0%%)|n", AttacksPerSec, AttackReload, AttackSpeedBonus, magicamp );
 
 			__asm
 			{
@@ -1858,11 +1858,14 @@ void __stdcall UnloadHWNDHandler( BOOL Force = FALSE )
 		if ( !Force )
 			MH_DisableHook( WarcraftRealWNDProc_org );
 		SkipAllMessages = FALSE;
+		WarcraftRealWNDProc_org = NULL;
 	}
 }
 
 void __stdcall DisableAllHooks( )
 {
+
+	Packet_Uninitalize( );
 
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -1971,6 +1974,8 @@ void __stdcall DisableAllHooks( )
 	UninitializePacketHandler( );
 
 	LatestDownloadedString = "";
+
+
 	//	UninitializeVoiceClient( );
 }
 
@@ -2012,7 +2017,6 @@ unsigned long __stdcall RefreshTimer( void * )
 
 				if ( RefreshTimerEND )
 				{
-
 					return 0;
 				}
 			}

@@ -29,8 +29,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;.\..\pa_snapshot\portaudio\build\msvc\Win32\ReleaseMinDependency\</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;.\..\dx_includes\;.\..\pa_snapshot\portaudio\include\</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\NTDLL\;.\..\includes\;.\..\pa_snapshot\portaudio\build\msvc\Win32\ReleaseMinDependency\</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\NTDLL\;.\..\includes\;.\..\pa_snapshot\portaudio\include\;.\..\ydbase\</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
@@ -66,7 +66,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <PreprocessorDefinitions>NDEBUG;NO_WIN32_LEAN_AND_MEAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <DebugInformationFormat>None</DebugInformationFormat>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <StringPooling>true</StringPooling>
       <FloatingPointExceptions>
@@ -75,7 +75,7 @@
       <OmitDefaultLibName>true</OmitDefaultLibName>
     </ClCompile>
     <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SubSystem>Windows</SubSystem>
@@ -92,7 +92,8 @@
       <CLRSupportLastError>
       </CLRSupportLastError>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
-      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
       <EnableUAC>
       </EnableUAC>
       <IgnoreAllDefaultLibraries>
@@ -101,52 +102,65 @@
       </MergeSections>
       <SectionAlignment>
       </SectionAlignment>
+      <GenerateMapFile>false</GenerateMapFile>
+      <AssemblyDebug>
+      </AssemblyDebug>
     </Link>
     <Manifest>
       <UpdateFileHashes>true</UpdateFileHashes>
     </Manifest>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PostBuildEvent>
+      <Message>
+      </Message>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="Source.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DotAAllstarsHelper688.rc" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="BlpReadWrite.cpp" />
-    <ClCompile Include="Crc32Dynamic.cpp">
-      <StructMemberAlignment Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Default</StructMemberAlignment>
-    </ClCompile>
+    <ClCompile Include="Crc32Dynamic.cpp" />
+    <ClCompile Include="DotaAllstarsHelper.cpp" />
     <ClCompile Include="DotaAutoFPSlimit.cpp" />
     <ClCompile Include="DotaChatHelper.cpp" />
     <ClCompile Include="DotaClickHelper.cpp" />
     <ClCompile Include="DotaCustomFrames.cpp" />
     <ClCompile Include="DotaCustomMinimap.cpp" />
     <ClCompile Include="DotaDebugHelpers.cpp" />
+    <ClCompile Include="DotaErrorHandler.cpp" />
+    <ClCompile Include="DotaFilesHelper.cpp" />
+    <ClCompile Include="DotaFOVfix.cpp" />
     <ClCompile Include="DotaFrameDefHelper.cpp" />
     <ClCompile Include="DotaHelperOverlayDirectx8.cpp" />
     <ClCompile Include="DotaHelperOverlayDirectx9.cpp" />
     <ClCompile Include="DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="DotaHPBarHelper.cpp" />
-    <ClCompile Include="DotaFilesHelper.cpp" />
-    <ClCompile Include="DotaMinimapHelper.cpp" />
-    <ClCompile Include="DoteNewDebugSystem.cpp" />
-    <ClCompile Include="MegaPacketHandler.cpp" />
+    <ClCompile Include="DotaHttpHelper.cpp" />
     <ClCompile Include="DotaMemoryHackHelper.cpp" />
+    <ClCompile Include="DotaMinimapHelper.cpp" />
+    <ClCompile Include="DotaMPBarHelper.cpp" />
+    <ClCompile Include="DotaPlayerHelper.cpp" />
     <ClCompile Include="DotaRawImagesDrawApi.cpp" />
     <ClCompile Include="DotaSyncScanner.cpp" />
+    <ClCompile Include="DotaViewAllySkill.cpp" />
     <ClCompile Include="DotaWebHelper.cpp" />
-    <ClCompile Include="DotaMPBarHelper.cpp" />
-    <ClCompile Include="DotaAllstarsHelper.cpp" />
-    <ClCompile Include="DotaPlayerHelper.cpp" />
-    <ClCompile Include="DotaErrorHandler.cpp" />
-    <ClCompile Include="DotaFOVfix.cpp" />
+    <ClCompile Include="DoteNewDebugSystem.cpp" />
     <ClCompile Include="hash_64.cpp" />
-    <ClCompile Include="DotaHttpHelper.cpp" />
+    <ClCompile Include="MegaPacketHandler.cpp" />
     <ClCompile Include="quantizer.cpp" />
     <ClCompile Include="Storm.cpp" />
     <ClCompile Include="UnitAndItem.cpp" />
-    <ClCompile Include="DotaViewAllySkill.cpp" />
     <ClCompile Include="WarcraftFrameHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source.def" />
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="base64.h" />
     <ClInclude Include="BlpReadWrite.h" />
     <ClInclude Include="buffer.h" />
     <ClInclude Include="Common.h" />
@@ -159,15 +173,13 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="MegaPacketHandler.h" />
     <ClInclude Include="quantizer.h" />
+    <ClInclude Include="RawImageApi.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Storm.h" />
     <ClInclude Include="Structures.h" />
     <ClInclude Include="ViewAllySkill.h" />
     <ClInclude Include="WarcraftFrameHelper.h" />
     <ClInclude Include="WinHttpClient.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="DotAAllstarsHelper688.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

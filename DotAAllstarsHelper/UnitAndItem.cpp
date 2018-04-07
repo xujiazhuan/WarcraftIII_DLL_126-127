@@ -54,7 +54,7 @@ std::vector<int> GetUnitsFromGroup( int grouphandle )
 			// Get next data
 			GroupData = *( int* )( GroupData + 0x4 );
 
-			if ( UnitAddr > 0 &&/* IsNotBadUnit( UnitAddr ) &&*/ IsHero( UnitAddr ) && !IsUnitIllusion( UnitAddr ) )
+			if ( UnitAddr > 0 && GetTypeId(UnitAddr) != 'H00J' && /* IsNotBadUnit( UnitAddr ) &&*/ IsHero( UnitAddr ) && !IsUnitIllusion( UnitAddr ) )
 				// save unit to list
 				localvector.push_back( UnitAddr );
 		}
@@ -79,6 +79,26 @@ std::vector<int> GetUnitsFromGroup( int grouphandle )
 				localvector.push_back( UnitAddr );
 		}
 
+
+		GroupData = *( int* )( GroupAddr + 0xC );
+		while ( GroupData > 0 )
+		{
+
+			// Get unit 
+			int UnitAddr = *( int* )( GroupData + 0x8 );
+
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( ( "Found:" + to_string( UnitAddr ) ).c_str( ) );
+			}
+
+			// Get next data
+			GroupData = *( int* )( GroupData + 0x4 );
+
+			if ( UnitAddr > 0 /*&& IsNotBadUnit( UnitAddr ) &&* !IsHero( UnitAddr )*/ && GetTypeId( UnitAddr ) == 'H00J' )
+				// save unit to list
+				localvector.push_back( UnitAddr );
+		}
 
 		GroupData = *( int* )( GroupAddr + 0xC );
 		while ( GroupData > 0 )

@@ -103,7 +103,7 @@ string GetStrID( int id )
 {
 	char buff[ 7 ];
 	char buff2[ 4 ];
-	memcpy( buff2, &id, 4 );
+	std::memcpy( buff2, &id, 4 );
 	buff[ 0 ] = '\'';
 	buff[ 1 ] = buff2[ 3 ];
 	buff[ 2 ] = buff2[ 2 ];
@@ -227,113 +227,122 @@ int __stdcall ReplayDesyncScan( BOOL scan_or_check )
 {
 	BYTE * replayscandata = NULL;
 	long size = 0;
-
-
-	if ( scan_or_check == TRUE )
+	
+	try
 	{
-		FILE * f;
-		fopen_s( &f, "ReplayScan.bin", "rb" );
-		if ( f )
+
+		if ( scan_or_check == TRUE )
 		{
-			fseek( f, 0, SEEK_END );
-			size = ftell( f );
-			fseek( f, 0, SEEK_SET );
-
-			if ( size > 0 )
+			FILE * f;
+			fopen_s( &f, "ReplayScan.bin", "rb" );
+			if ( f )
 			{
-				replayscandata = new BYTE[ size ];
-				fread( replayscandata, size, 1, f );
+				fseek( f, 0, SEEK_END );
+				size = ftell( f );
+				fseek( f, 0, SEEK_SET );
+
+				if ( size > 0 )
+				{
+					replayscandata = new BYTE[ size ];
+					fread( replayscandata, size, 1, f );
+				}
+
+				fclose( f );
+				f = NULL;
 			}
 
-			fclose( f );
-			f = NULL;
-		}
+			fopen_s( &f, "ReplayScan.bin", "wb" );
 
-		fopen_s( &f, "ReplayScan.bin", "wb" );
-
-		if ( f )
-		{
-			if ( ScanId != 0 )
-				fwrite( replayscandata, size, 1, f );
-			FillScanList( );
-			ScanStructHead tmpcountstr = ScanStructHead( );
-			tmpcountstr.UnitsScanCount = ScanUnitsForDump.size( );
-			tmpcountstr.ItemsScanCount = ScanItemsForDump.size( );
-
-			fwrite( &tmpcountstr, sizeof( ScanStructHead ), 1, f );
-
-			for ( ScanStructUnit s : ScanUnitsForDump )
+			if ( f )
 			{
-				fwrite( &s, sizeof( ScanStructUnit ), 1, f );
+				if ( ScanId != 0 )
+					fwrite( replayscandata, size, 1, f );
+				FillScanList( );
+				ScanStructHead tmpcountstr = ScanStructHead( );
+				tmpcountstr.UnitsScanCount = ScanUnitsForDump.size( );
+				tmpcountstr.ItemsScanCount = ScanItemsForDump.size( );
+
+				fwrite( &tmpcountstr, sizeof( ScanStructHead ), 1, f );
+
+				for ( ScanStructUnit s : ScanUnitsForDump )
+				{
+					fwrite( &s, sizeof( ScanStructUnit ), 1, f );
+				}
+
+				for ( ScanStructItem s : ScanItemsForDump )
+				{
+					fwrite( &s, sizeof( ScanStructItem ), 1, f );
+				}
+
+				fclose( f );
+				f = NULL;
+			}
+			else
+			{
+				PrintText( "Error! No access to ReplayScan.bin file." );
 			}
 
-			for ( ScanStructItem s : ScanItemsForDump )
-			{
-				fwrite( &s, sizeof( ScanStructItem ), 1, f );
-			}
-
-			fclose( f );
-			f = NULL;
 		}
 		else
 		{
-			PrintText( "Error! No access to ReplayScan.bin file." );
+
+			ScanUnitsForDump_fromdump.clear( );
+			ScanItemsForDump_fromdump.clear( );
+
+			FILE * f;
+			fopen_s( &f, "ReplayScan.bin", "rb" );
+			if ( f )
+			{
+				fseek( f, 0, SEEK_END );
+				size = ftell( f );
+				fseek( f, 0, SEEK_SET );
+				int currentscanid = 0;
+				bool needscan = false;
+				while ( size > 0 )
+				{
+					ScanStructHead tmpcountstr = ScanStructHead( );
+					fread( &tmpcountstr, sizeof( ScanStructHead ), 1, f );
+					size -= sizeof( ScanStructHead );
+					for ( int i = 0; i < tmpcountstr.UnitsScanCount; i++ )
+					{
+						ScanStructUnit tmpunitstr = ScanStructUnit( );
+						fread( &tmpunitstr, sizeof( ScanStructUnit ), 1, f );
+						if ( ScanId == currentscanid )
+						{
+							ScanUnitsForDump_fromdump.push_back( tmpunitstr );
+							needscan = true;
+						}
+						size -= sizeof( ScanStructUnit );
+					}
+					for ( int i = 0; i < tmpcountstr.ItemsScanCount; i++ )
+					{
+						ScanStructItem tmpitemstr = ScanStructItem( );
+						fread( &tmpitemstr, sizeof( ScanStructItem ), 1, f );
+						if ( ScanId == currentscanid )
+						{
+							ScanItemsForDump_fromdump.push_back( tmpitemstr );
+							needscan = true;
+						}
+						size -= sizeof( ScanStructItem );
+					}
+					currentscanid++;
+				}
+
+				if ( needscan )
+				{
+					FillScanList( );
+					CompareResultsAndPrintInfo( );
+				}
+
+				fclose( f );
+			}
 		}
 
 	}
-	else
+	catch ( ... )
 	{
+		PrintText( "FATAL ERROR FATAL ERROR!! WARNING FATAL ERROR WHILE REPLAY DESYNC SCAN!" );
 
-		ScanUnitsForDump_fromdump.clear( );
-		ScanItemsForDump_fromdump.clear( );
-
-		FILE * f;
-		fopen_s( &f, "ReplayScan.bin", "rb" );
-		if ( f )
-		{
-			fseek( f, 0, SEEK_END );
-			size = ftell( f );
-			fseek( f, 0, SEEK_SET );
-			int currentscanid = 0;
-			bool needscan = false;
-			while ( size > 0 )
-			{
-				ScanStructHead tmpcountstr = ScanStructHead( );
-				fread( &tmpcountstr, sizeof( ScanStructHead ), 1, f );
-				size -= sizeof( ScanStructHead );
-				for ( int i = 0; i < tmpcountstr.UnitsScanCount; i++ )
-				{
-					ScanStructUnit tmpunitstr = ScanStructUnit( );
-					fread( &tmpunitstr, sizeof( ScanStructUnit ), 1, f );
-					if ( ScanId == currentscanid )
-					{
-						ScanUnitsForDump_fromdump.push_back( tmpunitstr );
-						needscan = true;
-					}
-					size -= sizeof( ScanStructUnit );
-				}
-				for ( int i = 0; i < tmpcountstr.ItemsScanCount; i++ )
-				{
-					ScanStructItem tmpitemstr = ScanStructItem( );
-					fread( &tmpitemstr, sizeof( ScanStructItem ), 1, f );
-					if ( ScanId == currentscanid )
-					{
-						ScanItemsForDump_fromdump.push_back( tmpitemstr );
-						needscan = true;
-					}
-					size -= sizeof( ScanStructItem );
-				}
-				currentscanid++;
-			}
-
-			if ( needscan )
-			{
-				FillScanList( );
-				CompareResultsAndPrintInfo( );
-			}
-
-			fclose( f );
-		}
 	}
 
 	ScanId++;

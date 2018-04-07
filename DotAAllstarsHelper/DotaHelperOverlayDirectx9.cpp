@@ -326,7 +326,7 @@ void DrawOverlayDx9( )
 			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			rv = d->CreateTexture( ( UINT )img.width, ( UINT )img.height, 1, 0, D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &ppTexture, NULL );
-			if ( ppTexture && rv == S_OK )
+			if ( ppTexture && rv == D3D_OK )
 			{
 #ifdef DOTA_HELPER_LOG
 				AddNewLineToDotaHelperLog( __func__,__LINE__ );
@@ -334,13 +334,24 @@ void DrawOverlayDx9( )
 				//D3DXCreateTextureFromFileA( d, "qergqerg.png", &ppTexture );
 				D3DLOCKED_RECT rect;
 				rv = ppTexture->LockRect( 0, &rect, 0, 0 );
-				if ( rv == S_OK )
+				if ( rv == D3D_OK )
 				{
 					unsigned char* dest = static_cast< unsigned char* >( rect.pBits );
-					memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
+#ifdef OLD_CODE
+					std::memcpy( dest, img.img.buf, ( size_t )( img.width * img.height * 4 ) );
+#else 
+				 
+#endif
 					ppTexture->UnlockRect( 0 );
-					D3DXFilterTexture_org( ppTexture, NULL, D3DX_DEFAULT, D3DX_DEFAULT );
+					if ( D3DXFilterTexture_org( ppTexture, NULL, D3DX_DEFAULT, D3DX_DEFAULT ) != D3D_OK )
+					{
+						if ( SetInfoObjDebugVal )
+						{
+							PrintText( "D3DXFilterTexture error" );
+						}
+					}
 					img.textureaddr = ppTexture;
+					img.drawdevice = 1;
 				}
 			}
 		}
@@ -468,15 +479,30 @@ void Uninitd3d9Hook( BOOL cleartextures )
 {
 	if ( EndScene_dx9_org )
 	{
-		MH_DisableHook( EndScene_dx9_org );
 		if ( cleartextures )
 		{
 			for ( auto & img : ListOfRawImages )
 			{
-				if ( img.textureaddr )
+				if ( img.textureaddr && img.drawdevice == 1  )
 				{
 					IDirect3DTexture9 * ppTexture = ( IDirect3DTexture9 * )img.textureaddr;
-					ppTexture->Release( );
+
+					if ( IsOkayPtr( ppTexture ) )
+					{
+						try
+						{
+							ppTexture->Release( );
+						}
+						catch ( ... )
+						{
+							if ( SetInfoObjDebugVal )
+							{
+								PrintText( "Error texture release" );
+							}
+						}
+					}
+
+					
 					ppTexture = NULL;
 					img.textureaddr = NULL;
 					img.ingame = FALSE;
@@ -484,6 +510,8 @@ void Uninitd3d9Hook( BOOL cleartextures )
 				}
 			}
 		}
+		MH_DisableHook( EndScene_dx9_org );
+		EndScene_dx9_org = NULL;
 	}
 }
 

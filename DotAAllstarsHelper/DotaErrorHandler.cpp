@@ -1033,6 +1033,7 @@ LONG __stdcall TopLevelExceptionFilter( _EXCEPTION_POINTERS *ExceptionInfo )
 		if ( StormErrorHandler_org )
 		{
 			MH_DisableHook( StormErrorHandler_org );
+			StormErrorHandler_org = NULL;
 		}
 
 		LONG retval = OriginFilter( ExceptionInfo );

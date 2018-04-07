@@ -809,7 +809,7 @@ namespace NWar3Frame
 			else
 			{
 				*( int* )( FrameAddr + 0x1E4 ) = ( int )Storm::MemAlloc( len ? len : strlen( text ) + 1 );
-				memcpy( *( void ** )( FrameAddr + 0x1E4 ), text, len ? len : strlen( text ) + 1 );
+				std::memcpy( *( void ** )( FrameAddr + 0x1E4 ), text, len ? len : strlen( text ) + 1 );
 			}
 			return;
 		case CFrameType::FRAMETYPE_TEXTBUTTON: // Tip
@@ -822,7 +822,7 @@ namespace NWar3Frame
 			else
 			{
 				*( int* )( FrameAddr + 0x1F8 ) = ( int )Storm::MemAlloc( len ? len : strlen( text ) + 1 );
-				memcpy( *( void ** )( FrameAddr + 0x1F8 ), text, len ? len : strlen( text ) + 1 );
+				std::memcpy( *( void ** )( FrameAddr + 0x1F8 ), text, len ? len : strlen( text ) + 1 );
 			}
 			return;
 		default:
@@ -1449,11 +1449,15 @@ namespace NWar3Frame
 		//	MessageBoxA( 0, tmps, "1", 0 );
 		if ( FrameEventHandler )
 			MH_DisableHook( FrameEventHandler );
+		FrameEventHandler = NULL;
+
 		//	MH_DisableHook( FixFrameHookError1 );
 		if ( Wc3ChangeMenu )
 			MH_DisableHook( Wc3ChangeMenu );
+		Wc3ChangeMenu = NULL;
 		if ( Wc3GetSkinItemPath )
 			MH_DisableHook( Wc3GetSkinItemPath );
+		Wc3GetSkinItemPath = NULL;
 
 		CFrameCallbackInitialized = false;
 	}

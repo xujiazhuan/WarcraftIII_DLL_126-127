@@ -9,3 +9,5 @@
 *.db-wal
 *.cache
 .vs/DotAAllstarsHelper/v15/.suo
+*.pdb
+*.map

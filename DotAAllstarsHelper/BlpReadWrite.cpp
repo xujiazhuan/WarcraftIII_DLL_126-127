@@ -368,7 +368,7 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 	{
 		target.length = ( unsigned long )( newW * newH * bytespp );
 		target.buf = Storm::MemAlloc[ target.length ];
-		memcpy( target.buf, rawData, target.length );
+		std::memcpy( target.buf, rawData, target.length );
 		return;
 	}
 
@@ -412,7 +412,7 @@ void ScaleImage( unsigned char* rawData, int oldW, int oldH, int newW, int newH,
 
 	if ( newH == oldH )
 	{
-		memcpy( final, temp, target.length * sizeof( double ) );
+		std::memcpy( final, temp, target.length * sizeof( double ) );
 	}
 	else
 	{
@@ -669,14 +669,14 @@ BOOL CreateJpgBLP( StormBuffer rawData, StormBuffer &output, int quality, char c
 		source.buf = ( char * )Storm::MemAlloc( ( unsigned int )( width * height * 4 ) );
 		for ( int j = 0; j < width * height; j++ )
 		{
-			memcpy( source.buf + j * 4, rawData.buf + j*bytespp, ( size_t )bytespp );
+			std::memcpy( source.buf + j * 4, rawData.buf + j*bytespp, ( size_t )bytespp );
 			source.buf[ j * 4 + 3 ] = '\xFF';
 		}
 	}
 
 	int truemipmaps = GetRequiredMipMaps( width, height );
 	BLPHeader blpHeader;
-	memcpy( blpHeader.ident, "BLP1", 4 );
+	std::memcpy( blpHeader.ident, "BLP1", 4 );
 	blpHeader.compress = 0; // jpg compression
 	blpHeader.IsAlpha = ( uint32_t )alphaflag;
 	blpHeader.sizey = ( unsigned long )height;
@@ -746,14 +746,14 @@ BOOL CreateJpgBLP( StormBuffer rawData, StormBuffer &output, int quality, char c
 	maxmipmaps = min( truemipmaps, maxmipmaps );
 
 	output.buf = ( char * )Storm::MemAlloc( output.length );
-	memcpy( output.buf, &blpHeader, sizeof( BLPHeader ) );
+	std::memcpy( output.buf, &blpHeader, sizeof( BLPHeader ) );
 	memset( output.buf + sizeof( BLPHeader ), 0, 4 );
 	char* blp = output.buf + sizeof( BLPHeader ) + 4;
 	for ( int i = 0; i < 16; i++ )
 	{
 		if ( i < maxmipmaps && width > 0 && height > 0 )
 		{
-			memcpy( blp, target[ i ].buf, target[ i ].length );
+			std::memcpy( blp, target[ i ].buf, target[ i ].length );
 			if ( bytespp < 4 || i > 0 ) // cleanup
 				scaled[ i ].Clear( );
 			if ( target[ i ].buf )
@@ -772,7 +772,7 @@ BOOL CreatePalettedBLP( StormBuffer rawData, StormBuffer &output, int colors, ch
 	q->ProcessImage( ( unsigned char* )rawData.buf, ( unsigned long )( width * height ), ( unsigned char )bytespp, 0x00 );
 	int truemipmaps = GetRequiredMipMaps( width, height );
 	BLPHeader blpHeader;
-	memcpy( blpHeader.ident, "BLP1", 4 );
+	std::memcpy( blpHeader.ident, "BLP1", 4 );
 	blpHeader.compress = 1; // paletted
 	blpHeader.IsAlpha = 8;
 	blpHeader.sizey = ( unsigned long )height;
@@ -824,7 +824,7 @@ BOOL CreatePalettedBLP( StormBuffer rawData, StormBuffer &output, int colors, ch
 
 	output.buf = ( char * )Storm::MemAlloc( output.length );
 	unsigned char* blpData = ( unsigned char* )output.buf;
-	memcpy( blpData, &blpHeader, sizeof( BLPHeader ) );
+	std::memcpy( blpData, &blpHeader, sizeof( BLPHeader ) );
 	memset( blpData + sizeof( BLPHeader ), 0, sizeof( BGRAPix ) * 256 );
 	unsigned char* blp = blpData + sizeof( BLPHeader ) + sizeof( BGRAPix ) * 256;
 	BGRAPix *palette = ( BGRAPix* )( blpData + sizeof( BLPHeader ) );
@@ -881,7 +881,7 @@ BOOL TGA2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, i
 
 	output.length = ( unsigned long )( width*height*bpp );
 	output.buf = ( char * )Storm::MemAlloc( output.length );
-	memcpy( output.buf, input.buf + sizeof( TGAHeader ) + header->imageIDLength, output.length );
+	std::memcpy( output.buf, input.buf + sizeof( TGAHeader ) + header->imageIDLength, output.length );
 
 	return TRUE;
 }
@@ -899,8 +899,8 @@ BOOL RAW2Tga( StormBuffer input, StormBuffer &output, int width, int height, int
 	output.length = sizeof( TGAHeader ) + width * height * bpp;
 	output.buf = ( char * )Storm::MemAlloc( output.length );
 
-	memcpy( output.buf, &header, sizeof( TGAHeader ) );
-	memcpy( output.buf + sizeof( TGAHeader ), input.buf, output.length - sizeof( TGAHeader ) );
+	std::memcpy( output.buf, &header, sizeof( TGAHeader ) );
+	std::memcpy( output.buf + sizeof( TGAHeader ), input.buf, output.length - sizeof( TGAHeader ) );
 
 	return TRUE;
 }
@@ -926,7 +926,7 @@ BOOL BMP2Raw( StormBuffer input, StormBuffer &output, int &width, int &height, i
 
 	output.length = ( unsigned long )( width*height*bpp );
 	output.buf = ( char * )Storm::MemAlloc( output.length );
-	memcpy( output.buf, input.buf + FileHeader->bfOffBits, output.length );
+	std::memcpy( output.buf, input.buf + FileHeader->bfOffBits, output.length );
 
 	if ( bpp == 4 ) // invert alpha
 		for ( int i = 0; i < width*height; i++ )
@@ -979,9 +979,9 @@ void flip_vertically( unsigned char *pixels, const size_t width, const size_t he
 
 	for ( ; low < high; low += stride, high -= stride )
 	{
-		memcpy( row, low, stride );
-		memcpy( low, high, stride );
-		memcpy( high, row, stride );
+		std::memcpy( row, low, stride );
+		std::memcpy( low, high, stride );
+		std::memcpy( high, row, stride );
 	}
 	free( row );
 }
@@ -1019,7 +1019,7 @@ unsigned char * Scale_WithoutResize( unsigned char *pixels, const size_t width, 
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-		memcpy( offset2, offset1, copysize );
+		std::memcpy( offset2, offset1, copysize );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__,__LINE__ );//( ( __func__ + std::to_string( y ) ).c_str( ), __LINE__ );
 #endif
@@ -1138,7 +1138,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
-	memcpy( &blph, input.buf, sizeof( BLPHeader ) );
+	std::memcpy( &blph, input.buf, sizeof( BLPHeader ) );
 
 	if ( memcmp( blph.ident, "BLP1", 4 ) != 0 )
 		return 0;
@@ -1177,7 +1177,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 		}
 
 		RGBAPix Pal[ 256 ];
-		memcpy( Pal, input.buf + curpos, 256 * 4 );
+		std::memcpy( Pal, input.buf + curpos, 256 * 4 );
 		curpos += 256 * 4;
 
 		int offset = ( int )blph.poffs[ 0 ];
@@ -1193,7 +1193,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 
 
 			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc( ( unsigned int )size );
-			memcpy( tdata, input.buf + offset, ( size_t )size );
+			std::memcpy( tdata, input.buf + offset, ( size_t )size );
 
 			RGBAPix *pic = blp1_convert_paletted_separated_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey, 0 );
 
@@ -1202,7 +1202,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 
 			output.length = textureSize;
 			output.buf = ( char * )Storm::MemAlloc( textureSize );
-			memcpy( output.buf, pic, textureSize );
+			std::memcpy( output.buf, pic, textureSize );
 			Storm::MemFree( pic );
 
 			width = ( int )blph.sizex;
@@ -1224,13 +1224,13 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 
 
 			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc( ( unsigned int )size );
-			memcpy( tdata, input.buf + offset, ( size_t )size );
+			std::memcpy( tdata, input.buf + offset, ( size_t )size );
 			RGBAPix *pic = blp1_convert_paletted_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey );
 
 			Storm::MemFree( tdata );
 			output.length = textureSize;
 			output.buf = ( char * )Storm::MemAlloc( textureSize );
-			memcpy( output.buf, pic, textureSize );
+			std::memcpy( output.buf, pic, textureSize );
 			Storm::MemFree( pic );
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
@@ -1250,13 +1250,13 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 
 
 			uint8_t* tdata = ( uint8_t * )Storm::MemAlloc( ( unsigned int )size );
-			memcpy( tdata, input.buf + offset, ( size_t )size );
+			std::memcpy( tdata, input.buf + offset, ( size_t )size );
 			RGBAPix *pic = blp1_convert_paletted_no_alpha( ( uint8_t* )tdata, Pal, blph.sizex, blph.sizey );
 
 			Storm::MemFree( tdata );
 			output.length = textureSize;
 			output.buf = ( char * )Storm::MemAlloc( textureSize );
-			memcpy( output.buf, pic, textureSize );
+			std::memcpy( output.buf, pic, textureSize );
 			Storm::MemFree( pic );
 			width = ( int )blph.sizex;
 			height = ( int )blph.sizey;
@@ -1276,13 +1276,13 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		unsigned long JPEGHeaderSize;
-		memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
+		std::memcpy( &JPEGHeaderSize, input.buf + curpos, 4 );
 		JPEGHeaderSize = _blp_swap_int32( JPEGHeaderSize );
 
 		StormBuffer tempdata;
 		tempdata.length = blph.psize[ 0 ] + JPEGHeaderSize;
 		tempdata.buf = ( char * )Storm::MemAlloc( blph.psize[ 0 ] + JPEGHeaderSize );
-		memcpy( tempdata.buf, input.buf + curpos + 4, ( size_t )JPEGHeaderSize );
+		std::memcpy( tempdata.buf, input.buf + curpos + 4, ( size_t )JPEGHeaderSize );
 
 
 
@@ -1291,7 +1291,7 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 		height = ( int )blph.sizey;
 
 		curpos = blph.poffs[ 0 ];
-		memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
+		std::memcpy( ( tempdata.buf + JPEGHeaderSize ), input.buf + curpos, blph.psize[ 0 ] );
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
@@ -1316,6 +1316,8 @@ unsigned long Blp2Raw( StormBuffer input, StormBuffer &output, int &width, int &
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
+
+
 		tempdata.Clear( );
 
 
@@ -1348,7 +1350,7 @@ BOOL JPG2Raw( StormBuffer input, StormBuffer & output, int width, int height, in
 
 		return TRUE;
 	}
-	MessageBoxA( 0, "Convert error 1", " Success ! ", 0 );
+	//MessageBoxA( 0, "Convert error 1", " Success ! ", 0 );
 	return FALSE;
 }
 

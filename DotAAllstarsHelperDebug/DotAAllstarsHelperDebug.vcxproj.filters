@@ -166,6 +166,12 @@
     <ClInclude Include="..\DotAAllstarsHelper\MegaPacketHandler.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\RawImageApi.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\base64.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Source.def">

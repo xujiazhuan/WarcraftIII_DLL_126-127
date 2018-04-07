@@ -37,7 +37,6 @@
 #include <chrono>
 #include <map>
 
-
 #include <filesystem>
 namespace fs = std::experimental::filesystem;
 
@@ -75,6 +74,7 @@ using namespace std;
 #pragma comment(lib,"portaudio.lib")
 */
 
+#include "RawImageApi.h"
 
 
 #pragma endregion
@@ -414,6 +414,8 @@ extern vector<RawImageStruct> ListOfRawImages;
 extern vector<FakeFileStruct> FakeFileList;
 void ClearAllRawImages( );
 extern BOOL NeedReleaseUnusedMemory;
+std::vector<std::string> get_file_list( const fs::path & path, bool dotolower = false );
+std::string GetFileContent( std::string filename );
 #pragma endregion
 
 
@@ -545,6 +547,8 @@ extern GetTownUnitCount_p GetTownUnitCount_org;
 extern GetTownUnitCount_p GetTownUnitCount_ptr;
 int __stdcall GetJassStringCount( BOOL dump );
 int __stdcall ScanJassStringForErrors( BOOL dump );
+
+int IsOkayPtr( void *ptr, unsigned int size = 4 );
 #pragma endregion
 
 const float DesktopScreen_Width = ( float )GetSystemMetrics( SM_CXSCREEN );

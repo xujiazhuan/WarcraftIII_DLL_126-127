@@ -34,12 +34,12 @@ void InitThreadCpuUsage( ) {
 	}
 
 	GetSystemTimeAsFileTime( &ftime );
-	memcpy( &lastCPU, &ftime, sizeof( FILETIME ) );
+	std::memcpy( &lastCPU, &ftime, sizeof( FILETIME ) );
 
 
 	GetProcessTimes( Warcraft3_Process, &ftime, &ftime, &fsys, &fuser );
-	memcpy( &lastSysCPU, &fsys, sizeof( FILETIME ) );
-	memcpy( &lastUserCPU, &fuser, sizeof( FILETIME ) );
+	std::memcpy( &lastSysCPU, &fsys, sizeof( FILETIME ) );
+	std::memcpy( &lastUserCPU, &fuser, sizeof( FILETIME ) );
 }
 
 double GetWar3CpuUsage( ) {
@@ -50,10 +50,10 @@ double GetWar3CpuUsage( ) {
 	ULARGE_INTEGER now, sys, user;
 	double percent;
 	GetSystemTimeAsFileTime( &ftime );
-	memcpy( &now, &ftime, sizeof( FILETIME ) );
+	std::memcpy( &now, &ftime, sizeof( FILETIME ) );
 	GetProcessTimes( Warcraft3_Process, &ftime, &ftime, &fsys, &fuser );
-	memcpy( &sys, &fsys, sizeof( FILETIME ) );
-	memcpy( &user, &fuser, sizeof( FILETIME ) );
+	std::memcpy( &sys, &fsys, sizeof( FILETIME ) );
+	std::memcpy( &user, &fuser, sizeof( FILETIME ) );
 	percent = ( double )( ( sys.QuadPart - lastSysCPU.QuadPart ) +
 		( user.QuadPart - lastUserCPU.QuadPart ) );
 	percent /= ( now.QuadPart - lastCPU.QuadPart );

@@ -76,6 +76,9 @@ void FreeAllIHelpers( )
 				Storm::MemFree( ih.buf );
 		}
 
+
+		Storm::FreeAllMemory( );
+
 		ICONMDLCACHELIST.clear( );
 	}
 #ifdef DOTA_HELPER_LOG
@@ -201,19 +204,16 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 
 		if ( ResultBuffer.buf != NULL )
 		{
-
 			ICONMDLCACHE tmpih;
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
-			ICONMDLCACHELIST.push_back( tmpih );
+			ICONMDLCACHELIST.push_back( tmpih );/*
 			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
-				Storm::MemFree( ( void* )*OutDataPointer );
+				Storm::MemFree( ( void* )*OutDataPointer );*/
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
-
-
 		}
 	}
 
@@ -344,8 +344,8 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
-				Storm::MemFree( ( void* )*OutDataPointer );
+			/*if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
+				Storm::MemFree( ( void* )*OutDataPointer );*/
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 #ifdef DOTA_HELPER_LOG
@@ -459,7 +459,7 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			id++;
 		}
 
-		memcpy( &OutImage[ 0 ], &BGRAPixList[ 0 ], 4 * w*h - 4 );
+		std::memcpy( &OutImage[ 0 ], &BGRAPixList[ 0 ], 4 * w*h - 4 );
 
 		/*
 
@@ -512,8 +512,8 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
-				Storm::MemFree( ( void* )*OutDataPointer );
+		/*	if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
+				Storm::MemFree( ( void* )*OutDataPointer );*/
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 		}
@@ -696,7 +696,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGTR", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -708,7 +708,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGRT", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -720,7 +720,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGSC", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -733,7 +733,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGAO", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -745,7 +745,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGAC", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -812,7 +812,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						while ( SequencesCount > 0 )
 						{
 							SequencesCount--;
-							memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
+							std::memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
 
 							if ( mdlfix.AnimationName.length( ) == 0 || mdlfix.AnimationName == tmpSequence.Name )
 							{
@@ -890,7 +890,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						while ( SequencesCount > 0 )
 						{
 							SequencesCount--;
-							memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
+							std::memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
 
 
 							if ( mdlfix.AnimationName == tmpSequence.Name )
@@ -917,7 +917,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize + 8;
 						}
@@ -931,7 +931,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
 						}
@@ -947,7 +947,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -963,7 +963,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -979,7 +979,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -995,7 +995,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -1009,7 +1009,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						offset += 4;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpGeosetAnimation, &ModelBytes[ offset ], sizeof( Mdx_GeosetAnimation ) );
+							std::memcpy( &tmpGeosetAnimation, &ModelBytes[ offset ], sizeof( Mdx_GeosetAnimation ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_GeosetAnimation ), TimesForReplace );
 
 							offset += tmpGeosetAnimation.InclusiveSize;
@@ -1026,7 +1026,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -1041,13 +1041,13 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Tracks tmpTracks;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
 							if ( memcmp( &ModelBytes[ offset ], "KEVT", 4 ) == 0 )
 							{
 								offset += 4;
-								memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
+								std::memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
 								offset += sizeof( Mdx_Tracks );
 								for ( int n = 0; n < tmpTracks.NrOfTracks; n++ )
 								{
@@ -1067,7 +1067,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
 							unsigned int size_of_this_struct = *( unsigned int* )&ModelBytes[ offset ];
@@ -1179,7 +1179,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			if ( TagFound )
 			{
-				memcpy( &ModelBytes[ TagStartOffset ], &ModelBytes[ TagStartOffset + TagSize + 4 ], sz - ( TagStartOffset + TagSize ) );
+				std::memcpy( &ModelBytes[ TagStartOffset ], &ModelBytes[ TagStartOffset + TagSize + 4 ], sz - ( TagStartOffset + TagSize ) );
 				memset( &ModelBytes[ sz - TagSize - 4 ], 0xFF, TagSize );
 
 				sz = sz - TagSize - 4;
@@ -1219,7 +1219,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				offset += 4;
 				while ( offset < sz )
 				{
-					memcpy( TagName, &ModelBytes[ offset ], 4 );
+					std::memcpy( TagName, &ModelBytes[ offset ], 4 );
 					if ( memcmp( &ModelBytes[ offset ], strGLBS, 4 ) == 0 )
 					{
 						offset += 4;
@@ -1248,7 +1248,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1269,7 +1269,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1292,7 +1292,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1315,7 +1315,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1338,7 +1338,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							{
 							offset += 4;
 							Mdx_Track tmpTrack;
-							memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+							std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 							offset += sizeof( Mdx_Track );
 							for ( DWORD i = 0; i < tmpTrack.NrOfTracks; i++ )
 							{
@@ -1360,7 +1360,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1381,7 +1381,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1403,7 +1403,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1423,7 +1423,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Tracks tmpTracks;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1434,7 +1434,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							if ( memcmp( &ModelBytes[ offset ], "KEVT", 4 ) == 0 )
 							{
 								offset += 4;
-								memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
+								std::memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
 								offset += sizeof( Mdx_Tracks );
 								for ( int n = 0; n < tmpTracks.NrOfTracks; n++ )
 								{
@@ -1453,7 +1453,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1574,7 +1574,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-			memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+			std::memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
 
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
@@ -1642,9 +1642,9 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			ResultBuffer.length = tmpih->size + FullPatchData.size( );
 
-			memcpy( &ResultBuffer.buf[ 0 ], tmpih->buf, sz );
+			std::memcpy( &ResultBuffer.buf[ 0 ], tmpih->buf, sz );
 
-			memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+			std::memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
 
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__,__LINE__ );
@@ -1669,8 +1669,8 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 #ifdef DOTA_HELPER_LOG
 			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-			memcpy( &ResultBuffer.buf[ 0 ], ModelBytes, sz );
-			memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+			std::memcpy( &ResultBuffer.buf[ 0 ], ModelBytes, sz );
+			std::memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
 
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
@@ -1782,7 +1782,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						while ( TexturesCount > 0 )
 						{
 							TexturesCount--;
-							memcpy( &tmpTexture, &ModelBytes[ offset ], sizeof( Mdx_Texture ) );
+							std::memcpy( &tmpTexture, &ModelBytes[ offset ], sizeof( Mdx_Texture ) );
 							TextureID++;
 
 							if ( mdlfix.TextureID == TextureID )
@@ -1797,7 +1797,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 									tmpTexture.ReplaceableId = atoi( mdlfix.NewTexturePath.c_str( ) );
 									memset( tmpTexture.FileName, 0, 260 );
 								}
-								memcpy( &ModelBytes[ offset ], &tmpTexture, sizeof( Mdx_Texture ) );
+								std::memcpy( &ModelBytes[ offset ], &tmpTexture, sizeof( Mdx_Texture ) );
 							}
 							offset += sizeof( Mdx_Texture );
 						}
@@ -1959,7 +1959,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 #ifdef DOTA_HELPER_LOG
 				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-				memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
+				std::memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
 
 				tmpih2.buf = ResultBuffer.buf;
 				tmpih2.size = ResultBuffer.length;
@@ -2211,3 +2211,42 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 	BOOL ingame;
 	string filename;
 };*/
+
+std::string GetFileContent( std::string filename )
+{
+	std::ifstream t( filename  );
+	std::string str;
+
+	t.seekg( 0, std::ios::end );
+
+	if ( t.tellg( ) > NULL )
+	{
+		str.reserve( t.tellg( ) );
+		t.seekg( 0, std::ios::beg );
+
+		str.assign( ( std::istreambuf_iterator<char>( t ) ),
+			std::istreambuf_iterator<char>( ) );
+	}
+
+	return str;
+}
+
+
+std::vector<std::string> get_file_list( const fs::path & path, bool dotolower )
+{
+	std::vector<std::string> m_file_list;
+	if ( !path.empty( ) )
+	{
+		fs::path apk_path( path );
+		fs::recursive_directory_iterator end;
+
+		for ( fs::recursive_directory_iterator i( apk_path ); i != end; ++i )
+		{
+			const fs::path cp = ( *i );
+
+			m_file_list.push_back( dotolower ? ToLower( cp.string( ) ) : cp.string( ) );
+		}
+	}
+	return m_file_list;
+}
+

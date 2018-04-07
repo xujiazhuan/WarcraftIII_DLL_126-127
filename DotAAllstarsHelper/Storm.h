@@ -62,5 +62,5 @@ namespace Storm {
 	LANGID FileGetLocale( );
 
 	void Init( HMODULE module );
-	void Cleanup( );
+	void FreeAllMemory( );
 }

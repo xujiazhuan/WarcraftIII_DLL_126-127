@@ -29,8 +29,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\dx_includes\;</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\dx_includes\;</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\includes\;</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\includes\;</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
@@ -136,6 +136,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\DotAAllstarsHelper\base64.h" />
     <ClInclude Include="..\DotAAllstarsHelper\BlpReadWrite.h" />
     <ClInclude Include="..\DotAAllstarsHelper\buffer.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Common.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
     <ClInclude Include="..\DotAAllstarsHelper\MegaPacketHandler.h" />
     <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\RawImageApi.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Storm.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Structures.h" />
     <ClInclude Include="..\DotAAllstarsHelper\ViewAllySkill.h" />

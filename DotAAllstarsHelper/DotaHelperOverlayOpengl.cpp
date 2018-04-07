@@ -55,8 +55,11 @@ void DrawAllRawImages( )
 
 
 		StormBuffer tmpBuf = StormBuffer( );
+#ifdef OLD_CODE
 		tmpBuf.Clone( img.img );
-
+#else 
+		 
+#endif
 
 		if ( img.MoveTime1 )
 		{
@@ -194,7 +197,8 @@ void DrawOverlayGl( )
 void UninitOpenglHook( )
 {
 	if ( wglSwapLayerBuffers_org )
-	MH_DisableHook( wglSwapLayerBuffers_org );
+		MH_DisableHook( wglSwapLayerBuffers_org );
+	wglSwapLayerBuffers_org = NULL;
 }
 
 //

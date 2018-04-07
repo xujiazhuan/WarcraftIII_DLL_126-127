@@ -15,43 +15,44 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Source.def">
+      <Filter>Src</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DotAAllstarsHelper688.rc">
+      <Filter>Файлы ресурсов</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BlpReadWrite.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
     <ClCompile Include="Crc32Dynamic.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaWebHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="UnitAndItem.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaAllstarsHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaHPBarHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaPlayerHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaMPBarHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaViewAllySkill.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaClickHelper.cpp">
+    <ClCompile Include="DotaAutoFPSlimit.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaChatHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
+    <ClCompile Include="DotaClickHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaCustomFrames.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaCustomMinimap.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaDebugHelpers.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
     <ClCompile Include="DotaErrorHandler.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="quantizer.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="hash_64.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaFilesHelper.cpp">
@@ -60,10 +61,7 @@
     <ClCompile Include="DotaFOVfix.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaAutoFPSlimit.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaCustomFrames.cpp">
+    <ClCompile Include="DotaFrameDefHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaHelperOverlayDirectx8.cpp">
@@ -75,110 +73,118 @@
     <ClCompile Include="DotaHelperOverlayOpengl.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaRawImagesDrawApi.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaMemoryHackHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaSyncScanner.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="Storm.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DotaFrameDefHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="WarcraftFrameHelper.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="BlpReadWrite.cpp">
+    <ClCompile Include="DotaHPBarHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaHttpHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="MegaPacketHandler.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="DoteNewDebugSystem.cpp">
+    <ClCompile Include="DotaMemoryHackHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="DotaMinimapHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaDebugHelpers.cpp">
+    <ClCompile Include="DotaMPBarHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="DotaCustomMinimap.cpp">
+    <ClCompile Include="DotaPlayerHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaRawImagesDrawApi.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaSyncScanner.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaViewAllySkill.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DotaWebHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="DoteNewDebugSystem.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="hash_64.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="MegaPacketHandler.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="quantizer.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="Storm.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitAndItem.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="WarcraftFrameHelper.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Source.def">
-      <Filter>Src</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
+    <ClInclude Include="base64.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="BlpReadWrite.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="buffer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
     <ClInclude Include="Common.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Crc32Dynamic.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Main.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ViewAllySkill.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="buffer.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="fnv.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="longlong.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="quantizer.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="HttpClass.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Structures.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Storm.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="FunctionTemplate.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="fp_call.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="WarcraftFrameHelper.h">
+    <ClInclude Include="FunctionTemplate.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="BlpReadWrite.h">
+    <ClInclude Include="HttpClass.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="WinHttpClient.h">
+    <ClInclude Include="longlong.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="MegaPacketHandler.h">
       <Filter>Headers</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="DotAAllstarsHelper688.rc">
-      <Filter>Файлы ресурсов</Filter>
-    </ResourceCompile>
+    <ClInclude Include="quantizer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="RawImageApi.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Storm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Structures.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewAllySkill.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WarcraftFrameHelper.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="WinHttpClient.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
