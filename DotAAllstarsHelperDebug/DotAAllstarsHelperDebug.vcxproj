@@ -10,7 +10,7 @@
     <ProjectGuid>{D89981A7-1DB5-43F9-9C0D-185750FCC7EB}</ProjectGuid>
     <RootNamespace>DotAAllstarsHelper</RootNamespace>
     <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
-    <ProjectName>DotAAllstarsHelper688j_debug</ProjectName>
+    <ProjectName>DotAAllstarsHelper688v_debug</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -29,8 +29,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\dx_includes\;</LibraryPath>
-    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\dx_includes\;</IncludePath>
+    <LibraryPath>.\..\MinHook;$(LibraryPath);.\..\JPEG\;.\..\includes\;</LibraryPath>
+    <IncludePath>.\..\MinHook;$(IncludePath);.\..\JPEG\;.\..\includes\;</IncludePath>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <IgnoreImportLibrary>
@@ -110,6 +110,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaChatHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaClickHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaCustomFrames.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaDebugHelpers.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaErrorHandler.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFilesHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaFOVfix.cpp" />
@@ -118,7 +119,9 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayDirectx9.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHelperOverlayOpengl.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaHPBarHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHttpHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaMemoryHackHelper.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\DotaMinimapHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaMPBarHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaPlayerHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaRawImagesDrawApi.cpp" />
@@ -126,14 +129,14 @@
     <ClCompile Include="..\DotAAllstarsHelper\DotaViewAllySkill.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\DotaWebHelper.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp" />
-    <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp" />
+    <ClCompile Include="..\DotAAllstarsHelper\MegaPacketHandler.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp" />
-    <ClCompile Include="..\DotAAllstarsHelper\SendGamePacket.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\Storm.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp" />
     <ClCompile Include="..\DotAAllstarsHelper\WarcraftFrameHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\DotAAllstarsHelper\base64.h" />
     <ClInclude Include="..\DotAAllstarsHelper\BlpReadWrite.h" />
     <ClInclude Include="..\DotAAllstarsHelper\buffer.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Common.h" />
@@ -144,7 +147,9 @@
     <ClInclude Include="..\DotAAllstarsHelper\HttpClass.h" />
     <ClInclude Include="..\DotAAllstarsHelper\longlong.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Main.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\MegaPacketHandler.h" />
     <ClInclude Include="..\DotAAllstarsHelper\quantizer.h" />
+    <ClInclude Include="..\DotAAllstarsHelper\RawImageApi.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Storm.h" />
     <ClInclude Include="..\DotAAllstarsHelper\Structures.h" />
     <ClInclude Include="..\DotAAllstarsHelper\ViewAllySkill.h" />

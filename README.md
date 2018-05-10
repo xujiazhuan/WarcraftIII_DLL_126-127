@@ -94,6 +94,12 @@ int __stdcall RawImage_Resize( int RawImage, int newwidth, int newheight )
 // Рисует RawImage по заданным координатам (от 0.0 до 1.0) в игре. Можно установить размер (от 0.0 до 1.0).
 // Draw RawImage as overlay ingame. xsize / ysize not working in this version (use 0.0)
 int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, float ypos, float xsize, float ysize )
+int __stdcall RawImage_EnableOverlay( unsigned int RawImage, BOOL enabled )
+int __stdcall RawImage_MoveTimed( unsigned int RawImage, float x2, float y2, unsigned int Time1, unsigned int Time2, unsigned int SleepTime )
+int __stdcall RawImage_SetPacketCallback( unsigned int RawImage, BOOL enable, unsigned int events )
+int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
+int __stdcall RawImage_IsBtn( unsigned int RawImage, BOOL enabled )
+
 ```
 "Example result:"
 ![RawImage Draw API](/Images/DrawRawImageApi.png?raw=true "You can see result of using experimental Draw API")
@@ -120,9 +126,20 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	integer pCFrame_SetRelativePosition = 0 
 	integer pCFrame_Destroy = 0 
 	integer pCFrame_AddCallack = 0 
+	integer pCFrame_AddCallackPacket = 0 
 	integer pCFrame_Enable = 0
 	integer pCFrame_IsEnabled = 0
 	integer pCFrame_GetFrameAddress = 0
+	integer pCFrame_StartCustomAnimate = 0
+	integer	pCFrame_SetCustomAnimateOffset = 0
+	integer	pCFrame_StopCustomAnimate = 0
+	integer pCFrame_SetScale = 0
+	integer pCFrame_Show = 0
+	
+	integer CFrameBackType_ControlFrame = 0
+	integer CFrameBackType_ControlBackdrop = 1
+	integer CFrameBackType_ControlPushedBackdrop = 2
+	integer CFrameBackType_ControlDisabledBackdrop = 3
 
 	integer	CFramePosition_TOP_LEFT = 0
 	integer	CFramePosition_TOP_CENTER = 1
@@ -142,7 +159,9 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	integer	FRAMETYPE_BUTTON = 5
 	integer	FRAMETYPE_TEXTBUTTON = 6
 	integer	FRAMETYPE_SPRITE = 7
-
+	integer	FRAMETYPE_HIGHLIGHT = 8
+	integer	FRAMETYPE_SCROLLBAR = 9
+	integer	FRAMETYPE_MODEL = 10
 
 	integer FRAME_EVENT_PRESSED = 1
 	integer FRAME_MOUSE_ENTER = 2
@@ -155,6 +174,11 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 	integer FRAME_CHECKBOX_CHECKED = 7
 	integer FRAME_CHECKBOX_UNCHECKED = 8
 	integer FRAME_EDITBOX_TEXT_CHANGED = 9
+	integer FRAME_POPUPMENU_ITEM_CHANGE_START = 10
+	integer FRAME_POPUPMENU_ITEM_CHANGED = 11
+	integer FRAME_MOUSE_DOUBLECLICK = 12
+	integer FRAME_SPRITE_ANIM_UPDATE = 13
+	
 ```		
 
 #endglobals
@@ -163,12 +187,13 @@ int __stdcall RawImage_DrawOverlay( int RawImage, BOOL enabled, float xpos, floa
 
 ```
 
+
 function CFrame_GetLastEventId takes nothing returns integer
 	if pCFrame_GetLastEventId == 0 then
 		set pCFrame_GetLastEventId = GetModuleProcAddress(EXTRADLLNAME, "CFrame_GetLastEventId")
 	endif
 	if pCFrame_GetLastEventId != 0 then 
-		return CallStdcallWith1Args(pCFrame_GetLastEventId,0)
+		return CallStdCallWith1Args(pCFrame_GetLastEventId,0)
 	endif
 	return 0
 endfunction
@@ -178,27 +203,27 @@ function CFrame_GetTriggerCFrame takes nothing returns integer
 		set pCFrame_GetTriggerCFrame = GetModuleProcAddress(EXTRADLLNAME, "CFrame_GetTriggerCFrame")
 	endif
 	if pCFrame_GetTriggerCFrame != 0 then 
-		return CallStdcallWith1Args(pCFrame_GetTriggerCFrame,0)
+		return CallStdCallWith1Args(pCFrame_GetTriggerCFrame,0)
 	endif
 	return 0
 endfunction
 
-function CFrame_GetCustomValue takes integer pCframe returns integer
+function CFrame_GetCustomValue takes integer pCframe, integer ValueID returns integer
 	if pCFrame_GetCustomValue == 0 then
 		set pCFrame_GetCustomValue = GetModuleProcAddress(EXTRADLLNAME, "CFrame_GetCustomValue")
 	endif
 	if pCFrame_GetCustomValue != 0 then 
-		return CallStdcallWith1Args(pCFrame_GetCustomValue,pCframe)
+		return CallStdCallWith2Args(pCFrame_GetCustomValue,pCframe,ValueID)
 	endif
-	return 0
+	return 0	
 endfunction
 
-function CFrame_SetCustomValue takes integer pCframe, integer customval returns nothing
+function CFrame_SetCustomValue takes integer pCframe, integer ValueID, integer customval returns nothing
 	if pCFrame_SetCustomValue == 0 then
 		set pCFrame_SetCustomValue = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetCustomValue")
 	endif
 	if pCFrame_SetCustomValue != 0 then 
-		call CallStdcallWith2Args(pCFrame_SetCustomValue,pCframe,customval)
+		call CallStdCallWith3Args(pCFrame_SetCustomValue,pCframe,ValueID,customval)
 	endif
 endfunction
 
@@ -207,7 +232,7 @@ function CFrame_LoadFramesListFile takes string filepath, boolean reload returns
 		set pCFrame_LoadFramesListFile = GetModuleProcAddress(EXTRADLLNAME, "CFrame_LoadFramesListFile")
 	endif
 	if pCFrame_LoadFramesListFile != 0 then 
-		call CallStdcallWith2Args(pCFrame_LoadFramesListFile,GetStringAddress(filepath),B2I(reload))
+		call CallStdCallWith2Args(pCFrame_LoadFramesListFile,GetStringAddress(filepath),B2I(reload))
 	endif
 endfunction
 
@@ -216,7 +241,7 @@ function CFrame_CreateNewFrame takes string framename, integer relativeframe, bo
 		set pCFrame_CreateNewFrame = GetModuleProcAddress(EXTRADLLNAME, "CFrame_CreateNewFrame")
 	endif
 	if pCFrame_CreateNewFrame != 0 then 
-		return CallStdcallWith4Args(pCFrame_CreateNewFrame,GetStringAddress(framename),relativeframe,B2I(show),frameid)
+		return CallStdCallWith4Args(pCFrame_CreateNewFrame,GetStringAddress(framename),relativeframe,B2I(show),frameid)
 	endif
 	return 0
 endfunction
@@ -226,7 +251,7 @@ function CFrame_LoadFrame takes string framename, integer frameid returns intege
 		set pCFrame_LoadFrame = GetModuleProcAddress(EXTRADLLNAME, "CFrame_LoadFrame")
 	endif
 	if pCFrame_LoadFrame != 0 then 
-		return CallStdcallWith2Args(pCFrame_LoadFrame,GetStringAddress(framename),frameid)
+		return CallStdCallWith2Args(pCFrame_LoadFrame,GetStringAddress(framename),frameid)
 	endif
 	return 0
 endfunction
@@ -236,9 +261,7 @@ function CFrame_SetFrameType takes integer pCframe, integer frametype returns no
 		set pCFrame_SetFrameType = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetFrameType")
 	endif
 	if pCFrame_SetFrameType != 0 then 
-		call CallStdcallWith2Args(pCFrame_SetFrameType,pCframe,frametype)
-	else 
-		call echo("CFrame_SetFrameType not found")
+		call CallStdCallWith2Args(pCFrame_SetFrameType,pCframe,frametype)
 	endif
 endfunction
 
@@ -247,7 +270,7 @@ function CFrame_SetFrameModel takes integer pCframe, string modelpath returns no
 		set pCFrame_SetFrameModel = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetFrameModel")
 	endif
 	if pCFrame_SetFrameModel != 0 then 
-		call CallStdcallWith2Args(pCFrame_SetFrameModel,pCframe,GetStringAddress(modelpath))
+		call CallStdCallWith2Args(pCFrame_SetFrameModel,pCframe,GetStringAddress(modelpath))
 	endif
 endfunction
 
@@ -256,7 +279,7 @@ function CFrame_SetFrameTexture takes integer pCframe, string texturepath, strin
 		set pCFrame_SetFrameTexture = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetFrameTexture")
 	endif
 	if pCFrame_SetFrameTexture != 0 then 
-		call CallStdcallWith4Args(pCFrame_SetFrameTexture,pCframe,GetStringAddress(texturepath),GetStringAddress(borderpath),B2I(tiled) )
+		call CallStdCallWith4Args(pCFrame_SetFrameTexture,pCframe,GetStringAddress(texturepath),GetStringAddress(borderpath),B2I(tiled) )
 	endif
 endfunction
 
@@ -265,9 +288,7 @@ function CFrame_SetFrameText takes integer pCframe, string text returns nothing
 		set pCFrame_SetFrameText = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetFrameText")
 	endif
 	if pCFrame_SetFrameText != 0 then 
-		call CallStdcallWith2Args(pCFrame_SetFrameText,pCframe,GetStringAddress(text))
-	else 
-		call echo("CFrame_SetFrameText not found")
+		call CallStdCallWith2Args(pCFrame_SetFrameText,pCframe,GetStringAddress(text))
 	endif
 endfunction
 
@@ -276,7 +297,7 @@ function CFrame_SetAbsolutePosition takes integer pCframe, integer origpos, real
 		set pCFrame_SetAbsolutePosition = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetAbsolutePosition")
 	endif
 	if pCFrame_SetAbsolutePosition != 0 then 
-		call CallStdcallWith4Args(pCFrame_SetAbsolutePosition,pCframe,origpos,mR2I(AbsoluteX),mR2I(AbsoluteY))
+		call CallStdCallWith4Args(pCFrame_SetAbsolutePosition,pCframe,origpos,mR2I(AbsoluteX),mR2I(AbsoluteY))
 	endif
 endfunction
 
@@ -285,7 +306,7 @@ function CFrame_SetRelativePosition takes integer pCframe, integer origpos, inte
 		set pCFrame_SetRelativePosition = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetRelativePosition")
 	endif
 	if pCFrame_SetRelativePosition != 0 then 
-		call CallStdcallWith6Args(pCFrame_SetRelativePosition,pCframe,origpos,relativeframeaddr,dstpos, mR2I(RelativeX),mR2I(RelativeY))
+		call CallStdCallWith6Args(pCFrame_SetRelativePosition,pCframe,origpos,relativeframeaddr,dstpos, mR2I(RelativeX),mR2I(RelativeY))
 	endif
 endfunction
 
@@ -294,7 +315,7 @@ function CFrame_Destroy takes integer pCframe returns nothing
 		set pCFrame_Destroy = GetModuleProcAddress(EXTRADLLNAME, "CFrame_Destroy")
 	endif
 	if pCFrame_Destroy != 0 then 
-		call CallStdcallWith1Args(pCFrame_Destroy,pCframe)
+		call CallStdCallWith1Args(pCFrame_Destroy,pCframe)
 	endif
 endfunction
 
@@ -303,7 +324,16 @@ function CFrame_AddCallack takes integer pCframe, string callbackfuncname, integ
 		set pCFrame_AddCallack = GetModuleProcAddress(EXTRADLLNAME, "CFrame_AddCallack")
 	endif
 	if pCFrame_AddCallack != 0 then 
-		call CallStdcallWith4Args(pCFrame_AddCallack,pCframe,GetStringAddress(callbackfuncname),callbackeventid,0)
+		call CallStdCallWith4Args(pCFrame_AddCallack,pCframe,GetStringAddress(callbackfuncname),callbackeventid,0)
+	endif
+endfunction
+
+function CFrame_AddCallackPacket takes integer pCframe, integer framecode, integer callbackeventid returns nothing
+	if pCFrame_AddCallackPacket == 0 then
+		set pCFrame_AddCallackPacket = GetModuleProcAddress(EXTRADLLNAME, "CFrame_AddCallackPacket")
+	endif
+	if pCFrame_AddCallackPacket != 0 then 
+		call CallStdCallWith4Args(pCFrame_AddCallackPacket,pCframe,framecode,callbackeventid,0)
 	endif
 endfunction
 
@@ -312,7 +342,7 @@ function CFrame_Enable takes integer pCframe, boolean enabled returns nothing
 		set pCFrame_Enable = GetModuleProcAddress(EXTRADLLNAME, "CFrame_Enable")
 	endif
 	if pCFrame_Enable != 0 then 
-		call CallStdcallWith2Args(pCFrame_Enable,pCframe,B2I(enabled))
+		call CallStdCallWith2Args(pCFrame_Enable,pCframe,B2I(enabled))
 	endif
 endfunction
 
@@ -322,7 +352,7 @@ function CFrame_IsEnabled takes integer pCframe returns boolean
 		set pCFrame_IsEnabled = GetModuleProcAddress(EXTRADLLNAME, "CFrame_IsEnabled")
 	endif
 	if pCFrame_IsEnabled != 0 then 
-		return I2B(CallStdcallWith1Args(pCFrame_IsEnabled,pCframe))
+		return I2B(CallStdCallWith1Args(pCFrame_IsEnabled,pCframe))
 	endif
 	return false
 endfunction
@@ -333,11 +363,56 @@ function CFrame_GetFrameAddress takes integer pCframe returns integer
 		set pCFrame_GetFrameAddress = GetModuleProcAddress(EXTRADLLNAME, "CFrame_GetFrameAddress")
 	endif
 	if pCFrame_GetFrameAddress != 0 then 
-		return CallStdcallWith1Args(pCFrame_GetFrameAddress,pCframe)
+		return CallStdCallWith1Args(pCFrame_GetFrameAddress,pCframe)
 	endif
 	return 0
 endfunction
 
+function CFrame_StartCustomAnimate takes integer frame,integer anim_id returns nothing
+	if pCFrame_StartCustomAnimate == 0 then
+		set pCFrame_StartCustomAnimate = GetModuleProcAddress(EXTRADLLNAME, "CFrame_StartCustomAnimate")
+	endif
+	if pCFrame_StartCustomAnimate != 0 then 
+		call CallStdCallWith2Args(pCFrame_StartCustomAnimate,pCframe,anim_id)//  0 = anim_id ?
+	endif
+endfunction
+
+function CFrame_StopCustomAnimate takes integer pCframe returns nothing
+	if pCFrame_StopCustomAnimate == 0 then
+		set pCFrame_StopCustomAnimate = GetModuleProcAddress(EXTRADLLNAME, "CFrame_StopCustomAnimate")
+	endif
+	if pCFrame_StopCustomAnimate != 0 then 
+		call CallStdCallWith1Args(pCFrame_StopCustomAnimate,pCframe)
+	endif
+endfunction
+
+function CFrame_SetCustomAnimateOffset takes integer pCframe, real anim_offset returns nothing
+	if pCFrame_SetCustomAnimateOffset == 0 then
+		set pCFrame_SetCustomAnimateOffset = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetCustomAnimateOffset")
+	endif
+	if pCFrame_SetCustomAnimateOffset != 0 then 
+		call CallStdCallWith2Args(pCFrame_SetCustomAnimateOffset,pCframe,mR2I(anim_offset))
+	endif
+endfunction
+
+function CFrame_SetScale takes integer pCframe, integer backtype, boolean filltoparentframe, real scalex,real scaley returns nothing
+	if pCFrame_SetScale == 0 then
+		set pCFrame_SetScale = GetModuleProcAddress(EXTRADLLNAME, "CFrame_SetScale")
+	endif
+	if pCFrame_SetScale != 0 then 
+		call CallStdCallWith5Args(pCFrame_SetScale,pCframe,backtype, B2I(filltoparentframe),mR2I(scalex),mR2I(scaley) )
+	endif
+endfunction
+
+
+function CFrame_Show takes integer pCframe,boolean show returns nothing
+	if ( pCFrame_Show == 0 ) then
+		set pCFrame_Show = GetModuleProcAddress(EXTRADLLNAME, "CFrame_Show")
+	endif
+	if ( pCFrame_Show != 0 ) then
+		call CallStdCallWith2Args(pCFrame_Show , pCframe , B2I(show))
+	endif
+endfunction
 
 
 function CFrameTestCallback takes nothing returns nothing
@@ -352,8 +427,6 @@ function CFrameTestCallback takes nothing returns nothing
 		call echo("Event id:" + Int2Hex(frameeventid) + ". Frame:" + Int2Hex(eventframe) + ". Flags:" +  Int2Hex( RMem( CFrame_GetFrameAddress(eventframe) + 0x1D4) ))
 	endif
 	
-	
-	
 endfunction
 		
 function CFrameTest takes nothing returns nothing
@@ -363,18 +436,202 @@ function CFrameTest takes nothing returns nothing
 	call CFrame_SetAbsolutePosition(glyphframe, CFramePosition_BOTTOM_LEFT, 0.155, 0.006  )
 	set glyphframe = CFrame_LoadFrame("GlyphItemButton",0)
 	
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EVENT_PRESSED)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_ENTER)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_LEAVE)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_UP)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_DOWN)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_WHEEL)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_CHECKED)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_UNCHECKED)
-	call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EDITBOX_TEXT_CHANGED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EVENT_PRESSED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_ENTER)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_LEAVE)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_UP)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_DOWN)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_MOUSE_WHEEL)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_CHECKED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_CHECKBOX_UNCHECKED)
+	//call CFrame_AddCallack(glyphframe,"CFrameTestCallback",FRAME_EDITBOX_TEXT_CHANGED)
+	
+	
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_EVENT_PRESSED)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_UP)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_DOWN)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_ENTER)
+	call CFrame_AddCallackPacket(glyphframe,'GLPH',FRAME_MOUSE_LEAVE)
+	
 	
 	call CFrame_SetFrameType(glyphframe,FRAMETYPE_BUTTON)
 	call CFrame_SetFrameText(glyphframe,"Clicked 0 times")
 endfunction
+
 ```
 #endcode
+
+
+
+
+# Packet API update! (for sync any data)
+
+# globals 
+```
+
+		
+	constant integer Packet_RawImageCode = 'IIMG'
+	constant integer Packet_KeyEventCode = 'IKEY'
+	constant integer Packet_CFrameEventCode = 'FRAM'
+
+	integer pPacket_Clear = 0
+	integer pPacket_Initialize = 0
+	integer pPacket_PushInteger = 0
+	integer pPacket_PopInteger = 0
+	integer pPacket_PushReal = 0
+	integer pPacket_PopReal = 0
+	integer pPacket_Send = 0
+	integer pPacket_GetTriggerPlayerId = 0
+
+
+```
+# endglobals 
+
+
+# code 
+```
+
+function Packet_Clear takes nothing returns integer
+	if pPacket_Clear == 0 then
+		set pPacket_Clear = GetModuleProcAddress(EXTRADLLNAME, "Packet_Clear")
+	endif
+	if pPacket_Clear != 0 then
+		return CallStdCallWith1Args(pPacket_Clear,0)
+	endif
+	return 0
+endfunction
+
+function Packet_Initialize takes integer pTriggerHandle returns integer
+	if pPacket_Initialize == 0 then
+		set pPacket_Initialize = GetModuleProcAddress(EXTRADLLNAME, "Packet_Initialize")
+	endif
+	if pPacket_Initialize != 0 then
+		return CallStdCallWith1Args(pPacket_Initialize,pTriggerHandle)
+	endif
+	return 0
+endfunction
+
+function Packet_PushInteger takes integer i returns integer
+	if pPacket_PushInteger == 0 then
+		set pPacket_PushInteger = GetModuleProcAddress(EXTRADLLNAME, "Packet_PushInteger")
+	endif
+	if pPacket_PushInteger != 0 then
+		return CallStdCallWith1Args(pPacket_PushInteger,i)
+	endif
+	return 0
+endfunction
+
+function Packet_PopInteger takes nothing returns integer
+	if pPacket_PopInteger == 0 then
+		set pPacket_PopInteger = GetModuleProcAddress(EXTRADLLNAME, "Packet_PopInteger")
+	endif
+	if pPacket_PopInteger != 0 then
+		return CallStdCallWith1Args(pPacket_PopInteger,0)
+	endif
+	return 0
+endfunction
+
+function Packet_PushReal takes real i returns integer
+	if pPacket_PushReal == 0 then
+		set pPacket_PushReal = GetModuleProcAddress(EXTRADLLNAME, "Packet_PushReal")
+	endif
+	if pPacket_PushReal != 0 then
+		return CallStdCallWith1Args(pPacket_PushReal,mR2I(i))
+	endif
+	return 0
+endfunction
+
+function Packet_PopReal takes nothing returns real
+	local real r = 0.0
+	local integer i = 0
+	if pPacket_PopReal == 0 then
+		set pPacket_PopReal = GetModuleProcAddress(EXTRADLLNAME, "Packet_PopReal")
+	endif
+	if pPacket_PopReal != 0 then
+		return mI2R(CallStdCallWith1Args(pPacket_PopReal,0))
+	endif
+	return r
+endfunction
+
+function Packet_Send takes nothing returns integer
+	if pPacket_Send == 0 then
+		set pPacket_Send = GetModuleProcAddress(EXTRADLLNAME, "Packet_Send")
+	endif
+	if pPacket_Send != 0 then
+		return CallStdCallWith1Args(pPacket_Send,0)
+	endif
+	return 0
+endfunction
+
+function Packet_GetTriggerPlayerId takes nothing returns integer
+	if pPacket_GetTriggerPlayerId == 0 then
+		set pPacket_GetTriggerPlayerId = GetModuleProcAddress(EXTRADLLNAME, "Packet_GetTriggerPlayerId")
+	endif
+	if pPacket_GetTriggerPlayerId != 0 then
+		return CallStdCallWith1Args(pPacket_GetTriggerPlayerId,0)
+	endif
+	return 0
+endfunction
+
+function Packet_TestRecv takes nothing returns nothing 
+	local integer PacketType = Packet_PopInteger( )
+	local integer PacketValueInteger = Packet_PopInteger( )
+	local real PacketValueReal = Packet_PopReal( )
+	local real PacketValueReal2 = Packet_PopReal( )
+	call echo("Packet type:" + Int2Hex(PacketType) + ". Packet integer value:" + I2S(PacketValueInteger) + ". Packet real value:" + R2S(PacketValueReal) + ". Packet real value2:" + R2S(PacketValueReal2) + ". Trigger Player:" + Int2Hex(Packet_GetTriggerPlayerId( )) )
+endfunction
+
+function Packet_TestRecv2 takes nothing returns nothing 
+	local integer PacketType = Packet_PopInteger( )
+	local integer p = Packet_GetTriggerPlayerId( )
+	if (PacketType == Packet_KeyEventCode) then 
+		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". Message:" + I2S(Packet_PopInteger( ))+ ". KeyCode:" + I2S(Packet_PopInteger( )))
+	endif 
+	if (PacketType == Packet_CFrameEventCode) then 
+		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". Frame code:" + I2S(Packet_PopInteger( ))+ ". Event:" + I2S(Packet_PopInteger( )) + ". CTRL:" + I2S(Packet_PopInteger( )) + ". ALT:" + I2S(Packet_PopInteger( )) + ". LEFT MOUSE:" + I2S(Packet_PopInteger( )) + ". RIGHT MOUSE:" + I2S(Packet_PopInteger( )) + ". MIDLE MOUSE:" + I2S(Packet_PopInteger( )))
+	endif 
+	if (PacketType == Packet_RawImageCode) then 
+		call echo("Packet_KeyEventCode: Player:" + I2S(p) + ". Player(duplicate):" + I2S(Packet_PopInteger( )) + ". RawImageId:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". mouse x/y:" + R2S(Packet_PopReal( )) + "/" + R2S(Packet_PopReal( ))+ ". Alt:" + I2S(Packet_PopInteger( ))+ ". Ctrl:" + I2S(Packet_PopInteger( ))+ ". LeftBtn:" + I2S(Packet_PopInteger( ))+ ". EventType:" + I2S(Packet_PopInteger( ))+ ". OffsetX:" + I2S(Packet_PopInteger( ))+ ". OffsetY:" + I2S(Packet_PopInteger( ))+ ". ImageID:" + I2S(Packet_PopInteger( )))
+	endif 
+endfunction
+
+
+function Packet_TestSend takes nothing returns nothing 
+	local integer maxpackets = 20
+	loop 
+	call echo("Packet clear:")
+	call Packet_Clear( )
+	call echo("Packet push packettype(just integer)")
+	call Packet_PushInteger(0x12345678)
+	call echo("Packet push integer")
+	call Packet_PushInteger(maxpackets)
+	call echo("Packet push real")
+	call Packet_PushReal(1234.56)
+	call echo("Packet push real")
+	call Packet_PushReal(1234.56)
+	call echo("Packet send ")
+	call Packet_Send( )
+	call echo("Packet send ok")
+	exitwhen ( maxpackets <= 0 )
+	set maxpackets = maxpackets - 1
+	endloop
+endfunction
+
+function Packet_TestInitialize takes nothing returns nothing
+	// global code
+	local trigger t =CreateTrigger()
+	//call TriggerAddAction(t,function Packet_TestRecv)
+	call TriggerAddAction(t,function Packet_TestRecv2)
+	call Packet_Initialize(GetHandleId(t))
+	set t = null
+	
+	// local send
+	//call Packet_TestSend( )
+	call FuncTriggerRegisterPlayerKeyboardEvent('0')
+	call CFrameTest( )
+endfunction
+
+
+
+```
+# endcode 

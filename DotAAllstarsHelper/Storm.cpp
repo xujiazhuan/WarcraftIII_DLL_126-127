@@ -9,7 +9,7 @@ namespace Storm {
 
 	struct StormLeakHelper
 	{
-		void * mem;
+		void * memaddr;
 		int retaddr;
 	};
 
@@ -30,6 +30,16 @@ namespace Storm {
 	void* AddrFileReadFile;
 	void* AddrFileCloseFile;
 	void* AddrFileGetLocale;
+
+	void FreeAllMemory( )
+	{
+		for ( auto s : LeakHelperList )
+		{
+			if ( s.memaddr != NULL )
+				Storm::MemFree( s.memaddr );
+		}
+		LeakHelperList.clear( );
+	}
 
 	void Init( HMODULE module ) {
 #ifdef DOTA_HELPER_LOG
@@ -55,13 +65,9 @@ namespace Storm {
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 #endif
-	}
+}
 
-	void Cleanup( ) {
 
-	}
-
-	
 	//294	SFileGetLocale() 
 	LANGID FileGetLocale( ) {
 #ifdef DOTA_HELPER_LOG
@@ -77,28 +83,27 @@ namespace Storm {
 
 	//TODO Debug版本加上调试信息
 	void* MemAlloc( uint32_t size ) {
-
-
-
-#ifdef DOTA_HELPER_LOG
 		auto retaddr = _ReturnAddress( );
 		StormLeakHelper tmpleak = StormLeakHelper( );
 		tmpleak.retaddr = ( int )retaddr;
 
 		if ( !StormAvailable )
 			MessageBoxA( 0, "Storm not initialized", "Error1", 0 );
-#endif
+
 		void * retval = aero::generic_std_call<void*>(
 			AddrMemAlloc,
 			size,
-			"",
-			0,
+			"DotaMem",
+			1,
 			0
 			);
-#ifdef DOTA_HELPER_LOG
-		tmpleak.mem = retaddr;
+		if ( !retval )
+			MessageBoxA( 0, "Storm error. No memory!", "Fatal error", 0 );
+
+
+		tmpleak.memaddr = retval;
 		LeakHelperList.push_back( tmpleak );
-#endif
+
 		return retval;
 	}
 
@@ -106,46 +111,73 @@ namespace Storm {
 	{
 		std::string outleaks;
 		char tmps[ 50 ];
-	
+
 		for ( auto s : LeakHelperList )
 		{
-			sprintf_s( tmps, "%X:%X\r\n", s.retaddr, s.mem );
+			sprintf_s( tmps, "%X:%X\r\n", ( unsigned int )s.retaddr, ( unsigned int )s.memaddr );
 			outleaks = outleaks + tmps;
 		}
-		MessageBoxA( 0, outleaks.c_str( ), "Leaks:", 0 );
+		MessageBoxA( 0, outleaks.c_str( ), ( to_string( LeakHelperList.size( ) ) + " leak found!" ).c_str( ), 0 );
 	}
 
 	void* MemFree( void* addr ) {
+
+		if ( !addr || !NeedReleaseUnusedMemory )
+			return 0;
+
 		AllocationCount--;
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
-		for ( unsigned int  i = 0; i < LeakHelperList.size( ); i++ )
+#endif
+		bool FounMem = false;
+
+		for ( unsigned int i = 0; i < LeakHelperList.size( ); i++ )
 		{
-			if ( LeakHelperList[ i ].mem == addr )
+			if ( LeakHelperList[ i ].memaddr == addr )
 			{
 				LeakHelperList.erase( LeakHelperList.begin( ) + i );
+				FounMem = true;
 				break;
 			}
 		}
-#endif
-		
+
+
+
+		if ( !FounMem )
+		{
+			if ( SetInfoObjDebugVal )
+			{
+				//MessageBoxA( 0, " Tried to free unknown memory!", "Fatal4ik error!", 0 );
+				throw exception( "Fatal Error! Tried to free unknown memory!" );
+			}
+			//
+			return 0;
+		}
+
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );//( (__func__ + (string)". Addr:" + to_string((int)addr)).c_str( ), __LINE__ );
 
 
 		if ( !StormAvailable )
 			MessageBoxA( 0, "Storm not initialized", "Error1", 0 );
 #endif
+
+		if ( !addr )
+			return 0;
+
 		return aero::generic_std_call<void*>(
 			AddrMemFree,
 			addr,
-			"",
-			0,
+			"DotaMem",
+			1,
 			0
 			);
-	}
+		}
 
 	int MemGetSize( void* addr ) {
+		if ( !addr )
+			return 0;
+
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
 
@@ -156,27 +188,52 @@ namespace Storm {
 		return aero::generic_std_call<uint32_t>(
 			AddrMemGetSize,
 			addr,
-			"",
+			"DotaMem",
 			0
 			);
 	}
 
 	void* MemReAlloc( void* addr, uint32_t size ) {
+
+
+		auto retaddr = _ReturnAddress( );
+
+		if ( !addr || !size )
+			return 0;
+
 #ifdef DOTA_HELPER_LOG
 		AddNewLineToDotaHelperLog( __func__, __LINE__ );
-
+#endif
+		for ( unsigned int i = 0; i < LeakHelperList.size( ); i++ )
+		{
+			if ( LeakHelperList[ i ].memaddr == addr )
+			{
+				LeakHelperList.erase( LeakHelperList.begin( ) + i );
+				break;
+			}
+		}
 
 		if ( !StormAvailable )
 			MessageBoxA( 0, "Storm not initialized", "Error1", 0 );
-#endif
-		return aero::generic_std_call<void*>(
+
+
+		void * retval = aero::generic_std_call<void*>(
 			AddrMemReAlloc,
 			addr,
 			size,
-			"",
+			"DotaMem",
 			0,
 			0
 			);
+
+
+		StormLeakHelper tmpleak = StormLeakHelper( );
+		tmpleak.retaddr = ( int )retaddr;
+
+		tmpleak.memaddr = retval;
+		LeakHelperList.push_back( tmpleak );
+
+		return retval;
 	}
 
 	HANDLE FileOpenFileEx( HANDLE hMpq, const char *szFileName, uint32_t dwSearchScope, HANDLE *phFile ) {
@@ -234,7 +291,7 @@ namespace Storm {
 			);
 	}
 
-}
+	}
 
 /*
 #ifndef _DEBUG

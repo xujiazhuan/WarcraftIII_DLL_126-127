@@ -1,0 +1,32 @@
+﻿  pa_allocation.c
+  pa_converters.c
+  pa_cpuload.c
+  pa_debugprint.c
+  pa_dither.c
+  pa_front.c
+  pa_process.c
+  pa_ringbuffer.c
+  pa_stream.c
+  pa_trace.c
+  pa_win_ds.c
+  pa_win_ds_dynlink.c
+  pa_hostapi_skeleton.c
+  pa_win_wasapi.c
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\include\ksmedia.h(1383): warning C4091: typedef : пропускается слева от "", когда ни одна переменная не объявлена
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\include\ksmedia.h(4356): warning C4091: typedef : пропускается слева от "", когда ни одна переменная не объявлена
+  pa_win_wdmks.c
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\include\ksmedia.h(1383): warning C4091: typedef : пропускается слева от "", когда ни одна переменная не объявлена
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\include\ksmedia.h(4356): warning C4091: typedef : пропускается слева от "", когда ни одна переменная не объявлена
+  pa_win_wmme.c
+  pa_win_coinitialize.c
+  pa_win_hostapis.c
+  pa_win_util.c
+  pa_win_waveformat.c
+  Создание кода...
+  Компиляция...
+  pa_win_wdmks_utils.c
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\include\ksmedia.h(1383): warning C4091: typedef : пропускается слева от "", когда ни одна переменная не объявлена
+C:\Program Files (x86)\Microsoft SDKs\Windows\v7.1A\include\ksmedia.h(4356): warning C4091: typedef : пропускается слева от "", когда ни одна переменная не объявлена
+  pa_x86_plain_converters.c
+  Создание кода...
+  portaudio.vcxproj -> C:\Projects\ToolsProjects\ExampleViewAllySkillPanel\ExampleViewAllySkillPanel_src_backup\pa_snapshot\portaudio\build\msvc\Win32\ReleaseMinDependency\portaudio.lib

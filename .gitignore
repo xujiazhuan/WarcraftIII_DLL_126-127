@@ -1,0 +1,13 @@
+
+*.db
+*.opendb
+*.lock
+*.ide
+*.ide-shm
+*.ide-wal
+*.db-shm
+*.db-wal
+*.cache
+.vs/DotAAllstarsHelper/v15/.suo
+*.pdb
+*.map

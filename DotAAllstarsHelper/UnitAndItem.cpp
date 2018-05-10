@@ -11,12 +11,127 @@ int __stdcall GetUnitOwnerSlot( int unitaddr )
 }
 
 
+std::vector<int> GetUnitsFromGroup( int grouphandle )
+{
+	std::vector<int> localvector;
+
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( ( "int:" + to_string( grouphandle ) ).c_str( ) );
+	}
+
+	// Get group address
+	int GroupAddr = ConvertHandle( grouphandle );
+
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( ( "GroupAddr:" + to_string( GroupAddr ) ).c_str( ) );
+	}
+
+	if ( GroupAddr )
+	{
+
+		// Set group offset
+		GroupAddr += 0x24;
+		// Set group data
+		if ( SetInfoObjDebugVal )
+		{
+			PrintText( "Search units..." );
+		}
+		int GroupData = *( int* )( GroupAddr + 0xC );
+		GroupData = *( int* )( GroupAddr + 0xC );
+		while ( GroupData > 0 )
+		{
+
+			// Get unit 
+			int UnitAddr = *( int* )( GroupData + 0x8 );
+
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( ( "Found:" + to_string( UnitAddr ) ).c_str( ) );
+			}
+
+			// Get next data
+			GroupData = *( int* )( GroupData + 0x4 );
+
+			if ( UnitAddr > 0 && GetTypeId(UnitAddr) != 'H00J' && /* IsNotBadUnit( UnitAddr ) &&*/ IsHero( UnitAddr ) && !IsUnitIllusion( UnitAddr ) )
+				// save unit to list
+				localvector.push_back( UnitAddr );
+		}
+
+		GroupData = *( int* )( GroupAddr + 0xC );
+		while ( GroupData > 0 )
+		{
+
+			// Get unit 
+			int UnitAddr = *( int* )( GroupData + 0x8 );
+
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( ( "Found:" + to_string( UnitAddr ) ).c_str( ) );
+			}
+
+			// Get next data
+			GroupData = *( int* )( GroupData + 0x4 );
+
+			if ( UnitAddr > 0 &&/* IsNotBadUnit( UnitAddr ) &&*/ !IsHero( UnitAddr ) && !IsUnitIllusion( UnitAddr ) )
+				// save unit to list
+				localvector.push_back( UnitAddr );
+		}
+
+
+		GroupData = *( int* )( GroupAddr + 0xC );
+		while ( GroupData > 0 )
+		{
+
+			// Get unit 
+			int UnitAddr = *( int* )( GroupData + 0x8 );
+
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( ( "Found:" + to_string( UnitAddr ) ).c_str( ) );
+			}
+
+			// Get next data
+			GroupData = *( int* )( GroupData + 0x4 );
+
+			if ( UnitAddr > 0 /*&& IsNotBadUnit( UnitAddr ) &&* !IsHero( UnitAddr )*/ && GetTypeId( UnitAddr ) == 'H00J' )
+				// save unit to list
+				localvector.push_back( UnitAddr );
+		}
+
+		GroupData = *( int* )( GroupAddr + 0xC );
+		while ( GroupData > 0 )
+		{
+
+			// Get unit 
+			int UnitAddr = *( int* )( GroupData + 0x8 );
+
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( ( "Found:" + to_string( UnitAddr ) ).c_str( ) );
+			}
+
+			// Get next data
+			GroupData = *( int* )( GroupData + 0x4 );
+
+			if ( UnitAddr > 0 /*&& IsNotBadUnit( UnitAddr ) &&* !IsHero( UnitAddr )*/ && IsUnitIllusion( UnitAddr ) )
+				// save unit to list
+				localvector.push_back( UnitAddr );
+		}
+
+	}
+
+
+
+	return localvector;
+}
 
 // Является ли юнит героем
 BOOL __stdcall IsHero( int unitaddr )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 	if ( unitaddr > 0 )
 	{
@@ -48,14 +163,14 @@ BOOL __stdcall IsUnitInvulnerable( int unitaddr )
 
 BOOL __stdcall IsUnitIllusion( int unitaddr )
 {
-   return ( *( unsigned int* )( unitaddr + 0x5C ) & 0x40000000 );
+	return ( *( unsigned int* )( unitaddr + 0x5C ) & 0x40000000 );
 }
 
 // Проверяет юнит или не юнит
 BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 	if ( unitaddr > 0 )
 	{
@@ -73,11 +188,17 @@ BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 		unsigned int x1 = *( unsigned int* )( unitaddr + 0xC );
 		unsigned int y1 = *( unsigned int* )( unitaddr + 0x10 );
 
-		int udata = *(  int* )( unitaddr + 0x28 );
+		int udata = *( int* )( unitaddr + 0x28 );
 
 
 		if ( x1 == 0xFFFFFFFF || y1 == 0xFFFFFFFF || udata == 0 )
+		{
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( "Coordinates or 0x28 offset bad" );
+			}
 			return FALSE;
+		}
 
 		if ( onlymem )
 			return TRUE;
@@ -86,20 +207,47 @@ BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 		unsigned int unitflag2 = *( unsigned int* )( unitaddr + 0x5C );
 
 		if ( unitflag & 1u )
+		{
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( "Flag 1 bad" );
+			}
 			return FALSE;
+		}
 
 		if ( !( unitflag & 2u ) )
+		{
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( "Flag 2 bad" );
+			}
 			return FALSE;
+		}
 
 		if ( unitflag2 & 0x100u )
+		{
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( "Flag 3 bad" );
+			}
 			return FALSE;
+		}
 
-		if ( unitflag2 == 0x1001u )
-			return FALSE;
-
+		/*	if ( unitflag2 == 0x1001u )
+			{
+				if ( SetInfoObjDebugVal )
+				{
+					PrintText( "Flag 4 bad" );
+				}
+				return FALSE;
+			}
+	*/
 		return TRUE;
 	}
-
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( "FATAL ERROR. NO UNIT ADDRESS FOUND" );
+	}
 	return FALSE;
 }
 
@@ -108,16 +256,16 @@ BOOL __stdcall IsNotBadUnit( int unitaddr, BOOL onlymem )
 BOOL __stdcall IsEnemy( int UnitAddr )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 	if ( UnitAddr > 0 && IsNotBadUnit( UnitAddr ) )
 	{
 		int unitownerslot = GetUnitOwnerSlot( ( int )UnitAddr );
 
-		if ( GetLocalPlayerId( ) == unitownerslot )
+		if ( GetLocalPlayerId( ) == unitownerslot || IsPlayerObserver( GetLocalPlayerId( ) ) )
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 			return FALSE;
 		}
@@ -130,27 +278,27 @@ BOOL __stdcall IsEnemy( int UnitAddr )
 			if ( Player1 == Player2 )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__,__LINE__ );
+				AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 				return FALSE;
 			}
 			if ( Player1 == 0 || Player2 == 0 )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__,__LINE__ );
+				AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 				return FALSE;
 			}
 
 			BOOL retval = IsPlayerEnemy( Player1, Player2 );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__,__LINE__ );
+			AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 			return retval;
 		}
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 	return FALSE;
 }
@@ -192,7 +340,7 @@ BOOL __stdcall IsNotBadItem( int itemaddr, BOOL extracheck )
 int GetSelectedUnitCountBigger( int slot )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 	int plr = GetPlayerByNumber( slot );
 	if ( plr > 0 )
@@ -217,7 +365,7 @@ int GetSelectedUnitCountBigger( int slot )
 int GetSelectedUnit( int slot )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 	if ( slot >= 0 && slot <= 15 )
 	{
@@ -314,20 +462,27 @@ int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode, int abilb
 	if ( unitaddr > 0 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );//;
 #endif
 		int pAddr1 = unitaddr + 0x1DC;
 		int pAddr2 = unitaddr + 0x1E0;
 
 		if ( ( int )( *( unsigned int * )( pAddr1 ) & *( unsigned int * )( pAddr2 ) ) != -1 )
 		{
+			//PrintText( "Found abils ... 1" );
 			int pData = GetObjectDataAddr( pAddr1 );
 
 			while ( pData > 0 )
 			{
+				//	PrintText( "Found abils ... 2" );
 				int pData2 = *( int* )( pData + 0x54 );
 				if ( pData2 > 0 )
 				{
+					/*	char foundabil3[ 100 ];
+						sprintf_s( foundabil3, "%s:%X:%X", "Found new abil:", *( int* )( pData2 + 0x30 ), *( int* )( pData2 + 0x34 ) );
+
+						PrintText(foundabil3 );*/
+
 					if ( abilcode != 0 && *( int* )( pData2 + 0x34 ) == abilcode )
 					{
 						if ( abilbasecode != 0 && *( int* )( pData2 + 0x30 ) == abilbasecode )
@@ -488,6 +643,41 @@ float GetUnitHPregen( int unitaddr )
 	return result;
 }
 
+float GetUnitHP( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xA0 );
+		if ( offset1 )
+		{
+
+			result = *( float* )( offset1 + 0x80 );
+		}
+	}
+	return result;
+}
+
+_GetUnitFloatStat GetUnitFloatState = NULL;
+
+
+float GetUnitMP( int unitaddr )
+{
+	float result = 0.0f;
+	if ( unitaddr > 0 )
+	{
+		int offset1 = GetUnitAddressFloatsRelated( unitaddr, 0xC0 );
+		if ( offset1 )
+		{
+			/*char test[ 100 ];
+			sprintf_s( test, 100, "Unit MP struct: %X", offset1 );
+			PrintText( test );*/
+			result = *( float* )( offset1 + 0x80 );
+		}
+	}
+	return result;
+}
+
 float GetUnitMPregen( int unitaddr )
 {
 	float result = 0.0f;
@@ -549,4 +739,32 @@ float GetUnitY_real( int unitaddr )
 		}
 	}
 	return result;
+}
+
+
+void( __thiscall * SelectUnitReal )( int pPlayerSelectData, int pUnit, int id, int unk1, int unk2, int unk3 ) = NULL;
+void( __thiscall * UpdatePlayerSelection )( int pPlayerSelectData, int unk ) = NULL;
+int( __cdecl * ClearSelection )( void ) = NULL;
+
+int( __thiscall * sub_6F332700 )( void *a1 );
+
+void SelectUnit( int unit )
+{
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( ( "Select unit:" + uint_to_hex( unit ) ).c_str( ) );
+		PrintText( ( "SelectUnitReal:" + uint_to_hex( unit ) ).c_str( ) );
+		PrintText( ( "UpdatePlayerSelection:" + uint_to_hex( unit ) ).c_str( ) );
+		PrintText( ( "IsNotBadUnit:" + uint_to_hex( IsNotBadUnit( unit ) ) ).c_str( ) );
+	}
+	if ( SelectUnitReal && UpdatePlayerSelection && IsNotBadUnit( unit ) )
+	{
+		sub_6F332700 = ( int( __thiscall * )( void *a1 ) )( GameDll + 0x332700 );
+		int playerslot = GetLocalPlayerId( );
+		int LocalPlayer = GetPlayerByNumber( playerslot );
+		int playerseldata = *( int * )( LocalPlayer + 0x34 );
+		SelectUnitReal( playerseldata, unit, playerslot, 0, 1, 1 );
+		UpdatePlayerSelection( ( int )playerseldata, 0 );
+		sub_6F332700( 0 );
+	}
 }

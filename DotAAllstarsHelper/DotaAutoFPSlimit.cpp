@@ -1,6 +1,9 @@
 #include "Main.h"
 
 
+unsigned int( __thiscall  * DestroyUnitHpBar )( int HpBarAddr );
+
+
 BOOL FPS_LIMIT_ENABLED = FALSE;
 
 ULARGE_INTEGER lastCPU, lastSysCPU, lastUserCPU;
@@ -17,7 +20,7 @@ int __stdcall SetMaxFps( int fps )
 
 void InitThreadCpuUsage( ) {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	SYSTEM_INFO sysInfo;
 	FILETIME ftime, fsys, fuser;
@@ -31,26 +34,26 @@ void InitThreadCpuUsage( ) {
 	}
 
 	GetSystemTimeAsFileTime( &ftime );
-	memcpy( &lastCPU, &ftime, sizeof( FILETIME ) );
+	std::memcpy( &lastCPU, &ftime, sizeof( FILETIME ) );
 
 
 	GetProcessTimes( Warcraft3_Process, &ftime, &ftime, &fsys, &fuser );
-	memcpy( &lastSysCPU, &fsys, sizeof( FILETIME ) );
-	memcpy( &lastUserCPU, &fuser, sizeof( FILETIME ) );
+	std::memcpy( &lastSysCPU, &fsys, sizeof( FILETIME ) );
+	std::memcpy( &lastUserCPU, &fuser, sizeof( FILETIME ) );
 }
 
 double GetWar3CpuUsage( ) {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	FILETIME ftime, fsys, fuser;
 	ULARGE_INTEGER now, sys, user;
 	double percent;
 	GetSystemTimeAsFileTime( &ftime );
-	memcpy( &now, &ftime, sizeof( FILETIME ) );
+	std::memcpy( &now, &ftime, sizeof( FILETIME ) );
 	GetProcessTimes( Warcraft3_Process, &ftime, &ftime, &fsys, &fuser );
-	memcpy( &sys, &fsys, sizeof( FILETIME ) );
-	memcpy( &user, &fuser, sizeof( FILETIME ) );
+	std::memcpy( &sys, &fsys, sizeof( FILETIME ) );
+	std::memcpy( &user, &fuser, sizeof( FILETIME ) );
 	percent = ( double )( ( sys.QuadPart - lastSysCPU.QuadPart ) +
 		( user.QuadPart - lastUserCPU.QuadPart ) );
 	percent /= ( now.QuadPart - lastCPU.QuadPart );
@@ -72,7 +75,7 @@ void UpdateFPS( )
 		if ( CurrentFps > MIN_WAR3_FPS )
 		{
 			CurrentFps -= 4;
-			if ( *InGame )
+			if ( IsGame( ) )
 				_SetMaxFps( CurrentFps );
 			sprintf_s( MyFpsString, 512, "%s%i.0 CPU:%.1f", "|nFPS: %.1f/", CurrentFps, currentcpuusage );
 		}
@@ -82,7 +85,7 @@ void UpdateFPS( )
 		if ( CurrentFps < MAX_WAR3_FPS )
 		{
 			CurrentFps += 4;
-			if ( *InGame )
+			if ( IsGame( ) )
 				_SetMaxFps( CurrentFps );
 			sprintf_s( MyFpsString, 512, "%s%i.0 CPU:%.1f", "|nFPS: %.1f/", CurrentFps, currentcpuusage );
 		}
@@ -105,7 +108,7 @@ int __stdcall EnableAutoFPSlimit( BOOL enable )
 BOOL __stdcall UnitNeedDrawBar( int unitaddr )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 	if ( unitaddr && IsNotBadUnit( unitaddr ) )
 	{
@@ -135,9 +138,25 @@ void __fastcall DrawBarForUnit_my( int unitaddr )
 	{
 		DrawBarForUnit_ptr( unitaddr );
 	}
-	else if ( FPSfix1Enabled && UnitNeedDrawBar( unitaddr ) )
+	else /*if ( UnitNeedDrawBar( unitaddr ) )*/
 	{
+		BOOL needremove = FALSE;
+		int hpbaraddr = *( int* )( unitaddr + 0x50 );
+		if ( hpbaraddr)
+		{
+			if ( !IsNotBadUnit( unitaddr ) || ( IsTower( unitaddr ) && IsUnitInvulnerable( unitaddr ) ) )
+			{
+				needremove = TRUE;
+				*( int * )( hpbaraddr + 8 ) = 0;
+			}
+		}
+
 		DrawBarForUnit_ptr( unitaddr );
+
+		if ( needremove )
+		{
+			*( int* )( unitaddr + 0x50 ) = 0;
+		}
 	}
 }
 

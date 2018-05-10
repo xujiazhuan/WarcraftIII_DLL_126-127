@@ -1,47 +1,20 @@
+#pragma once
+
+
 #include "Main.h"
 #include "Storm.h"
 
 #pragma pack(push,1)
 
 
-#pragma region ErrorHandler.cpp
-#ifdef DOTA_HELPER_LOG
+//extern int memoryleakcheck;
+
 void  __stdcall AddNewLineToJassLog( const char * s );
 void __stdcall  AddNewLineToDotaChatLog( const char * s );
-void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );
+void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );//( const char * s, int line );
 void __stdcall  AddNewLineToJassNativesLog( const char * s );
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );
-void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
-
-extern void ResetTopLevelExceptionFilter( );
-extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
-extern BOOL bDllLogEnable;
-typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
-extern StormErrorHandler StormErrorHandler_org;
-typedef int( __fastcall *LookupNative )( int global, int unused, const char * name );
-extern LookupNative LookupNative_org;
-typedef signed int( __fastcall * LookupJassFunc )( int global, int unused, const char * funcname );
-extern LookupJassFunc LookupJassFunc_org;
-typedef void( __fastcall * ProcessNetEvents )( void * data, int unused_, int Event );
-extern ProcessNetEvents ProcessNetEvents_org;
-typedef void( __fastcall * BlizzardDebug1 ) ( const char*str );
-extern BlizzardDebug1 BlizzardDebug1_org;
-typedef void( __cdecl * BlizzardDebug2 )( const char * src, int lineid, const char * classname );
-extern BlizzardDebug2 BlizzardDebug2_org;
-typedef void( __cdecl * BlizzardDebug3 )( const char *format, ... );
-extern BlizzardDebug3 BlizzardDebug3_org;
-typedef void( __cdecl * BlizzardDebug4 )( BOOL type1, const char *format, ... );
-extern BlizzardDebug4 BlizzardDebug4_org;
-typedef void( __cdecl * BlizzardDebug5 )( const char *format, ... );
-extern BlizzardDebug5 BlizzardDebug5_org;
-typedef void( __cdecl * BlizzardDebug6 )( const char *format, ... );
-extern BlizzardDebug6 BlizzardDebug6_org;
-#endif
-#pragma endregion
-
-//extern int memoryleakcheck;
-
 
 
 //extern int memoryleakcheck;
@@ -53,6 +26,7 @@ private:
 public:
 	char *buf;
 	unsigned long length;
+	bool NeedClear = false;
 	/*~StormBuffer( )
 	{
 	Clear( );
@@ -73,6 +47,7 @@ public:
 		//	memoryleakcheck++;
 		length = l;
 		buf = ( char * )Storm::MemAlloc( l + 1 );
+		NeedClear = true;
 		buf[ l ] = '\0';
 	}
 	StormBuffer( char* b, unsigned long l )
@@ -82,7 +57,7 @@ public:
 #endif
 		buf = b;
 		length = l;
-	}
+}
 	void Resize( unsigned long l )
 	{
 #ifdef DOTA_HELPER_LOG
@@ -90,8 +65,12 @@ public:
 #endif
 		Clear( );
 		buf = ( char * )Storm::MemAlloc( l + 1 );
+		NeedClear = true;
 		buf[ l ] = '\0';
 		length = l;
+#ifdef DOTA_HELPER_LOG
+		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	}
 
 	char * GetData( )
@@ -124,7 +103,11 @@ public:
 #endif
 		//	memoryleakcheck--;
 		length = 0;
-		Storm::MemFree( buf );
+		if ( buf != NULL )
+		{
+			if ( NeedClear )
+				Storm::MemFree( buf );
+		}
 		buf = NULL;
 	}
 
@@ -161,14 +144,14 @@ public:
 
 	CHAR& operator []( INT Index )
 	{
-#ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
+		//#ifdef DOTA_HELPER_LOG
+		//		AddNewLineToDotaHelperLog( __func__,__LINE__ );
+		//#endif
 		return buf[ Index ];
 	}
 
 
-};
+	};
 
 typedef struct StormBufferList
 {
@@ -198,7 +181,7 @@ typedef struct StormBufferList
 		buf = b;
 		length = l;
 	}
-} StormBufferList;
+	} StormBufferList;
 
 
 #pragma pack(pop)

@@ -65,13 +65,7 @@
     <ClCompile Include="..\DotAAllstarsHelper\hash_64.cpp">
       <Filter>Src</Filter>
     </ClCompile>
-    <ClCompile Include="..\DotAAllstarsHelper\HttpClass.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\quantizer.cpp">
-      <Filter>Src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DotAAllstarsHelper\SendGamePacket.cpp">
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\UnitAndItem.cpp">
@@ -105,6 +99,18 @@
       <Filter>Src</Filter>
     </ClCompile>
     <ClCompile Include="..\DotAAllstarsHelper\BlpReadWrite.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaHttpHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\MegaPacketHandler.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaMinimapHelper.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DotAAllstarsHelper\DotaDebugHelpers.cpp">
       <Filter>Src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -155,6 +161,15 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\DotAAllstarsHelper\BlpReadWrite.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\MegaPacketHandler.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\RawImageApi.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DotAAllstarsHelper\base64.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

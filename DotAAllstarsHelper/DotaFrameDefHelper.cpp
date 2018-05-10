@@ -1,5 +1,5 @@
-#include "Main.h"
 
+#include "Main.h"
 #include "WarcraftFrameHelper.h"
 
 using namespace NWar3Frame;
@@ -8,6 +8,9 @@ struct CFrameBuffer
 {
 	CWar3Frame * frame;
 	string callbackfuncname;
+	bool packetcallback;
+	unsigned int callbackeventid;
+	int FrameCode;
 };
 
 vector<CFrameBuffer> CFrameBufferList;
@@ -15,16 +18,21 @@ vector<CFrameBuffer> CFrameBufferList;
 
 void DotaHelperEventEndCallback( )
 {
-	if ( pCurrentFrameFocusedAddr )
+	if ( IsGameFrameActive( ) && pCurrentFrameFocusedAddr && *( int* )pCurrentFrameFocusedAddr )
 		*( int* )pCurrentFrameFocusedAddr = 0;
-
 }
 
 
 
 RCString NewCallBackFuncName = RCString( );
 
+int NewCallBackTriggerHandle = 0;
+
+
+
 int LastEventId = 0;
+
+
 
 int __stdcall CFrame_GetLastEventId( int )
 {
@@ -55,13 +63,58 @@ int DotaHelperFrameCallback( CWar3Frame*frame, int FrameAddr, unsigned int Event
 	//MessageBoxA( 0, frame->FrameName.c_str( ), frame->FrameName.c_str( ), 0 );
 	for ( auto s : CFrameBufferList )
 	{
-		if ( s.frame == frame )
+		if ( s.frame == frame && s.callbackeventid == EventId )
 		{
 			if ( s.callbackfuncname.length( ) > 0 )
 			{
 				str2jstr( &NewCallBackFuncName, s.callbackfuncname.c_str( ) );
 				ExecuteFunc( &NewCallBackFuncName );
 				//MessageBoxA( 0, CWar3Frame::DumpAllFrames( ).c_str( ), " Frames ", 0 );
+			}
+			else if ( s.packetcallback  )
+			{
+				std::vector<unsigned char> SendKeyEvent;
+				SendKeyEvent.push_back( 0x50 );
+				// header custom packets
+				SendKeyEvent.push_back( 0xFF );
+				// size custom packets 
+				SendKeyEvent.push_back( 0 );
+				SendKeyEvent.push_back( 0 );
+				SendKeyEvent.push_back( 0 );
+				SendKeyEvent.push_back( 0 );
+				// packet type
+				int packettype = 'FRAM';
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&packettype, ( ( unsigned char * )&packettype ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				// data
+				int locpid = GetLocalPlayerId( );
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&locpid, ( ( unsigned char * )&locpid ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&s.FrameCode, ( ( unsigned char * )&s.FrameCode ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&LastEventId, ( ( unsigned char * )&LastEventId ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+
+				int IsCtrlPressed = IsKeyPressed( VK_CONTROL );
+				int IsAltPressed = IsKeyPressed( VK_MENU );
+				int IsLeftMousePressed = IsKeyPressed( 1 );
+				int IsRightMousePressed = IsKeyPressed( 2 );
+				int IsMiddleMousePressed = IsKeyPressed( 3 );
+
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsCtrlPressed, ( ( unsigned char * )&IsCtrlPressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsAltPressed, ( ( unsigned char * )&IsAltPressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsLeftMousePressed, ( ( unsigned char * )&IsLeftMousePressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsRightMousePressed, ( ( unsigned char * )&IsRightMousePressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+				SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&IsMiddleMousePressed, ( ( unsigned char * )&IsMiddleMousePressed ) + 4 );
+				*( int* )&SendKeyEvent[ 2 ] += 4;
+
+				
+				SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
+				SendKeyEvent.clear( );
 			}
 			break;
 		}
@@ -80,6 +133,8 @@ void FrameDefHelperInitialize( )
 	CWar3Frame::SetGlobalEventCallback( DotaHelperEventEndCallback );
 	CWar3Frame::Init( GameVersion, GameDll );
 	CWar3Frame::InitCallbackHook( );
+	NewCallBackFuncName = RCString( );
+	NewCallBackTriggerHandle = 0;
 }
 
 void FrameDefHelperUninitialize( )
@@ -87,6 +142,8 @@ void FrameDefHelperUninitialize( )
 	CFrameBufferList.clear( );
 	CWar3Frame::UninitializeAllFrames( TRUE );
 	CWar3Frame::UninitializeCallbackHook( );
+	NewCallBackFuncName = RCString( );
+	NewCallBackTriggerHandle = 0;
 }
 
 string GetCallbackFuncName( CWar3Frame * frame )
@@ -104,20 +161,25 @@ string GetCallbackFuncName( CWar3Frame * frame )
 }
 
 
-void __stdcall CFrame_SetCustomValue( CWar3Frame*frame, int value )
+void __stdcall CFrame_SetCustomValue( CWar3Frame*frame, int id, int value )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( __func__ );
 #endif
-	frame->SetFrameCustomValue( value );
+	if ( id >= 1 && id <= 10 )
+		frame->SetFrameCustomValue( value, id );
+	else
+		frame->SetFrameCustomValue( value, 1 );
 }
 
-int __stdcall CFrame_GetCustomValue( CWar3Frame*frame )
+int __stdcall CFrame_GetCustomValue( CWar3Frame*frame, int id )
 {
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( __func__ );
 #endif
-	return frame->CustomValue;
+	if ( id >= 1 && id <= 10 )
+		return frame->GetFrameCustomValue( id );
+	return frame->GetFrameCustomValue( 1 );
 }
 
 int __stdcall CFrame_GetFrameAddress( CWar3Frame*frame )
@@ -149,7 +211,7 @@ CWar3Frame * __stdcall CFrame_CreateNewFrame( const char * FrameName, int relati
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaChatLog( __func__ );
 #endif
-	CWar3Frame * returnframe = new CWar3Frame( FrameName, relativeframeaddr, show, FrameId );
+	CWar3Frame * returnframe = new CWar3Frame( FrameName, FrameId, show, relativeframeaddr );
 
 	if ( !returnframe->CheckIsOk( ) )
 	{
@@ -197,6 +259,48 @@ void __stdcall CFrame_SetFrameModel( CWar3Frame * frame, const char * modelpath 
 		return;
 	frame->SetModel( modelpath );
 }
+// Experimenal version of CFrame_SetFrameModel with more flags
+void __stdcall CFrame_SetFrameModelEx( CWar3Frame * frame, const char * modelpath, int MdlType, int Flags )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->SetModel( modelpath, MdlType, Flags );
+}
+// Start animate with ID (ID or just flag?)
+void __stdcall CFrame_StartCustomAnimate( CWar3Frame * frame, int anim_id )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->StartAnimate( anim_id );
+}
+// Stop animate frame
+void __stdcall CFrame_StopCustomAnimate( CWar3Frame * frame )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->StopAnimate( );
+}
+
+// Set custom animation offset. For example start=0.0 end=1.0 , set 0.5 = middle of animation.
+void __stdcall CFrame_SetCustomAnimateOffset( CWar3Frame * frame, float offset )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	frame->anim_offset = offset;
+}
+
 
 // Set texture for frame, now support only SPRITE and some other frametype(USE FRAMETYPE_ITEM FOR TEST)
 void __stdcall CFrame_SetFrameTexture( CWar3Frame * frame, const char * texturepath, const char * borderpath, BOOL tiled )
@@ -258,7 +362,10 @@ void __stdcall CFrame_Destroy( CWar3Frame * frame )
 		if ( CFrameBufferList[ i ].frame == frame )
 		{
 			CFrameBufferList.erase( CFrameBufferList.begin( ) + i );
-			break;
+			if ( i > 0 )
+				i--;
+			else
+				break;
 		}
 	}
 
@@ -277,6 +384,27 @@ void __stdcall CFrame_AddCallack( CWar3Frame * frame, const char * callbackfuncn
 	CFrameBuffer tmpFrameBuf = CFrameBuffer( );
 	tmpFrameBuf.frame = frame;
 	tmpFrameBuf.callbackfuncname = callbackfuncname;
+	tmpFrameBuf.packetcallback = false;
+	tmpFrameBuf.callbackeventid = callbackeventid;
+	tmpFrameBuf.FrameCode = 0;
+	CFrameBufferList.push_back( tmpFrameBuf );
+	frame->RegisterEventCallback( callbackeventid );
+	//frame->SkipOtherEvents = skipothercallback;
+}
+
+void __stdcall CFrame_AddCallackPacket( CWar3Frame * frame, int FrameCode,  unsigned int callbackeventid, BOOL skipothercallback )
+{
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaChatLog( __func__ );
+#endif
+	if ( !frame )
+		return;
+	CFrameBuffer tmpFrameBuf = CFrameBuffer( );
+	tmpFrameBuf.frame = frame;
+	tmpFrameBuf.callbackfuncname = "";
+	tmpFrameBuf.packetcallback = true;
+	tmpFrameBuf.callbackeventid = callbackeventid;
+	tmpFrameBuf.FrameCode = FrameCode;
 	CFrameBufferList.push_back( tmpFrameBuf );
 	frame->RegisterEventCallback( callbackeventid );
 	//frame->SkipOtherEvents = skipothercallback;
@@ -302,3 +430,48 @@ BOOL __stdcall CFrame_IsEnabled( CWar3Frame * frame )
 		return FALSE;
 	return frame->IsEnabled( );
 }
+
+void __stdcall CFrame_SetScale( CWar3Frame * frame, CFrameBackdropType backtype, BOOL FillToFrame, float scalex, float scaley )
+{
+	if ( !frame )
+		return;
+	//frame->FillToParentFrame( backtype, FillToFrame );
+	frame->SetFrameScale( backtype, scalex, scaley );
+}
+
+void __stdcall CFrame_SetTextWidth( CWar3Frame * frame, float scalex )
+{
+	if ( !frame )
+		return;
+	frame->SetTextFrameFontWidth(scalex );
+}
+
+void __stdcall CFrame_SetTextHeight( CWar3Frame * frame, float scaley )
+{
+	if ( !frame )
+		return;
+	frame->SetTextFrameFontHeight( scaley );
+}
+
+
+void __stdcall CFrame_SetTextFont( CWar3Frame * frame, const char * font, float scale, int flag )
+{
+	if ( !frame )
+		return;
+	SetTextFrameFont( frame->FrameAddr, font, scale, flag );
+}
+
+void __stdcall CFrame_Update( CWar3Frame * frame )
+{
+	if ( !frame )
+		return;
+	frame->UpdateFlagsV2( );
+}
+
+void __stdcall CFrame_Show( CWar3Frame * frame, BOOL show )
+{
+	if ( !frame )
+		return;
+	frame->Show( show );
+}
+

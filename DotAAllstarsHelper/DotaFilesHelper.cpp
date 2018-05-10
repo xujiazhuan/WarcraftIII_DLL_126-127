@@ -20,7 +20,8 @@ vector<FileRedirectStruct> FileRedirectList;
 BOOL NeedDumpFilesToDisk = FALSE;
 int __stdcall DumpFilesToDisk( BOOL enabled )
 {
-	NeedDumpFilesToDisk = enabled;
+	MessageBoxA(0,"ÎØÈÁÊÀ OSHIBKA ERROR"," ",0);
+	//NeedDumpFilesToDisk = enabled;
 	return enabled;
 }
 
@@ -64,23 +65,38 @@ BOOL IsMemInCache( int addr )
 
 void FreeAllIHelpers( )
 {
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+#endif
 	if ( !ICONMDLCACHELIST.empty( ) )
 	{
 		for ( ICONMDLCACHE & ih : ICONMDLCACHELIST )
 		{
-			if ( ih.buf )
+			if ( ih.buf && NeedReleaseUnusedMemory )
 				Storm::MemFree( ih.buf );
 		}
 
+
+		Storm::FreeAllMemory( );
+
 		ICONMDLCACHELIST.clear( );
 	}
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+#endif
 	if ( !FileRedirectList.empty( ) )
 		FileRedirectList.clear( );
 
 	if ( !FakeFileList.empty( ) )
 		FakeFileList.clear( );
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+#endif
 	ClearAllRawImages( );
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+#endif
 }
 
 
@@ -121,7 +137,7 @@ int idddd = 0;
 void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize, BOOL IsTga )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -188,19 +204,16 @@ void ApplyTerrainFilter( string filename, int * OutDataPointer, size_t * OutSize
 
 		if ( ResultBuffer.buf != NULL )
 		{
-
 			ICONMDLCACHE tmpih;
 			tmpih.buf = ResultBuffer.buf;
 			tmpih.size = ResultBuffer.length;
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
-			ICONMDLCACHELIST.push_back( tmpih );
+			ICONMDLCACHELIST.push_back( tmpih );/*
 			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
-				Storm::MemFree( ( void* )*OutDataPointer );
+				Storm::MemFree( ( void* )*OutDataPointer );*/
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
-
-
 		}
 	}
 
@@ -218,7 +231,7 @@ int __stdcall ApplyTerrainFilterDirectly( char * filename, int * OutDataPointer,
 void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	char * originfiledata = ( char * )( int )*OutDataPointer;
@@ -232,14 +245,14 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 	InBuffer.length = sz;
 	StormBuffer OutBuffer;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 
 
 	try
 	{
 #endif
-		rawImageSize = Blp2Raw( InBuffer, ( StormBuffer )OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
+		rawImageSize = Blp2Raw( InBuffer, OutBuffer, w, h, bpp, mipmaps, alphaflag, compress, alphaenconding, filename.c_str( ) );
 #ifdef DOTA_HELPER_LOG
 	}
 	catch ( ... )
@@ -251,11 +264,11 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 
 #endif
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-	if ( rawImageSize > 0 )
+	if ( rawImageSize > 0 && OutBuffer.buf && OutBuffer.length && w == 64 && h == 64 )
 	{
-		MessageBoxA( 0, "CreateFilterImage", " ", 0 );
+		//MessageBoxA( 0, "CreateFilterImage", " ", 0 );
 		BGRAPix * OutImage = ( BGRAPix* )OutBuffer.buf;
 		BGRAPix BlackPix;
 
@@ -315,13 +328,13 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 
 		StormBuffer ResultBuffer;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		CreatePalettedBLP( OutBuffer, ResultBuffer, 256, filename.c_str( ), w, h, bpp, alphaflag, mipmaps );
 
 		OutBuffer.Clear( );
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		if ( ResultBuffer.buf != NULL )
 		{
@@ -331,12 +344,12 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
-				Storm::MemFree( ( void* )*OutDataPointer );
+			/*if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
+				Storm::MemFree( ( void* )*OutDataPointer );*/
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 			if ( NeedDumpFilesToDisk )
@@ -365,13 +378,20 @@ void ApplyIconFilter( string filename, int * OutDataPointer, size_t * OutSize )
 #ifdef DOTA_HELPER_LOG
 		else
 		{
-
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
-
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 		}
 #endif
 	}
-
+#ifdef DOTA_HELPER_LOG
+	else if ( !rawImageSize )
+		MessageBoxA( 0, "Convert error.", " Success ! ", 0 );
+	else if ( !OutBuffer.buf || !OutBuffer.length )
+		MessageBoxA( 0, "StormBuffer futall error.", " Success ! ", 0 );
+	else if ( w != 64 || h != 64 )
+		MessageBoxA( 0, "Width/Height of image not 64x64.", " Success ! ", 0 );
+	else if ( w != 64 || h != 64 )
+		MessageBoxA( 0, "Width/Height of image not 64x64.", " Success ! ", 0 );
+#endif
 }
 
 
@@ -381,7 +401,7 @@ void ApplyIconFrameFilter( string filename, int * OutDataPointer, size_t * OutSi
 void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	ICONMDLCACHE tmpih;
@@ -439,7 +459,7 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			id++;
 		}
 
-		memcpy( &OutImage[ 0 ], &BGRAPixList[ 0 ], 4 * w*h - 4 );
+		std::memcpy( &OutImage[ 0 ], &BGRAPixList[ 0 ], 4 * w*h - 4 );
 
 		/*
 
@@ -492,8 +512,8 @@ void ApplyTestFilter( string filename, int * OutDataPointer, size_t * OutSize )
 			tmpih.hashlen = filename.length( );
 			tmpih._hash = GetBufHash( filename.c_str( ), tmpih.hashlen );
 			ICONMDLCACHELIST.push_back( tmpih );
-			if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
-				Storm::MemFree( ( void* )*OutDataPointer );
+		/*	if ( !IsMemInCache( *OutDataPointer ) && NeedReleaseUnusedMemory )
+				Storm::MemFree( ( void* )*OutDataPointer );*/
 			*OutDataPointer = ( int )tmpih.buf;
 			*OutSize = tmpih.size;
 		}
@@ -511,7 +531,7 @@ BOOL FixDisabledIconPath( string _filename, int * OutDataPointer, size_t * OutSi
 {
 	string filename = _filename;
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	BOOL CreateDarkIcon = FALSE;
@@ -669,14 +689,14 @@ vector<BYTE> FullPatchData;
 void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesForReplace )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	Mdx_Track tmpTrack;
 	size_t offset = _offset;
 	if ( memcmp( &ModelBytes[ offset ], "KGTR", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -688,7 +708,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGRT", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -700,7 +720,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGSC", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -713,7 +733,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGAO", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -725,7 +745,7 @@ void ProcessNodeAnims( BYTE * ModelBytes, size_t _offset, vector<int *> & TimesF
 	if ( memcmp( &ModelBytes[ offset ], "KGAC", 4 ) == 0 )
 	{
 		offset += 4;
-		memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+		std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 		offset += sizeof( Mdx_Track );
 		for ( int i = 0; i < tmpTrack.NrOfTracks; i++ )
 		{
@@ -760,7 +780,7 @@ BYTE HelperBytesPart3[ ] = { 0xFF,0xFF,0xFF,0xFF,
 void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	BYTE * ModelBytes = ( BYTE* )*OutDataPointer;
 	size_t sz = *OutSize;
@@ -792,7 +812,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						while ( SequencesCount > 0 )
 						{
 							SequencesCount--;
-							memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
+							std::memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
 
 							if ( mdlfix.AnimationName.length( ) == 0 || mdlfix.AnimationName == tmpSequence.Name )
 							{
@@ -816,7 +836,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			}
 
 
-			if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+		/*	if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
 			{
 				FILE *f;
 				fopen_s( &f, ".\\Test1234.mdx", "wb" );
@@ -824,7 +844,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				fclose( f );
 				MessageBoxA( 0, "Ok dump", "DUMP", 0 );
 			}
-
+*/
 
 			ModelSequenceValueList.erase( ModelSequenceValueList.begin( ) + ( int )i );
 
@@ -870,7 +890,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						while ( SequencesCount > 0 )
 						{
 							SequencesCount--;
-							memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
+							std::memcpy( &tmpSequence, &ModelBytes[ offset ], sizeof( Mdx_Sequence ) );
 
 
 							if ( mdlfix.AnimationName == tmpSequence.Name )
@@ -897,7 +917,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize + 8;
 						}
@@ -911,7 +931,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
 						}
@@ -927,7 +947,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -943,7 +963,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -959,7 +979,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -975,7 +995,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -989,7 +1009,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						offset += 4;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpGeosetAnimation, &ModelBytes[ offset ], sizeof( Mdx_GeosetAnimation ) );
+							std::memcpy( &tmpGeosetAnimation, &ModelBytes[ offset ], sizeof( Mdx_GeosetAnimation ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_GeosetAnimation ), TimesForReplace );
 
 							offset += tmpGeosetAnimation.InclusiveSize;
@@ -1006,7 +1026,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += size_of_this_struct - 4;
 						}
@@ -1021,13 +1041,13 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Tracks tmpTracks;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
 							if ( memcmp( &ModelBytes[ offset ], "KEVT", 4 ) == 0 )
 							{
 								offset += 4;
-								memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
+								std::memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
 								offset += sizeof( Mdx_Tracks );
 								for ( int n = 0; n < tmpTracks.NrOfTracks; n++ )
 								{
@@ -1047,7 +1067,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							ProcessNodeAnims( ModelBytes, offset + sizeof( Mdx_Node ), TimesForReplace );
 							offset += tmpNode.InclusiveSize;
 							unsigned int size_of_this_struct = *( unsigned int* )&ModelBytes[ offset ];
@@ -1099,14 +1119,14 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				}
 
 
-				if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+				/*if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
 				{
 					FILE *f;
 					fopen_s( &f, ".\\Test1234.mdx", "wb" );
 					fwrite( ModelBytes, sz, 1, f );
 					fclose( f );
 					MessageBoxA( 0, "Ok dump", "DUMP", 0 );
-				}
+				}*/
 
 			}
 
@@ -1159,7 +1179,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			if ( TagFound )
 			{
-				memcpy( &ModelBytes[ TagStartOffset ], &ModelBytes[ TagStartOffset + TagSize + 4 ], sz - ( TagStartOffset + TagSize ) );
+				std::memcpy( &ModelBytes[ TagStartOffset ], &ModelBytes[ TagStartOffset + TagSize + 4 ], sz - ( TagStartOffset + TagSize ) );
 				memset( &ModelBytes[ sz - TagSize - 4 ], 0xFF, TagSize );
 
 				sz = sz - TagSize - 4;
@@ -1199,7 +1219,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 				offset += 4;
 				while ( offset < sz )
 				{
-					memcpy( TagName, &ModelBytes[ offset ], 4 );
+					std::memcpy( TagName, &ModelBytes[ offset ], 4 );
 					if ( memcmp( &ModelBytes[ offset ], strGLBS, 4 ) == 0 )
 					{
 						offset += 4;
@@ -1228,7 +1248,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1249,7 +1269,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1272,7 +1292,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1295,7 +1315,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
 
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1318,7 +1338,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							{
 							offset += 4;
 							Mdx_Track tmpTrack;
-							memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
+							std::memcpy( &tmpTrack, &ModelBytes[ offset ], sizeof( Mdx_Track ) );
 							offset += sizeof( Mdx_Track );
 							for ( DWORD i = 0; i < tmpTrack.NrOfTracks; i++ )
 							{
@@ -1340,7 +1360,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1361,7 +1381,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1383,7 +1403,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						{
 							size_t size_of_this_struct = *( size_t* )&ModelBytes[ offset ];
 							offset += 4;
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1403,7 +1423,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Tracks tmpTracks;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
 								MaxObjectId = tmpNode.ObjectId;
@@ -1414,7 +1434,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 							if ( memcmp( &ModelBytes[ offset ], "KEVT", 4 ) == 0 )
 							{
 								offset += 4;
-								memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
+								std::memcpy( &tmpTracks, &ModelBytes[ offset ], sizeof( Mdx_Tracks ) );
 								offset += sizeof( Mdx_Tracks );
 								for ( int n = 0; n < tmpTracks.NrOfTracks; n++ )
 								{
@@ -1433,7 +1453,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						Mdx_Node tmpNode;
 						while ( newoffset > offset )
 						{
-							memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
+							std::memcpy( &tmpNode, &ModelBytes[ offset ], sizeof( Mdx_Node ) );
 
 							if ( tmpNode.ObjectId != 0xFFFFFFFF && tmpNode.ObjectId > MaxObjectId )
 							{
@@ -1534,34 +1554,34 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			}
 
 
-			if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
-			{
-				FILE *f;
-				fopen_s( &f, ".\\Test1234.mdx", "wb" );
-				fwrite( &FullPatchData[ 0 ], FullPatchData.size( ), 1, f );
-				fclose( f );
-				MessageBoxA( 0, "Ok dump", "DUMP", 0 );
-			}
+			//if ( IsKeyPressed( '0' ) && FileExist( ".\\Test1234.mdx" ) )
+			//{
+			//	FILE *f;
+			//	fopen_s( &f, ".\\Test1234.mdx", "wb" );
+			//	fwrite( &FullPatchData[ 0 ], FullPatchData.size( ), 1, f );
+			//	fclose( f );
+			//	MessageBoxA( 0, "Ok dump", "DUMP", 0 );
+			//}
 
 
 			ICONMDLCACHE * tmpih = Storm::MemAllocStruct<ICONMDLCACHE>( );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			StormBuffer ResultBuffer;
 			ResultBuffer.buf = ( char * )Storm::MemAlloc( FullPatchData.size( ) );
 			ResultBuffer.length = FullPatchData.size( );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-			memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+			std::memcpy( &ResultBuffer.buf[ 0 ], &FullPatchData[ 0 ], FullPatchData.size( ) );
 
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
 			tmpih->hashlen = filename.length( );
 			tmpih->_hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			ICONMDLCACHELIST.push_back( *tmpih );
 
@@ -1576,7 +1596,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 
 			Storm::MemFree( tmpih );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			ModelScaleList.erase( ModelScaleList.begin( ) + ( int )i );
 
@@ -1616,18 +1636,18 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 		{
 			StormBuffer ResultBuffer;
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			ResultBuffer.buf = ( char * )Storm::MemAlloc( tmpih->size + FullPatchData.size( ) );
 
 			ResultBuffer.length = tmpih->size + FullPatchData.size( );
 
-			memcpy( &ResultBuffer.buf[ 0 ], tmpih->buf, sz );
+			std::memcpy( &ResultBuffer.buf[ 0 ], tmpih->buf, sz );
 
-			memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+			std::memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
 
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			Storm::MemFree( tmpih->buf );
 			tmpih->buf = ResultBuffer.buf;
@@ -1635,22 +1655,22 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			*OutDataPointer = ( int )tmpih->buf;
 			*OutSize = tmpih->size;
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		}
 		else
 		{
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			StormBuffer ResultBuffer;
 			ResultBuffer.buf = ( char * )Storm::MemAlloc( sz + FullPatchData.size( ) );
 			ResultBuffer.length = sz + FullPatchData.size( );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-			memcpy( &ResultBuffer.buf[ 0 ], ModelBytes, sz );
-			memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
+			std::memcpy( &ResultBuffer.buf[ 0 ], ModelBytes, sz );
+			std::memcpy( &ResultBuffer.buf[ sz ], &FullPatchData[ 0 ], FullPatchData.size( ) );
 
 			tmpih->buf = ResultBuffer.buf;
 			tmpih->size = ResultBuffer.length;
@@ -1658,7 +1678,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 			tmpih->hashlen = filename.length( );
 			tmpih->_hash = GetBufHash( filename.c_str( ), tmpih->hashlen );
 #ifdef DOTA_HELPER_LOG
-			AddNewLineToDotaHelperLog( __func__, __LINE__ );
+			AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 			ICONMDLCACHELIST.push_back( *tmpih );
 
@@ -1762,7 +1782,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 						while ( TexturesCount > 0 )
 						{
 							TexturesCount--;
-							memcpy( &tmpTexture, &ModelBytes[ offset ], sizeof( Mdx_Texture ) );
+							std::memcpy( &tmpTexture, &ModelBytes[ offset ], sizeof( Mdx_Texture ) );
 							TextureID++;
 
 							if ( mdlfix.TextureID == TextureID )
@@ -1777,7 +1797,7 @@ void ProcessMdx( string filename, int * OutDataPointer, size_t * OutSize, BOOL u
 									tmpTexture.ReplaceableId = atoi( mdlfix.NewTexturePath.c_str( ) );
 									memset( tmpTexture.FileName, 0, 260 );
 								}
-								memcpy( &ModelBytes[ offset ], &tmpTexture, sizeof( Mdx_Texture ) );
+								std::memcpy( &ModelBytes[ offset ], &tmpTexture, sizeof( Mdx_Texture ) );
 							}
 							offset += sizeof( Mdx_Texture );
 						}
@@ -1829,20 +1849,20 @@ void PrintLog( const char * str )
 BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL unknown, BOOL IsFileExistOld )
 {
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	BOOL IsFileExist = IsFileExistOld;
 
 	if ( !OutDataPointer || !OutSize || filename.length( ) < 3 )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return IsFileExist;
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	ICONMDLCACHE tmpih;
 	BOOL FoundOldHelper = GetFromIconMdlCache( filename, &tmpih );
@@ -1851,12 +1871,12 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 		*OutDataPointer = ( int )tmpih.buf;
 		*OutSize = tmpih.size;
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return TRUE;
 	}
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	for ( RawImageStruct & s : ListOfRawImages )
@@ -1866,7 +1886,7 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 			if ( ToLower( filename ) == ToLower( s.filename ) )
 			{
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__, __LINE__ );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 				*OutDataPointer = ( int )s.ingamebuffer.buf;
 				*OutSize = s.ingamebuffer.length;
@@ -1876,14 +1896,14 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
 	string FileExtension = ToLower( fs::path( filename ).extension( ).string( ) );
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -1918,8 +1938,6 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 	}
 
 
-
-
 	for ( FileRedirectStruct & DotaRedirectHelp : FileRedirectList )
 	{
 		if ( filename == DotaRedirectHelp.NewFilePath )
@@ -1934,14 +1952,14 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 
 				StormBuffer ResultBuffer;
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__, __LINE__ );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 				ResultBuffer.buf = ( char * )Storm::MemAlloc( DataSize );
 				ResultBuffer.length = DataSize;
 #ifdef DOTA_HELPER_LOG
-				AddNewLineToDotaHelperLog( __func__, __LINE__ );
+				AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
-				memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
+				std::memcpy( &ResultBuffer.buf[ 0 ], DataPointer, DataSize );
 
 				tmpih2.buf = ResultBuffer.buf;
 				tmpih2.size = ResultBuffer.length;
@@ -1954,8 +1972,44 @@ BOOL ProcessFile( string filename, int * OutDataPointer, size_t * OutSize, BOOL 
 				*OutDataPointer = ( int )tmpih2.buf;
 				*OutSize = tmpih2.size;
 
-				IsFileExist = ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
-				return IsFileExist;
+
+				if ( FileExtension == string( ".tga" ) )
+				{
+
+				}
+				else if ( FileExtension == string( ".blp" ) )
+				{
+					if ( !IsFileExist )
+					{
+						IsFileExist = FixDisabledIconPath( filename, OutDataPointer, OutSize, unknown );
+					}
+					else
+					{
+						//ApplyTestFilter( filename, OutDataPointer, OutSize );
+						/*if ( strstr( filename.c_str( ), "terrainart" ) == filename.c_str( ) ||
+						strstr( filename.c_str( ), "replaceabletextures\\cliff" ) == filename.c_str( ) )
+						ApplyTerrainFilter( filename, OutDataPointer, OutSize, FALSE );*/
+					}
+				}
+				else if ( FileExtension == string( ".mdx" ) )
+				{
+					if ( IsFileExist )
+					{
+						ProcessMdx( filename, OutDataPointer, OutSize, unknown );
+					}
+					else
+					{
+						//return GameGetFile_ptr( "Objects\\InvalidObject\\InvalidObject.mdx", OutDataPointer, OutSize, unknown );
+					}
+				}
+
+
+
+				//ProcessFile( DotaRedirectHelp.NewFilePath, OutDataPointer, OutSize, unknown, IsFileExist );
+
+
+
+				return TRUE;
 			}
 
 		}
@@ -1994,10 +2048,10 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	//	outfile.close( );
 	//}
 
-	if ( !*InGame && !MainFuncWork )
+	if ( !(IsGame( )) && !MainFuncWork )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		return IsFileExist;
@@ -2005,14 +2059,14 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 	if ( TerminateStarted )
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
@@ -2021,7 +2075,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	if ( !OutDataPointer || !OutSize )
 	{
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 		return GameGetFile_ptr( filename, OutDataPointer, OutSize, unknown );
 	}
@@ -2030,9 +2084,9 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 #ifdef DOTA_HELPER_LOG
 	if ( filename && *filename != '\0' )
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	else
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 
@@ -2041,7 +2095,7 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	{
 
 #ifdef DOTA_HELPER_LOG
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 
 		return IsFileExist;
@@ -2061,13 +2115,13 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 	if ( !IsFileExist )
 	{
 
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 	}
 	else
 	{
 
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 
 	}
 
@@ -2088,11 +2142,11 @@ BOOL __fastcall GameGetFile_my( const char * filename, int * OutDataPointer, uns
 
 	if ( !IsFileExist )
 	{
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	}
 	else
 	{
-		AddNewLineToDotaHelperLog( __func__, __LINE__ );
+		AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	}
 #endif
 
@@ -2108,7 +2162,7 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 {
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 	cout << "CreateIconFrameMask:" << iconpath << endl;
 #endif
 
@@ -2117,7 +2171,7 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );
 #endif
 	return TRUE;
 }
@@ -2157,3 +2211,42 @@ int __stdcall CreateIconFrameMask( const char * iconpath )
 	BOOL ingame;
 	string filename;
 };*/
+
+std::string GetFileContent( std::string filename )
+{
+	std::ifstream t( filename  );
+	std::string str;
+
+	t.seekg( 0, std::ios::end );
+
+	if ( t.tellg( ) > NULL )
+	{
+		str.reserve( t.tellg( ) );
+		t.seekg( 0, std::ios::beg );
+
+		str.assign( ( std::istreambuf_iterator<char>( t ) ),
+			std::istreambuf_iterator<char>( ) );
+	}
+
+	return str;
+}
+
+
+std::vector<std::string> get_file_list( const fs::path & path, bool dotolower )
+{
+	std::vector<std::string> m_file_list;
+	if ( !path.empty( ) )
+	{
+		fs::path apk_path( path );
+		fs::recursive_directory_iterator end;
+
+		for ( fs::recursive_directory_iterator i( apk_path ); i != end; ++i )
+		{
+			const fs::path cp = ( *i );
+
+			m_file_list.push_back( dotolower ? ToLower( cp.string( ) ) : cp.string( ) );
+		}
+	}
+	return m_file_list;
+}
+

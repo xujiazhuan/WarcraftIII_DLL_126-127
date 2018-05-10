@@ -2,25 +2,21 @@
 #include "Storm.h"
 #pragma optimize("",off)
 
-#define ADDRESS LPVOID  // data
-#define GADDRESS LPVOID // game call
+int sub_6F334180;   // 334C00 6f334C00
+int sub_6F6061B0;   // 606860 6f606860
+int sub_6F605CC0;   // 606370 6f606370
+int sub_6F359CC0;   // 35A740 6f35A740
+int sub_6F32C880; // 32D300   6f
 
-GADDRESS sub_6F27AE90;   // 27B950 6f27B950
-GADDRESS sub_6F334180;   // 334C00 6f334C00
-GADDRESS sub_6F6061B0;   // 606860 6f606860
-GADDRESS sub_6F605CC0;   // 606370 6f606370
-GADDRESS sub_6F359CC0;   // 35A740 6f35A740
-GADDRESS sub_6F32C880; // 32D300   6f
+int sub_6F2C74B0;
 
-GADDRESS sub_6F2C74B0;
-
-ADDRESS a16F08C;
-ADDRESS a16F004;
-ADDRESS a16F090;
-//ADDRESS a16F06C;
-//ADDRESS a16F070;
-ADDRESS a3000AC;
-ADDRESS a3000B0;
+LPVOID a16F08C;
+LPVOID a16F004;
+LPVOID a16F090;
+//Address a16F06C;
+//Address a16F070;
+LPVOID a3000AC;
+LPVOID a3000B0;
 
 int aHPBAR;
 int aMPBAR;
@@ -58,42 +54,42 @@ float mpbaroffsetTowerY[ 20 ];
 
 void __stdcall MPBARLOG1( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 
 void __stdcall MPBARLOG2( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 
 void __stdcall MPBARLOG3( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 void __stdcall MPBARLOG4( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 
 void __stdcall MPBARLOG5( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 
 void __stdcall MPBARLOG6( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 
 void __stdcall MPBARLOG7( )
 {
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 }
 
 
@@ -167,7 +163,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	__asm mov retval, eax;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 
 
@@ -175,7 +171,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 		return retval;
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 
 	int unitslot = GetUnitOwnerSlot( unitaddr );
@@ -184,7 +180,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 
 	aMPBarSizeX = aMPBarSizeX_default;
@@ -266,7 +262,7 @@ int __stdcall  SetMPBarConfigForPlayer( int unitaddr )
 	}
 
 #ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__,__LINE__ );
+	AddNewLineToDotaHelperLog( __func__,__LINE__ );//;
 #endif
 
 	return retval;
@@ -452,6 +448,8 @@ void __declspec( naked ) f001527F0( )
 		mov     eax, dword ptr[ edi + 0x50 ];
 		test    eax, eax;
 		je L093;
+		cmp    dword ptr[ eax + 0xC ], 0;
+		je L093;
 		push    ebx;
 		mov     ebx, dword ptr[ eax + 0xC ];
 		mov aHPBAR, ebx;
@@ -474,7 +472,7 @@ void __declspec( naked ) f001527F0( )
 		lea eax, BarVtableClone;
 		mov     dword ptr[ ebx ], eax;
 		pop eax;
-		call    sub_6F27AE90; // ds:[0016FF24]=6F27B950 (Game.6F27B950)
+		call    GetUnitFloatState; // ds:[0016FF24]=6F27B950 (Game.6F27B950)
 		fldz;
 		fcomp   dword ptr[ esp + 0xC ];
 		fstsw   ax;
@@ -485,7 +483,7 @@ void __declspec( naked ) f001527F0( )
 		push    ecx;
 		xor     edx, edx;
 		mov     ecx, edi;
-		call    sub_6F27AE90;     // ds:[0016FF24]=6F27B950 (Game.6F27B950)
+		call    GetUnitFloatState;     // ds:[0016FF24]=6F27B950 (Game.6F27B950)
 		fldz;
 		fcomp   dword ptr[ esp + 0xC ];
 		fstsw   ax;
@@ -599,8 +597,8 @@ BOOL ManabarEnabled = FALSE;
 char Storm_401_org_malloc_old[ 5 ];
 char HPMP_DRAW_old[ 5 ];
 
-ADDRESS Storm_401_org_malloc;
-ADDRESS HPMP_DRAW;
+LPVOID Storm_401_org_malloc;
+LPVOID HPMP_DRAW;
 
 void Hook( )
 {
@@ -677,7 +675,6 @@ void ManaBarSwitch( BOOL b )
 
 	if ( GameVersion == 0x26a )
 	{
-		*( int* )&sub_6F27AE90 = ( int )GameDll + 0x27AE90;  // 6F27B9B0 
 		*( int* )&sub_6F334180 = ( int )GameDll + 0x334180;  // 0x6f334CC0
 		*( int* )&sub_6F6061B0 = ( int )GameDll + 0x6061B0;  // 0x6f606950
 		*( int* )&sub_6F605CC0 = ( int )GameDll + 0x605CC0;  // 0x6f606460
@@ -707,7 +704,6 @@ void ManaBarSwitch( BOOL b )
 	}
 	else if ( GameVersion == 0x27a )
 	{
-		*( int* )&sub_6F27AE90 = ( int )GameDll + 0x669B40; // 669B40
 		*( int* )&sub_6F334180 = ( int )GameDll + 0x358CF0; // 358CF0
 		*( int* )&sub_6F6061B0 = ( int )GameDll + 0x0BD830; // 0BD830
 		*( int* )&sub_6F605CC0 = ( int )GameDll + 0x0BD630; // 0BD630

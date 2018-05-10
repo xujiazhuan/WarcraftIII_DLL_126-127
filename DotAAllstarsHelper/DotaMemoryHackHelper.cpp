@@ -296,3 +296,50 @@ int __stdcall GetJassStringCount( BOOL dump )
 	return stringcount;
 }
 
+
+const int UseWarnIsBadReadPtr = 2;
+
+
+int IsOkayPtr( void *ptr, unsigned int size  )
+{
+	if ( UseWarnIsBadReadPtr == 1 )
+	{
+		int returnvalue = IsBadReadPtr( ptr, size ) == 0;
+		return returnvalue;
+	}
+	else if ( UseWarnIsBadReadPtr == 2 )
+	{
+		MEMORY_BASIC_INFORMATION mbi;
+		if ( VirtualQuery( ptr, &mbi, sizeof( MEMORY_BASIC_INFORMATION ) ) == 0 )
+		{
+			return 0;
+		}
+
+		if ( ( int )ptr + size > ( int )mbi.BaseAddress + mbi.RegionSize )
+		{
+			return 0;
+		}
+
+
+		if ( ( int )ptr < ( int )mbi.BaseAddress )
+		{
+			return 0;
+		}
+
+
+		if ( mbi.State != MEM_COMMIT )
+		{
+			return 0;
+		}
+
+
+		if ( mbi.Protect != PAGE_READWRITE && mbi.Protect != PAGE_WRITECOPY && mbi.Protect != PAGE_READONLY )
+		{
+			return 0;
+		}
+
+		return 1;
+	}
+	else
+		return 1;
+}

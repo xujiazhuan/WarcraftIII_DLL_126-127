@@ -2,11 +2,12 @@
 
 
 
+
 #define MAX_CHAT_MSG_LEN 128
 
 int GetChatOffset( )
 {
-	int pclass = GetGlobalClassAddr( );
+	int pclass = *( int* )pW3XGlobalClass;
 	if ( pclass > 0 )
 	{
 		return *( int* )( pclass + 0x3FC );
@@ -41,86 +42,167 @@ LPARAM lpReturnScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey(
 LPARAM lpRShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_RSHIFT, 0 ) << 16 ) );
 LPARAM lpRShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_RSHIFT, 0 ) << 16 ) );
 
+LPARAM lpShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_SHIFT, 0 ) << 16 ) );
+LPARAM lpShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_SHIFT, 0 ) << 16 ) );
+
+LPARAM lpLShiftScanKeyUP = ( LPARAM )( 0xC0000001 | ( LPARAM )( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
+LPARAM lpLShiftScanKeyDOWN = ( LPARAM )( 0x00000001 | ( LPARAM )( MapVirtualKey( VK_LSHIFT, 0 ) << 16 ) );
+
+
+
+
+
+
 pGameChatSetState GameChatSetState;
 
 
+typedef int( __fastcall * pGameChatSendMessage )( int GlobalGlueObjAddr, int zero, int event_vtable );
+pGameChatSendMessage GameChatSendMessage;
+
+pSetChatTargetUsers pSetChatTargetUsers_org;
+pSetChatTargetUsers pSetChatTargetUsers_ptr;
+
+BOOL UsingCustomChatTarget = FALSE;
+
+int CustomChatTarget = 0;
+
+int __fastcall SetChatTargetUsers_my( int chataddr, int ecx, int valtype )
+{
+	if ( !UsingCustomChatTarget )
+		return pSetChatTargetUsers_ptr( chataddr, ecx, valtype );
+	else
+		return pSetChatTargetUsers_ptr( chataddr, ecx, CustomChatTarget );
+}
+
+
+time_t AntiSpam_LastTime = std::time( 0 );
+unsigned int AntiSpam_Seconds = 4;
+unsigned int AntiSpam_CurMsgCount = 0;
+unsigned int AntiSpam_MsgLimit = 10;
+
+
+void __stdcall SetAntiSpamLimits( unsigned int Messages, unsigned int Seconds )
+{
+	AntiSpam_Seconds = Seconds;
+	AntiSpam_MsgLimit = Messages;
+}
+
+int _EventVtable = 0;
+int _ChatSendEvent = 0;
+
 int __stdcall SendMessageToChat( const char * msg, BOOL toAll )
 {
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	if ( !GetChatOffset( ) )
+	/* Send messages to chat without any delay!  */
+	/* by Karaulov 08.12.2017 */
+
+
+	if ( !msg || msg[ 0 ] == '\0' )
+		return FALSE;
+	
+	if ( AntiSpam_MsgLimit && AntiSpam_Seconds )
+	{
+		time_t AntiSpam_CurTime = std::time( 0 );
+		if ( AntiSpam_CurTime - AntiSpam_LastTime > AntiSpam_Seconds )
+		{
+			AntiSpam_LastTime = AntiSpam_CurTime;
+			AntiSpam_CurMsgCount = 0;
+		}
+		else
+		{
+			AntiSpam_CurMsgCount++;
+
+			if ( AntiSpam_CurMsgCount > AntiSpam_MsgLimit )
+			{
+				return FALSE;
+			}
+		}
+	}
+
+	int ChatOffset = GetChatOffset( );
+	if ( !ChatOffset )
 	{
 		return FALSE;
 	}
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	if ( !GetChatString( ) )
-	{
-		return FALSE;
-	}
 
-	BYTE tmpbuf[ 256 ];
-	BYTE tmpbuf2[ 256 ];
-	memset( tmpbuf2, 0, 256 );
-	GetKeyboardState( tmpbuf );
-	SetKeyboardState( tmpbuf2 );
-
-
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
 	char * pChatString = GetChatString( );
-	if ( msg > 0 && pChatString > 0 && Warcraft3Window > 0 )
+
+	if ( !pChatString )
 	{
-		if ( *( int* )ChatFound > 0 )
+		return FALSE;
+	}
+
+	//BYTE tmpbuf[ 256 ];
+	//BYTE tmpbuf2[ 256 ];
+	//memset( tmpbuf2, 0, 256 );
+	//GetKeyboardState( tmpbuf );
+	//SetKeyboardState( tmpbuf2 );
+
+	
+	//char tmpdeb[ 512 ];
+	//sprintf_s( tmpdeb, "%X->%s", pChatString, pChatString );
+	//MessageBox( 0, tmpdeb, tmpdeb, 0 );
+
+	BlockInput( TRUE );
+
+	if ( pChatString > 0 && Warcraft3Window > 0 )
+	{
+		if ( *( int* )ChatFound )
 		{
+			UsingCustomChatTarget = TRUE;
 			if ( toAll )
 			{
-				pChatString[ 0 ] = '\0';
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RSHIFT, lpRShiftScanKeyDOWN );
-
-				GameChatSetState( GetChatOffset( ), 0, 0 );
-
-				GameChatSetState( GetChatOffset( ), 0, 1 );
+				CustomChatTarget = 0;
 			}
-			sprintf_s( pChatString, MAX_CHAT_MSG_LEN, "%s", msg );
-
-			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
-			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
-
-
-			if ( toAll )
+			else
 			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RSHIFT, lpRShiftScanKeyUP );
+				CustomChatTarget = 1;
 			}
+			/* Close chat */
+			pChatString[ 0 ] = '\0';
+			GameChatSetState( ChatOffset, 0, 0 );
+
+			/* Open chat */
+			GameChatSetState( ChatOffset, 0, 1 );
+
+			/* Set message */
+			sprintf_s( pChatString, MAX_CHAT_MSG_LEN, "%.128s", msg );
+
+			/* Send Event */
+			GameChatSendMessage = ( pGameChatSendMessage )( _ChatSendEvent );
+			GameChatSendMessage( *( int* )_GlobalGlueObj, 0, _EventVtable );
+
+			UsingCustomChatTarget = FALSE;
 		}
-		else if ( *( int* )ChatFound == 0 && !toAll )
+		else
 		{
-			if ( toAll )
-			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RSHIFT, lpRShiftScanKeyDOWN );
-			}
-			
-			GameChatSetState( GetChatOffset( ), 0, 1 );
-			
-			sprintf_s( pChatString, MAX_CHAT_MSG_LEN, "%s", msg );
-
-			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYDOWN, VK_RETURN, lpReturnScanKeyDOWN );
-			WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RETURN, lpReturnScanKeyUP );
+			UsingCustomChatTarget = TRUE;
 
 			if ( toAll )
 			{
-				WarcraftRealWNDProc_ptr( Warcraft3Window, WM_KEYUP, VK_RSHIFT, lpRShiftScanKeyUP );
+				CustomChatTarget = 0;
 			}
+			else
+			{
+				CustomChatTarget = 1;
+			}
+
+			/* Open chat */
+			GameChatSetState( ChatOffset, 0, 1 );
+
+			/* Set message */
+			sprintf_s( pChatString, MAX_CHAT_MSG_LEN, "%.128s", msg );
+
+			/* Send Event */
+			GameChatSendMessage = ( pGameChatSendMessage )( _ChatSendEvent );
+			GameChatSendMessage( *( int* )_GlobalGlueObj, 0, _EventVtable );
+
+			UsingCustomChatTarget = FALSE;
+
 		}
 
 	}
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-#endif
-	SetKeyboardState( tmpbuf );
+	BlockInput( FALSE );
+ //	SetKeyboardState( tmpbuf );
 
 	return 0;
 }

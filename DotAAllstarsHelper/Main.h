@@ -8,9 +8,10 @@
 #define WIN32_LEAN_AND_MEAN
 //#define PSAPI_VERSION 1
 
-
+//#define DOTA_HELPER_LOG_NEW
 
 #pragma region Includes
+
 
 #pragma comment(lib,"legacy_stdio_definitions.lib")
 #include <stdint.h>
@@ -21,6 +22,8 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+
+#include "fp_call.h"
 
 #include <concurrent_vector.h>
 #define safevector concurrency::concurrent_vector
@@ -33,7 +36,6 @@
 #include <thread>
 #include <chrono>
 #include <map>
-
 
 #include <filesystem>
 namespace fs = std::experimental::filesystem;
@@ -62,6 +64,19 @@ using namespace std;
 
 #include "WarcraftFrameHelper.h"
 
+#include "MegaPacketHandler.h"
+
+
+#include <stdlib.h>
+
+/*
+#include <portaudio.h>
+#pragma comment(lib,"portaudio.lib")
+*/
+
+#include "RawImageApi.h"
+
+
 #pragma endregion
 
 
@@ -70,8 +85,9 @@ using namespace std;
 #define IsKeyPressed(CODE) ((GetAsyncKeyState(CODE) & 0x8000) > 0)
 
 
+BOOL IsGame( );
 
-
+extern int ConvertHandle( int handle );
 
 extern BOOL InitFunctionCalled;
 
@@ -88,16 +104,17 @@ extern int RenderStage;
 int GetGlobalClassAddr( );
 BOOL FileExist( const char * name );
 DWORD GetDllCrc32( );
-//typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
-//extern _TriggerExecute TriggerExecute;
+typedef void *( __cdecl * _TriggerExecute )( int TriggerHandle );
+extern _TriggerExecute TriggerExecute;
 
-
+int __stdcall SendMessageToChat( const char * msg, BOOL toAll );
 
 typedef void( __cdecl * pExecuteFunc )( RCString * funcname );
 extern pExecuteFunc ExecuteFunc;
 typedef void( __thiscall * pConvertStrToJassStr )( RCString * jStr, const char * cStr );
 extern pConvertStrToJassStr str2jstr;
 
+std::string uint_to_hex( unsigned int i );
 
 BOOL IsClassEqual( int ClassID1, int ClassID2 );
 int GetTypeId( int unit_item_abil_etc_addr );
@@ -164,6 +181,11 @@ extern BOOL ShowSkillPanelOnlyForHeroes;
 #pragma endregion
 
 #pragma region UnitAndItem.cpp
+extern void( __thiscall * SelectUnitReal )( int pPlayerSelectData, int pUnit, int id, int unk1, int unk2, int unk3 );
+extern void( __thiscall * UpdatePlayerSelection )( int pPlayerSelectData, int unk );
+extern int( __cdecl * ClearSelection )( void );
+void SelectUnit( int unit );
+std::vector<int> GetUnitsFromGroup( int groupid );
 int * FindUnitAbils( int unitaddr, unsigned int * count, int abilcode = 0, int abilbasecode = 0 );
 int __stdcall GetUnitOwnerSlot( int unitaddr );
 BOOL __stdcall IsEnemy( int UnitAddr );
@@ -183,13 +205,16 @@ int * GetUnitCountAndUnitArray( int ** unitarray );
 int * GetItemCountAndItemArray( int ** itemarray );
 float GetUnitMPregen( int unitaddr );
 float GetUnitHPregen( int unitaddr );
+float GetUnitMP( int unitaddr );
+float GetUnitHP( int unitaddr );
 int GetUnitAddressFloatsRelated( int unitaddr, int step );
 float GetUnitX_real( int unitaddr );
 float GetUnitY_real( int unitaddr );
 #pragma endregion
 
 #pragma region DotaMPBarHelper.cpp
-
+typedef float *( __thiscall * _GetUnitFloatStat )( int unitaddr, float *a2, int a3 );
+extern _GetUnitFloatStat GetUnitFloatState;
 extern BYTE BarVtableClone[ 0x80 ];
 void ManaBarSwitch( BOOL b );
 void PatchOffset( void * addr, void * buffer, unsigned int size );
@@ -214,24 +239,33 @@ extern vector<CustomHPBar> CustomHPBarList[ 20 ];
 #pragma endregion
 
 #pragma region ErrorHandler.cpp
-#ifdef DOTA_HELPER_LOG
+
 void  __stdcall AddNewLineToJassLog( const char * s );
 void __stdcall  AddNewLineToDotaChatLog( const char * s );
-void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );
+void __stdcall  AddNewLineToDotaHelperLog( const char * s, int line );//( const char * s, int line );
 void __stdcall  AddNewLineToJassNativesLog( const char * s );
 void __stdcall EnableErrorHandler( int );
 void __stdcall DisableErrorHandler( int );
-void DumpExceptionInfoToFile( _EXCEPTION_POINTERS *ExceptionInfo );
 
-extern void ResetTopLevelExceptionFilter( );
-extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
-extern BOOL bDllLogEnable;
-typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
-extern StormErrorHandler StormErrorHandler_org;
+
 typedef int( __fastcall *LookupNative )( int global, int unused, const char * name );
 extern LookupNative LookupNative_org;
 typedef signed int( __fastcall * LookupJassFunc )( int global, int unused, const char * funcname );
 extern LookupJassFunc LookupJassFunc_org;
+
+extern BOOL bDllLogEnable;
+
+#ifndef DOTA_HELPER_LOG_NEW
+#ifdef DOTA_HELPER_LOG
+
+void __cdecl DumpExceptionInfoToFile( _EXCEPTION_POINTERS * ExceptionInfo );
+
+extern void ResetTopLevelExceptionFilter( );
+extern LPTOP_LEVEL_EXCEPTION_FILTER OriginFilter;
+
+typedef LONG( __fastcall * StormErrorHandler )( int a1, void( *a2 )( int, const char *, ... ), int a3, BYTE *a4, LPSYSTEMTIME a5 );
+extern StormErrorHandler StormErrorHandler_org;
+
 typedef void( __fastcall * ProcessNetEvents )( void * data, int unused_, int Event );
 extern ProcessNetEvents ProcessNetEvents_org;
 typedef void( __fastcall * BlizzardDebug1 ) ( const char*str );
@@ -247,6 +281,7 @@ extern BlizzardDebug5 BlizzardDebug5_org;
 typedef void( __cdecl * BlizzardDebug6 )( const char *format, ... );
 extern BlizzardDebug6 BlizzardDebug6_org;
 #endif
+#endif
 #pragma endregion
 
 
@@ -260,7 +295,7 @@ extern int GameVersion;
 extern HWND Warcraft3Window;
 
 #pragma region All Offsets Here
-extern int GlobalPlayerOffset;
+extern int GlobalGameStateOffset;
 extern int IsPlayerEnemyOffset;
 extern int DrawSkillPanelOffset;
 extern int DrawSkillPanelOverlayOffset;
@@ -269,7 +304,9 @@ extern int IsDrawSkillPanelOverlayOffset;
 extern int IsNeedDrawUnitOriginOffset;
 extern int IsNeedDrawUnit2offset;
 extern int IsNeedDrawUnit2offsetRetAddress;
-extern BOOL * InGame;
+extern int _GlobalGlueObj;
+extern int _GameUI;
+extern int * InGame;
 extern BOOL * IsWindowActive;
 extern int ChatFound;
 extern int pW3XGlobalClass;
@@ -278,7 +315,9 @@ extern int pWar3GlobalData1;
 extern int UnitVtable;
 extern int ItemVtable;
 extern int pPrintText2;
+extern const char * GetBoolStr( BOOL val );
 extern void PrintText( const char * text, float staytime = 10.0f );
+extern void PrintText( std::string text, float staytime = 10.0f );
 extern int MapNameOffset1;
 extern int MapNameOffset2;
 extern int pOnChatMessage_offset;
@@ -288,12 +327,16 @@ extern int GetItemInSlotAddr;
 extern float * GetWindowXoffset;
 extern float * GetWindowYoffset;
 extern int GameFrameAtMouseStructOffset;
-//extern int pTriggerExecute;
+extern int pTriggerExecute;
 #pragma endregion
 
 
 
 #pragma region DotaClickHelper.cpp
+extern BOOL SetInfoObjDebugVal;
+extern int ChatEditBoxVtable;
+BOOL IsChatActive( );
+BOOL IsGameFrameActive( );
 extern vector<int> doubleclickSkillIDs;
 extern vector<int> WhiteListForTeleport;
 extern BOOL ShopHelperEnabled;
@@ -321,7 +364,22 @@ extern int sub_6F33A010Offset;
 void IssueFixerInit( );
 void IssueFixerDisable( );
 typedef int( __fastcall * c_SimpleButtonClickEvent )( int pButton, int unused, int ClickEventType );
-extern c_SimpleButtonClickEvent SimpleButtonClickEvent;
+int __fastcall SimpleButtonClickEvent_my( int pButton, int unused, int ClickEventType );
+extern c_SimpleButtonClickEvent SimpleButtonClickEvent_org;
+extern c_SimpleButtonClickEvent SimpleButtonClickEvent_ptr;
+extern int CommandButtonVtable;
+extern std::vector<ClickPortrainForId> ClickPortrainForIdList;
+
+typedef int( __fastcall * pSimpleButtonPreClickEvent )( int pButton, int unused, int a2 );
+int __fastcall SimpleButtonPreClickEvent_my( int pButton, int unused, int a2 );
+extern pSimpleButtonPreClickEvent SimpleButtonPreClickEvent_org;
+extern pSimpleButtonPreClickEvent SimpleButtonPreClickEvent_ptr;
+
+extern std::vector<ObjInfoAction> IgnoreObjInfo;
+
+extern std::vector< int > InfoWhitelistedObj;
+
+
 #pragma endregion
 
 
@@ -344,6 +402,8 @@ extern GameGetFile GameGetFile_org, GameGetFile_ptr;
 void FreeAllIHelpers( );
 
 
+typedef int( __fastcall * p_GetTypeInfo )( int unit_item_code, int unused );
+extern p_GetTypeInfo GetTypeInfo;
 
 
 extern RawImageCallbackData * GlobalRawImageCallbackData;
@@ -354,6 +414,8 @@ extern vector<RawImageStruct> ListOfRawImages;
 extern vector<FakeFileStruct> FakeFileList;
 void ClearAllRawImages( );
 extern BOOL NeedReleaseUnusedMemory;
+std::vector<std::string> get_file_list( const fs::path & path, bool dotolower = false );
+std::string GetFileContent( std::string filename );
 #pragma endregion
 
 
@@ -369,16 +431,10 @@ extern SetGameAreaFOV SetGameAreaFOV_org, SetGameAreaFOV_ptr;
 
 
 #pragma region DotaWebHelper.cpp
-string SendHttpPostRequest( const char * host, const char * path, const char * data );
+string SendHttpPostRequest( const char * url, const char * data );
 string SendHttpGetRequest( const char * host, const char * path );
+extern string LatestDownloadedString;
 #pragma endregion 
-
-
-#pragma region SendGamePacket.cpp
-extern int PacketClassPtr;
-extern int pGAME_SendPacket;
-void SendPacket( BYTE* packetData, DWORD size );
-#pragma endregion
 
 
 #pragma region DotaAutoFPSlimit.cpp
@@ -401,6 +457,23 @@ extern BOOL FPSfix1Enabled;
 #pragma region DotaChatHelper.cpp
 typedef int( __fastcall * pGameChatSetState )( int chat, int unused, BOOL IsOpened );
 extern pGameChatSetState GameChatSetState;
+
+typedef int( __fastcall * pSetChatTargetUsers/*sub_6F3412F0*/ )( int chataddr, int ecx, int valtype );
+extern pSetChatTargetUsers pSetChatTargetUsers_org;
+extern pSetChatTargetUsers pSetChatTargetUsers_ptr;
+int __fastcall SetChatTargetUsers_my( int chataddr, int ecx, int valtype );
+
+extern LPARAM lpRShiftScanKeyUP;
+extern LPARAM lpRShiftScanKeyDOWN;
+
+extern LPARAM lpShiftScanKeyUP;
+extern LPARAM lpShiftScanKeyDOWN;
+
+extern LPARAM lpLShiftScanKeyUP;
+extern LPARAM lpLShiftScanKeyDOWN;
+
+extern int _EventVtable;
+extern int _ChatSendEvent;
 #pragma endregion
 
 
@@ -474,6 +547,8 @@ extern GetTownUnitCount_p GetTownUnitCount_org;
 extern GetTownUnitCount_p GetTownUnitCount_ptr;
 int __stdcall GetJassStringCount( BOOL dump );
 int __stdcall ScanJassStringForErrors( BOOL dump );
+
+int IsOkayPtr( void *ptr, unsigned int size = 4 );
 #pragma endregion
 
 const float DesktopScreen_Width = ( float )GetSystemMetrics( SM_CXSCREEN );
@@ -487,3 +562,31 @@ extern int ScanId;
 
 
 #pragma endregion
+
+
+
+inline std::string WStringToString( LPCWSTR s )
+{
+	if ( !s )
+		return "";
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.to_bytes( s );
+}
+
+inline std::wstring StringToWString( LPCSTR s )
+{
+	if ( !s )
+		return L"";
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	return converter.from_bytes( s );
+}
+
+
+void SetTlsForMe( );
+void __stdcall Packet_Initialize( int TriggerHandle );
+/* Voice chat. Works only in a single player game :( 
+In the local game or on the Internet there is a limit on sending data size, so the voice is recorded no more than one second! It is necessary to find and destroy the sending limit.
+void UninitializeVoiceClient( );
+void InitVoiceClientThread( );
+void AddNewPaTestData( std::vector<unsigned char> _samples, int playerid, int packetsize, bool compressed );
+*/

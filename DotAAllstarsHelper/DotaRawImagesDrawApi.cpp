@@ -1,8 +1,10 @@
 #include "Main.h"
 #include "BlpReadWrite.h"
 
+#define MAX_IMAGES_COUNT 100000
 
 vector<RawImageStruct> ListOfRawImages;
+
 
 
 double pDistance( int x1, int y1, int x2, int y2 )
@@ -10,42 +12,167 @@ double pDistance( int x1, int y1, int x2, int y2 )
 	return sqrt( ( x2 - x1 )*( x2 - x1 ) + ( y2 - y1 )*( y2 - y1 ) );
 }
 
+int __stdcall ClearRawImage( unsigned int RawImage, RGBAPix FillByte )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+#ifdef OLD_CODE
+	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
+	for ( int i = 0; i < tmpRawImage.width * tmpRawImage.height; i++ )
+	{
+		RawImageData[ i ] = FillByte;
+	}
+#else 
+
+#endif
+	return 1;
+}
+
+int __stdcall BackupRawImage( unsigned int RawImage )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+	if ( tmpRawImage.backup_img )
+	{
+		delete[ ] tmpRawImage.backup_img;
+	}
+
+#ifdef OLD_CODE
+	tmpRawImage.backup_img = new char[ tmpRawImage.img.length ];
+	std::memcpy( tmpRawImage.backup_img, tmpRawImage.img.buf, tmpRawImage.img.length );
+#else 
+	
+#endif
+	tmpRawImage.backup_width = tmpRawImage.width;
+	tmpRawImage.backup_height = tmpRawImage.height;
+
+	return TRUE;
+}
+
+int __stdcall RestoreRawImage( unsigned int RawImage )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+	if ( !tmpRawImage.backup_img )
+		return FALSE;
+
+#ifdef OLD_CODE
+	tmpRawImage.img.Clear( );
+	tmpRawImage.img.Resize( tmpRawImage.backup_width * tmpRawImage.backup_height * 4 );
+	std::memcpy( tmpRawImage.img.buf, tmpRawImage.backup_img, tmpRawImage.backup_width * tmpRawImage.backup_height * 4 );
+#else
+	
+#endif
+
+	return TRUE;
+}
+
+
+
+
 // Создает RawImage (RGBA) с указанным цветом
 int __stdcall CreateRawImage( int width, int height, RGBAPix defaultcolor )
 {
 	if ( !InitFunctionCalled )
 		return 0;
 	int resultid = ListOfRawImages.size( );
-#ifdef DOTA_HELPER_LOG
-	AddNewLineToDotaHelperLog( __func__, __LINE__ );
-	cout << "CreateRawImage:" << endl;
-#endif
+
 	width = width + ( width % 2 );
 	height = height + ( height % 2 );
 
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+	AddNewLineToDotaHelperLog( "Raw images:", ListOfRawImages.size( ) );
+	AddNewLineToDotaHelperLog( "Image width:", width );
+	AddNewLineToDotaHelperLog( "Image height:", height );
+
+	AddNewLineToJassNativesLog( __func__ );
+	AddNewLineToJassNativesLog( ( "Raw images:" + std::to_string( ListOfRawImages.size( ) ) ).c_str( ) );
+	AddNewLineToJassNativesLog( ( "Image width:" + std::to_string( width ) ).c_str( ) );
+	AddNewLineToJassNativesLog( ( "Image height:" + std::to_string( height ) ).c_str( ) );
+
+
+	cout << "CreateRawImage:" << endl;
+#endif
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( "Create struct:" );
+#endif
 	RawImageStruct tmpRawImage = RawImageStruct( );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( "Create buffer:" );
+#endif
+
+
+#ifdef OLD_CODE
 	StormBuffer tmpRawImageBuffer = StormBuffer( );
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( "Resize buffer" );
+#endif
 	tmpRawImageBuffer.Resize( width * height * 4 );
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( " ok " );
+#endif
 	for ( int i = 0; i < width * height; i++ )
 	{
 		*( RGBAPix* )&tmpRawImageBuffer[ i * 4 ] = defaultcolor;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( __func__ );
+#endif
+
 	tmpRawImage.img = tmpRawImageBuffer;
+
+#else 
+
+
+#endif
+
+
 	tmpRawImage.width = width;
 	tmpRawImage.height = height;
 	tmpRawImage.filename = string( );
 	tmpRawImage.RawImage = resultid;
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( __func__ );
+#endif
+
 	ListOfRawImages.push_back( tmpRawImage );
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToJassNativesLog( __func__ );
+#endif
 	return resultid;
 }
 
 // Загружает RawImage из filename (tga,blp)
 int __stdcall LoadRawImage( const char * filename )
 {
-	if ( !InitFunctionCalled )
+	if ( !InitFunctionCalled || !filename || filename[ 0 ] == '\0' )
 		return 0;
 	int resultid = ListOfRawImages.size( );
 #ifdef DOTA_HELPER_LOG
@@ -61,7 +188,7 @@ int __stdcall LoadRawImage( const char * filename )
 	GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
 	if ( PatchFileData == 0 || PatchFileSize == 0 )
 	{
-		PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
+		//PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
 		//MessageBoxA( 0, ( "RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ), "READ ERROR", 0 );
 		GameGetFile_org( filename, &PatchFileData, &PatchFileSize, TRUE );
 		if ( PatchFileData == 0 || PatchFileSize == 0 )
@@ -76,11 +203,15 @@ int __stdcall LoadRawImage( const char * filename )
 					{
 						char * tmpfilename = new char[ filenamelen ];
 						memset( tmpfilename, 0, filenamelen );
-						memcpy( tmpfilename, filename, filenamelen - 4 );
+						std::memcpy( tmpfilename, filename, filenamelen - 4 );
 						GameGetFile_org( ( tmpfilename + string( ".blp" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
 						if ( PatchFileData == 0 || PatchFileSize == 0 )
 						{
 							GameGetFile_org( ( tmpfilename + string( ".tga" ) ).c_str( ), &PatchFileData, &PatchFileSize, TRUE );
+							if ( PatchFileData == 0 || PatchFileSize == 0 )
+							{
+								PrintText( ( "|cFFFF0000RawImages: File:" + string( filename ) + " not found in game! Try another search methods." ).c_str( ) );
+							}
 						}
 
 						delete[ ] tmpfilename;
@@ -111,7 +242,11 @@ int __stdcall LoadRawImage( const char * filename )
 		if ( rawImageSize > 0 )
 		{
 			RawImageStruct tmpRawImage = RawImageStruct( );
+#ifdef OLD_CODE
 			tmpRawImage.img = OutBuffer;
+#else 
+	
+#endif
 			tmpRawImage.width = w;
 			tmpRawImage.height = h;
 			tmpRawImage.filename = filename;
@@ -131,7 +266,12 @@ int __stdcall LoadRawImage( const char * filename )
 			if ( rawImageSize > 0 )
 			{
 				RawImageStruct tmpRawImage = RawImageStruct( );
+
+#ifdef OLD_CODE
 				tmpRawImage.img = OutBuffer;
+#else 
+			
+#endif
 				tmpRawImage.width = w;
 				tmpRawImage.height = h;
 				tmpRawImage.filename = filename;
@@ -139,7 +279,7 @@ int __stdcall LoadRawImage( const char * filename )
 				ListOfRawImages.push_back( tmpRawImage );
 
 				PrintText( "FU##! Error filetype :O" );
-		//		MessageBoxA( 0, "FU##! Error filetype :O", "FU##! Error filetype :O", 0 );
+				//		MessageBoxA( 0, "FU##! Error filetype :O", "FU##! Error filetype :O", 0 );
 			}
 		}
 
@@ -177,7 +317,6 @@ int __stdcall RawImage_DrawImg( unsigned int RawImage, unsigned int RawImage2, i
 		return FALSE;
 	}
 
-
 	if ( RawImage2 >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
@@ -186,7 +325,7 @@ int __stdcall RawImage_DrawImg( unsigned int RawImage, unsigned int RawImage2, i
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	RawImageStruct & tmpRawImage2 = ListOfRawImages[ RawImage2 ];
 
-
+#ifdef OLD_CODE
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	RGBAPix* RawImageData2 = ( RGBAPix* )tmpRawImage2.img.buf;
 
@@ -210,13 +349,14 @@ int __stdcall RawImage_DrawImg( unsigned int RawImage, unsigned int RawImage2, i
 				RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] / RawImageData2[ ArrayXYtoId( tmpRawImage2.width, x2, y2 ) ];
 		}
 	}
+#else 
 
+
+#endif
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
 	}
-
-
 	return TRUE;
 }
 
@@ -230,24 +370,27 @@ int __stdcall RawImage_DrawPixel( unsigned int RawImage, int x, int y, RGBAPix c
 		return FALSE;
 	}
 
+
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+#ifdef OLD_CODE
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	if ( x >= 0 && y >= 0 && x < tmpRawImage.width && y < tmpRawImage.height )
 	{
 		RawImageData[ ArrayXYtoId( tmpRawImage.width, x, y ) ] = color;
 	}
-
+#else 
+	
+#endif
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
 	}
 
-
 	return TRUE;
 }
 
-// Рисует прямоугольник с указанным цветом и размером
-int __stdcall RawImage_DrawRect( unsigned int RawImage, int drawx, int drawy, int widthsize, int heightsize, RGBAPix color )
+
+int __stdcall RawImage_FillRectangle( unsigned int RawImage, int x1, int y1, int x2, int y2, RGBAPix color )
 {
 	if ( !InitFunctionCalled )
 		return 0;
@@ -256,14 +399,58 @@ int __stdcall RawImage_DrawRect( unsigned int RawImage, int drawx, int drawy, in
 		return FALSE;
 	}
 
-	for ( int xsize = 0; xsize < widthsize; xsize++ )
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+#ifdef OLD_CODE
+	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
+
+	for ( int xsize = 0; xsize < x2; xsize++ )
 	{
-		for ( int ysize = 0; ysize < heightsize; ysize++ )
+		for ( int ysize = 0; ysize < y2; ysize++ )
 		{
-			RawImage_DrawPixel( RawImage, drawx + xsize, drawy + ysize, color );
+			RawImage_DrawPixel( RawImage, x1 + xsize, y1 + ysize, color );
 		}
 	}
+#else 
+	
+#endif
+	if ( tmpRawImage.used_for_overlay )
+	{
+		tmpRawImage.needResetTexture = TRUE;
+	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
+
+	return TRUE;
+}
+
+
+// Рисует прямоугольник с указанным цветом и размером
+int __stdcall RawImage_DrawRect( unsigned int RawImage, int x1, int y1, int x2, int y2, int size, RGBAPix color )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+#ifdef OLD_CODE
+	// fixme
+	for ( int xsize = 0; xsize < x2; xsize++ )
+	{
+		for ( int ysize = 0; ysize < y2; ysize++ )
+		{
+			RawImage_DrawPixel( RawImage, x1 + xsize, y1 + ysize, color );
+		}
+	}
+#else 
+	
+#endif
 	return TRUE;
 }
 
@@ -325,15 +512,15 @@ void drawLineOverlap( unsigned int RawImage, int aXStart, int aYStart, int aXEnd
 
 		if ( aXEnd >= aXStart && aYEnd >= aYStart )
 		{
-			RawImage_DrawRect( RawImage, aXStart, aYStart, aXEnd - aXStart + 1, aYEnd - aYStart + 1, aColor );
+			RawImage_FillRectangle( RawImage, aXStart, aYStart, aXEnd - aXStart + 1, aYEnd - aYStart + 1, aColor );
 		}
 		else if ( aXEnd >= aXStart )
 		{
-			RawImage_DrawRect( RawImage, aXStart, aYEnd, aXEnd - aXStart + 1, aYStart - aYEnd + 1, aColor );
+			RawImage_FillRectangle( RawImage, aXStart, aYEnd, aXEnd - aXStart + 1, aYStart - aYEnd + 1, aColor );
 		}
 		else if ( aYEnd >= aYStart )
 		{
-			RawImage_DrawRect( RawImage, aXEnd, aYStart, aXStart - aXEnd + 1, aYEnd - aYStart + 1, aColor );
+			RawImage_FillRectangle( RawImage, aXEnd, aYStart, aXStart - aXEnd + 1, aYEnd - aYStart + 1, aColor );
 		}
 	}
 	else {
@@ -597,12 +784,16 @@ int __stdcall RawImage_DrawLine( unsigned int RawImage, int x1, int y1, int x2, 
 {
 	if ( !InitFunctionCalled )
 		return 0;
+
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
 	}
-
+#ifdef OLD_CODE
 	drawThickLine( RawImage, x1, y1, x2, y2, size, 0, color );
+#else 
+
+#endif
 
 	return TRUE;
 }
@@ -612,16 +803,24 @@ int __stdcall RawImage_DrawCircle( unsigned int RawImage, int x, int y, int radi
 {
 	if ( !InitFunctionCalled )
 		return 0;
+
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
 	{
 		return FALSE;
 	}
+
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	size /= 2;
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+#ifdef OLD_CODE
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 	for ( int x2 = 0; x2 < tmpRawImage.width; x2++ )
 	{
-		for ( int y2 = 0; y2 < tmpRawImage.width; y2++ )
+		for ( int y2 = 0; y2 < tmpRawImage.height; y2++ )
 		{
 			double dist = pDistance( x, y, x2, y2 );
 			if ( pDistance( x, y, x2, y2 ) >= radius - size && pDistance( x, y, x2, y2 ) <= radius + size )
@@ -632,12 +831,17 @@ int __stdcall RawImage_DrawCircle( unsigned int RawImage, int x, int y, int radi
 		}
 
 	}
+#else 
+	
+#endif
 
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
 	}
-
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 
 	return TRUE;
 }
@@ -655,11 +859,20 @@ int __stdcall RawImage_FillCircle( unsigned int RawImage, int x, int y, int radi
 		return FALSE;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+
+#ifdef OLD_CODE
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
+
+
+
 	for ( int x2 = 0; x2 < tmpRawImage.width; x2++ )
 	{
-		for ( int y2 = 0; y2 < tmpRawImage.width; y2++ )
+		for ( int y2 = 0; y2 < tmpRawImage.height; y2++ )
 		{
 			if ( pDistance( x, y, x2, y2 ) <= radius )
 			{
@@ -668,15 +881,21 @@ int __stdcall RawImage_FillCircle( unsigned int RawImage, int x, int y, int radi
 		}
 	}
 
+#else 
+
+#endif
+
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 
 	return TRUE;
 }
-
 
 // Оставляет только круг с указанным радиусом
 int __stdcall RawImage_EraseCircle( unsigned int RawImage, int x, int y, int radius, BOOL inverse )
@@ -688,8 +907,11 @@ int __stdcall RawImage_EraseCircle( unsigned int RawImage, int x, int y, int rad
 		return FALSE;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
-	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
+
 	RGBAPix tmpPix = RGBAPix( );
 
 	if ( !inverse )
@@ -697,9 +919,13 @@ int __stdcall RawImage_EraseCircle( unsigned int RawImage, int x, int y, int rad
 		return RawImage_FillCircle( RawImage, x, y, radius, tmpPix );
 	}
 
+#ifdef OLD_CODE
+
+	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
+
 	for ( int x2 = 0; x2 < tmpRawImage.width; x2++ )
 	{
-		for ( int y2 = 0; y2 < tmpRawImage.width; y2++ )
+		for ( int y2 = 0; y2 < tmpRawImage.height; y2++ )
 		{
 			if ( pDistance( x, y, x2, y2 ) > radius )
 			{
@@ -707,11 +933,17 @@ int __stdcall RawImage_EraseCircle( unsigned int RawImage, int x, int y, int rad
 			}
 		}
 	}
+#else 
+	
+#endif
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 
 	return TRUE;
 }
@@ -726,8 +958,16 @@ int __stdcall RawImage_EraseColor( unsigned int RawImage, RGBAPix color, int pow
 		return FALSE;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+#ifdef OLD_CODE
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
+#else 
+
+#endif
 	RGBAPix tmpPix = RGBAPix( );
 	unsigned char// A = color.A,
 		R = color.R,
@@ -736,7 +976,7 @@ int __stdcall RawImage_EraseColor( unsigned int RawImage, RGBAPix color, int pow
 
 	for ( int x2 = 0; x2 < tmpRawImage.width; x2++ )
 	{
-		for ( int y2 = 0; y2 < tmpRawImage.width; y2++ )
+		for ( int y2 = 0; y2 < tmpRawImage.height; y2++ )
 		{
 			unsigned char// A2 = RawImageData[ ArrayXYtoId( tmpRawImage.width, x2, y2 ) ].A,
 				R2 = RawImageData[ ArrayXYtoId( tmpRawImage.width, x2, y2 ) ].R,
@@ -757,6 +997,9 @@ int __stdcall RawImage_EraseColor( unsigned int RawImage, RGBAPix color, int pow
 		tmpRawImage.needResetTexture = TRUE;
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	return TRUE;
 }
 
@@ -771,11 +1014,19 @@ int __stdcall RawImage_LoadFontFromResource( const char * filepath )
 {
 	if ( !InitFunctionCalled )
 		return 0;
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	int PatchFileData = 0;
 	size_t PatchFileSize = 0;
 	GameGetFile_ptr( filepath, &PatchFileData, &PatchFileSize, TRUE );
 	DWORD Font = NULL;//Globals, this is the Font in the RAM
 	AddFontMemResourceEx( ( void* )PatchFileData, PatchFileSize, NULL, &Font );
+
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	return TRUE;
 }
 
@@ -803,6 +1054,9 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 	}
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+#ifdef OLD_CODE
+
 	RGBAPix* RawImageData = ( RGBAPix* )tmpRawImage.img.buf;
 #ifdef DOTA_HELPER_LOG
 	AddNewLineToDotaHelperLog( __func__, __LINE__ );
@@ -989,6 +1243,9 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 		}
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	DeleteObject( NewFont );
 
 	SelectObject( hDC, hBmpOld );
@@ -997,6 +1254,9 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 
 	RGBPix* tmpBitmapPixList = ( RGBPix* )pSrcData;
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 
 	for ( int x0 = 0; x0 < tmpRawImage.width; x0++ )
 	{
@@ -1009,10 +1269,15 @@ int __stdcall RawImage_DrawText( unsigned int RawImage, const char * text, int x
 		}
 	}
 
+#ifdef DOTA_HELPER_LOG
+	AddNewLineToDotaHelperLog( __func__, __LINE__ );
+#endif
 	DeleteDC( hDC );
 	DeleteObject( hBmpOld );
 	DeleteObject( hTempBmp );
+#else 
 
+#endif
 	if ( tmpRawImage.used_for_overlay )
 	{
 		tmpRawImage.needResetTexture = TRUE;
@@ -1038,7 +1303,11 @@ int __stdcall SaveRawImageToGameFile( unsigned int RawImage, const char * filena
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 	tmpRawImage.filename = filename;
+#ifdef OLD_CODE
 	StormBuffer tmpRawImageBuffer = tmpRawImage.img;
+#else 
+
+#endif
 	StormBuffer ResultBuffer = StormBuffer( );
 	if ( tmpRawImage.ingamebuffer.buf )
 		tmpRawImage.ingamebuffer.Clear( );
@@ -1070,16 +1339,13 @@ int __stdcall DumpRawImageToFile( unsigned int RawImage, const char * filename )
 
 	RawImageStruct tmpRawImage = ListOfRawImages[ RawImage ];
 	StormBuffer outbuffer;
+#ifdef OLD_CODE
 	StormBuffer inbuffer = tmpRawImage.img;
 	RAW2Tga( inbuffer, outbuffer, tmpRawImage.width, tmpRawImage.height, 4, filename );
-	FILE * f;
-	fopen_s( &f, filename, "wb" );
-	if ( f )
-	{
-		fwrite( outbuffer.buf, outbuffer.length, 1, f );
-		fclose( f );
-		outbuffer.Clear( );
-	}
+#else 
+
+
+#endif 
 
 
 	return TRUE;
@@ -1137,14 +1403,24 @@ int __stdcall RawImage_Resize( unsigned int RawImage, int newwidth, int newheigh
 	newwidth = newwidth + ( newwidth % 2 );
 	newheight = newheight + ( newheight % 2 );
 
+
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
+#ifdef OLD_CODE
+
 	StormBuffer tmpOldBuffer = tmpRawImage.img;
 	StormBuffer tmpNewBuffer = StormBuffer( );
 	ScaleImage( ( unsigned char * )tmpOldBuffer.buf, tmpRawImage.width, tmpRawImage.height, newwidth, newheight, 4, tmpNewBuffer );
 	tmpOldBuffer.Clear( );
 	tmpRawImage.img = tmpNewBuffer;
+#else 
+
+#endif
+
+
 	tmpRawImage.height = newheight;
 	tmpRawImage.width = newwidth;
+
 	if ( tmpRawImage.used_for_overlay )
 		tmpRawImage.needResetTexture = TRUE;
 
@@ -1186,24 +1462,20 @@ int __stdcall RawImage_DrawOverlay( unsigned int RawImage, BOOL enabled, float x
 
 			tmpRawImage.width = PowerOfTwo( tmpRawImage.width );
 			tmpRawImage.height = PowerOfTwo( tmpRawImage.height );
-
+#ifdef OLD_CODE
 			char * newimage = ( char * )Scale_WithoutResize( ( unsigned char * )tmpRawImage.img.buf, oldwidth, oldheight,
 				tmpRawImage.width, tmpRawImage.height, 4 );
-
-			if ( tmpRawImage.img.buf == newimage )
-			{
-				tmpRawImage.width = oldwidth;
-				tmpRawImage.height = oldheight;
-			}
-			else
-			{
-				tmpRawImage.img.buf = newimage;
-				tmpRawImage.img.length = tmpRawImage.width *  tmpRawImage.height * 4;
-			}
+			tmpRawImage.img.buf = newimage;
+			tmpRawImage.img.length = tmpRawImage.width *  tmpRawImage.height * 4;
+#else 
 			
+#endif
+
+
+
 
 			//RawImage_Resize( RawImage, PowerOfTwo( tmpRawImage.width ), PowerOfTwo( tmpRawImage.height ) );
-		}
+	}
 	}
 	tmpRawImage.used_for_overlay = enabled;
 	tmpRawImage.overlay_x = xpos;
@@ -1266,11 +1538,13 @@ int __stdcall RawImage_MoveTimed( unsigned int RawImage, float x2, float y2, uns
 
 RawImageCallbackData * GlobalRawImageCallbackData = NULL;
 
-int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
+
+
+
+int __stdcall RawImage_SetPacketCallback( unsigned int RawImage, BOOL enable, unsigned int events )
 {
 	if ( !InitFunctionCalled )
 		return 0;
-	GlobalRawImageCallbackData = callbackdata;
 
 
 	if ( RawImage >= ( int )ListOfRawImages.size( ) )
@@ -1280,16 +1554,58 @@ int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseAct
 
 	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
 
+
+	tmpRawImage.PacketCallback = enable;
+	tmpRawImage.events = events;
+	tmpRawImage.IsMouseDown = FALSE;
+	tmpRawImage.IsMouseEntered = FALSE;
+
+	return 0;
+}
+
+int __stdcall RawImage_AddCallback( unsigned int RawImage, const char * MouseActionCallback, RawImageCallbackData * callbackdata, unsigned int events )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+
+	if ( SetInfoObjDebugVal )
+	{
+		PrintText( "Add callback" );
+	}
+	GlobalRawImageCallbackData = callbackdata;
+
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		if ( SetInfoObjDebugVal )
+		{
+			PrintText( "Error!" );
+		}
+		return FALSE;
+	}
+
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+
 	if ( !MouseActionCallback || MouseActionCallback[ 0 ] == '\0' )
 	{
+		if ( SetInfoObjDebugVal )
+		{
+			PrintText( "Error callback disabled" );
+		}
 		tmpRawImage.MouseCallback = FALSE;
 		tmpRawImage.MouseActionCallback = RCString( );
+		tmpRawImage.MouserExecuteFuncCallback = FALSE;
 	}
 	else
 	{
+		if ( SetInfoObjDebugVal )
+		{
+			PrintText( "Ok. Added for function:" + string( MouseActionCallback ) );
+		}
 		tmpRawImage.MouseActionCallback = RCString( );
 		str2jstr( &tmpRawImage.MouseActionCallback, MouseActionCallback );
 		tmpRawImage.MouseCallback = TRUE;
+		tmpRawImage.MouserExecuteFuncCallback = TRUE;
 	}
 
 	tmpRawImage.events = events;
@@ -1314,60 +1630,140 @@ int __stdcall RawImage_IsBtn( unsigned int RawImage, BOOL enabled )
 	return TRUE;
 }
 
+int __stdcall RawImage_UseImageCoords( unsigned int RawImage, BOOL enabled )
+{
+	if ( !InitFunctionCalled )
+		return 0;
+
+	if ( RawImage >= ( int )ListOfRawImages.size( ) )
+	{
+		return FALSE;
+	}
+
+	RawImageStruct & tmpRawImage = ListOfRawImages[ RawImage ];
+	tmpRawImage.UseImageCoords = enabled;
+	return TRUE;
+}
+
+
+
+
+void SendRawImagePacket( RawImageCallbackData* callbackdata )
+{
+	std::vector<unsigned char>SendKeyEvent;
+	SendKeyEvent.push_back( 0x50 );
+	// header custom packets
+	SendKeyEvent.push_back( 0xFF );
+	// size custom packets 
+	SendKeyEvent.push_back( 0 );
+	SendKeyEvent.push_back( 0 );
+	SendKeyEvent.push_back( 0 );
+	SendKeyEvent.push_back( 0 );
+	// packet type
+	int packettype = 'IIMG';
+	SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&packettype, ( ( unsigned char * )&packettype ) + 4 );
+	*( int* )&SendKeyEvent[ 2 ] += 4;
+	// data
+	int locpid = GetLocalPlayerId( );
+	SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )&locpid, ( ( unsigned char * )&locpid ) + 4 );
+	*( int* )&SendKeyEvent[ 2 ] += 4;
+	SendKeyEvent.insert( SendKeyEvent.end( ), ( unsigned char * )callbackdata, ( ( unsigned char * )callbackdata ) + sizeof( RawImageCallbackData ) );
+	*( int* )&SendKeyEvent[ 2 ] += sizeof( RawImageCallbackData );
+
+	SendPacket( ( BYTE* )&SendKeyEvent[ 0 ], SendKeyEvent.size( ) );
+	SendKeyEvent.clear( );
+}
+
 BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, float mousey )
 {
 	if ( !GlobalRawImageCallbackData )
+	{
+		if ( SetInfoObjDebugVal )
+		{
+			PrintText( "Callback not initialzied!" );
+		}
 		return FALSE;
-
-
-
+	}
 	GlobalRawImageCallbackData->IsAltPressed = IsKeyPressed( VK_MENU );
 	GlobalRawImageCallbackData->IsCtrlPressed = IsKeyPressed( VK_CONTROL );
 	GlobalRawImageCallbackData->EventType = callbacktype;
+
 	float ScreenX = *GetWindowXoffset;
 	float ScreenY = *GetWindowYoffset;
 
-	float scalex = *GetWindowXoffset / DefaultSceenWidth;
-	float scaley = *GetWindowYoffset / DefaultSceenHeight;
-
+	float scalex = ScreenX / DefaultSceenWidth;
+	float scaley = ScreenY / DefaultSceenHeight;
 
 	//scalex *= DesktopScreen_Width / DefaultSceenWidth;
 	//scaley *= DesktopScreen_Height / DefaultSceenHeight;
-	float mouseposx = mousex / ScreenX;
-	float mouseposy = mousey / ScreenY;
+
+	float mouseposx = mousex /*/ ScreenX*/;
+	float mouseposy = mousey /*/ ScreenY*/;
+
 	GlobalRawImageCallbackData->mousex = mouseposx;
 	GlobalRawImageCallbackData->mousey = mouseposy;
 
-	for ( unsigned int i = ListOfRawImages.size( ) - 1; i > 0; i-- )
+	for ( auto & img : ListOfRawImages )
 	{
 		BOOL NeedSkipEvent = rawimage_skipmouseevent;
-
-		RawImageStruct & img = ListOfRawImages[ i ];
+#ifdef OLD_CODE
 		RGBAPix* RawImageData = ( RGBAPix* )img.img.buf;
+#else 
+
+		
+#endif
 
 		if ( img.used_for_overlay &&
 			img.MouseCallback &&
-			( img.events & ( unsigned int )callbacktype ) > 0 )
+			( ( img.events & ( unsigned int )callbacktype ) > 0 || ( callbacktype == RawImageEventType::MouseDown && img.button ) ) )
 		{
+			if ( SetInfoObjDebugVal )
+			{
+				PrintText( "Callback need!" );
+			}
+
+			if ( img.button )
+			{
+				if ( SetInfoObjDebugVal )
+				{
+					PrintText( "Button found!" );
+				}
+			}
+			else
+			{
+				if ( SetInfoObjDebugVal )
+				{
+					PrintText( "No bo found!" );
+				}
+			}
+
 			BOOL MouseEnteredInRawImage = FALSE;
+
 			float posx = ScreenX * img.overlay_x;
 			float posy = ScreenY * img.overlay_y;
+
 			float sizex = ( float )img.width * scalex;
 			float sizey = ( float )img.height * scaley;
-			int img_x, img_y;
+
+			float img_x, img_y;
 			//posy -= sizey;
 			GlobalRawImageCallbackData->RawImage = img.RawImage;
+			GlobalRawImageCallbackData->RawImageCustomId = img.RawImageCustomId;
 
 			if ( mousex > posx && mousex < posx + sizex && mousey > posy && mousey < posy + sizey )
 			{
-				img_x = img.width - ( int )( posx + sizex - mousex );
-				img_y = img.height - ( int )( posy + sizey - mousey );
+
+				img_x = sizex - ( posx + sizex - mousex );
+				img_y = sizey - ( posy + sizey - mousey );
+
+				img_x /= scalex;
+				img_y /= scaley;
 
 				if ( img_x > img.width )
-					img_x = img.width;
+					img_x = ( float )img.width;
 
 				if ( img_y > img.height )
-					img_y = img.height;
+					img_y = ( float )img.height;
 
 				if ( img_x < 1 )
 					img_x = 0;
@@ -1375,11 +1771,40 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				if ( img_y < 1 )
 					img_y = 0;
 
-				RGBAPix eventpix = RawImageData[ ArrayXYtoId( img.width, img_x, img.height - img_y ) ];
+				if ( img.UseImageCoords )
+				{
+					GlobalRawImageCallbackData->mousex = img_x;
+					GlobalRawImageCallbackData->mousey = img_y;
+				}
 
+				if ( SetInfoObjDebugVal )
+				{
+					PrintText( "Mouse x/y:" + to_string( mouseposx ) + "/" + to_string( mouseposy ) );
+					PrintText( "Mouse pos x/y:" + to_string( mousex ) + "/" + to_string( mousey ) );
+					PrintText( "Image pos x/y:" + to_string( posx ) + "/" + to_string( posy ) );
+					PrintText( "Image click x/y:" + to_string( img_x ) + "/" + to_string( img_y ) );
+				}
+#ifdef OLD_CODE
+				RGBAPix* RawImageData = ( RGBAPix* )img.img.buf;
+				RGBAPix eventpix = RawImageData[ ArrayXYtoId( img.width, ( int )img_x, img.height - ( int )img_y ) ];
+#else 
+				
+#endif
 				if ( eventpix.A >= 20 )
+				{
+					if ( SetInfoObjDebugVal )
+					{
+						PrintText( "Click can be here!" );
+					}
 					NeedSkipEvent = FALSE;
-
+				}
+				else
+				{
+					if ( SetInfoObjDebugVal )
+					{
+						PrintText( "Found bad pixel" );
+					}
+				}
 				MouseEnteredInRawImage = TRUE;
 			}
 			else
@@ -1388,30 +1813,61 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				img_y = 0;
 			}
 
-			GlobalRawImageCallbackData->offsetx = img_x;
-			GlobalRawImageCallbackData->offsety = img_y;
+			GlobalRawImageCallbackData->offsetx = ( int )img_x;
+			GlobalRawImageCallbackData->offsety = ( int )img_y;
 
 			switch ( callbacktype )
 			{
 			case RawImageEventType::MouseUp:
-				if ( img.IsMouseDown )
+				if ( img.IsMouseDown || !( img.events & ( unsigned int )RawImageEventType::MouseDown ) )
 				{
 					img.IsMouseDown = FALSE;
 
 					if ( MouseEnteredInRawImage )
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseClick;
-					if ( !NeedSkipEvent )
-						ExecuteFunc( &img.MouseActionCallback );
-					return !(( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ));
+
+					if ( ( img.events & ( unsigned int )RawImageEventType::MouseUp ) > 0
+						|| ( img.events & ( unsigned int )RawImageEventType::MouseClick ) > 0 )
+					{
+						if ( !NeedSkipEvent && img.MouserExecuteFuncCallback )
+						{
+							if ( SetInfoObjDebugVal )
+							{
+								PrintText( "ExecuteFunc MouseUp" );
+							}
+
+							ExecuteFunc( &img.MouseActionCallback );
+
+						}
+						if ( !NeedSkipEvent && img.PacketCallback )
+							SendRawImagePacket( GlobalRawImageCallbackData );
+					}
+					return !NeedSkipEvent && ( rawimage_skipmouseevent || img.button );
 				}
 				break;
 			case RawImageEventType::MouseDown:
-				if ( !img.IsMouseDown && MouseEnteredInRawImage )
+				if ( ( !img.IsMouseDown || !( img.events & ( unsigned int )RawImageEventType::MouseUp ) )
+					&& MouseEnteredInRawImage )
 				{
 					img.IsMouseDown = TRUE;
-					if ( !NeedSkipEvent )
-						ExecuteFunc( &img.MouseActionCallback );
-					return !( ( rawimage_skipmouseevent && NeedSkipEvent ) || ( NeedSkipEvent && img.button ) );
+
+					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseDown;
+
+					if ( ( img.events & ( unsigned int )RawImageEventType::MouseDown ) > 0 )
+					{
+						if ( !NeedSkipEvent && img.MouserExecuteFuncCallback )
+						{
+							if ( SetInfoObjDebugVal )
+							{
+								PrintText( "ExecuteFunc MouseDown" );
+							}
+							ExecuteFunc( &img.MouseActionCallback );
+
+						}
+						if ( !NeedSkipEvent && img.PacketCallback )
+							SendRawImagePacket( GlobalRawImageCallbackData );
+					}
+					return !NeedSkipEvent && ( rawimage_skipmouseevent || img.button );
 				}
 				break;
 			case RawImageEventType::MouseClick:
@@ -1427,7 +1883,19 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 					{
 						img.IsMouseEntered = FALSE;
 						GlobalRawImageCallbackData->EventType = RawImageEventType::MouseLeave;
-						ExecuteFunc( &img.MouseActionCallback );
+						if ( ( img.events & ( unsigned int )RawImageEventType::MouseLeave ) > 0 )
+						{
+							if ( img.MouserExecuteFuncCallback )
+							{
+								if ( SetInfoObjDebugVal )
+								{
+									PrintText( "ExecuteFunc MouseLeave" );
+								}
+								ExecuteFunc( &img.MouseActionCallback );
+							}
+							if ( img.PacketCallback )
+								SendRawImagePacket( GlobalRawImageCallbackData );
+						}
 					}
 				}
 				else
@@ -1438,7 +1906,19 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 						{
 							img.IsMouseEntered = TRUE;
 							GlobalRawImageCallbackData->EventType = RawImageEventType::MouseEnter;
-							ExecuteFunc( &img.MouseActionCallback );
+							if ( ( img.events & ( unsigned int )RawImageEventType::MouseEnter ) > 0 )
+							{
+								if ( img.MouserExecuteFuncCallback )
+								{
+									if ( SetInfoObjDebugVal )
+									{
+										PrintText( "ExecuteFunc MouseEnter" );
+									}
+									ExecuteFunc( &img.MouseActionCallback );
+								}
+								if ( img.PacketCallback )
+									SendRawImagePacket( GlobalRawImageCallbackData );
+							}
 						}
 					}
 				}
@@ -1448,17 +1928,48 @@ BOOL RawImageGlobalCallbackFunc( RawImageEventType callbacktype, float mousex, f
 				{
 					img.IsMouseDown = FALSE;
 					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseUp;
-					ExecuteFunc( &img.MouseActionCallback );
+					if ( ( img.events & ( unsigned int )RawImageEventType::MouseUp ) > 0 )
+					{
+						if ( img.MouserExecuteFuncCallback )
+						{
+							if ( SetInfoObjDebugVal )
+							{
+								PrintText( "ExecuteFunc MouseUp2" );
+							}
+							ExecuteFunc( &img.MouseActionCallback );
+						}
+						if ( img.PacketCallback )
+							SendRawImagePacket( GlobalRawImageCallbackData );
+					}
 				}
 				if ( img.IsMouseEntered )
 				{
 					img.IsMouseEntered = FALSE;
 					GlobalRawImageCallbackData->EventType = RawImageEventType::MouseLeave;
-					ExecuteFunc( &img.MouseActionCallback );
+					if ( ( img.events & ( unsigned int )RawImageEventType::MouseLeave ) > 0 )
+					{
+						if ( img.MouserExecuteFuncCallback )
+						{
+							if ( SetInfoObjDebugVal )
+							{
+								PrintText( "ExecuteFunc MouseLeave" );
+							}
+							ExecuteFunc( &img.MouseActionCallback );
+						}
+						if ( img.PacketCallback )
+							SendRawImagePacket( GlobalRawImageCallbackData );
+					}
 				}
 				break;
 			default:
 				break;
+			}
+		}
+		else if ( SetInfoObjDebugVal )
+		{
+			if ( IsKeyPressed( VK_LMENU ) )
+			{
+				PrintText( "Callback for:" + to_string( GlobalRawImageCallbackData->RawImage ) + " not initalized!" );
 			}
 		}
 	}
@@ -1504,47 +2015,59 @@ void ApplyIconFrameFilter( string filename, int * OutDataPointer, size_t * OutSi
 
 void ClearAllRawImages( )
 {
+	int i = sizeof( RawImageStruct );
 	AutoFixImagesSize = TRUE;
 	for ( RawImageStruct & s : ListOfRawImages )
 	{
 		s.used_for_overlay = FALSE;
+#ifdef OLD_CODE
 		if ( s.img.buf )
 			s.img.Clear( );
+#else 
+	
+#endif
 		if ( s.ingame )
 		{
 			if ( s.ingamebuffer.buf )
 				s.ingamebuffer.Clear( );
 			s.ingame = FALSE;
 		}
+
+		if ( s.backup_img )
+			delete[ ] s.backup_img;
 	}
 	ListOfRawImages.clear( );
+
+	ListOfRawImages.reserve( MAX_IMAGES_COUNT ); // reserve 15MB for RawImageStruct
+
 	RGBAPix tmppix = RGBAPix( );
 	CreateRawImage( 64, 64, tmppix.RGBAPixWar3( 0, 255, 0, 255 ) );
-}
+	}
 
 
-float __stdcall GetScreenWidth( int )
+/* Only for game. int return = fix missing eax */
+int __stdcall GetScreenWidth( int )
 {
-	return DesktopScreen_Width;
+	return *( int* )&DesktopScreen_Width;
 }
-float __stdcall GetScreenHeight( int )
+int __stdcall GetScreenHeight( int )
 {
-	return DesktopScreen_Height;
-}
-
-float __stdcall GetWindowWidth( int )
-{
-	if ( *InGame )
-		return  *GetWindowXoffset;
-	return DesktopScreen_Width;
-}
-float __stdcall GetWindowHeight( int )
-{
-	if ( *InGame )
-		return  *GetWindowYoffset;
-	return DesktopScreen_Height;
+	return  *( int* )&DesktopScreen_Height;
 }
 
+int __stdcall GetWindowWidth( int )
+{
+	if ( IsGame( ) )
+		return   *( int* )GetWindowXoffset;
+	return *( int* )&DesktopScreen_Width;
+}
+int __stdcall GetWindowHeight( int )
+{
+	if ( IsGame( ) )
+		return   *( int* )GetWindowYoffset;
+	return *( int* )&DesktopScreen_Height;
+}
+/* end */
 
 float DefaultSceenWidth = 1440.0f;
 float DefaultSceenHeight = 900.0f;
