@@ -340,7 +340,7 @@ DWORD LastPressedKeysTime[ 1024 ];
 vector<int> RegisteredKeyCodes;
 vector<int> BlockedKeyCodes;
 
-vector<KeyActionStruct> KeyActionList;
+vector<KeyActionStruct> KeyActionList(12);
 
 
 
@@ -602,8 +602,7 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 			KeyActionList.clear( );
 		return 0;
 	}
-
-	KeyActionStruct tmpstr;
+	KeyActionStruct &tmpstrKeyActionList[btnID];
 	tmpstr.VK = KeyCode & 0xFF;
 	tmpstr.btnID = btnID;
 	tmpstr.IsSkill = IsSkill;
@@ -655,7 +654,7 @@ int __stdcall AddKeyButtonAction( int KeyCode, int btnID, BOOL IsSkill )
 		PrintText( debugtext );
 
 	}
-	KeyActionList.push_back( tmpstr );
+	//KeyActionList.push_back( tmpstr );
 
 	return 0;
 }
@@ -1416,7 +1415,7 @@ void __stdcall SetForceHotkeyProcess( BOOL lvl1, BOOL lvl2, BOOL lvl3 )
 
 }
 
-// Заменяет текст в строке 
+// Г‡Г Г¬ГҐГ­ГїГҐГІ ГІГҐГЄГ±ГІ Гў Г±ГІГ°Г®ГЄГҐ 
 bool replaceAll( std::string& str, const std::string& from, const std::string& to, int addtofrom = 0 )
 {
 	if ( from.empty( ) )
